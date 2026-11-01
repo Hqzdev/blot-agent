@@ -1,0 +1,370 @@
+[
+  {
+    "path": "/",
+    "status": 200
+  },
+  {
+    "path": "/features",
+    "status": 200
+  },
+  {
+    "path": "/docs",
+    "status": 200
+  },
+  {
+    "path": "/contact",
+    "status": 200
+  },
+  {
+    "path": "/beta",
+    "status": 200
+  },
+  {
+    "path": "/changelog",
+    "status": 200
+  },
+  {
+    "path": "/privacy",
+    "status": 200
+  },
+  {
+    "path": "/github",
+    "status": 200
+  },
+  {
+    "path": "/workspace",
+    "status": 200
+  },
+  {
+    "path": "/icon.svg",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/grok-bot-character-catalog",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/blot-product-plan",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/blot-technical-specification",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/mcp-developer-guide",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.1",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.2",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.3",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.4",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.5",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.6",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.7",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.8",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.9",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/P0.10",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.1",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.2",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.3",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.4",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.5",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.6",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.7",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.8",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.9",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.10",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.11",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/A2.12",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/architecture-overview",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/documentation-review",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/implementation-plan",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/orchestrator",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/orchestrator-commands",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/agent-types",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/agent-system-prompts",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/agent-capabilities",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/motes",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/optimization",
+    "status": 200
+  },
+  {
+    "path": "/workspace/documents/google-workspace",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/design/grok-bot-character-catalog.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/blot-product-plan.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/blot-technical-specification.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/integrations/mcp-developer-guide.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/product-scope.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/domain-glossary.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/chat-to-run.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/roles-and-gates.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/permission-policy.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/supported-projects.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/platform-matrix.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/tool-boundaries.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/data-lifecycle.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/acceptance-matrix.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/repo-policy.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/apple-targets.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/swift-packages.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/java-modules.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/composition-root.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/toolchain.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/formatting.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/build-commands.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/ci.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/fixtures.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/contracts.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/architecture/logging.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/README.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/documentation-review.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/implementation-plan.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/orchestrator.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/orchestrator-commands.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/agent-types.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/agent-system-prompts.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/agent-capabilities.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/agents/motes.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/optimization.md",
+    "status": 200
+  },
+  {
+    "path": "/project-docs/integrations/google-workspace.md",
+    "status": 200
+  },
+  {
+    "path": "/#demo",
+    "status": 200
+  },
+  {
+    "path": "/#use-cases",
+    "status": 200
+  },
+  {
+    "path": "/#pricing",
+    "status": 200
+  },
+  {
+    "path": "/#statement",
+    "status": 200
+  },
+  {
+    "path": "/beta?platform=macos",
+    "status": 200
+  },
+  {
+    "path": "/beta?platform=ios",
+    "status": 200
+  },
+  {
+    "path": "/beta?platform=android",
+    "status": 200
+  },
+  {
+    "path": "/beta?platform=windows",
+    "status": 200
+  }
+]

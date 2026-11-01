@@ -1,12 +1,7 @@
-import { Stage } from "@/components/Shell";
-import { PrivacyPage } from "@/components/legal";
+import { PageFrame, PageLink } from "@/components/site/PageFrame";
 
 export const metadata = { title: "Privacy — Blot" };
 
-export default function Privacy() {
-  return (
-    <Stage hint={false}>
-      <PrivacyPage />
-    </Stage>
-  );
+export default function PrivacyPage() {
+  return <PageFrame eyebrow="Privacy" title="Your data, clearly explained." intro="How this local website handles its demonstrations and links."><div className="site-prose site-article"><section><h2>Local demonstrations</h2><p>The landing’s chat, selected agents, and theme are demonstration state in your browser. Chat messages are not sent to an AI provider and do not start tasks on your computer. Reloading the page resets this state.</p></section><section><h2>No email collection</h2><p>This local website does not have email, registration, or mailing-list forms. Contact links lead to the project on GitHub.</p></section><section><h2>Assets and external links</h2><p>The website’s fonts and illustrations are served locally. Links to GitHub open that service, which has its own data policies.</p></section><section><h2>The Blot application</h2><p>Application storage, permissions, and provider access are described in the project specifications. This website page does not replace final public service terms or claim that planned application features are already delivered.</p><PageLink href="/workspace/documents/P0.9">Data lifecycle specification</PageLink><PageLink href="/workspace/documents/P0.5">Permission policy specification</PageLink></section></div></PageFrame>;
 }

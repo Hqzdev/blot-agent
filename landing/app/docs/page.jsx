@@ -1,12 +1,8 @@
-import { Stage } from "@/components/Shell";
-import { DocsPage } from "@/components/docs";
+import { PageFrame } from "@/components/site/PageFrame";
+import { DocumentationIndex } from "@/components/site/DocumentationIndex";
 
-export const metadata = { title: "Docs — Blot" };
+export const metadata = { title: "Documentation — Blot" };
 
-export default function Docs() {
-  return (
-    <Stage hint={false}>
-      <DocsPage />
-    </Stage>
-  );
+export default function DocumentationPage() {
+  return <PageFrame eyebrow="Resources" title="Build with Blot." intro="The product plan, technical specification, agent architecture, and MCP integration contract."><DocumentationIndex /></PageFrame>;
 }
