@@ -2,9 +2,14 @@
 set -eu
 cd "$(dirname "$0")/.."
 bundle="${1:?Pass the generated app bundle}"
-: "${BLOT_SIGNING_IDENTITY:?Set an Apple Development or Developer ID Application signing identity with a private key before packaging}"
-[ "$BLOT_SIGNING_IDENTITY" != "-" ] || { echo 'A Team ID is required for the hardened JVM and SQLite libraries.' >&2; exit 1; }
+BLOT_SIGNING_IDENTITY="${BLOT_SIGNING_IDENTITY:-${EXPANDED_CODE_SIGN_IDENTITY:--}}"
+export BLOT_SIGNING_IDENTITY
 [ -d "$bundle/Contents" ] || { echo "App bundle is missing" >&2; exit 1; }
+# Конфигурация владельца остаётся вне распространяемого приложения.
+if [ -n "$(find "$bundle" -type f \( -name '.env' -o -name '.env.*' \) -print -quit)" ]; then
+    echo 'Remove .env files from the app bundle before packaging.' >&2
+    exit 1
+fi
 if [ -x .build/tools/jdk-25.0.4.1+1/Contents/Home/bin/java ]; then
     JAVA_HOME="$PWD/.build/tools/jdk-25.0.4.1+1/Contents/Home"
     export JAVA_HOME
@@ -12,10 +17,12 @@ fi
 : "${JAVA_HOME:?Select JDK 25 before packaging}"
 GRADLE_USER_HOME="${GRADLE_USER_HOME:-$PWD/.build/gradle-home}"
 export GRADLE_USER_HOME
+echo '[Blot] Building Java backend'
 backend/gradlew --no-daemon -p backend :api:bootJar
 resources="$bundle/Contents/Resources/Backend"
 mkdir -p "$resources"
 cp backend/api/build/libs/blot-backend.jar "$resources/blot-backend.jar"
+python3 scripts/copy-provider-ca.py "$resources/provider-ca.pem"
 scripts/build-native-helpers.sh "$resources"
 mkdir -p "$resources/native"
 # Версия берётся из фактического bootJar, поэтому не дублируется в скрипте.
@@ -28,7 +35,7 @@ with zipfile.ZipFile(sys.argv[1]) as application:
     with zipfile.ZipFile(io.BytesIO(application.read(libraries[0]))) as driver:
         pathlib.Path(sys.argv[2]).write_bytes(driver.read('org/sqlite/native/Mac/aarch64/libsqlitejdbc.dylib'))
 PYTHON
-codesign --force --options runtime --sign "${BLOT_SIGNING_IDENTITY:--}" "$resources/native/libsqlitejdbc.dylib"
+scripts/sign-native.sh "$resources/native/libsqlitejdbc.dylib"
 
 runtime="$resources/runtime/Contents/Home"
 if [ ! -x "$runtime/bin/java" ]; then
@@ -36,16 +43,16 @@ if [ ! -x "$runtime/bin/java" ]; then
     "$JAVA_HOME/bin/jlink" --add-modules java.se,jdk.crypto.ec,jdk.unsupported,jdk.management,jdk.zipfs,jdk.charsets \
         --strip-debug --no-header-files --no-man-pages --output "$runtime"
 fi
-"$JAVA_HOME/bin/java" -version
+echo '[Blot] Embedding Java runtime and native helpers'
 
 # Подписываем вложенный код отдельно; основной App Sandbox остаётся включённым.
 find "$runtime" -type f \( -name '*.dylib' -o -perm -111 \) | while IFS= read -r binary; do
     if /usr/bin/file -b "$binary" | /usr/bin/grep -q 'Mach-O'; then
         case "$binary" in
-            */lib/jspawnhelper) codesign --force --identifier com.blot.backend.spawn --options runtime --entitlements native/InheritedProcess.entitlements --sign "${BLOT_SIGNING_IDENTITY:--}" "$binary" ;;
-            */bin/java) codesign --force --identifier com.blot.backend.java --options runtime --entitlements native/JavaRuntime.entitlements --sign "${BLOT_SIGNING_IDENTITY:--}" "$binary" ;;
-            */bin/*) codesign --force --options runtime --entitlements native/JavaRuntime.entitlements --sign "${BLOT_SIGNING_IDENTITY:--}" "$binary" ;;
-            *) codesign --force --options runtime --sign "${BLOT_SIGNING_IDENTITY:--}" "$binary" ;;
+            */lib/jspawnhelper) scripts/sign-native.sh --identifier com.blot.backend.spawn --entitlements native/InheritedProcess.entitlements "$binary" ;;
+            */bin/java) scripts/sign-native.sh --identifier com.blot.backend.java --entitlements native/JavaRuntime.entitlements "$binary" ;;
+            */bin/*) scripts/sign-native.sh --entitlements native/JavaRuntime.entitlements "$binary" ;;
+            *) scripts/sign-native.sh "$binary" ;;
         esac
     fi
 done
@@ -53,7 +60,9 @@ done
 # Debug Xcode может вынести собственный код в отдельные dylib.
 for library in "$bundle"/Contents/MacOS/*.dylib; do
     [ -f "$library" ] || continue
-    codesign --force --options runtime --sign "${BLOT_SIGNING_IDENTITY:--}" "$library"
+    scripts/sign-native.sh "$library"
 done
-codesign --force --options runtime --entitlements apps/macos/BlotMac/BlotMac.entitlements --sign "${BLOT_SIGNING_IDENTITY:--}" "$bundle"
+scripts/sign-native.sh --entitlements apps/macos/BlotMac/BlotMac.entitlements "$bundle"
 codesign --verify --deep --strict "$bundle"
+[ -x "$runtime/bin/java" ] && [ -s "$resources/blot-backend.jar" ] || { echo 'Backend packaging is incomplete.' >&2; exit 1; }
+echo "[Blot] Backend packaged into $bundle"

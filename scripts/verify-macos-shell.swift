@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 /// Standalone checks compiled against the app sources by check-macos-shell.sh.
@@ -398,15 +399,14 @@ struct VerifyMacOSShell {
 
     @MainActor private static func renderScreens(to output: URL) async throws {
         try FileManager.default.createDirectory(at: output, withIntermediateDirectories: true)
-        FontRegistrar.registerBundledFonts()
         let requestedSizes = ProcessInfo.processInfo.environment["BLOT_RENDER_SIZES"]
         let renderSizes: [(Int, Int)] = requestedSizes.map { value in
             value.split(separator: ",").map { item in
                 let parts = item.split(separator: "x").compactMap { Int($0) }
-                precondition(parts.count == 2 && parts[0] >= 1100 && parts[1] >= 666, "Invalid render size")
+                precondition(parts.count == 2 && parts[0] >= 1024 && parts[1] >= 666, "Invalid render size")
                 return (parts[0], parts[1])
             }
-        } ?? [(1312,751),(1440,900),(1100,700),(1710,983)]
+        } ?? [(1024,768),(1440,900),(1312,751),(1710,983)]
         for light in [false, true] {
             let appearance = NSAppearance(named: light ? .aqua : .darkAqua)!
             NSApp.appearance = appearance

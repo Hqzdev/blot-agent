@@ -1,5 +1,6 @@
 // Модели представления: фактические данные собираются из WorkspaceRecords.
 
+import BlotDesign
 import SwiftUI
 
 // MARK: - Agents

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 import BlotAPI
 import CoreImage.CIFilterBuiltins
@@ -11,19 +12,48 @@ struct DevicePairingView: View {
     nonisolated private struct PairRequest: Decodable, Sendable, Identifiable { let id: UUID; let version: Int64; let deviceName: String?; let platform: String?; let approved: Bool; let claimed: Bool }
     nonisolated private struct Id: Encodable, Sendable { let id: UUID }
     var body: some View {
-        VStack(spacing: 16) {
-            Text("Connect your iPhone").font(.title2)
-            if let descriptor, let image = qr(descriptor) {
-                Image(nsImage: image).interpolation(.none).resizable().frame(width: 260, height: 260)
-                Text("Scan this code in Blot on your iPhone. Confirm the device below.").multilineTextAlignment(.center)
-                Text(descriptor.address.absoluteString).font(.caption).textSelection(.enabled)
+        KSheet("Connect your iPhone", subtitle: "Scan this code in Blot on your iPhone, then approve the device here.", width: 440) {
+            VStack(spacing: KSpace.md) {
+                Group {
+                    if let descriptor, let image = qr(descriptor) {
+                        Image(nsImage: image).interpolation(.none).resizable()
+                            .accessibilityLabel("Pairing QR code")
+                            .transition(.opacity)
+                    } else if error == nil {
+                        ProgressView().controlSize(.regular)
+                    } else {
+                        KIcon("circle-alert", size: 28, color: K.text3)
+                    }
+                }
+                .frame(width: 240, height: 240)
+                .padding(KSpace.md)
+                .background(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).fill(Color.white))
+                .overlay(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).strokeBorder(K.border, lineWidth: 1))
+                if let descriptor {
+                    Text(descriptor.address.absoluteString).font(KFont.mono(11)).foregroundStyle(K.text3)
+                        .textSelection(.enabled)
+                }
             }
-            ForEach(requests.filter { !$0.approved && $0.deviceName != nil }) { request in
-                HStack { Text(request.deviceName ?? "iPhone"); Spacer(); Button("Approve device") { approve(request) } }
+            .frame(maxWidth: .infinity)
+            let waiting = requests.filter { !$0.approved && $0.deviceName != nil }
+            if !waiting.isEmpty {
+                SettingsGroup(title: "Waiting for approval") {
+                    ForEach(Array(waiting.enumerated()), id: \.element.id) { index, request in
+                        if index > 0 { SettingsDivider() }
+                        ListRow(title: request.deviceName ?? "iPhone", subtitle: request.platform) {
+                            IconTile(icon: "iphone")
+                        } trailing: {
+                            KButton(title: "Approve", icon: "check", kind: .primary, height: 28) { approve(request) }
+                        }
+                    }
+                }
+                .transition(.kAppear)
             }
-            if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
-            HStack { Button("New code") { Task { await create() } }; Spacer(); Button("Done") { dismiss() } }
-        }.padding(24).frame(width: 440)
+            if let error { InlineFeedback(text: error, tone: .error) }
+        } footer: {
+            KButton(title: "New code", icon: "rotate-ccw") { Task { await create() } }
+            KButton(title: "Done", kind: .primary) { dismiss() }.keyboardShortcut(.defaultAction)
+        }
         .task {
             await create()
             while !Task.isCancelled { await refresh(); try? await Task.sleep(for: .seconds(1)) }

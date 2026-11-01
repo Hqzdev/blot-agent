@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 /// SwiftUI owns the header. This bridge styles the frame and positions native buttons.

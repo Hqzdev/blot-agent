@@ -1,6 +1,9 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
+/// «14 · Motes — Team graph»: who works with whom, by organisation, communication or dependencies.
+/// Selecting a node or an edge opens its source record in the inspector.
 struct TeamGraphView: View {
     @Environment(AppState.self) private var app
     private var graph: WorkspaceGraph? {
@@ -15,24 +18,53 @@ struct TeamGraphView: View {
     var body: some View {
         @Bindable var app = app
         VStack(spacing: 0) {
-            HStack {
-                Picker("Граф", selection: $app.graphMode) {
-                    ForEach(GraphMode.allCases) { Text($0.rawValue).tag($0) }
-                }.pickerStyle(.segmented)
-                Button("Переписка") { app.openWorkRun(app.selectedRunID) }
-            }.padding(16)
-            if let graph, !graph.nodes.isEmpty {
+            HStack(spacing: KSpace.sm) {
+                KSegmented(options: GraphMode.allCases, selection: $app.graphMode, label: \.rawValue, title: "Graph view")
+                Spacer()
+                KButton(title: "Conversation", icon: "messages-square", kind: .ghost) { app.openWorkRun(app.selectedRunID) }
+                    .disabled(UUID(uuidString: app.selectedRunID) == nil)
+            }
+            .padding(.horizontal, KSpace.lg).padding(.vertical, KSpace.md)
+            .kBorder(.bottom)
+            if app.workspace.loading && graph == nil {
+                ContentSkeleton()
+            } else if let graph, !graph.nodes.isEmpty {
                 RunGraphCanvas(graph: graph)
-                Text(
-                    "Связи построены по назначениям, сообщениям, ревью и зависимостям. Нажмите узел или связь, чтобы открыть источник."
-                )
-                .font(KFont.caption()).foregroundStyle(K.text2).padding(12)
+                    .background(GraphGrid())
+                    .id(app.graphMode)
+                    .transition(.opacity)
+                HStack(spacing: KSpace.lg) {
+                    Text("Built from assignments, messages, reviews and dependencies. Select a node or an edge to see its source record.")
+                        .font(KFont.caption()).foregroundStyle(K.text3)
+                    Spacer()
+                    Text("\(graph.nodes.count) nodes · \(graph.edges.count) links").font(KFont.mono(11)).foregroundStyle(K.text3)
+                }
+                .padding(.horizontal, KSpace.lg).padding(.vertical, 10).kBorder(.top)
             } else {
-                CatalogEmptyView(
-                    title: "Граф пока пуст",
-                    detail: "Выберите запуск. Задачи и специалисты появятся после принятия плана.")
+                EmptyState(icon: "network", title: "The graph is empty",
+                           detail: UUID(uuidString: app.selectedRunID) == nil
+                               ? "Choose a run in the sidebar."
+                               : "Tasks and specialists appear after you approve the plan.")
+                    .frame(maxHeight: .infinity)
             }
         }
+        .kAnimation(value: app.graphMode)
+    }
+}
+
+private struct GraphGrid: View {
+    var body: some View {
+        Canvas { context, size in
+            let step: CGFloat = 24
+            var path = Path()
+            for x in stride(from: 0, through: size.width, by: step) {
+                for y in stride(from: 0, through: size.height, by: step) {
+                    path.addEllipse(in: CGRect(x: x - 0.75, y: y - 0.75, width: 1.5, height: 1.5))
+                }
+            }
+            context.fill(path, with: .color(K.text.opacity(0.06)))
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -41,7 +73,10 @@ private struct RunGraphCanvas: View {
     let graph: WorkspaceGraph
     private func point(_ id: String) -> CGPoint {
         let index = graph.nodes.firstIndex { $0.id == id } ?? 0
-        return CGPoint(x: 140 + (index % 3) * 280, y: 65 + (index / 3) * 150)
+        return CGPoint(x: 140 + (index % 3) * 280, y: 75 + (index / 3) * 160)
+    }
+    private func selected(_ selection: GraphSelection) -> Bool {
+        app.inspectorVisible && app.graphSelection == selection
     }
     var body: some View {
         ScrollView([.horizontal, .vertical]) {
@@ -49,30 +84,60 @@ private struct RunGraphCanvas: View {
                 ForEach(graph.edges) { edge in
                     let from = point(edge.from)
                     let to = point(edge.to)
+                    let active = selected(.edge(edge.source))
                     GraphConnection(from: from, to: to).stroke(
-                        K.text3.opacity(0.65), style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
-                    Button(edge.label) { select(.edge(edge.source)) }
-                        .font(KFont.caption()).padding(4).background(K.surface2, in: Capsule())
-                        .position(x: (from.x + to.x) / 2, y: (from.y + to.y) / 2)
-                        .help(edge.source)
+                        active ? K.text : K.text3.opacity(0.65),
+                        style: StrokeStyle(lineWidth: active ? 2 : 1.5, lineCap: .round, dash: active ? [] : [5, 4]))
+                }
+                ForEach(graph.edges) { edge in
+                    let from = point(edge.from)
+                    let to = point(edge.to)
+                    Button { select(.edge(edge.source)) } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "arrow.right").font(.system(size: 10, weight: .semibold))
+                                .foregroundStyle(K.text2).accessibilityHidden(true)
+                            Text(edge.label).font(KFont.ui(11)).foregroundStyle(K.text2).lineLimit(1)
+                        }
+                        .padding(.horizontal, 8).frame(height: 24)
+                        .background(Rectangle().fill(K.bg))
+                        .overlay(Rectangle().strokeBorder(selected(.edge(edge.source)) ? K.text : K.borderStrong,
+                                                          lineWidth: selected(.edge(edge.source)) ? 2 : 1))
+                    }
+                    .buttonStyle(KIconButtonStyle()).kFocusRing(radius: 0)
+                    .position(x: (from.x + to.x) / 2, y: (from.y + to.y) / 2)
+                    .help(edge.source)
+                    .accessibilityLabel("Link: \(edge.label)")
                 }
                 ForEach(graph.nodes) { node in
-                    Button {
-                        select(.node(node.id))
-                    } label: {
+                    let active = selected(.node(node.id))
+                    let status = BackendStatus(node.status)
+                    Button { select(.node(node.id)) } label: {
                         HStack(spacing: 10) {
-                            FaceAvatar(role: .backendRole(node.role), size: 28)
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text(node.title).font(KFont.body(.medium)).lineLimit(2)
-                                Text(node.status).font(KFont.caption()).foregroundStyle(K.text2).lineLimit(2)
-                                Text(node.kind == "TASK" ? "Задача" : "Сессия специалиста").font(
-                                    KFont.caption()
-                                ).foregroundStyle(K.text3)
+                            FaceAvatar(role: .backendRole(node.role), size: 34)
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(node.title).font(KFont.label()).foregroundStyle(K.text).lineLimit(2)
+                                HStack(spacing: 6) {
+                                    Image(systemName: status.tone.icon).font(.system(size: 10, weight: .semibold))
+                                        .foregroundStyle(status.tone.color).accessibilityHidden(true)
+                                    Text(status.label + " · " + (node.kind == "TASK" ? "task" : "specialist"))
+                                        .font(KFont.mono(11)).foregroundStyle(K.text2).lineLimit(1)
+                                }
                             }.frame(maxWidth: .infinity, alignment: .leading)
-                        }.padding(12).frame(width: 245, height: 100).kCard(fill: K.surface2)
-                    }.buttonStyle(.plain).position(point(node.id))
+                        }
+                        .padding(EdgeInsets(top: 10, leading: 10, bottom: 10, trailing: 12))
+                        .frame(width: 236, height: 72)
+                        .background(RoundedRectangle(cornerRadius: K.rPopover, style: .continuous).fill(K.surface))
+                        .overlay(RoundedRectangle(cornerRadius: K.rPopover, style: .continuous)
+                            .strokeBorder(active ? K.text : K.borderStrong, lineWidth: active ? 2 : 1))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rPopover)
+                    .position(point(node.id))
+                    .accessibilityLabel("\(node.title), \(status.label)")
+                    .accessibilityAddTraits(active ? .isSelected : [])
                 }
-            }.frame(width: 850, height: CGFloat(max(1, (graph.nodes.count + 2) / 3) * 150))
+            }.frame(width: 850, height: CGFloat(max(1, (graph.nodes.count + 2) / 3) * 160))
+                .padding(KSpace.lg)
         }
     }
     private func select(_ selection: GraphSelection) {

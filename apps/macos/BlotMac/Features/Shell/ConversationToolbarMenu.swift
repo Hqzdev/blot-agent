@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 struct ConversationToolbarMenu: View {
@@ -60,12 +61,11 @@ struct ConversationToolbarMenu: View {
                 Label(archived ? "Restore from archive" : "Archive", systemImage: archived ? "arrow.uturn.backward" : "archivebox")
             }.keyboardShortcut("a", modifiers: [.shift, .command])
         } label: {
-            Label("Conversation actions", systemImage: "ellipsis").labelStyle(.iconOnly)
-                .font(.system(size: 16)).foregroundStyle(K.text2)
-                .frame(width: 28, height: 28).kHover(radius: K.rMd)
+            KIcon("ellipsis", size: 16, color: K.text2)
+                .frame(width: K.iconButtonSize, height: K.iconButtonSize).kHover(radius: K.rSm)
         }
         .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
-        .kFocusRing().accessibilityLabel("Conversation actions").help("Conversation actions")
+        .kFocusRing(radius: K.rSm).accessibilityLabel("Conversation actions").help("Conversation actions")
         .alert("Rename conversation", isPresented: $renaming) {
             TextField("Title", text: $title)
             Button("Cancel", role: .cancel) {}

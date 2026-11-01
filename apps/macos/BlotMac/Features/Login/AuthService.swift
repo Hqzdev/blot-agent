@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 import BlotAPI
 
@@ -20,11 +21,11 @@ enum AuthError: LocalizedError, Equatable {
     case invalidEmail, emptyPassword, wrongCredentials, invalidCode, codeExpired
     var errorDescription: String? {
         switch self {
-        case .invalidEmail: "Введите корректную почту."
-        case .emptyPassword: "Введите пароль от 12 символов."
-        case .wrongCredentials: "Неверная почта или пароль."
-        case .invalidCode: "Неверный код."
-        case .codeExpired: "Код истёк. Запросите новый."
+        case .invalidEmail: "Enter a valid email address."
+        case .emptyPassword: "Enter a password of at least 12 characters."
+        case .wrongCredentials: "Wrong email or password."
+        case .invalidCode: "That code is not right."
+        case .codeExpired: "The code has expired. Request a new one."
         }
     }
 }

@@ -1,13 +1,22 @@
 package dev.blot.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.fasterxml.jackson.databind.*;
 import dev.blot.core.*;
+import dev.blot.core.Project;
+import dev.blot.core.Run;
+import dev.blot.core.RunStatus;
+import dev.blot.core.SpecificationRevision;
+import dev.blot.core.Task;
+import dev.blot.core.workspace.Entity;
 import java.nio.file.*;
 import java.time.Instant;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class SharedContractTest {
   private record LegacyEnvelope(

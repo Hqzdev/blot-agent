@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct ProfileStatisticsView: View {
@@ -16,7 +17,7 @@ struct ProfileStatisticsView: View {
             metric("Current streak", value: days(statistics?.currentStreakDays))
         }
         .padding(.vertical, 12)
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(K.border, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).strokeBorder(K.border, lineWidth: 1))
     }
 
     private var separator: some View { VDivider().frame(height: 36) }

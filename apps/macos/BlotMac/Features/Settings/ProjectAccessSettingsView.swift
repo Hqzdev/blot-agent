@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 import AppKit
 import BlotAPI
@@ -6,28 +7,35 @@ struct ProjectAccessSettingsView: View {
     @State private var projects: [BackendEntity<ProjectValue>] = []
     @State private var busy = false
     @State private var error: String?
+    @State private var loaded = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Git projects").font(KFont.pageTitle()).foregroundStyle(K.text)
-            Text("Choose a repository on this Mac. Agents work in separate workspaces; commit and push require separate approvals.")
-                .font(KFont.body()).foregroundStyle(K.text2)
-            KButton(title: "Add repository…", icon: "folder", kind: .primary) { chooseFolder() }.disabled(busy)
-            if busy { ProgressView() }
-            if let error { Text(error).foregroundStyle(K.warning).textSelection(.enabled) }
-            ForEach(projects, id: \.id) { project in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(project.data.name).font(KFont.body(.medium))
-                    Text(project.data.repositoryPath).font(KFont.caption()).foregroundStyle(K.text2).textSelection(.enabled)
-                    HStack {
-                        Text(project.data.archived ? "Archived" : "Connected").font(KFont.caption()).foregroundStyle(K.text3)
-                        Spacer()
-                        Button("Choose folder again…") { chooseFolder(existing: project) }.disabled(busy)
-                    }
-                }.padding(14).kCard(fill: K.surface)
+        SettingsGroup(title: "Repositories",
+                      detail: "Agents work in separate workspaces of these repositories. Commits and pushes need separate approval.",
+                      action: {
+                          KButton(title: "Add repository…", icon: "plus", kind: .primary, loading: busy) { chooseFolder() }
+                      }) {
+            if projects.isEmpty && !busy && !loaded {
+                LoadingState(label: "Loading repositories…")
+            } else if projects.isEmpty {
+                EmptyState(icon: "git-branch", title: "No repositories connected",
+                           detail: "Choose a Git repository on this Mac to start tasks in it.")
             }
-            if projects.isEmpty && !busy { Text("No repositories connected.").foregroundStyle(K.text3) }
-        }.task { await load() }
+            ForEach(Array(projects.enumerated()), id: \.element.id) { index, project in
+                if index > 0 { SettingsDivider() }
+                ListRow(title: project.data.name, subtitle: project.data.repositoryPath) {
+                    IconTile(icon: "folder")
+                } trailing: {
+                    StatusBadge(project.data.archived ? "Archived" : "Connected", tone: project.data.archived ? .neutral : .success)
+                    KButton(title: "Reconnect…", kind: .ghost, height: 28) { chooseFolder(existing: project) }
+                        .disabled(busy)
+                        .help("Choose the same folder again to restore access")
+                }
+                .padding(.horizontal, 4)
+            }
+            if let error { GroupContent { InlineFeedback(text: error, tone: .error) } }
+        }
+        .task { await load() }
     }
 
     private func chooseFolder(existing: BackendEntity<ProjectValue>? = nil) {
@@ -55,6 +63,7 @@ struct ProjectAccessSettingsView: View {
     }
 
     private func load() async {
+        defer { loaded = true }
         do { projects = try await BackendRuntime.shared.client.records("PROJECT", as: ProjectValue.self) }
         catch { self.error = error.localizedDescription }
     }

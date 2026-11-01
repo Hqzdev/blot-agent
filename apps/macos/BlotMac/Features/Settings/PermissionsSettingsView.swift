@@ -1,20 +1,27 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
+/// «07 · Settings — Permissions»: how approvals work and every action waiting for one.
 struct PermissionsSettingsView: View {
     @Environment(AppState.self) private var app
     @Bindable var settings: SettingsState
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(
-                "Разрешение связано с точным действием, исходной версией, сроком и одним использованием. Агент не может выдать его себе."
-            )
-            .font(KFont.body()).foregroundStyle(K.text2)
-            let actions = app.workspace.rows("PREPARED_ACTION").filter {
-                ["PREPARED", "EXECUTING"].contains($0.data.text("status"))
-            }
-            if actions.isEmpty { Text("Нет действий, ожидающих разрешения.").foregroundStyle(K.text3) }
-            ForEach(actions, id: \.id) { PreparedActionView(action: $0) }
+        let actions = app.workspace.rows("PREPARED_ACTION").filter {
+            ["PREPARED", "EXECUTING"].contains($0.data.text("status"))
         }
+        SettingsGroup(title: "Approvals") {
+            SettingsRow(title: "Ask before running",
+                        detail: "A permission covers one exact action, its base commit, five minutes and a single use. Agents cannot grant permissions to themselves.") {
+                StatusBadge("Always on", tone: .success)
+            }
+        }
+        SettingsGroup(title: "Waiting for approval", detail: actions.isEmpty ? nil : "\(actions.count) actions") {
+            if actions.isEmpty {
+                EmptyState(icon: "shield-check", title: "Nothing to approve",
+                           detail: "Commands, file changes, commits and pushes appear here when an agent prepares them.")
+            }
+        }
+        ForEach(actions, id: \.id) { PreparedActionView(action: $0).transition(.kAppear) }
     }
 }

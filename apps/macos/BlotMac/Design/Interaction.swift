@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 struct KIconButtonStyle: ButtonStyle {
@@ -42,21 +43,46 @@ struct InlineFeedback: View {
     enum Tone {
         case information, success, warning, error
 
+        /// Information and success read as secondary text; problems stay in ink and medium weight.
         var color: Color {
             switch self {
-            case .information: K.text2
-            case .success: K.success
-            case .warning: K.warning
-            case .error: K.danger
+            case .information, .success: K.text2
+            case .warning, .error: K.text
             }
         }
 
+        /// A different glyph for every tone, so the tone is clear without colour.
         var icon: String {
             switch self {
             case .information: "info.circle"
             case .success: "circle-check"
-            case .warning: "exclamationmark.circle"
-            case .error: "circle-alert"
+            case .warning: "exclamationmark.triangle"
+            case .error: "xmark.octagon"
+            }
+        }
+
+        var weight: KFont.Weight {
+            switch self {
+            case .information, .success: .regular
+            case .warning, .error: .medium
+            }
+        }
+
+        var spokenPrefix: String {
+            switch self {
+            case .information: ""
+            case .success: "Done: "
+            case .warning: "Warning: "
+            case .error: "Error: "
+            }
+        }
+
+        var status: BlotStatus {
+            switch self {
+            case .information: .info
+            case .success: .success
+            case .warning: .warning
+            case .error: .error
             }
         }
     }
@@ -67,10 +93,11 @@ struct InlineFeedback: View {
     var body: some View {
         HStack(alignment: .top, spacing: KSpace.sm) {
             KIcon(tone.icon, size: 14, color: tone.color).accessibilityHidden(true)
-            Text(text).font(KFont.caption()).foregroundStyle(tone.color)
+            Text(text).font(KFont.caption(tone.weight)).foregroundStyle(tone.color)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .accessibilityElement(children: .combine)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(tone.spokenPrefix + text)
     }
 }
 

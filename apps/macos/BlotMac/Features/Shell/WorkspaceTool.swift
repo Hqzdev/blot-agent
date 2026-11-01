@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 enum WorkspaceTool: String, CaseIterable, Identifiable {

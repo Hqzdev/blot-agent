@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct PrimaryBlot: View {

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct ProfileEditorView: View {
@@ -21,22 +22,17 @@ struct ProfileEditorView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Edit profile").font(KFont.ui(20, .semibold))
-            SettingsTextField(label: "Name", text: $name)
-            SettingsTextField(label: "Username", text: $username)
-            Text("Use letters, numbers, and underscores. Up to 32 characters.").font(KFont.caption()).foregroundStyle(K.text2)
-            Text("Bio").font(KFont.body(.medium))
-            TextEditor(text: $bio).font(KFont.body()).scrollContentBackground(.hidden)
-                .padding(10).frame(height: 120).kCard(fill: K.surface).accessibilityLabel("Profile bio")
-            Text("Changes are saved on this Mac.").font(KFont.caption()).foregroundStyle(K.text2)
-            HStack {
-                Spacer()
-                KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                KButton(title: "Save", kind: .primary) { save(details); dismiss() }
-                    .disabled(!details.isValid).keyboardShortcut(.defaultAction)
-            }
-        }.padding(24).frame(width: 480).background(K.bg).foregroundStyle(K.text)
+        KSheet("Edit profile", subtitle: "Changes are saved on this Mac.", width: 480) {
+            KTextField("Name", text: $name, required: true, autofocus: true)
+            KTextField("Username", text: $username, icon: "at", mono: true,
+                       error: username.isEmpty || details.isValid || details.name.isEmpty ? nil : "Use letters, numbers and underscores, up to 32 characters.",
+                       hint: "Letters, numbers and underscores. Up to 32 characters.")
+            KTextArea("Bio", text: $bio, placeholder: "A line about you", minHeight: 96, maxHeight: 160)
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            KButton(title: "Save", kind: .primary) { save(details); dismiss() }
+                .disabled(!details.isValid).keyboardShortcut(.defaultAction)
+        }
     }
 }
 
@@ -53,34 +49,33 @@ struct ProfileShowcaseEditor: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Edit showcase").font(KFont.ui(20, .semibold))
+        KSheet("Edit showcase", subtitle: "Choose the sites to feature on your profile.", width: 480) {
             if sites.isEmpty {
-                Text("Save a website in Sites from the three-dot menu, then feature it here.")
-                    .font(KFont.body()).foregroundStyle(K.text2)
+                EmptyState(icon: "globe", title: "No saved sites",
+                           detail: "Save a website in Sites from the More menu in the rail, then feature it here.")
             } else {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
-                        ForEach(sites) { site in
-                            Toggle(isOn: Binding(get: { selected.contains(site.id) }, set: { enabled in
-                                if enabled { selected.insert(site.id) } else { selected.remove(site.id) }
-                            })) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(site.name).font(KFont.body()).foregroundStyle(K.text)
-                                    Text(site.url.host ?? site.url.absoluteString).font(KFont.caption()).foregroundStyle(K.text2)
-                                }
-                            }.toggleStyle(.checkbox)
+                    VStack(spacing: 0) {
+                        ForEach(Array(sites.enumerated()), id: \.element.id) { index, site in
+                            if index > 0 { SettingsDivider() }
+                            ListRow(title: site.name, subtitle: site.url.host ?? site.url.absoluteString) {
+                                IconTile(icon: "globe")
+                            } trailing: {
+                                KToggle(isOn: Binding(get: { selected.contains(site.id) }, set: { enabled in
+                                    if enabled { selected.insert(site.id) } else { selected.remove(site.id) }
+                                })).accessibilityLabel("Feature \(site.name)")
+                            }
                         }
                     }
-                }.frame(maxHeight: 280)
-            }
-            HStack {
-                Spacer()
-                KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                if !sites.isEmpty {
-                    KButton(title: "Save", kind: .primary) { save(selected); dismiss() }.keyboardShortcut(.defaultAction)
                 }
+                .frame(maxHeight: 300)
+                .kCard()
             }
-        }.padding(24).frame(width: 480).background(K.bg).foregroundStyle(K.text)
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            if !sites.isEmpty {
+                KButton(title: "Save", kind: .primary) { save(selected); dismiss() }.keyboardShortcut(.defaultAction)
+            }
+        }
     }
 }

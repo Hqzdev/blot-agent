@@ -1,6 +1,10 @@
 package dev.blot.api;
 
 import dev.blot.core.*;
+import dev.blot.core.Project;
+import dev.blot.core.Run;
+import dev.blot.core.SpecificationRevision;
+import dev.blot.core.Task;
 import java.util.List;
 import java.util.Map;
 

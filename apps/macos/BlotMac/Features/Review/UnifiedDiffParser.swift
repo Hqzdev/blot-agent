@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 /// Parses the displayed unified diff excerpt without reading or modifying project files.

@@ -1,4 +1,5 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
 enum BlotContext: Hashable {
@@ -32,6 +33,14 @@ extension AppState {
         if team.allSatisfy({ $0.state == .idle || $0.state == .done }) { return .idle }
         return team.contains(where: { $0.stateLabel.contains("planning") }) ? .thinking : .working
     }
+}
+
+/// A stimulus addressed to the character on one screen.
+struct BlotStimulus: Equatable {
+    var kind: BlotStimulusKind = .none
+    var id = 0
+    var context: BlotContext = .home
+    var createdAt = Date()
 }
 
 private struct BlotNamespaceKey: EnvironmentKey { static let defaultValue: Namespace.ID? = nil }

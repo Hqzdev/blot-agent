@@ -1,3 +1,4 @@
+import BlotDesign
 import Observation
 import Foundation
 
@@ -36,11 +37,10 @@ enum SettingsSection: String, CaseIterable, Identifiable {
     }
 }
 
-/// In-memory preview preferences. No tools, commands, or external services are invoked.
+/// Preferences for this session. Theme, text size and Reduce motion apply immediately; the rest are kept in memory.
 @Observable
 final class SettingsState {
     var section: SettingsSection = .general
-    var weeklyUsage = AccountUsage.preview
     var search = ""
     var projectsFolder = "~/Developer/blot"
     var editor = "VS Code"

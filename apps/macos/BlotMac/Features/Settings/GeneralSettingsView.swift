@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct GeneralSettingsView: View {
@@ -8,37 +9,38 @@ struct GeneralSettingsView: View {
         SettingsGroup(title: "Workspace") {
             SettingsRow(title: "Projects folder", detail: "New projects and tasks started outside a project are stored here.") {
                 HStack(spacing: 10) {
-                    Text(settings.projectsFolder).font(KFont.mono(11)).foregroundStyle(K.text2)
-                    KButton(title: "Change") { changeFolder = true }
+                    Text(settings.projectsFolder).font(KFont.mono(12)).foregroundStyle(K.text2)
+                    KButton(title: "Change…", height: 28) { changeFolder = true }
                 }
             }
-            HDivider()
+            SettingsDivider()
             SettingsRow(title: "Open files in", detail: "Where files and folders open when you click a path.") {
-                SettingsChoice(value: $settings.editor, options: ["VS Code", "Xcode", "Cursor", "System default"])
+                SettingsChoice(title: "Open files in", value: $settings.editor, options: ["VS Code", "Xcode", "Cursor", "System default"])
             }
-            HDivider()
+            SettingsDivider()
             SettingsRow(title: "Language", detail: "Language of the app interface. Blot answers in the language you write in.") {
-                SettingsChoice(value: $settings.language, options: ["Auto detect", "English", "Русский"])
+                SettingsChoice(title: "Language", value: $settings.language, options: ["Auto detect", "English", "Русский"])
             }
         }
         SettingsGroup(title: "Behavior") {
             SettingsToggleRow(title: "Show in menu bar", detail: "Keep Blot in the menu bar while tasks run with the window closed.", value: $settings.menuBar)
-            HDivider()
+            SettingsDivider()
             SettingsToggleRow(title: "Prevent sleep while a task runs", detail: "Keep the Mac awake until Blot finishes or stops to ask you.", value: $settings.preventSleep)
-            HDivider()
+            SettingsDivider()
             SettingsRow(title: "Notify when a task finishes", detail: "Send a macOS notification when a task completes or needs approval.") {
-                SettingsChoice(value: $settings.completionNotice, options: ["When in background", "Always", "Never"])
+                SettingsChoice(title: "Task finished notifications", value: $settings.completionNotice, options: ["When in background", "Always", "Never"])
             }
-            HDivider()
+            SettingsDivider()
             SettingsToggleRow(title: "Confirm before quitting", detail: "Warn if quitting would stop tasks that are still running.", value: $settings.confirmQuit)
         }
         SettingsGroup(title: "Updates") {
             SettingsRow(title: "Release channel", detail: "Beta gets new agent features about two weeks earlier.") {
-                SettingsChoice(value: $settings.releaseChannel, options: ["Stable", "Beta"])
+                SettingsChoice(title: "Release channel", value: $settings.releaseChannel, options: ["Stable", "Beta"])
             }
-            HDivider()
-            SettingsRow(title: "Blot 1.4.2", detail: checked ? "Preview · no update service connected" : "Up to date · checked 12 minutes ago") {
-                KButton(title: "Check now") { checked = true }
+            SettingsDivider()
+            SettingsRow(title: "Blot \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")",
+                        detail: checked ? "No update service is connected in this build." : "Updates are installed with the app.") {
+                KButton(title: "Check now", height: 28) { checked = true }
             }
         }
         .sheet(isPresented: $changeFolder) {
@@ -61,20 +63,18 @@ struct SettingsEditSheet: View {
         _value = State(initialValue: initialValue)
         self.save = save
     }
+    private var trimmed: String { value.trimmingCharacters(in: .whitespacesAndNewlines) }
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text(title).font(KFont.ui(20, .semibold)).foregroundStyle(K.text)
-            SettingsTextField(label: label, text: $value)
-            Text("Saved for this preview session.").font(KFont.body()).foregroundStyle(K.text3)
-            HStack {
-                Spacer()
-                KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                KButton(title: "Save", kind: .primary) {
-                    save(value.trimmingCharacters(in: .whitespacesAndNewlines)); dismiss()
-                }
-                .disabled(value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                .keyboardShortcut(.defaultAction)
+        KSheet(title, subtitle: "Saved for this session on this Mac.", width: 440) {
+            KTextField(label, text: $value, large: true, required: true, autofocus: true) {
+                guard !trimmed.isEmpty else { return }
+                save(trimmed); dismiss()
             }
-        }.padding(24).frame(width: 440).background(K.bg)
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            KButton(title: "Save", kind: .primary) { save(trimmed); dismiss() }
+                .disabled(trimmed.isEmpty)
+                .keyboardShortcut(.defaultAction)
+        }
     }
 }

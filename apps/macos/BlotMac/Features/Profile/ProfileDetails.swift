@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 nonisolated struct ProfileDetails: Codable, Equatable, Sendable {

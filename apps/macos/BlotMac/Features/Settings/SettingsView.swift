@@ -1,74 +1,65 @@
+import BlotDesign
 import SwiftUI
 
+/// «Settings Sidebar» from agent.pen: title, search, sections grouped as Personal / Agent / Integrations.
 struct SettingsSidebar: View {
     @Environment(AppState.self) private var app
     var body: some View {
         @Bindable var settings = app.settings
-            VStack(alignment: .leading, spacing: 0) {
-                HStack(spacing: 12) {
-                    Text("Settings")
-                        .font(KFont.sidebarTitle())
-                        .foregroundStyle(K.text)
-                    Spacer()
-                    Button {
-                        app.showingSettings = false
-                    } label: {
-                        HStack(spacing: 5) {
-                            KIcon("chevron-left", size: 14, color: K.text2)
-                        }
-                    }
-                    .buttonStyle(KButtonStyle(kind: .ghost, height: 28))
-                    .help("Вернуться к задачам")
-                }
-                .padding(.leading, 18).padding(.trailing, 8)
-                .frame(height: K.headerHeight)
-                HStack(spacing: 8) {
-                    KIcon("search", size: 14, color: K.text3)
-                    TextField("Search settings", text: $settings.search)
-                        .textFieldStyle(.plain).font(KFont.body())
-                }
-                .padding(8).background(K.surface2, in: RoundedRectangle(cornerRadius: 6))
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: KSpace.sm) {
+                Text("Settings").font(KFont.sidebarTitle()).foregroundStyle(K.text)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer()
+                IconButton(icon: "x", help: "Close settings · Esc") { app.showingSettings = false }
+            }
+            .padding(.leading, 16).padding(.trailing, 10)
+            .frame(height: K.headerHeight)
+            KSearchField(placeholder: "Search settings", text: $settings.search)
                 .padding(.horizontal, 12).padding(.bottom, 4)
-                ScrollView {
-                    VStack(spacing: K.sidebarRowSpacing) {
-                        ForEach(["Personal", "Agent", "Integrations"], id: \.self) { group in
-                            let sections = SettingsSection.allCases.filter {
-                                $0.group == group && (settings.search.isEmpty ||
-                                    $0.rawValue.localizedCaseInsensitiveContains(settings.search))
-                            }
-                            if !sections.isEmpty {
-                                SectionLabel(title: group, actionIcon: nil)
-                                ForEach(sections) { section in
-                                    SidebarItem(icon: section.icon, label: section.rawValue,
-                                                active: settings.section == section) {
-                                        settings.section = section
-                                    }
+            ScrollView {
+                VStack(spacing: K.sidebarRowSpacing) {
+                    ForEach(["Personal", "Agent", "Integrations"], id: \.self) { group in
+                        let sections = SettingsSection.allCases.filter {
+                            $0.group == group && (settings.search.isEmpty ||
+                                $0.rawValue.localizedCaseInsensitiveContains(settings.search))
+                        }
+                        if !sections.isEmpty {
+                            SectionLabel(title: group)
+                            ForEach(sections) { section in
+                                SidebarItem(icon: section.icon, label: section.rawValue,
+                                            active: settings.section == section) {
+                                    settings.section = section
                                 }
                             }
                         }
-                        if !settings.search.isEmpty && !SettingsSection.allCases.contains(where: {
-                            $0.rawValue.localizedCaseInsensitiveContains(settings.search)
-                        }) {
-                            Text("No settings found").font(KFont.body()).foregroundStyle(K.text3).padding()
-                        }
-                    }.padding(.horizontal, 8)
-                }.scrollIndicators(.never)
-                Text("Настройки этого Mac")
-                    .font(KFont.caption()).foregroundStyle(K.text3).padding(18)
-            }
-            .background(K.bgSidebar).kBorder(.trailing)
+                    }
+                    if !settings.search.isEmpty && !SettingsSection.allCases.contains(where: {
+                        $0.rawValue.localizedCaseInsensitiveContains(settings.search)
+                    }) {
+                        Text("No settings match “\(settings.search)”").font(KFont.caption()).foregroundStyle(K.text3)
+                            .frame(maxWidth: .infinity, alignment: .leading).padding(10)
+                    }
+                }.padding(.horizontal, 6).padding(.bottom, 12)
+            }.scrollIndicators(.never)
+            Text("Settings for this Mac")
+                .font(KFont.caption()).foregroundStyle(K.text3).padding(16)
+        }
+        .onExitCommand { app.showingSettings = false }
     }
 }
 
+/// «04 · Settings — General» page: section title, then the section's groups.
 struct SettingsView: View {
     @Environment(AppState.self) private var app
     var body: some View {
-        @Bindable var settings = app.settings
         PageContent {
-            VStack(alignment: .leading, spacing: 32) {
-                Text(settings.section.rawValue).font(KFont.pageTitle()).foregroundStyle(K.text)
-                page
+            VStack(alignment: .leading, spacing: KSpace.section) {
+                Text(app.settings.section.rawValue).font(KFont.pageTitle()).foregroundStyle(K.text)
+                    .accessibilityAddTraits(.isHeader)
+                page.id(app.settings.section).transition(.kAppear)
             }
+            .kAnimation(value: app.settings.section)
         }
         .background(K.bg)
     }

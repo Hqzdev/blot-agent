@@ -1,10 +1,18 @@
 package dev.blot.application.workspace;
 
-import static org.junit.jupiter.api.Assertions.*;
-
+import dev.blot.application.workspace.requirements.RequirementCoverage;
 import dev.blot.core.workspace.*;
+import dev.blot.core.workspace.planning.CoverageData;
+import dev.blot.core.workspace.planning.PlanData;
+import dev.blot.core.workspace.planning.PlanStepData;
+import dev.blot.core.workspace.planning.RequirementData;
 import java.util.*;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class RequirementCoverageTest {
   @Test

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 struct ShellRightPane: View {
     @Environment(AppState.self) private var app

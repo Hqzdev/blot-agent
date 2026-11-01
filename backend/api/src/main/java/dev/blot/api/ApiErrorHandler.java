@@ -2,7 +2,8 @@ package dev.blot.api;
 
 import dev.blot.application.ApplicationError;
 import dev.blot.application.workspace.WorkspaceFailure;
-import dev.blot.infrastructure.StorageException;
+import dev.blot.core.workspace.Entity;
+import dev.blot.infrastructure.database.StorageException;
 import java.util.Map;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;

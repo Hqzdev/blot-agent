@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		B20000000000000000000001 /* BlotAPI in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000002 /* BlotAPI */; };
 		B20000000000000000000003 /* BlotAPI in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000004 /* BlotAPI */; };
+		B20000000000000000000011 /* BlotDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000012 /* BlotDesign */; };
+		B20000000000000000000013 /* BlotDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000014 /* BlotDesign */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -39,12 +41,14 @@
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				B20000000000000000000001 /* BlotAPI in Frameworks */,
+				B20000000000000000000011 /* BlotDesign in Frameworks */,
 			);
 		};
 		A20000000000000000000007 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			files = (
 				B20000000000000000000003 /* BlotAPI in Frameworks */,
+				B20000000000000000000013 /* BlotDesign in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -79,6 +83,7 @@
 				13CB0E6D307BE25300C7CE8A /* Sources */,
 				13CB0E6E307BE25300C7CE8A /* Frameworks */,
 				13CB0E6F307BE25300C7CE8A /* Resources */,
+				B20000000000000000000006 /* Embed Java backend */,
 			);
 			buildRules = (
 			);
@@ -89,6 +94,7 @@
 			name = Blot;
 			packageProductDependencies = (
 				B20000000000000000000002 /* BlotAPI */,
+				B20000000000000000000012 /* BlotDesign */,
 			);
 			productName = BlotMac;
 			productReference = 13CB0E71307BE25300C7CE8A /* Blot.app */;
@@ -111,6 +117,7 @@
 			name = BlotIOS;
 			packageProductDependencies = (
 				B20000000000000000000004 /* BlotAPI */,
+				B20000000000000000000014 /* BlotDesign */,
 			);
 			productName = BlotIOS;
 			productReference = A20000000000000000000004 /* BlotIOS.app */;
@@ -145,6 +152,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				B20000000000000000000005 /* XCLocalSwiftPackageReference "../packages/BlotAPI" */,
+				B20000000000000000000015 /* XCLocalSwiftPackageReference "../packages/BlotDesign" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 13CB0E72307BE25300C7CE8A /* Products */;
@@ -169,6 +177,27 @@
 			);
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B20000000000000000000006 /* Embed Java backend */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			inputPaths = (
+				"$(TARGET_BUILD_DIR)/$(INFOPLIST_PATH)",
+				"$(TARGET_BUILD_DIR)/$(EXECUTABLE_PATH)",
+			);
+			name = "Embed Java backend";
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(UNLOCALIZED_RESOURCES_FOLDER_PATH)/Backend/blot-backend.jar",
+			);
+			shellPath = /bin/sh;
+			shellScript = (
+				"set -eu",
+				"\"$SRCROOT/../scripts/package-backend.sh\" \"$TARGET_BUILD_DIR/$FULL_PRODUCT_NAME\"",
+				"",
+			);
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		13CB0E6D307BE25300C7CE8A /* Sources */ = {
@@ -310,11 +339,12 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 9RPQ7DDSR4;
 				ENABLE_APP_SANDBOX = YES;
-				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_INCOMING_NETWORK_CONNECTIONS = YES;
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
@@ -355,6 +385,7 @@
 				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_BLUETOOTH = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
@@ -512,6 +543,10 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../packages/BlotAPI;
 		};
+		B20000000000000000000015 /* XCLocalSwiftPackageReference "../packages/BlotDesign" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../packages/BlotDesign;
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -522,6 +557,14 @@
 		B20000000000000000000004 /* BlotAPI */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = BlotAPI;
+		};
+		B20000000000000000000012 /* BlotDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BlotDesign;
+		};
+		B20000000000000000000014 /* BlotDesign */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BlotDesign;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

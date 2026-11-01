@@ -3,6 +3,7 @@ package dev.blot.application.agent;
 import dev.blot.core.Task;
 import dev.blot.core.agent.AgentAssignment;
 import dev.blot.core.agent.AgentSession;
+import dev.blot.core.agent.AgentSessionStatus;
 import dev.blot.core.agent.AssignmentStatus;
 import dev.blot.core.agent.TaskAttempt;
 import dev.blot.core.agent.TaskAttemptStatus;

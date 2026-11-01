@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct SitesLibraryView: View {
@@ -6,27 +7,26 @@ struct SitesLibraryView: View {
     @State private var adding = false
     var body: some View {
         PageContent {
-            VStack(alignment: .leading, spacing: 0) {
-                WorkspacePageHeader(title: "Sites", detail: "Keep useful websites close to your work.") {
+            VStack(alignment: .leading, spacing: KSpace.xl) {
+                PageHeader(title: "Sites", subtitle: "Keep useful websites close to your work.") {
                     KButton(title: "Add site", icon: "plus") { adding = true }
                 }
                 if app.workspaceLibrary.sites.isEmpty {
-                    WorkspaceEmptyView(icon: WorkspaceTool.sites.icon, title: "No saved sites",
+                    EmptyState(icon: WorkspaceTool.sites.icon, title: "No saved sites",
                                        detail: "Add a website to open it from your workspace.")
                 } else {
-                    ForEach(app.workspaceLibrary.sites) { site in
-                        HStack(spacing: 12) {
-                            KIcon("globe", size: 20, color: K.text2)
-                            Button { openURL(site.url) } label: {
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(site.name).font(KFont.body(.medium)).foregroundStyle(K.text)
-                                    Text(site.url.host ?? site.url.absoluteString).font(KFont.caption()).foregroundStyle(K.text2)
-                                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                            }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
-                            IconButton(icon: "square-arrow-out-up-right", help: "Open \(site.name)") { openURL(site.url) }
-                            IconButton(icon: "trash-2", help: "Remove \(site.name)") { app.workspaceLibrary.removeSite(site.id) }
-                        }.padding(.vertical, 14)
-                        HDivider()
+                    SettingsGroup(title: "Saved sites") {
+                        ForEach(Array(app.workspaceLibrary.sites.enumerated()), id: \.element.id) { index, site in
+                            if index > 0 { SettingsDivider() }
+                            ListRow(title: site.name, subtitle: site.url.host ?? site.url.absoluteString,
+                                    action: { openURL(site.url) }) {
+                                IconTile(icon: "globe")
+                            } trailing: {
+                                IconButton(icon: "square-arrow-out-up-right", help: "Open \(site.name)") { openURL(site.url) }
+                                IconButton(icon: "trash-2", help: "Remove \(site.name)") { app.workspaceLibrary.removeSite(site.id) }
+                            }
+                            .padding(.horizontal, 4)
+                        }
                     }
                 }
             }
@@ -49,21 +49,19 @@ private struct SiteEditorView: View {
         return url
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            Text("Add site").font(KFont.ui(20, .semibold))
-            SettingsTextField(label: "Name", text: $name)
-            SettingsTextField(label: "Website URL", text: $address, required: true,
-                              error: !address.isEmpty && url == nil ? "Enter a valid http or https address without credentials." : nil)
-            HStack {
-                Spacer()
-                KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
-                KButton(title: "Add site", kind: .primary) {
-                    guard let url else { return }
-                    let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
-                    save(SavedSite(id: UUID(), name: title.isEmpty ? url.host ?? address : title, url: url))
-                    dismiss()
-                }.disabled(url == nil).keyboardShortcut(.defaultAction)
-            }
-        }.padding(24).frame(width: 460).background(K.bg).foregroundStyle(K.text)
+        KSheet("Add site", subtitle: "Saved on this Mac and shown in Sites and on your profile showcase.", width: 460) {
+            KTextField("Website URL", text: $address, placeholder: "example.com", mono: true, required: true,
+                       error: !address.isEmpty && url == nil ? "Enter a valid http or https address without credentials." : nil,
+                       autofocus: true)
+            KTextField("Name", text: $name, placeholder: "Optional", hint: "Leave empty to use the site's address.")
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            KButton(title: "Add site", kind: .primary) {
+                guard let url else { return }
+                let title = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                save(SavedSite(id: UUID(), name: title.isEmpty ? url.host ?? address : title, url: url))
+                dismiss()
+            }.disabled(url == nil).keyboardShortcut(.defaultAction)
+        }
     }
 }

@@ -5,6 +5,7 @@
 //  Created by Yaroslav Fairfieldd on 10/11/26.
 //
 
+import BlotDesign
 import SwiftUI
 
 struct ContentView: View {

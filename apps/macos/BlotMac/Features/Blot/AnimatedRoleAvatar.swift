@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 /// Role reactions settle into subtle idle motion instead of freezing the avatar.

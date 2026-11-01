@@ -1,9 +1,19 @@
 package dev.blot.api;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import com.fasterxml.jackson.databind.*;
+import dev.blot.api.workspace.security.TlsConfiguration;
 import dev.blot.application.ports.*;
+import dev.blot.application.ports.EmailSender;
+import dev.blot.application.ports.SecretStore;
+import dev.blot.application.ports.WorkspaceStore;
+import dev.blot.application.workspace.Records;
+import dev.blot.application.workspace.execution.RunService;
+import dev.blot.core.workspace.EntityKind;
+import dev.blot.core.workspace.planning.CoverageData;
+import dev.blot.core.workspace.planning.PlanStepData;
+import dev.blot.core.workspace.planning.RequirementData;
+import dev.blot.core.workspace.projects.RunData;
+import dev.blot.infrastructure.workspace.security.TlsIdentity;
 import java.net.*;
 import java.net.http.*;
 import java.nio.file.*;
@@ -14,6 +24,11 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.context.annotation.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class HttpApiTest {
   @TempDir Path directory;
@@ -106,6 +121,20 @@ class HttpApiTest {
           json.readTree(retry.body()).path("operationId"));
       var read = send(http, base, "/v2/records/CONVERSATION/" + id, "GET", null, token);
       assertEquals(200, read.statusCode());
+      var project = desktopCommand(http, base, token, "project.create", null, null,
+          Map.of("name", "Research"), UUID.randomUUID()).path("result");
+      UUID projectId = UUID.fromString(project.path("id").asText());
+      assertEquals("", project.path("data").path("repositoryPath").asText());
+      desktopCommand(http, base, token, "memory.save", projectId, null,
+          Map.of("data", Map.of("scope", "project", "status", "active", "content", "Project brief")),
+          UUID.randomUUID());
+      var projectChat = desktopCommand(http, base, token, "conversation.create", projectId, null,
+          Map.of("title", "First question"), UUID.randomUUID()).path("result");
+      desktopCommand(http, base, token, "conversation.send_message", null, null,
+          Map.of("conversationId", projectChat.path("id").asText(), "content", "Hello"), UUID.randomUUID());
+      assertEquals(projectId.toString(), projectChat.path("projectId").asText());
+      desktopCommand(http, base, token, "conversation.send_message", null, null,
+          Map.of("conversationId", id, "content", "Hello without a project"), UUID.randomUUID());
       String second = register(http, base, "second@example.com");
       assertEquals(
           404,
@@ -177,7 +206,7 @@ class HttpApiTest {
       UUID runId = UUID.fromString(run.path("id").asText());
       UUID owner = UUID.fromString(run.path("ownerId").asText());
       var store = context.getBean(WorkspaceStore.class);
-      var runs = context.getBean(dev.blot.application.workspace.RunService.class);
+      var runs = context.getBean(RunService.class);
       store.transact(
           tx ->
               runs.propose(
@@ -187,9 +216,9 @@ class HttpApiTest {
                       dev.blot.core.workspace.EntityKind.RUN,
                       owner,
                       runId,
-                      dev.blot.core.workspace.RunData.class),
+                      RunData.class),
                   List.of(
-                      new dev.blot.core.workspace.PlanStepData(
+                      new PlanStepData(
                           "build",
                           "Implement",
                           List.of("Result reviewed"),
@@ -197,8 +226,8 @@ class HttpApiTest {
                           "BACKEND",
                           List.of("."))),
                   List.of(
-                      new dev.blot.core.workspace.RequirementData("r1", "Implement the feature")),
-                  List.of(new dev.blot.core.workspace.CoverageData("r1", List.of("build")))));
+                      new RequirementData("r1", "Implement the feature")),
+                  List.of(new CoverageData("r1", List.of("build")))));
       for (String type : List.of("run.plan.approve", "run.pause", "run.resume", "run.stop")) {
         var current =
             json.readTree(send(http, base, "/v2/records/RUN/" + runId, "GET", null, token).body());
@@ -406,7 +435,7 @@ class HttpApiTest {
             "--blot.data-directory=" + directory.resolve("tls-state"),
             "--blot.worker.enabled=false",
             "--blot.automations.enabled=false")) {
-      var identity = context.getBean(dev.blot.infrastructure.workspace.TlsIdentity.class);
+      var identity = context.getBean(TlsIdentity.class);
       var trust = java.security.KeyStore.getInstance("PKCS12");
       try (var input = Files.newInputStream(identity.keystore())) {
         trust.load(input, identity.password().toCharArray());
@@ -420,7 +449,7 @@ class HttpApiTest {
       var http = HttpClient.newBuilder().sslContext(ssl).build();
       int port = ((WebServerApplicationContext) context).getWebServer().getPort();
       String token = register(http, "https://127.0.0.1:" + port, "tls@example.com");
-      int ble = context.getBean(dev.blot.api.workspace.TlsConfiguration.BleConnector.class).port();
+      int ble = context.getBean(TlsConfiguration.BleConnector.class).port();
       assertTrue(ble > 0);
       assertNotEquals(port, ble);
       var login =

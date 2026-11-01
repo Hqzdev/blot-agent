@@ -1,24 +1,27 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
+/// Settings › Instructions and Skills: instructions are stored as versioned skills.
 struct AgentSettingsView: View {
     @Environment(AppState.self) private var app
     @Bindable var settings: SettingsState
     @State private var creating = false
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(
-                "Инструкции сохраняются как версионированные навыки для выбранных ролей и проектов. Они применяются к новым сессиям и не расширяют права инструментов."
-            )
-            .font(KFont.body()).foregroundStyle(K.text2)
-            Button("Создать инструкцию для агентов") { creating = true }
-            Button("Открыть сохранённые навыки") {
-                app.showingSettings = false
-                app.product = .code
-                app.codeRoute = .skills
+        let count = app.workspace.rows("SKILL").count
+        SettingsGroup(title: "Agent instructions",
+                      detail: "Instructions are saved as versioned skills for chosen roles and projects. They apply to new sessions and never extend tool permissions.") {
+            SettingsRow(title: "New instruction", detail: "Write an instruction and choose which specialists receive it.") {
+                KButton(title: "Create…", icon: "plus", kind: .primary) { creating = true }
             }
-            Text("Сохранено навыков: \(app.workspace.rows("SKILL").count)").font(KFont.caption())
-                .foregroundStyle(K.text3)
-        }.sheet(isPresented: $creating) { SkillEditorView() }
+            SettingsDivider()
+            SettingsRow(title: "Saved skills", detail: count == 0 ? "None yet" : "\(count) saved on the server") {
+                KButton(title: "Open Skills", icon: "puzzle") {
+                    app.showingSettings = false
+                    app.openSection(.skills)
+                }
+            }
+        }
+        .sheet(isPresented: $creating) { SkillEditorView() }
     }
 }

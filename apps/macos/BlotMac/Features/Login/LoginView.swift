@@ -6,13 +6,18 @@
 //  360 pt column centred in the window, footer links at the bottom.
 //
 
+import BlotDesign
 import SwiftUI
+import BlotAPI
 
 @MainActor
 struct LoginView: View {
     @Environment(AppState.self) private var state
     @State private var model: LoginViewModel
     @State private var showSMTP = false
+    @State private var emailManaged: Bool?
+    @State private var setupError: String?
+    @State private var checkingSetup = false
 
     init(model: LoginViewModel? = nil) {
         _model = State(initialValue: model ?? LoginViewModel(lastEmail: SessionStore.lastEmail))
@@ -36,22 +41,54 @@ struct LoginView: View {
                     .frame(width: 360)
                     .padding(.bottom, 40)
                     .frame(maxWidth: .infinity, minHeight: proxy.size.height)
-                    .transition(.opacity.combined(with: .offset(y: 8)))
+                    .transition(.kAppear)
                     .id(model.screen)
                 }
                 .scrollIndicators(.never)
             }
 
-            Button("Configure email delivery on this Mac") { showSMTP = true }.font(KFont.body()).padding(.bottom, 12)
-            AuthFooter()
+            VStack(spacing: KSpace.md) {
+                if let setupError {
+                    HStack(alignment: .top, spacing: KSpace.md) {
+                        InlineFeedback(text: "Blot could not reach its server on this Mac. \(setupError)", tone: .error)
+                            .textSelection(.enabled)
+                        KButton(title: "Try again", icon: "rotate-ccw", height: 28, loading: checkingSetup) {
+                            Task { await checkSetup() }
+                        }
+                    }
+                    .frame(maxWidth: 520)
+                    .transition(.kAppear)
+                }
+                if emailManaged == false {
+                    HStack(spacing: KSpace.sm) {
+                        KIcon("mail", size: 14, color: K.text3)
+                        Text("Verification emails need an SMTP account.").font(KFont.ui(13)).foregroundStyle(K.text3)
+                        TextLink(title: "Set up email delivery…", color: K.text, weight: .medium) { showSMTP = true }
+                    }
+                }
+            }
+            .padding(.horizontal, KSpace.xl).padding(.bottom, KSpace.xl)
+            .animation(.default, value: setupError)
         }
         .background(K.bg)
         .ignoresSafeArea()
         .sheet(isPresented: $showSMTP) { SMTPSetupView() }
+        .task { await checkSetup() }
         .onChange(of: model.signedInUser) { _, user in
             guard let user else { return }
             state.signIn(user, remember: model.staySignedIn)
         }
+    }
+
+    private func checkSetup() async {
+        checkingSetup = true
+        defer { checkingSetup = false }
+        do {
+            try await BackendRuntime.shared.start()
+            let setup = try await BackendRuntime.shared.client.get("v2/setup/status", as: InstallationSetup.self)
+            emailManaged = setup.emailManaged
+            setupError = nil
+        } catch { setupError = error.localizedDescription }
     }
 }
 
@@ -71,8 +108,8 @@ private struct SignUpForm: View {
                 AuthField(label: "Email", icon: "envelope", placeholder: "you@example.com", text: $model.email,
                           autofocus: true, onSubmit: { model.sendCode() },
                           error: model.error == AuthError.invalidEmail.errorDescription ? model.error : nil)
-                AuthField(label: "Password", icon: "lock", placeholder: "At least 12 characters", text: $model.password,
-                          secure: true, onSubmit: { model.sendCode() })
+                AuthField(label: "Password", icon: "lock", placeholder: "Create a password", text: $model.password,
+                          secure: true, onSubmit: { model.sendCode() }, hint: "Use at least 12 characters.")
                 AuthErrorText(message: model.error)
                 PrimaryAuthButton(title: "Continue with email", loading: model.isLoading,
                                   action: { model.sendCode() })
@@ -111,13 +148,19 @@ private struct LogInForm: View {
 
                 HStack(spacing: 10) {
                     KToggle(isOn: $model.staySignedIn)
-                    Text("Stay signed in on this Mac")
-                        .font(KFont.body())
-                        .foregroundStyle(K.text2)
-                        .onTapGesture { withAnimation(.snappy(duration: 0.18)) { model.staySignedIn.toggle() } }
+                        .accessibilityLabel("Stay signed in on this Mac")
+                    Button { model.staySignedIn.toggle() } label: {
+                        Text("Stay signed in on this Mac")
+                            .font(KFont.body())
+                            .foregroundStyle(K.text2)
+                    }
+                    .buttonStyle(KIconButtonStyle())
+                    .focusable(false)
+                    .accessibilityHidden(true)
                     Spacer()
                 }
                 .padding(.vertical, 2)
+                .kAnimation(KMotion.quick, value: model.staySignedIn)
 
                 AuthErrorText(message: model.error)
                 PrimaryAuthButton(title: "Log in", loading: model.isLoading,
@@ -182,8 +225,7 @@ private struct AuthHeading: View {
             BlotMark()
             VStack(spacing: 8) {
                 Text(title)
-                    .font(KFont.ui(28, .semibold))
-                    .kerning(-0.5)
+                    .font(KFont.pageTitle())
                     .foregroundStyle(K.text)
                 Text(subtitle)
                     .font(KFont.body())
@@ -203,8 +245,8 @@ private struct ResetPasswordForm: View {
         VStack(spacing: 20) {
             AuthHeading(title: "Reset password", subtitle: "Enter the code from your email and a new password.")
             CodeInput(code: $model.code, disabled: model.isLoading, invalid: model.error != nil)
-            AuthField(label: "New password", icon: "lock", placeholder: "At least 12 characters", text: $model.password,
-                      secure: true, onSubmit: { model.resetPassword() })
+            AuthField(label: "New password", icon: "lock", placeholder: "New password", text: $model.password,
+                      secure: true, onSubmit: { model.resetPassword() }, hint: "Use at least 12 characters.")
             AuthErrorText(message: model.error)
             PrimaryAuthButton(title: "Change password", loading: model.isLoading,
                               enabled: model.code.count == 6, action: { model.resetPassword() })
@@ -213,6 +255,7 @@ private struct ResetPasswordForm: View {
     }
 }
 
+/// Auth form field: the shared «Text Field» at the large size.
 private struct AuthField: View {
     let label: String
     let icon: String
@@ -223,52 +266,16 @@ private struct AuthField: View {
     var onSubmit: () -> Void = {}
     var trailingLink: (title: String, action: () -> Void)?
     var error: String?
-
-    @FocusState private var focused: Bool
+    /// Requirement that must stay visible while typing (the placeholder disappears).
+    var hint: String?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(label)
-                    .font(KFont.body(.medium))
-                    .foregroundStyle(K.text2)
-                Spacer()
-                if let trailingLink {
-                    TextLink(title: trailingLink.title, size: 12, action: trailingLink.action)
-                }
-            }
-
-            HStack(spacing: 10) {
-                KIcon(icon, size: 14, color: K.text3)
-                Group {
-                    if secure {
-                        SecureField(placeholder, text: $text)
-                    } else {
-                        TextField(placeholder, text: $text)
-                            .textContentType(.username)
-                    }
-                }
-                .textFieldStyle(.plain)
-                .font(KFont.body())
-                .foregroundStyle(K.text)
-                .focused($focused)
-                .accessibilityLabel(label)
-                .accessibilityHint(error ?? "")
-                .onSubmit(onSubmit)
-            }
-            .padding(.horizontal, 12)
-            .frame(height: 40)
-            .background(RoundedRectangle(cornerRadius: K.rMd, style: .continuous).fill(K.bg))
-            .overlay(
-                RoundedRectangle(cornerRadius: K.rMd, style: .continuous)
-                    .strokeBorder(error != nil ? K.danger : focused ? K.focus : K.borderStrong, lineWidth: focused ? 2 : 1)
-            )
-            .contentShape(Rectangle())
-            .onTapGesture { focused = true }
-        }
-        .onAppear {
-            if autofocus { focused = true }
-        }
+        // The error text is shown once under the form, so the field only turns red.
+        KTextField(label, text: $text, placeholder: placeholder, icon: icon, secure: secure, large: true,
+                   invalid: error != nil, hint: hint, autofocus: autofocus,
+                   contentType: secure ? .password : .username,
+                   trailingLink: trailingLink.map { FieldLink(title: $0.title, action: $0.action) },
+                   onSubmit: onSubmit)
     }
 }
 
@@ -325,7 +332,7 @@ private struct CodeInput: View {
             RoundedRectangle(cornerRadius: K.rMd, style: .continuous)
                 .strokeBorder(invalid ? K.danger : active ? K.focus : K.borderStrong, lineWidth: active ? 2 : 1)
         )
-        .animation(.snappy(duration: 0.15), value: code)
+        .animation(KMotion.quick, value: code)
     }
 }
 
@@ -355,13 +362,13 @@ private struct PrimaryAuthButton: View {
                 if loading {
                     ProgressView()
                         .controlSize(.small)
-                        .tint(K.onInverse)
                 }
             }
             .frame(maxWidth: .infinity)
         }
-        .buttonStyle(KButtonStyle(kind: .primary, height: 40))
-        .kFocusRing()
+        // Sign-in is the one pill-shaped control in the system.
+        .buttonStyle(BlotButtonStyle(.pill, size: .large, fullWidth: true))
+        .kFocusRing(radius: K.controlHeightLarge / 2)
         .accessibilityLabel(loading ? "\(title), waiting" : title)
         .disabled(!enabled || loading)
     }
@@ -372,15 +379,9 @@ private struct AuthErrorText: View {
 
     var body: some View {
         if let message {
-            HStack(alignment: .top, spacing: 6) {
-                KIcon("exclamationmark.circle", size: 13, color: K.danger)
-                Text(message)
-                    .font(KFont.body())
-                    .foregroundStyle(K.danger)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }
-            .transition(.opacity)
+            InlineFeedback(text: message, tone: .error)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .transition(.kAppear)
         }
     }
 }
@@ -397,37 +398,5 @@ private struct SwitchPrompt: View {
                 .foregroundStyle(K.text2)
             TextLink(title: link, color: K.text, weight: .medium, action: action)
         }
-    }
-}
-
-private struct TextLink: View {
-    let title: String
-    var color: Color = K.text2
-    var weight: KFont.Weight = .regular
-    var size: CGFloat = 13
-    let action: () -> Void
-    @State private var hovering = false
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(KFont.ui(size, weight))
-                .foregroundStyle(color)
-                .underline(hovering)
-        }
-        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
-        .onHover { hovering = $0 }
-    }
-}
-
-private struct AuthFooter: View {
-    var body: some View {
-        HStack(spacing: 20) {
-            ForEach(["Terms", "Privacy", "Status", "Help"], id: \.self) { title in
-                TextLink(title: title, color: K.text3, size: 12) {}
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 52)
     }
 }

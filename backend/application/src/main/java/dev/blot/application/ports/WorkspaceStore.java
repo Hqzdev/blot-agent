@@ -1,6 +1,11 @@
 package dev.blot.application.ports;
 
 import dev.blot.core.workspace.*;
+import dev.blot.core.workspace.Entity;
+import dev.blot.core.workspace.EntityKind;
+import dev.blot.core.workspace.conversation.MessageData;
+import dev.blot.core.workspace.conversation.SummaryData;
+import dev.blot.core.workspace.identity.AuthSessionData;
 import java.util.*;
 import java.util.function.Function;
 

@@ -7,6 +7,7 @@
 
 import Foundation
 import Observation
+import BlotDesign
 import SwiftUI
 
 enum AuthScreen: Equatable {
@@ -72,7 +73,7 @@ final class LoginViewModel {
     func show(_ screen: AuthScreen) {
         error = nil
         password = ""
-        withAnimation(.snappy(duration: 0.25)) { self.screen = screen }
+        withAnimation(KMotion.standard) { self.screen = screen }
     }
 
     func useDifferentEmail() {
@@ -109,7 +110,7 @@ final class LoginViewModel {
                 isLoading = false
                 code = ""
                 startCountdown()
-                withAnimation(.snappy(duration: 0.25)) { screen = .verify }
+                withAnimation(KMotion.standard) { screen = .verify }
             } catch {
                 isLoading = false
                 self.error = error.localizedDescription
@@ -175,7 +176,7 @@ final class LoginViewModel {
     }
 
     private func fail(_ error: AuthError) {
-        withAnimation(.snappy(duration: 0.2)) { self.error = error.errorDescription }
+        withAnimation(KMotion.quick) { self.error = error.errorDescription }
     }
 
     private func run(clearCodeOnError: Bool = false, _ operation: @escaping () async throws -> AuthUser) {
@@ -190,7 +191,7 @@ final class LoginViewModel {
             } catch {
                 isLoading = false
                 if clearCodeOnError { code = "" }
-                withAnimation(.snappy(duration: 0.2)) { self.error = error.localizedDescription }
+                withAnimation(KMotion.quick) { self.error = error.localizedDescription }
             }
         }
     }

@@ -1,9 +1,89 @@
 package dev.blot.api.workspace;
 
+import dev.blot.api.workspace.commands.BasicCommands;
+import dev.blot.api.workspace.commands.GitCommands;
+import dev.blot.api.workspace.commands.LibraryCommands;
+import dev.blot.api.workspace.commands.WorkflowCommands;
+import dev.blot.api.workspace.installation.InstallationConfiguration;
 import dev.blot.application.ports.*;
+import dev.blot.application.ports.ArtifactStore;
+import dev.blot.application.ports.EmailSender;
+import dev.blot.application.ports.GitGateway;
+import dev.blot.application.ports.JsonCodec;
+import dev.blot.application.ports.PasswordHasher;
+import dev.blot.application.ports.ProcessGateway;
+import dev.blot.application.ports.ProjectAccess;
+import dev.blot.application.ports.ProviderGateway;
+import dev.blot.application.ports.SecretStore;
+import dev.blot.application.ports.WorkspaceStore;
 import dev.blot.application.workspace.*;
-import dev.blot.core.workspace.ProfileData;
+import dev.blot.application.workspace.Records;
+import dev.blot.application.workspace.WorkspaceMaintenance;
+import dev.blot.application.workspace.agent.AgentCommunicationTools;
+import dev.blot.application.workspace.agent.AgentExecutionService;
+import dev.blot.application.workspace.agent.AgentFiles;
+import dev.blot.application.workspace.agent.AgentResultService;
+import dev.blot.application.workspace.agent.DelegationService;
+import dev.blot.application.workspace.agent.RoleCatalog;
+import dev.blot.application.workspace.artifact.ArtifactMaintenance;
+import dev.blot.application.workspace.automation.AutomationService;
+import dev.blot.application.workspace.billing.BudgetService;
+import dev.blot.application.workspace.billing.BudgetedProvider;
+import dev.blot.application.workspace.commands.CommandDispatcher;
+import dev.blot.application.workspace.commands.ToolDefinitions;
+import dev.blot.application.workspace.conversation.ContextBuilder;
+import dev.blot.application.workspace.conversation.ContextCompactor;
+import dev.blot.application.workspace.conversation.ConversationLifecycle;
+import dev.blot.application.workspace.conversation.ConversationService;
+import dev.blot.application.workspace.conversation.MemoryService;
+import dev.blot.application.workspace.conversation.SessionService;
+import dev.blot.application.workspace.data.DataLifecycleService;
+import dev.blot.application.workspace.execution.GenerationStateService;
+import dev.blot.application.workspace.execution.GenerationWorker;
+import dev.blot.application.workspace.execution.PreparedActionExecutor;
+import dev.blot.application.workspace.execution.RetryService;
+import dev.blot.application.workspace.execution.RetryingProvider;
+import dev.blot.application.workspace.execution.RunService;
+import dev.blot.application.workspace.execution.SerializedProvider;
+import dev.blot.application.workspace.execution.ToolHistory;
+import dev.blot.application.workspace.execution.ToolRecoveryService;
+import dev.blot.application.workspace.execution.ToolService;
+import dev.blot.application.workspace.execution.WorkflowScheduler;
+import dev.blot.application.workspace.git.GitOperationService;
+import dev.blot.application.workspace.git.GitPreparationService;
+import dev.blot.application.workspace.identity.AccountService;
+import dev.blot.application.workspace.identity.DeviceService;
+import dev.blot.application.workspace.identity.EmailChallengeService;
+import dev.blot.application.workspace.identity.TokenGenerator;
+import dev.blot.application.workspace.integrations.IntegrationService;
+import dev.blot.application.workspace.library.LegacyImportService;
+import dev.blot.application.workspace.library.LibraryService;
+import dev.blot.application.workspace.permissions.PermissionService;
+import dev.blot.application.workspace.profile.ProfileService;
+import dev.blot.application.workspace.projects.ProjectService;
+import dev.blot.application.workspace.providers.ModelStreamingService;
+import dev.blot.application.workspace.providers.ProviderCertificateService;
+import dev.blot.application.workspace.providers.ProviderSettingsService;
+import dev.blot.application.workspace.review.ReviewService;
+import dev.blot.application.workspace.statistics.StatisticsService;
+import dev.blot.core.workspace.profile.ProfileData;
 import dev.blot.infrastructure.workspace.*;
+import dev.blot.infrastructure.workspace.InstallationLock;
+import dev.blot.infrastructure.workspace.JacksonCodec;
+import dev.blot.infrastructure.workspace.git.LocalWorkspaceCleaner;
+import dev.blot.infrastructure.workspace.artifacts.LocalArtifactStore;
+import dev.blot.infrastructure.workspace.database.SqliteWorkspaceStore;
+import dev.blot.infrastructure.workspace.execution.MacPlatformBridge;
+import dev.blot.infrastructure.workspace.execution.VirtualMachineProcessGateway;
+import dev.blot.infrastructure.workspace.git.LocalGitGateway;
+import dev.blot.infrastructure.workspace.projects.LocalProjectAccess;
+import dev.blot.infrastructure.workspace.projects.MacProjectAccess;
+import dev.blot.infrastructure.workspace.provider.GigaChatGateway;
+import dev.blot.infrastructure.workspace.provider.SmtpEmailSender;
+import dev.blot.infrastructure.workspace.security.ArgonPasswordHasher;
+import dev.blot.infrastructure.workspace.security.ConfiguredSecretStore;
+import dev.blot.infrastructure.workspace.security.MacKeychainSecretStore;
+import dev.blot.infrastructure.workspace.provider.PemCertificates;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.nio.file.*;
@@ -11,6 +91,7 @@ import java.time.*;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.*;
+import org.springframework.core.env.Environment;
 
 /** Единственное место выбора реальных адаптеров. */
 @Configuration
@@ -61,8 +142,13 @@ public class WorkspaceConfiguration {
   }
 
   @Bean
-  SecretStore secrets(MacPlatformBridge bridge) {
-    return new MacKeychainSecretStore(bridge);
+  InstallationConfiguration installationConfiguration(Environment environment) {
+    return new InstallationConfiguration(environment);
+  }
+
+  @Bean
+  SecretStore secrets(MacPlatformBridge bridge, InstallationConfiguration configuration) {
+    return new ConfiguredSecretStore(configuration.secrets(), new MacKeychainSecretStore(bridge));
   }
 
   @Bean
@@ -123,8 +209,9 @@ public class WorkspaceConfiguration {
   }
 
   @Bean
-  ProviderSettingsService settings(WorkspaceStore store, Records records) {
-    return new ProviderSettingsService(store, records);
+  ProviderSettingsService settings(
+      WorkspaceStore store, Records records, InstallationConfiguration configuration) {
+    return new ProviderSettingsService(store, records, configuration.provider());
   }
 
   @Bean(initMethod = "recover")
@@ -257,8 +344,12 @@ public class WorkspaceConfiguration {
 
   @Bean
   ProfileService profiles(
-      WorkspaceStore store, Records records, RoleCatalog roles, ToolDefinitions tools) {
-    return new ProfileService(store, records, roles, tools);
+      WorkspaceStore store,
+      Records records,
+      RoleCatalog roles,
+      ToolDefinitions tools,
+      ProviderSettingsService settings) {
+    return new ProfileService(store, records, roles, tools, settings);
   }
 
   @Bean

@@ -5,6 +5,7 @@
 //  Reusable building blocks from agent.pen → «Components — Atoms / Rows / Blocks / Shell».
 //
 
+import BlotDesign
 import SwiftUI
 
 // MARK: - Icon
@@ -207,134 +208,109 @@ private extension Edge {
 // MARK: - Button
 
 enum KButtonKind {
-    case standard   // surface-2 + border
-    case primary    // inverse fill (white in dark theme)
+    case standard   // panel fill + hairline border
+    case primary    // ink fill (paper in the dark theme)
     case ghost      // no fill until hover
-    case danger
+    case danger     // destructive: bordered, semibold label; pair with a clear verb or icon
 }
 
+/// Neutral bordered buttons from BlotDesign: fill and outline show hover, press, focus and
+/// disabled states; nothing is tinted.
 struct KButtonStyle: ButtonStyle {
     var kind: KButtonKind = .standard
     var height: CGFloat = K.controlHeight
+    var fullWidth = false
 
     func makeBody(configuration: Configuration) -> some View {
-        KButtonBody(configuration: configuration, kind: kind, height: height)
+        BlotButtonStyle(kind.blotKind, size: height >= K.controlHeightLarge ? .large : height < K.controlHeight ? .compact : .regular,
+                        fullWidth: fullWidth)
+            .makeBody(configuration: configuration)
     }
 }
 
-private struct KButtonBody: View {
-    @Environment(\.isEnabled) private var enabled
-    let configuration: ButtonStyleConfiguration
-    let kind: KButtonKind
-    let height: CGFloat
-    @State private var hovering = false
-
-    var body: some View {
-        configuration.label
-            .font(KFont.body(.medium))
-            .foregroundStyle(foreground)
-            .padding(.horizontal, KSpace.lg)
-            .frame(height: height)
-            .background(RoundedRectangle(cornerRadius: K.rMd, style: .continuous).fill(fill))
-            .overlay(RoundedRectangle(cornerRadius: K.rMd, style: .continuous).strokeBorder(stroke, lineWidth: 1))
-            .opacity(!enabled ? 0.45 : configuration.isPressed ? 0.8 : 1)
-            .contentShape(Rectangle())
-            .onHover { hovering = enabled && $0 }
-    }
-
-    private var foreground: Color {
-        switch kind {
-        case .primary: K.onInverse
-        case .danger: K.danger
-        default: K.text
-        }
-    }
-
-    private var fill: Color {
-        switch kind {
-        case .standard: hovering ? K.selected : K.surface2
-        case .primary: K.inverse.opacity(hovering ? 0.9 : 1)
-        case .ghost: hovering ? K.hover : .clear
-        case .danger: hovering ? K.dangerBg : K.surface2
-        }
-    }
-
-    private var stroke: Color {
-        switch kind {
-        case .primary: K.inverse
-        case .ghost: .clear
-        default: K.border
+extension KButtonKind {
+    var blotKind: BlotButtonKind {
+        switch self {
+        case .standard: .secondary
+        case .primary: .primary
+        case .ghost: .ghost
+        case .danger: .destructive
         }
     }
 }
 
-/// Button with optional leading SF Symbol, as in the «Button» component.
+/// «Button» from agent.pen: 32 pt, 13 pt medium label, optional 14 pt leading icon.
+/// `loading` swaps the icon for a spinner and blocks repeated presses.
 struct KButton: View {
     let title: String
     var icon: String?
     var kind: KButtonKind = .standard
     var height: CGFloat = K.controlHeight
+    var loading = false
+    var fullWidth = false
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                if let icon {
+                if loading {
+                    ProgressView().controlSize(.mini)
+                        .tint(kind == .primary ? K.onInverse : K.text2)
+                        .frame(width: 14, height: 14)
+                } else if let icon {
                     HugeIconImage(icon, size: 14)
                 }
-                Text(title)
-                    .lineLimit(1)
+                Text(title).lineLimit(1)
             }
         }
-        .buttonStyle(KButtonStyle(kind: kind, height: height))
+        .buttonStyle(KButtonStyle(kind: kind, height: height, fullWidth: fullWidth))
+        .disabled(loading)
         .kFocusRing()
+        .accessibilityLabel(loading ? "\(title), in progress" : title)
     }
 }
 
+/// «Icon Button» from agent.pen: 28 × 28, radius 6, 16 pt glyph.
 struct IconButton: View {
     let icon: String
-    var size: CGFloat = 32
+    var size: CGFloat = K.iconButtonSize
     var iconSize: CGFloat = 16
     var color: Color = K.text2
+    var active = false
     var help: String?
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            KIcon(icon, size: iconSize, color: color)
+            KIcon(icon, size: iconSize, color: active ? K.text : color)
                 .frame(width: size, height: size)
-                .kHover(radius: K.rSm)
         }
-        .buttonStyle(KIconButtonStyle())
-        .kFocusRing(radius: K.rSm)
-        .accessibilityLabel(help ?? icon)
+        .buttonStyle(BlotIconButtonStyle(size: size, selected: active))
+        .kFocusRing(radius: K.rMd)
+        .accessibilityLabel(help?.kSpokenTitle ?? icon)
+        .accessibilityAddTraits(active ? .isSelected : [])
         .help(help ?? "")
     }
 }
 
-/// Filled circular send button from the composer.
+/// Ink send button with an arrow from BlotDesign. Shows a spinner while a message is being sent.
 struct SendButton: View {
     var enabled = true
-    var size: CGFloat = 36
+    var sending = false
+    var size: CGFloat = 28
     var action: () -> Void = {}
 
     var body: some View {
-        Button(action: action) {
-            HugeIconImage("arrow-up", size: 16)
-                .foregroundStyle(K.onInverse)
-                .frame(width: size, height: size)
-                .background(Circle().fill(enabled ? K.inverse : K.text3))
-        }
-        .buttonStyle(KIconButtonStyle())
-        .disabled(!enabled)
-        .kFocusRing(radius: size / 2)
-        .accessibilityLabel("Send message")
-        .help(enabled ? "Send message" : "Enter a message to send")
+        BlotSendButton(phase: sending ? .sending : .ready, size: size, action: action)
+            .disabled(!enabled || sending)
+            .kFocusRing(radius: K.rMd)
+            .help(sending ? "Отправка…" : enabled ? "Отправить · Return" : "Введите сообщение")
     }
 }
 
 // MARK: - Chip / Badge / Dot
 
+/// «Chip» from agent.pen: 28 pt, 13 pt label, optional icon and chevron.
 struct Chip: View {
     var icon: String?
     let label: String
@@ -347,7 +323,7 @@ struct Chip: View {
         HStack(spacing: 6) {
             if let icon { KIcon(icon, size: 14, color: color) }
             Text(label)
-                .font(mono ? KFont.mono(12) : KFont.body())
+                .font(mono ? KFont.mono(12) : KFont.ui(13))
                 .foregroundStyle(color)
                 .lineLimit(1)
             if chevron {
@@ -355,7 +331,7 @@ struct Chip: View {
             }
         }
         .padding(.horizontal, 8)
-        .frame(height: 28)
+        .frame(minHeight: 28)
         .overlay {
             if bordered {
                 RoundedRectangle(cornerRadius: K.rMd, style: .continuous).strokeBorder(K.border, lineWidth: 1)
@@ -381,10 +357,11 @@ struct MenuChip: View {
     }
 }
 
+/// Tag: mono label on the tag fill with square corners.
 struct Badge: View {
     let text: String
-    var fg: Color = K.text2
-    var bg: Color = K.surface2
+    var fg: Color = K.text
+    var bg: Color = BlotColor.tag
 
     var body: some View {
         Text(text)
@@ -392,7 +369,7 @@ struct Badge: View {
             .foregroundStyle(fg)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(bg))
+            .background(Rectangle().fill(bg))
             .lineLimit(1)
             .fixedSize()
     }
@@ -409,30 +386,16 @@ struct StatusDot: View {
 
 // MARK: - Toggle
 
-/// «Toggle» component: 30 × 18, inverse track when on.
+/// Native switch preserves keyboard, accessibility and appearance behavior.
 struct KToggle: View {
     @Binding var isOn: Bool
 
     var body: some View {
-        Button {
-            withAnimation(.snappy(duration: 0.18)) { isOn.toggle() }
-        } label: {
-            ZStack(alignment: isOn ? .trailing : .leading) {
-                Capsule()
-                    .fill(isOn ? K.inverse : K.selected)
-                    .overlay(Capsule().strokeBorder(isOn ? Color.clear : K.border, lineWidth: 1))
-                Circle()
-                    .fill(isOn ? K.onInverse : K.text3)
-                    .frame(width: 14, height: 14)
-                    .padding(2)
-            }
-            .frame(width: 30, height: 18)
-            .contentShape(Capsule())
-        }
-        .buttonStyle(KIconButtonStyle())
-        .accessibilityAddTraits(.isToggle)
-        .kFocusRing(radius: K.rSm)
-        .accessibilityValue(isOn ? "On" : "Off")
+        Toggle("Enabled", isOn: $isOn)
+            .labelsHidden()
+            .toggleStyle(.switch)
+            .controlSize(.small)
+            .tint(K.inverse)
     }
 }
 
@@ -442,45 +405,24 @@ struct KSegmented<Option: Hashable>: View {
     let options: [Option]
     @Binding var selection: Option
     var label: (Option) -> String
-    var icon: ((Option) -> String?)?
-    var height: CGFloat = 30
-    var fontSize: CGFloat = 14
+    var title = "View"
 
     var body: some View {
-        HStack(spacing: 2) {
+        Picker(title, selection: $selection) {
             ForEach(options, id: \.self) { option in
-                let active = option == selection
-                Button {
-                    withAnimation(.snappy(duration: 0.2)) { selection = option }
-                } label: {
-                    HStack(spacing: 6) {
-                        if let name = icon?(option) {
-                            KIcon(name, size: 14, color: active ? K.text : K.text2)
-                        }
-                        Text(label(option))
-                            .font(KFont.ui(fontSize, active ? .medium : .regular))
-                            .foregroundStyle(active ? K.text : K.text2)
-                    }
-                    .padding(.horizontal, 8)
-                    .frame(height: height - 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(active ? K.selected : Color.clear)
-                    )
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
-                .accessibilityAddTraits(active ? .isSelected : [])
+                Text(label(option)).tag(option)
             }
         }
-        .padding(3)
-        .frame(height: height)
-        .overlay(RoundedRectangle(cornerRadius: K.rMd, style: .continuous).strokeBorder(K.border, lineWidth: 1))
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .fixedSize(horizontal: true, vertical: false)
     }
 }
 
 // MARK: - Sidebar rows
 
+/// «Sidebar Item» from agent.pen: 29 pt row, 16 pt icon, 14 pt label, 12 pt meta, radius 6.
+/// `indented` rows (tasks under a project) align with the parent's label and use secondary text.
 struct SidebarItem: View {
     var icon: String?
     let label: String
@@ -488,55 +430,82 @@ struct SidebarItem: View {
     var metaColor: Color = K.text3
     var dot: Color?
     var active = false
-    var labelColor: Color = K.text
-    var leadingIndent = false
+    var indented = false
+    var labelColor: Color?
     var action: () -> Void = {}
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 if let icon {
                     KIcon(icon, size: 16, color: active ? K.text : K.text2)
-                } else if leadingIndent {
-                    Color.clear.frame(width: 16, height: 16)
                 }
                 Text(label)
-                    .font(KFont.body())
-                    .foregroundStyle(labelColor)
+                    .font(KFont.label(active ? .medium : .regular))
+                    .foregroundStyle(labelColor ?? (active || !indented ? K.text : K.text2))
                     .lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 if let dot {
-                    StatusDot(color: dot, size: 7)
+                    StatusDot(color: dot, size: 6).accessibilityHidden(true)
                 } else if let meta {
-                    Text(meta).font(KFont.body()).foregroundStyle(metaColor)
+                    Text(meta).font(KFont.caption()).foregroundStyle(metaColor).lineLimit(1)
                 }
             }
-            .padding(.horizontal, 10)
-            .frame(height: K.sidebarRowHeight)
+            .padding(.leading, indented ? 34 : 10)
+            .padding(.trailing, 10)
+            .padding(.vertical, 6)
+            .frame(minHeight: K.sidebarRowHeight)
+            .contentShape(Rectangle())
             .kHover(radius: K.rMd, active: active)
         }
-        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
         .accessibilityAddTraits(active ? .isSelected : [])
     }
 }
 
+/// «Section Label» from agent.pen: 12 pt medium, tertiary, optional trailing action.
 struct SectionLabel: View {
     let title: String
-    var actionIcon: String? = "plus"
+    var actionIcon: String?
+    var actionHelp: String?
     var action: () -> Void = {}
 
     var body: some View {
         HStack {
             Text(title)
-                .font(KFont.body(.medium))
+                .font(KFont.caption(.medium))
                 .foregroundStyle(K.text3)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .accessibilityAddTraits(.isHeader)
             if let actionIcon {
-                Button(action: action) { KIcon(actionIcon, size: 14, color: K.text3) }
-                    .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+                IconButton(icon: actionIcon, size: 20, iconSize: 14, color: K.text3, help: actionHelp ?? title, action: action)
             }
         }
-        .padding(EdgeInsets(top: 16, leading: 10, bottom: 6, trailing: 10))
+        .padding(EdgeInsets(top: 16, leading: 10, bottom: 6, trailing: 6))
+    }
+}
+
+/// Collapsible «Section Label» (Pinned, Archived).
+struct SectionDisclosure: View {
+    let title: String
+    @Binding var expanded: Bool
+    var help: String?
+
+    var body: some View {
+        Button { expanded.toggle() } label: {
+            HStack(spacing: 4) {
+                Text(title).font(KFont.caption(.medium)).foregroundStyle(K.text3)
+                KIcon("chevron-down", size: 10, color: K.text3)
+                    .rotationEffect(.degrees(expanded ? 0 : -90))
+                Spacer(minLength: 0)
+            }
+            .padding(EdgeInsets(top: 16, leading: 10, bottom: 6, trailing: 10))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+        .kAnimation(KMotion.quick, value: expanded)
+        .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+        .help(help ?? "")
     }
 }
 
@@ -548,7 +517,7 @@ struct FaceAvatar: View {
     var size: CGFloat = 32
 
     var body: some View {
-        BlotDrawing(role: role, framing: .avatar)
+        BlotDrawing(role: role.blotRole, framing: .avatar)
             .frame(width: size, height: size)
             .accessibilityLabel(role.title)
     }
@@ -564,7 +533,7 @@ struct InitialsAvatar: View {
 
     var body: some View {
         Text(initials)
-            .font(KFont.ui(size * 0.42, weight))
+            .font(.system(size: size * 0.42, weight: weight.system))
             .foregroundStyle(foreground)
             .frame(width: size, height: size)
             .background(Circle().fill(fill))
@@ -582,6 +551,15 @@ struct HDivider: View {
 struct VDivider: View {
     var color: Color = K.border
     var body: some View { Rectangle().fill(color).frame(width: 1) }
+}
+
+extension String {
+    /// Tooltip text without its shortcut suffix («Hide sidebar · ⌃⌘S» → «Hide sidebar»), for
+    /// accessibility labels. The shortcut stays in the tooltip and the menu bar.
+    var kSpokenTitle: String {
+        guard let range = range(of: " · ") else { return self }
+        return String(self[..<range.lowerBound])
+    }
 }
 
 /// Text with `seconds` formatted like «1m 12s».

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -7,12 +8,12 @@ struct ImageLibraryView: View {
     @State private var error: String?
     var body: some View {
         PageContent {
-            VStack(alignment: .leading, spacing: 0) {
-                WorkspacePageHeader(title: "Images", detail: "Images saved in your workspace on this Mac.") {
+            VStack(alignment: .leading, spacing: KSpace.xl) {
+                PageHeader(title: "Images", subtitle: "Images saved in your workspace on this Mac.") {
                     KButton(title: "Import images", icon: "plus") { importing = true }
                 }
                 if app.workspaceLibrary.images.isEmpty {
-                    WorkspaceEmptyView(icon: WorkspaceTool.images.icon, title: "Your image library",
+                    EmptyState(icon: WorkspaceTool.images.icon, title: "Your image library",
                                        detail: "Import images to browse and preview them here.")
                 } else {
                     LazyVGrid(columns: [GridItem(.adaptive(minimum: 180))], spacing: 20) {
@@ -47,10 +48,12 @@ private struct LibraryImageCell: View {
                     else if error != nil { KIcon("photo", size: 28, color: K.text3) }
                     else { SkeletonBlock() }
                 }.frame(maxWidth: .infinity).frame(height: 150)
-                    .background(K.surface2, in: RoundedRectangle(cornerRadius: K.rMd))
+                    .background(K.surface2, in: RoundedRectangle(cornerRadius: K.rLg, style: .continuous))
+                    .clipShape(RoundedRectangle(cornerRadius: K.rLg, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).strokeBorder(K.border, lineWidth: 1))
                     .contentShape(Rectangle())
             }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).disabled(image == nil).accessibilityLabel("Preview \(item.name)")
-            Text(item.name).font(KFont.body()).foregroundStyle(K.text).lineLimit(1)
+            Text(item.name).font(KFont.ui(13)).foregroundStyle(K.text).lineLimit(1)
             if let error { Text(error).font(KFont.caption()).foregroundStyle(K.text2).lineLimit(2) }
         }
         .loadingTransition(isLoading: image == nil && error == nil)
@@ -65,16 +68,14 @@ private struct LibraryImageCell: View {
                 self.error = error.localizedDescription
             }
         }
-        .contextMenu { Button("Remove from library", action: remove) }
+        .contextMenu { Button("Remove from library", role: .destructive, action: remove) }
         .sheet(isPresented: $previewing) {
-            VStack(spacing: 16) {
-                HStack {
-                    Text(item.name).font(KFont.body(.medium))
-                    Spacer()
-                    IconButton(icon: "x", help: "Close preview") { previewing = false }
-                }
-                if let image { Image(nsImage: image).resizable().scaledToFit().frame(maxHeight: 500) }
-            }.padding(24).frame(width: 700).background(K.bg)
+            KSheet(item.name, width: 700) {
+                if let image { Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity, maxHeight: 500) }
+            } footer: {
+                KButton(title: "Remove from library", icon: "trash-2", kind: .danger) { previewing = false; remove() }
+                KButton(title: "Done", kind: .primary) { previewing = false }.keyboardShortcut(.defaultAction)
+            }
         }
     }
 }

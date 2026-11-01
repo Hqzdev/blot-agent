@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct WorkspaceMoreMenu: View {
@@ -9,9 +10,10 @@ struct WorkspaceMoreMenu: View {
         Button(action: toggle) {
             KIcon("ellipsis", size: 20)
                 .frame(width: K.railButtonSize, height: K.railButtonSize)
-                .kHover(radius: 10, active: presented)
+                .kHover(radius: K.rMd, active: presented)
         }
-        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+        .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
+        .help("More tools")
         .accessibilityLabel("More")
         .background(KMenuAnchorView(anchor: anchor))
         .onDisappear { if presented { KMenuController.shared.close() } }
@@ -54,10 +56,8 @@ struct WorkspaceMoreMenuCard: View {
                 }
             }
         }
-        .padding(8).frame(width: 230)
-        .background(K.surface2, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(K.border, lineWidth: 1))
-        .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
+        .padding(6).frame(width: 230)
+        .kPopover()
     }
 }
 
@@ -68,13 +68,13 @@ private struct WorkspaceMenuRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 9) {
-                KIcon(icon, size: 16, color: K.text)
-                Text(title).font(KFont.body()).foregroundStyle(K.text).lineLimit(1)
+            HStack(spacing: 8) {
+                KIcon(icon, size: 16, color: K.text2)
+                Text(title).font(KFont.ui(13)).foregroundStyle(K.text).lineLimit(1)
                 Spacer(minLength: 0)
             }
-            .padding(.leading, 6).frame(height: 29).contentShape(Rectangle())
-            .kHover(radius: 7)
-        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+            .padding(.horizontal, 10).frame(height: 30).contentShape(Rectangle())
+            .kHover(radius: K.rMd)
+        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 struct ConversationRow: View {
@@ -23,19 +24,23 @@ struct ConversationRow: View {
         HStack(spacing: 0) {
             Button(action: open) {
                 HStack(spacing: 6) {
-                    Text(item.title).font(KFont.body(unread ? .semibold : .regular))
-                        .foregroundStyle(selected || unread ? K.text : K.text2)
+                    Text(item.title).font(KFont.label(unread ? .semibold : selected ? .medium : .regular))
+                        .foregroundStyle(K.text)
                         .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                    if unread { StatusDot(color: K.focus, size: 5).accessibilityHidden(true) }
-                    else if item.running { StatusDot(color: K.success, size: 4).accessibilityHidden(true) }
+                    if item.running {
+                        KIcon("activity", size: 12, color: K.success).accessibilityHidden(true)
+                            .help("Running")
+                    } else if unread {
+                        StatusDot(color: K.focus, size: 6).accessibilityHidden(true)
+                    }
                 }
-                .padding(.leading, indented ? 32 : 10).padding(.trailing, 6)
+                .padding(.leading, indented ? 34 : 10).padding(.trailing, 6)
                 .frame(height: K.sidebarRowHeight).contentShape(Rectangle())
             }
             .focused($focused, equals: .open)
             .buttonStyle(KIconButtonStyle()).overlay { focusOutline(for: .open) }
             .accessibilityAddTraits(selected ? .isSelected : [])
-            .accessibilityValue(unread ? "Unread" : "Read")
+            .accessibilityValue([item.running ? "Running" : nil, unread ? "Unread" : nil].compactMap { $0 }.joined(separator: ", "))
             .help(item.title)
 
             if actionsVisible {

@@ -1,9 +1,12 @@
+import BlotDesign
 import BlotAPI
 import Foundation
 
 extension AppState {
     var projects: [ProjectItem] {
-        workspace.rows("PROJECT").filter { !$0.data.flag("archived") }.map { project in
+        workspace.rows("PROJECT").filter {
+            !$0.data.flag("archived") && !$0.data.text("repositoryPath").isEmpty
+        }.map { project in
             ProjectItem(
                 id: project.id.uuidString, name: project.data.text("name"),
                 tasks:
@@ -64,6 +67,14 @@ extension AppState {
 }
 
 extension AgentRole {
+    /// Title for a backend role string; roles without a portrait are shown humanised («DATA_ENGINEER» → «Data engineer»).
+    static func displayName(_ role: String) -> String {
+        let known = backendRole(role)
+        if known != .blot || role.uppercased() == "BLOT" { return known.title }
+        let words = role.replacingOccurrences(of: "_", with: " ").lowercased()
+        return words.isEmpty ? "Specialist" : words.prefix(1).uppercased() + words.dropFirst()
+    }
+
     static func backendRole(_ role: String) -> AgentRole {
         switch role {
         case "BACKEND": .backend
