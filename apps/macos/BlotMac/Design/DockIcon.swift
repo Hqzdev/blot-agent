@@ -8,6 +8,7 @@
 //
 
 import AppKit
+import BlotDesign
 import SwiftUI
 
 struct DockIconSync: View {

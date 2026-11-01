@@ -75,9 +75,18 @@ jobs:
           swift package resolve --package-path packages/BlotAPI
           swift build --package-path packages/BlotAPI
           swift test --package-path packages/BlotAPI
+      - name: Resolve, build, and test BlotDesign
+        run: |
+          swift package resolve --package-path packages/BlotDesign
+          swift build --package-path packages/BlotDesign
+          swift test --package-path packages/BlotDesign
   apple-build:
     runs-on: [self-hosted, macOS, ARM64, xcode-27]
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
       - run: xcodebuild -project apps/Blot.xcodeproj -scheme BlotMac -configuration Debug -destination 'platform=macOS' -derivedDataPath .build/xcode CODE_SIGNING_ALLOWED=NO build
       - run: xcodebuild -project apps/Blot.xcodeproj -scheme BlotIOS -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath .build/xcode-ios CODE_SIGNING_ALLOWED=NO build

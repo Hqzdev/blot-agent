@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 struct AccountPlugin: Codable, Equatable, Identifiable {

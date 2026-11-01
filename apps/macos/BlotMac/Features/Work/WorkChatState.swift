@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 import Observation
 import BlotAPI
@@ -21,6 +22,8 @@ final class WorkChatSession: Identifiable {
     let projectID: String?
     let assistant: AssistantProfile?
     private(set) var messages: [WorkChatMessage] = []
+    private(set) var pendingMessage: WorkChatMessage?
+    var visibleMessages: [WorkChatMessage] { messages + (pendingMessage.map { [$0] } ?? []) }
     var draft = ""
     private(set) var isSending = false
     private(set) var error: String?
@@ -49,6 +52,7 @@ final class WorkChatSession: Identifiable {
         pendingCommandID = commandID
         let content = pendingText ?? text
         pendingText = content
+        pendingMessage = WorkChatMessage(text: content, fromUser: true)
         observation = Task {
             do {
                 let client = BackendRuntime.shared.client
@@ -62,6 +66,8 @@ final class WorkChatSession: Identifiable {
                 pendingCommandID = nil; pendingText = nil
                 draft = ""
                 generationID = receipt.operationId
+                try await refreshMessages(backendID)
+                pendingMessage = nil
                 await observeGeneration(receipt.operationId)
 
             } catch let failure as BackendFailure {
@@ -171,7 +177,6 @@ final class WorkChatState {
 
     func load() async throws {
         nonisolated struct ConversationValue: Codable, Sendable { let title: String; let mode: String; let archived: Bool }
-        nonisolated struct ProjectValue: Codable, Sendable { let name: String }
         let client = BackendRuntime.shared.client
         let conversations = try await client.records("CONVERSATION", as: ConversationValue.self)
         sessions = conversations.filter { $0.data.mode == "WORK" && !$0.data.archived }.map { row in
@@ -180,8 +185,21 @@ final class WorkChatState {
             return session
         }
         for session in sessions { try await session.loadHistory() }
-        let values = try await client.records("PROJECT", as: ProjectValue.self)
-        projects = values.map { WorkChatProject(id: $0.id.uuidString, name: $0.data.name) }
+        updateProjects(try await client.records("PROJECT", as: BackendJSON.self))
+    }
+
+    func updateProjects(_ rows: [WorkspaceRow]) {
+        projects = rows.filter { !$0.data.flag("archived") }.map {
+            WorkChatProject(id: $0.id.uuidString, name: $0.data.text("name"))
+        }
+        if let selectedProjectID, !projects.contains(where: { $0.id == selectedProjectID }) {
+            self.selectedProjectID = nil
+        }
+    }
+
+    func registerProject(id: String, name: String) {
+        guard !projects.contains(where: { $0.id == id }) else { return }
+        projects.append(WorkChatProject(id: id, name: name))
     }
 
     func clear() { sessions.forEach { $0.stopObserving() }; sessions = []; projects = []; selectedProjectID = nil; expandedProjectID = nil; draft = "" }
@@ -247,6 +265,11 @@ extension AppState {
     func openWorkChatProject(_ id: String) {
         guard workChat.projects.contains(where: { $0.id == id }) else { return }
         workChat.toggleProject(id)
+        openWorkChat()
+    }
+
+    func openQuickChat() {
+        workChat.selectProject(nil)
         openWorkChat()
     }
 

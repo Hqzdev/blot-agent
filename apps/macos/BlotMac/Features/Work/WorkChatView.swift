@@ -1,5 +1,7 @@
+import BlotDesign
 import SwiftUI
 
+/// Blot Work: a conversation with Blot or one of the user's GPTs, stored on the Blot server.
 struct WorkChatView: View {
     @Environment(AppState.self) private var app
 
@@ -8,46 +10,68 @@ struct WorkChatView: View {
         VStack(spacing: 0) {
             if let chat = app.currentWorkChat {
                 ScrollView {
-                    VStack(alignment: .leading, spacing: 24) {
-                        if let assistant = chat.assistant {
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(assistant.name).font(KFont.pageTitle()).foregroundStyle(K.text)
-                                DisclosureGroup("Instructions") {
-                                    Text(assistant.instructions).font(KFont.body()).foregroundStyle(K.text2)
-                                        .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
-                                }.font(KFont.body()).foregroundStyle(K.text2)
-                            }
-                        }
-                        if let error = chat.error { Text(error).foregroundStyle(K.warning).textSelection(.enabled) }
-                        if chat.isSending {
-                            HStack { ProgressView("Blot is working…"); Button("Stop") { chat.cancel() } }
-                        }
-                        if chat.canRetry && !chat.isSending { Button("Continue interrupted response") { chat.retry() } }
-                        ForEach(chat.messages) { message in
-                            if message.fromUser { ThreadBlockView(block: .user(message.text), actions: ThreadActions()) }
-                            else {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text(chat.assistant?.name ?? "Blot").font(KFont.body(.medium)).foregroundStyle(K.text3)
-                                    Text(message.text).font(KFont.body()).foregroundStyle(K.text)
-                                        .textSelection(.enabled)
+                    ContentColumn {
+                        LazyVStack(alignment: .leading, spacing: KSpace.xl) {
+                            if let assistant = chat.assistant {
+                                VStack(alignment: .leading, spacing: KSpace.md) {
+                                    Text(assistant.name).font(KFont.pageTitle()).foregroundStyle(K.text)
+                                    KDisclosure("Инструкции") {
+                                        Text(assistant.instructions).font(KFont.ui(13)).foregroundStyle(K.text2).lineSpacing(3)
+                                            .frame(maxWidth: .infinity, alignment: .leading).textSelection(.enabled)
+                                    }
                                 }
                             }
+                            if chat.messages.isEmpty && !chat.isSending {
+                                EmptyState(icon: "message-square", title: "Начните разговор",
+                                           detail: "Напишите Blot в поле ниже.")
+                            }
+                            ForEach(chat.visibleMessages) { message in
+                                Group {
+                                    if message.fromUser { UserBubble(text: message.text) }
+                                    else {
+                                        VStack(alignment: .leading, spacing: 6) {
+                                            Text(chat.assistant?.name ?? "Blot").font(KFont.label()).foregroundStyle(K.text3)
+                                            AgentText(text: message.text)
+                                        }
+                                    }
+                                }
+                                .transition(.kAppear)
+                            }
+                            if chat.isSending {
+                                HStack(spacing: KSpace.sm) {
+                                    TypingDots()
+                                    Text("\(chat.assistant?.name ?? "Blot") пишет…").font(KFont.ui(13)).foregroundStyle(K.text3)
+                                }
+                                .transition(.opacity)
+                            }
+                            if let error = chat.error {
+                                HStack(spacing: KSpace.md) {
+                                    InlineFeedback(text: error, tone: .error).textSelection(.enabled)
+                                    if chat.canRetry && !chat.isSending {
+                                        KButton(title: "Продолжить ответ", icon: "rotate-ccw", height: 28) { chat.retry() }
+                                    }
+                                }
+                                .transition(.kAppear)
+                            }
                         }
-                    }.frame(maxWidth: K.contentWidth).padding(24).frame(maxWidth: .infinity)
-                }.defaultScrollAnchor(.bottom)
-            } else {
-                VStack(spacing: 20) {
-                    PrimaryBlot(context: .workHome)
-                    Text("How can I help?").font(KFont.pageTitle(.regular)).foregroundStyle(K.text)
-                    if let project = app.workChat.selectedProject {
-                        Text("New chat in \(project.name)").font(KFont.body()).foregroundStyle(K.text2)
+                        .padding(.vertical, KSpace.xl)
+                        .kAnimation(value: chat.messages.count)
+                        .kAnimation(value: chat.isSending)
                     }
-                }.frame(maxWidth: .infinity, maxHeight: .infinity)
+                }.defaultScrollAnchor(.bottom)
+            } else if let project = app.workChat.selectedProject {
+                ProjectOverview(project: project)
+            } else {
+                StartConversationView()
             }
-            Composer(text: $app.workChatDraft, placeholder: "Message Blot",
-                     petContext: app.currentWorkChat == nil ? nil : app.activeBlotContext,
-                     approvalModes: [], status: "Work · saved on this Mac", onSend: { app.sendWorkChatMessage() })
-                .composerPlacement(hasPet: app.currentWorkChat != nil)
-        }.id(app.currentWorkChat?.id ?? "new-work-chat")
+            if app.currentWorkChat != nil || app.workChat.selectedProject != nil {
+                Composer(text: $app.workChatDraft, placeholder: "Напишите Blot…",
+                         petContext: app.currentWorkChat == nil ? nil : app.activeBlotContext,
+                         sending: app.currentWorkChat?.isSending ?? false,
+                         onStop: app.currentWorkChat?.isSending == true ? { app.currentWorkChat?.cancel() } : nil,
+                         onSend: { app.sendWorkChatMessage() })
+                    .composerPlacement(hasPet: app.currentWorkChat != nil)
+            }
+        }.id(app.currentWorkChat?.id ?? app.workChat.selectedProjectID ?? "new-work-chat")
     }
 }

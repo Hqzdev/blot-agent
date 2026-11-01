@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct ProductModePicker: View {
@@ -8,10 +9,13 @@ struct ProductModePicker: View {
 
     var body: some View {
         Button(action: toggle) {
-            HStack(spacing: 7) {
-                Text(title).font(KFont.ui(18, .semibold)).foregroundStyle(K.text).lineLimit(1)
-                KIcon("chevron-down", size: 12, color: K.text2)
-            }.padding(.trailing, 6).frame(height: 34).kHover(radius: 12, active: presented)
+            HStack(spacing: 6) {
+                Text(title).font(KFont.sidebarTitle()).foregroundStyle(K.text).lineLimit(1)
+                KIcon("chevron-down", size: 12, color: K.text3)
+                    .rotationEffect(.degrees(presented ? 180 : 0))
+            }.padding(.horizontal, 6).frame(height: 32).kHover(radius: K.rMd, active: presented)
+                .padding(.leading, -6)
+                .kAnimation(KMotion.quick, value: presented)
         }
         .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
         .accessibilityLabel("Switch mode")
@@ -36,27 +40,25 @@ struct ProductModePicker: View {
 struct ProductModeMenuCard: View {
     @Environment(AppState.self) private var app
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach([Product.work, .code], id: \.self) { product in
+        VStack(spacing: 2) {
+            ForEach([Product.code, .work], id: \.self) { product in
                 Button {
                     KMenuController.shared.close()
                     app.switchProduct(product)
                 } label: {
                     HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Blot \(product.rawValue)").font(KFont.body()).foregroundStyle(K.text)
-                            Text(product.subtitle).font(KFont.caption()).foregroundStyle(K.text2)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Blot \(product.rawValue)").font(KFont.ui(15, .medium)).foregroundStyle(K.text)
+                            Text(product.subtitle).font(KFont.ui(13)).foregroundStyle(K.text2)
                         }.frame(maxWidth: .infinity, alignment: .leading)
-                        if app.product == product { KIcon("check", size: 16, color: K.text2) }
+                        if app.product == product { KIcon("check", size: 16, color: K.text) }
                     }
-                    .padding(.horizontal, 12).frame(height: 54).contentShape(Rectangle())
-                    .kHover(radius: 10)
-                }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).accessibilityAddTraits(app.product == product ? .isSelected : [])
+                    .padding(.horizontal, 12).padding(.vertical, 10).contentShape(Rectangle())
+                    .kHover(radius: 10, active: app.product == product)
+                }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: 10).accessibilityAddTraits(app.product == product ? .isSelected : [])
             }
         }
-        .padding(8).frame(width: 240)
-        .background(K.surface2, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(K.borderStrong, lineWidth: 1))
-        .shadow(color: .black.opacity(0.25), radius: 18, y: 8)
+        .padding(6).frame(width: 300)
+        .kPopover(radius: K.rXl)
     }
 }

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 /// Fixtures compose production views; no authentication, file or network actions run.
@@ -235,7 +236,7 @@ struct MacRenderPreview: View {
             }
         }
         .environment(state)
-        .preferredColorScheme(state.theme.colorScheme)
+        .blotTheme(state.theme).tint(K.inverse)
         .environment(\.scenePhase, .inactive)
     }
 }

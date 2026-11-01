@@ -6,6 +6,7 @@
 //  plan, approval request, changed files and inline notes.
 //
 
+import BlotDesign
 import SwiftUI
 
 /// Callbacks a block may need. Blocks without buttons ignore them.
@@ -68,9 +69,9 @@ struct UserBubble: View {
                 .font(KFont.body())
                 .foregroundStyle(K.text)
                 .lineSpacing(4)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(K.surface2))
+                .padding(.horizontal, KSpace.lg)
+                .padding(.vertical, KSpace.md)
+                .background(RoundedRectangle(cornerRadius: K.rMd, style: .continuous).fill(K.userMessage))
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
         }

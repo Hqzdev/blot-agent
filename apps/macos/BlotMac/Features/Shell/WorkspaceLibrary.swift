@@ -1,3 +1,4 @@
+import BlotDesign
 import AppKit
 import Observation
 

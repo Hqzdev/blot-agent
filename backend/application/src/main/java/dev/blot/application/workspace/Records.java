@@ -2,6 +2,8 @@ package dev.blot.application.workspace;
 
 import dev.blot.application.ports.WorkspaceStore;
 import dev.blot.core.workspace.*;
+import dev.blot.core.workspace.Entity;
+import dev.blot.core.workspace.EntityKind;
 import java.time.Clock;
 import java.util.UUID;
 

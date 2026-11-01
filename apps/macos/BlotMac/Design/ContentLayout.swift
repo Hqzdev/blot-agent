@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 /// The content width excludes the surrounding page gutter on every screen.

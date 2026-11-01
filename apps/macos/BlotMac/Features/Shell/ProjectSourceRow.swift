@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 import UniformTypeIdentifiers
 

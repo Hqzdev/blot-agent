@@ -1,94 +1,94 @@
+import BlotDesign
 import SwiftUI
 
 struct PersonalSettingsView: View {
     @Environment(AppState.self) private var app
     @Bindable var settings: SettingsState
-    @State private var showUsage = false
     var body: some View {
         @Bindable var app = app
         switch settings.section {
         case .appearance:
             SettingsGroup(title: "Theme") {
-                SettingsRow(title: "Appearance", detail: "Choose how Blot looks, or follow your Mac's appearance.") {
-                    KSegmented(options: ThemePreference.allCases, selection: $app.theme, label: { $0.rawValue })
+                SettingsRow(title: "Appearance", detail: "System follows your Mac's appearance, including automatic switching. Light and Dark override it for Blot only.") {
+                    KSegmented(options: ThemePreference.allCases,
+                               selection: Binding(get: { app.theme }, set: { app.chooseTheme($0) }),
+                               label: { $0.title }, title: "Appearance")
                 }
             }
             SettingsGroup(title: "Interface") {
-                SettingsRow(title: "Text size", detail: "Preferred text size for the interface preview.") {
-                    SettingsChoice(value: $settings.fontSize, options: ["Small", "Default", "Large"])
+                SettingsRow(title: "Text size", detail: "Scales text across Blot. Larger sizes also follow the macOS text size.") {
+                    SettingsChoice(title: "Text size", value: $settings.fontSize, options: TextSizePreference.allCases.map(\.rawValue))
                 }
-                HDivider()
+                SettingsDivider()
                 SettingsToggleRow(title: "Show agent avatars", detail: "Display role portraits alongside team messages.", value: $settings.showAvatars)
-                HDivider()
+                SettingsDivider()
                 SettingsToggleRow(title: "Reduce motion", detail: "Prefer quieter transitions and fewer animated effects.", value: $settings.reduceMotion)
             }
         case .notifications:
             SettingsGroup(title: "Tasks") {
                 SettingsRow(title: "Task finished", detail: "Choose when to show completion notifications.") {
-                    SettingsChoice(value: $settings.completionNotice, options: ["When in background", "Always", "Never"])
+                    SettingsChoice(title: "Task finished notifications", value: $settings.completionNotice, options: ["When in background", "Always", "Never"])
                 }
-                HDivider()
+                SettingsDivider()
                 SettingsToggleRow(title: "Approval needed", detail: "Let me know when an agent is waiting for a decision.", value: $settings.approvalNotifications)
-                HDivider()
+                SettingsDivider()
                 SettingsToggleRow(title: "Task failed", detail: "Show a notification when a task needs attention.", value: $settings.failureNotifications)
             }
             SettingsGroup(title: "Delivery") {
                 SettingsToggleRow(title: "Play a sound", value: $settings.notificationSound)
-                HDivider()
+                SettingsDivider()
                 SettingsToggleRow(title: "Show message previews", detail: "Include a short task summary in notifications.", value: $settings.notificationPreview)
             }
         case .shortcuts:
             SettingsGroup(title: "Navigation") {
                 shortcut("New task / New run", "⌘ N")
-                HDivider()
+                SettingsDivider()
                 shortcut("Search tasks, files and actions", "⌘ K")
-                HDivider()
-                shortcut("Stop active task / run; close an open menu", "Esc")
-                HDivider()
+                SettingsDivider()
+                shortcut("Close a menu, sheet or the command palette", "Esc")
+                SettingsDivider()
                 shortcut("Settings", "⌘ ,")
-                HDivider()
+                SettingsDivider()
                 shortcut("Blot Code · Task", "⌘ 1")
-                HDivider()
+                SettingsDivider()
                 shortcut("Motes · Team chat", "⌘ 2")
-                HDivider()
+                SettingsDivider()
                 shortcut("Motes · Team graph", "⌘ 3")
-                HDivider()
+                SettingsDivider()
                 shortcut("Show Pet", "⌥ Space")
-                HDivider()
+                SettingsDivider()
                 shortcut("Show / hide sidebar", "⌃ ⌘ S")
             }
-            Text("These shortcuts match the app menu.").font(KFont.body()).foregroundStyle(K.text3)
+            Text("These shortcuts match the app menu.").font(KFont.caption()).foregroundStyle(K.text3)
         case .account:
             SettingsGroup(title: "Profile") {
-                SettingsRow(title: app.profileDetails.name, detail: app.currentUser?.email ?? "Preview account") {
-                    InitialsAvatar(initials: app.profileDetails.initials, size: 36)
+                SettingsRow(title: app.profileDetails.name, detail: app.currentUser?.email ?? "") {
+                    InitialsAvatar(initials: app.profileDetails.initials, size: 36,
+                                   fill: K.profileAvatar, foreground: K.onInverse, bordered: false)
                 }
-                HDivider()
-                SettingsRow(title: "Plan", detail: "Your personal Blot workspace.") { Badge(text: "Pro") }
+                SettingsDivider()
+                SettingsRow(title: "Public profile", detail: "Name, username, bio and showcase are stored on this Mac.") {
+                    KButton(title: "Open profile", icon: "user") { app.showingSettings = false; app.openProfile() }
+                }
             }
             SettingsGroup(title: "Session") {
-                SettingsRow(title: "Signed in on this Mac", detail: "Account actions will be available when the account service is connected.") {
-                    Badge(text: "Preview", fg: K.text3)
+                SettingsRow(title: "Signed in on this Mac", detail: "Signing out keeps your data on the server.") {
+                    KButton(title: "Sign out", icon: "log-out", kind: .danger, loading: app.isSigningOut) { app.signOut() }
                 }
             }
         case .billing:
-            SettingsGroup(title: "Your plan") {
-                SettingsRow(title: "Blot Pro", detail: "Personal workspace · preview subscription") { Badge(text: "Pro") }
-            }
             SettingsGroup(title: "Usage") {
-                SettingsRow(title: "Weekly allowance", detail: "\(settings.weeklyUsage.usedPercent)% used · \(settings.weeklyUsage.resetDescription)") {
-                    ProgressView(value: settings.weeklyUsage.usedFraction).tint(K.inverse).frame(width: 140)
+                SettingsRow(title: "Token usage", detail: "Spent and reserved tokens are recorded per run by the backend.") {
+                    KButton(title: "Open Models", icon: "cpu") { settings.section = .models }
                 }
-                HDivider()
-                SettingsRow(title: "This month", detail: "38 tasks · 4.1M input · 612K output tokens") {
-                    KButton(title: "View details") { showUsage = true }
-                }
+                SettingsDivider()
+                SettingsRow(title: "Run budgets", detail: "Each run has its own limit. Raise it from the run’s Results tab.")
             }
             SettingsGroup(title: "Billing") {
-                SettingsRow(title: "Payment details", detail: "Subscription and payment information is sample data in this preview.") {
-                    Badge(text: "Preview", fg: K.text3)
+                SettingsRow(title: "Plan and payments", detail: "Billing is not connected in this build.") {
+                    StatusBadge("Not connected")
                 }
-            }.sheet(isPresented: $showUsage) { UsagePreviewView() }
+            }
         default: EmptyView()
         }
     }
@@ -96,7 +96,7 @@ struct PersonalSettingsView: View {
     private func shortcut(_ title: String, _ keys: String) -> some View {
         SettingsRow(title: title) {
             Text(keys).font(KFont.mono(12)).foregroundStyle(K.text2)
-                .padding(.horizontal, 10).padding(.vertical, 6).kCard(radius: 6, fill: K.surface2)
+                .padding(.horizontal, 8).frame(height: 24).kCard(radius: K.rSm, fill: K.surface2)
         }
     }
 }

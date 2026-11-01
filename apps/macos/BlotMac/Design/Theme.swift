@@ -2,37 +2,17 @@
 //  Theme.swift
 //  BlotMac
 //
-//  Design tokens based on agent.pen → «Blot — Design System».
-//  Secondary text and semantic colors include contrast adjustments.
-//  Every color has a dark and a light value and follows the window appearance.
+//  Mac names for the shared BlotDesign tokens. Screens keep using `K`, `KSpace` and `KFont`;
+//  the values come from the package, so the Mac and iPhone apps share one monochrome system.
+//  Status colours are intentionally ink: meaning is carried by icons, labels and weight.
 //
 
-import AppKit
-import CoreText
+import BlotDesign
+import Observation
 import SwiftUI
 
-// MARK: - Colors
-
-nonisolated private func nsColor(_ rgba: UInt32) -> NSColor {
-    NSColor(
-        srgbRed: CGFloat((rgba >> 24) & 0xFF) / 255,
-        green: CGFloat((rgba >> 16) & 0xFF) / 255,
-        blue: CGFloat((rgba >> 8) & 0xFF) / 255,
-        alpha: CGFloat(rgba & 0xFF) / 255
-    )
-}
-
-/// Builds a color that resolves per appearance. Values are 0xRRGGBBAA.
-nonisolated private func dynamicColor(dark: UInt32, light: UInt32) -> Color {
-    let darkColor = nsColor(dark)
-    let lightColor = nsColor(light)
-    return Color(nsColor: NSColor(name: nil) { appearance in
-        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua ? darkColor : lightColor
-    })
-}
-
 extension Color {
-    /// 0xRRGGBB, opaque.
+    /// 0xRRGGBB, opaque. Kept for user content (avatars, images); interface chrome uses `K`.
     nonisolated init(hex: UInt32, opacity: Double = 1) {
         self.init(
             .sRGB,
@@ -44,161 +24,180 @@ extension Color {
     }
 }
 
-/// Blot design tokens. Names match the variables in agent.pen.
+/// Blot design tokens for the Mac app, backed by `BlotDesign`.
 enum K {
-    static let bg = dynamicColor(dark: 0x0F0F11FF, light: 0xFFFFFFFF)
-    static let bgSidebar = dynamicColor(dark: 0x131315FF, light: 0xF7F7F7FF)
-    static let bgChrome = dynamicColor(dark: 0x1B1B1CFF, light: 0xEFEFEFFF)
-    static let composer = dynamicColor(dark: 0x2A2A2CFF, light: 0xF3F3F3FF)
-    static let composerContext = dynamicColor(dark: 0x1E1E20FF, light: 0xEAEAEAFF)
-    static let surface = dynamicColor(dark: 0x1C1C1CFF, light: 0xFFFFFFFF)
-    static let surface2 = dynamicColor(dark: 0x232323FF, light: 0xF3F3F3FF)
-    static let card = dynamicColor(dark: 0x1A1A1AFF, light: 0xF7F7F9FF)
-    static let hover = dynamicColor(dark: 0xFFFFFF0D, light: 0x0000000A)
-    static let selected = dynamicColor(dark: 0xFFFFFF14, light: 0x0000000F)
-    static let border = dynamicColor(dark: 0xFFFFFF14, light: 0x00000014)
-    static let borderStrong = dynamicColor(dark: 0xFFFFFF26, light: 0x00000024)
-    static let text = dynamicColor(dark: 0xECECECFF, light: 0x0D0D0DFF)
-    static let text2 = dynamicColor(dark: 0xA1A1A1FF, light: 0x5D5D5DFF)
-    static let text3 = dynamicColor(dark: 0x999999FF, light: 0x666666FF)
-    static let focus = Color(nsColor: .keyboardFocusIndicatorColor)
-    static let inverse = dynamicColor(dark: 0xECECECFF, light: 0x0D0D0DFF)
-    static let onInverse = dynamicColor(dark: 0x121212FF, light: 0xFFFFFFFF)
-    static let success = dynamicColor(dark: 0x5FBF8FFF, light: 0x187344FF)
-    static let danger = dynamicColor(dark: 0xE36A62FF, light: 0xC8372DFF)
-    static let warning = dynamicColor(dark: 0xD9A84AFF, light: 0x89600AFF)
-    static let successBg = dynamicColor(dark: 0x5FBF8F1A, light: 0x1F8A5714)
-    static let dangerBg = dynamicColor(dark: 0xE36A621A, light: 0xC8372D12)
-    static let ember = dynamicColor(dark: 0xE36A62FF, light: 0xE5484DFF)
-    static let profileAvatar = Color(hex: 0xEA4A37)
-    static let diffAddBg = dynamicColor(dark: 0x5FBF8F14, light: 0x1F8A5712)
-    static let diffDelBg = dynamicColor(dark: 0xE36A6214, light: 0xC8372D10)
-    static let scrim = Color.black.opacity(0.45)
-    static let graphGrid = dynamicColor(dark: 0xFFFFFF08, light: 0x00000008)
-    static let edgeGray = Color(hex: 0x6E6E6E)
+    // Surfaces
+    static let bg = BlotColor.canvas
+    static let bgSidebar = BlotColor.sidebar
+    static let bgChrome = BlotColor.canvas
+    static let composer = BlotColor.panel
+    static let composerContext = BlotColor.sidebar
+    static let surface = BlotColor.panel
+    static let surface2 = BlotColor.fill
+    static let card = BlotColor.panel
+    static let userMessage = BlotColor.fill
+    static let codeBackground = BlotColor.sidebar
 
-    // Radii
+    // Interaction
+    static let hover = BlotColor.hover
+    static let selected = BlotColor.selected
+    static let pressed = BlotColor.pressed
+    static let border = BlotColor.hairline
+    static let borderStrong = BlotColor.hairlineStrong
+    static let focus = BlotColor.focusRing
+
+    // Text
+    static let text = BlotColor.text
+    static let text2 = BlotColor.textSecondary
+    /// Helper text people need to read uses the secondary colour; `disabled` is for controls
+    /// that cannot be used and for placeholders.
+    static let text3 = BlotColor.textSecondary
+    static let disabled = BlotColor.textTertiary
+    static let inverse = BlotColor.inverse
+    static let onInverse = BlotColor.onInverse
+
+    // Status — monochrome. Pair with `StatusTone.icon` / `InlineFeedback.Tone.icon` and a label.
+    static let success = BlotColor.text
+    static let danger = BlotColor.text
+    static let warning = BlotColor.text
+    static let successBg = BlotColor.hover
+    static let dangerBg = BlotColor.pressed
+    static let ember = BlotColor.accent
+    static let profileAvatar = BlotColor.inverse
+    static let diffAddBg = BlotColor.diffAdded
+    static let diffDelBg = BlotColor.diffRemoved
+    static let scrim = BlotColor.scrim
+    static let graphGrid = BlotColor.dynamic(BlotColorPair(light: 0x00000008, dark: 0xFFFFFF08))
+    static let edgeGray = BlotColor.edge
+    static let tooltip = BlotColor.tooltip
+    static let onTooltip = BlotColor.onTooltip
+
+    // Radii: one 10 pt radius for controls, rows, fields, the composer and panels.
     static let rSm: CGFloat = 6
-    static let rMd: CGFloat = 8
-    static let rLg: CGFloat = 12
+    static let rMd: CGFloat = BlotRadius.control
+    static let rLg: CGFloat = BlotRadius.panel
     static let rXl: CGFloat = 16
 
     // Layout
     static let windowWidth: CGFloat = 1312
     static let windowHeight: CGFloat = 751
-    static let sidebarWidth: CGFloat = 240
-    static let headerHeight: CGFloat = 52
-    static let contentWidth: CGFloat = 736
+    static let sidebarWidth: CGFloat = BlotLayout.sidebarIdealWidth
+    static let headerHeight: CGFloat = BlotLayout.headerHeight
+    static let contentWidth: CGFloat = BlotLayout.conversationMaxWidth
     static let profileContentWidth: CGFloat = 880
     static let railWidth: CGFloat = 52
     static let shellToolbarHeight: CGFloat = 44
-    static let sidebarRowHeight: CGFloat = 29
-    static let projectSidebarMin: CGFloat = sidebarWidth
-    static let projectSidebarMax: CGFloat = 320
+    static let sidebarRowHeight: CGFloat = 34
+    static let projectSidebarMin: CGFloat = BlotLayout.sidebarMinWidth
+    static let projectSidebarMax: CGFloat = BlotLayout.sidebarMaxWidth
     static let projectPanelWidth: CGFloat = 280
     static let sidebarRowSpacing: CGFloat = 2
     static let railButtonSize: CGFloat = 36
-    static let controlHeight: CGFloat = 36
+    static let controlHeight: CGFloat = BlotLayout.controlHeight
+    static let controlHeightLarge: CGFloat = BlotLayout.controlHeightLarge
+    static let iconButtonSize: CGFloat = BlotLayout.iconButton
+    static let listTileSize: CGFloat = 32
     static let shellInset: CGFloat = 4
     static let pageInset: CGFloat = KSpace.xl
     static let pageTopInset: CGFloat = KSpace.section
     static let composerHeight: CGFloat = 98
-    static let composerContextHeight: CGFloat = 50
-    static let composerContextOverlap: CGFloat = 12
+    static let composerContextHeight: CGFloat = 36
+    /// The context row sits above the input as its own line; nothing overlaps.
+    static let composerContextOverlap: CGFloat = 0
     static let composerBottomInset: CGFloat = 20 - shellInset
     static let composerPetClearance: CGFloat = 36
-    static let composerRadius: CGFloat = 20
+    static let composerRadius: CGFloat = BlotRadius.control
     static let primaryBlotSize: CGFloat = 76
     static let composerBlotSize: CGFloat = 56
 }
 
+/// Spacing follows the 6 / 10 / 16 / 24 rhythm.
 enum KSpace {
     static let xs: CGFloat = 4
-    static let sm: CGFloat = 8
-    static let md: CGFloat = 12
-    static let lg: CGFloat = 16
-    static let xl: CGFloat = 24
+    static let element: CGFloat = BlotSpace.element
+    static let sm: CGFloat = BlotSpace.s8
+    static let md: CGFloat = BlotSpace.s10
+    static let lg: CGFloat = BlotSpace.panel
+    static let xl: CGFloat = BlotSpace.section
     static let section: CGFloat = 32
 }
 
-private struct BlotReduceMotionKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    var blotReduceMotion: Bool {
-        get { self[BlotReduceMotionKey.self] }
-        set { self[BlotReduceMotionKey.self] = newValue }
-    }
-}
-
-enum KMotion {
-    static let sidebar = Animation.smooth(duration: 0.26)
-    static let loading = Animation.easeInOut(duration: 0.18)
-}
+// Motion tokens (KMotion), transitions and Reduce Motion handling live in shared/Motion.swift.
 
 // MARK: - Fonts
 
-/// Inter for UI, JetBrains Mono for code. Both are bundled in Resources/Fonts and
-/// registered at launch. If registration fails SwiftUI falls back to the system font.
+/// In-app text size (Settings › Appearance). Views that build fonts with `KFont` read it, so
+/// they redraw when it changes.
+@Observable
+final class KTextScale {
+    static let shared = KTextScale()
+    var value: CGFloat = 1
+}
+
+/// System typeface only. Sizes snap to the shared scale — 13 metadata, 14 captions and labels,
+/// 16 body, 24 headings — and follow the in-app text size. Code uses the system monospaced face.
 enum KFont {
     enum Weight {
         case regular, medium, semibold, bold
+
+        var system: Font.Weight {
+            switch self {
+            case .regular: .regular
+            case .medium: .medium
+            case .semibold, .bold: .semibold
+            }
+        }
+    }
+
+    static var scale: CGFloat { KTextScale.shared.value }
+
+    /// Snaps a requested size to the type scale. Nothing in the interface is larger than 24.
+    static func tier(_ size: CGFloat) -> CGFloat {
+        switch size {
+        case ..<13.5: BlotTextRole.meta.size
+        case ..<15.5: BlotTextRole.caption.size
+        case ..<19.5: BlotTextRole.body.size
+        default: BlotTextRole.heading.size
+        }
     }
 
     static func ui(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
-        let name: String
-        switch weight {
-        case .regular: name = "Inter-Regular"
-        case .medium: name = "Inter-Medium"
-        case .semibold: name = "Inter-SemiBold"
-        case .bold: name = "Inter-Bold"
-        }
-        return .custom(name, fixedSize: size)
+        .system(size: tier(size) * scale, weight: weight.system)
     }
 
     static func mono(_ size: CGFloat, _ weight: Weight = .regular) -> Font {
-        let name: String
-        switch weight {
-        case .regular: name = "JetBrainsMono-Regular"
-        case .medium: name = "JetBrainsMono-Medium"
-        case .semibold, .bold: name = "JetBrainsMono-SemiBold"
-        }
-        return .custom(name, fixedSize: size)
+        .system(size: max(11, min(size, 16)) * scale, weight: weight.system, design: .monospaced)
     }
 
-    static func body(_ weight: Weight = .regular) -> Font { ui(14, weight) }
-    static func caption(_ weight: Weight = .regular) -> Font { ui(12, weight) }
-    static func sidebarTitle() -> Font { ui(20, .semibold) }
-    static func pageTitle(_ weight: Weight = .semibold) -> Font { ui(28, weight) }
+    /// Messages, inputs and body copy (16).
+    static func body(_ weight: Weight = .regular) -> Font { ui(16, weight) }
+    /// Buttons, row titles and card headers (14 medium).
+    static func label(_ weight: Weight = .medium) -> Font { ui(14, weight) }
+    /// Secondary row text, metadata and descriptions (13).
+    static func caption(_ weight: Weight = .regular) -> Font { ui(13, weight) }
+    static func sheetTitle() -> Font { ui(16, .semibold) }
+    static func sidebarTitle() -> Font { ui(14, .semibold) }
+    /// Page and welcome headings (24 semibold), the largest text in the app.
+    static func pageTitle(_ weight: Weight = .semibold) -> Font { ui(24, weight) }
 }
 
-enum FontRegistrar {
-    /// Registers every .ttf found inside the app bundle for this process.
-    static func registerBundledFonts() {
-        guard let root = Bundle.main.resourceURL,
-              let enumerator = FileManager.default.enumerator(at: root, includingPropertiesForKeys: nil)
-        else { return }
-        for case let url as URL in enumerator where url.pathExtension.lowercased() == "ttf" {
-            CTFontManagerRegisterFontsForURL(url as CFURL, .process, nil)
-        }
-    }
-}
+// MARK: - Text size
 
-// MARK: - Theme preference
-
-enum ThemePreference: String, CaseIterable, Identifiable {
-    case system = "System"
-    case light = "Light"
-    case dark = "Dark"
-
+enum TextSizePreference: String, CaseIterable, Identifiable {
+    case small = "Small", standard = "Default", large = "Large"
     var id: String { rawValue }
-
-    var colorScheme: ColorScheme? {
+    var dynamicTypeSize: DynamicTypeSize {
         switch self {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
+        case .small: .medium
+        case .standard: .large
+        case .large: .xLarge
+        }
+    }
+    var scale: CGFloat {
+        switch self {
+        case .small: 0.92
+        case .standard: 1
+        case .large: 1.12
         }
     }
 }

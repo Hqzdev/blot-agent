@@ -1,66 +1,91 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
 extension BackendEntity where Value == BackendJSON {
     var idPayload: BackendJSON { .object(["id": .string(id.uuidString)]) }
 }
 
+/// Sends one workspace command for a record. Shows a spinner while the command is in flight and a
+/// toast when it finishes; failures also stay in the workspace banner with a retry.
 struct WorkspaceActionButton: View {
     @Environment(AppState.self) private var app
     let title: String
     let command: String
     let row: WorkspaceRow
     var payload: BackendJSON?
+    var icon: String?
+    var kind: KButtonKind = .standard
+    var success: String?
+
+    private var key: String { command + ":" + row.id.uuidString }
+
     var body: some View {
-        Button(title) {
-            Task { try? await app.workspace.send(command, payload: payload ?? row.idPayload, row: row) }
+        KButton(title: title, icon: icon, kind: kind, loading: app.workspace.commands.active.contains(key)) {
+            Task {
+                do {
+                    try await app.workspace.send(command, payload: payload ?? row.idPayload, row: row)
+                    if let success { app.toasts.show(success) }
+                } catch {
+                    app.toasts.show(error.localizedDescription, tone: .error)
+                }
+            }
         }
-        .disabled(app.workspace.commands.active.contains(command + ":" + row.id.uuidString))
     }
 }
 
+/// Connection and command state under the toolbar: lost connection, recovery of commands sent
+/// before a restart, commands waiting for confirmation. Hidden when everything is in sync.
 struct WorkspaceStatusView: View {
     @Environment(AppState.self) private var app
+    @State private var refreshing = false
+    @State private var showingDetails = false
+
     var body: some View {
         let workspace = app.workspace
-        if let error = workspace.recoveryError ?? workspace.error ?? workspace.commands.error {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(error).textSelection(.enabled).foregroundStyle(K.warning)
-                    Spacer()
-                    Button("Обновить") { Task { await workspace.refresh() } }
-                    if workspace.recoveryError != nil {
-                        Button("Восстановить отправленные команды") {
-                            Task { await app.recoverWorkspaceCommands() }
-                        }
-                    }
+        let error = workspace.recoveryError ?? workspace.error ?? workspace.commands.error
+        let pending = Array(workspace.commands.pending.values).sorted { $0.id.uuidString < $1.id.uuidString }
+        if error != nil || !pending.isEmpty {
+            HStack {
+                Spacer()
+                Button { showingDetails.toggle() } label: {
+                    Label(error == nil ? "Ожидает подтверждения" : "Проверьте подключение",
+                          systemImage: error == nil ? "clock" : "exclamationmark.triangle")
                 }
-                ForEach(
-                    Array(workspace.commands.pending.values).sorted { $0.id.uuidString < $1.id.uuidString }
-                ) { command in
-                    HStack {
-                        Text("Ожидает подтверждения: " + command.type).font(KFont.caption())
-                        Button("Повторить исходную команду") {
-                            Task {
-                                let receipt = await workspace.commands.retry(command)
-                                await workspace.refresh()
-                                if let receipt { openResult(receipt, command: command) }
+                .buttonStyle(KButtonStyle(kind: .standard))
+                .popover(isPresented: $showingDetails, arrowEdge: .bottom) {
+                    VStack(alignment: .leading, spacing: KSpace.md) {
+                        if let error { InlineFeedback(text: error, tone: .error).textSelection(.enabled) }
+                        if workspace.recoveryError != nil {
+                            KButton(title: "Восстановить отправленные команды", icon: "rotate-ccw",
+                                    loading: workspace.recoveringCommands) {
+                                Task { await app.recoverWorkspaceCommands() }
                             }
                         }
-                        .disabled(workspace.commands.active.contains(command.key))
-                    }
+                        KButton(title: "Подключиться снова", icon: "rotate-ccw", loading: refreshing) {
+                            refreshing = true
+                            Task { await workspace.refresh(); refreshing = false }
+                        }
+                        ForEach(pending) { command in
+                            Text("Ожидаем подтверждения: \(Self.describe(command.type))").font(KFont.caption())
+                            KButton(title: "Отправить повторно", loading: workspace.commands.active.contains(command.key)) {
+                                Task {
+                                    let receipt = await workspace.commands.retry(command)
+                                    await workspace.refresh()
+                                    if let receipt { openResult(receipt, command: command) }
+                                }
+                            }
+                        }
+                    }.padding(20).frame(width: 380)
                 }
-            }.font(KFont.body()).padding(12).frame(maxWidth: .infinity, alignment: .leading).background(
-                K.surface2)
-        } else if workspace.loading || workspace.recoveringCommands {
-            HStack {
-                ProgressView().controlSize(.small)
-                Text(
-                    workspace.recoveringCommands
-                        ? "Восстановление отправленных команд…" : "Загрузка данных сервера…")
-            }
-            .font(KFont.caption()).padding(10)
+            }.padding(.horizontal, KSpace.lg).padding(.top, KSpace.sm)
         }
+    }
+
+    /// «run.plan.approve» → «Run plan approve».
+    static func describe(_ type: String) -> String {
+        let words = type.replacingOccurrences(of: "_", with: " ").replacingOccurrences(of: ".", with: " ")
+        return words.prefix(1).uppercased() + words.dropFirst()
     }
 
     private func openResult(_ receipt: BackendReceipt, command: WorkspaceCommands.Pending) {

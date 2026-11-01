@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 enum PaletteAction: Hashable {
@@ -24,7 +25,7 @@ enum CommandPaletteIndex {
         for project in projects {
             for task in project.tasks {
                 tasks.append(PaletteEntry(id: "task:\(project.id):\(task.id)", group: "Tasks", title: task.title,
-                    detail: "\(project.name) · \(task.isRunning ? "running" : task.age)", icon: "bubble.left",
+                    detail: "\(project.name) · \(BackendStatus(task.age).label.lowercased())", icon: "bubble.left",
                     action: .task(projectID: project.id, taskID: task.id)))
                 let taskPaths = task.thread.flatMap { block -> [String] in
                     switch block {

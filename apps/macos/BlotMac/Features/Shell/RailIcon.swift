@@ -1,26 +1,13 @@
+import BlotDesign
 import SwiftUI
 
 enum RailIcon {
-    case home, space, symbol(String)
+    case home, symbol(String)
 
     @ViewBuilder func image(color: Color) -> some View {
         switch self {
         case .home:
             RoundedHomeGlyph().fill(color).frame(width: 20, height: 20)
-        case .space:
-            ZStack {
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .strokeBorder(color, lineWidth: 1.6)
-                    .frame(width: 13, height: 16)
-                    .rotationEffect(.degrees(14)).offset(x: 3, y: -3)
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .fill(K.bgChrome)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 3, style: .continuous)
-                            .strokeBorder(color, lineWidth: 1.6)
-                    }
-                    .frame(width: 14, height: 16).offset(x: -3, y: 2)
-            }.frame(width: 20, height: 20)
         case .symbol(let name): KIcon(name, size: 20, color: color)
         }
     }

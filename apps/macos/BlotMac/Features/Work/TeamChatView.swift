@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct TeamChatView: View {
@@ -6,8 +7,10 @@ struct TeamChatView: View {
         if let id = UUID(uuidString: app.selectedRunID) {
             RunWorkspaceView(runID: id).id(id)
         } else {
-            CatalogEmptyView(
-                title: "Выберите запуск", detail: "Создайте задание или откройте существующий запуск.")
+            EmptyState(icon: "users", title: "Choose a run",
+                       detail: "Start a new team run or open an existing one in the sidebar.",
+                       actionTitle: "New run", actionIcon: "plus") { app.openNewRun() }
+                .frame(maxHeight: .infinity)
         }
     }
 }

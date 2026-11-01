@@ -1,16 +1,63 @@
 package dev.blot.infrastructure.workspace;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import dev.blot.application.ports.*;
+import dev.blot.application.ports.GitGateway;
+import dev.blot.application.ports.ProcessGateway;
+import dev.blot.application.ports.ProviderGateway;
+import dev.blot.application.ports.WorkspaceStore;
 import dev.blot.application.workspace.*;
+import dev.blot.application.workspace.Records;
+import dev.blot.application.workspace.agent.AgentCommunicationTools;
+import dev.blot.application.workspace.agent.AgentExecutionService;
+import dev.blot.application.workspace.agent.AgentFiles;
+import dev.blot.application.workspace.agent.AgentResultService;
+import dev.blot.application.workspace.agent.DelegationService;
+import dev.blot.application.workspace.agent.RoleCatalog;
+import dev.blot.application.workspace.commands.ToolDefinitions;
+import dev.blot.application.workspace.conversation.ContextBuilder;
+import dev.blot.application.workspace.conversation.ContextCompactor;
+import dev.blot.application.workspace.conversation.ConversationService;
+import dev.blot.application.workspace.conversation.MemoryService;
+import dev.blot.application.workspace.execution.GenerationStateService;
+import dev.blot.application.workspace.execution.GenerationWorker;
+import dev.blot.application.workspace.execution.PreparedActionExecutor;
+import dev.blot.application.workspace.execution.RunService;
+import dev.blot.application.workspace.execution.ToolHistory;
+import dev.blot.application.workspace.execution.ToolService;
+import dev.blot.application.workspace.execution.WorkflowScheduler;
+import dev.blot.application.workspace.identity.TokenGenerator;
+import dev.blot.application.workspace.integrations.IntegrationService;
+import dev.blot.application.workspace.permissions.PermissionService;
+import dev.blot.application.workspace.profile.ProfileService;
+import dev.blot.application.workspace.providers.ModelStreamingService;
+import dev.blot.application.workspace.providers.ProviderSettingsService;
+import dev.blot.application.workspace.review.ReviewService;
 import dev.blot.core.workspace.*;
+import dev.blot.core.workspace.Entity;
+import dev.blot.core.workspace.EntityKind;
+import dev.blot.core.workspace.ReviewData;
+import dev.blot.core.workspace.agent.AgentSessionData;
+import dev.blot.core.workspace.agent.AttemptData;
+import dev.blot.core.workspace.execution.GenerationData;
+import dev.blot.core.workspace.execution.PreparedActionData;
+import dev.blot.core.workspace.identity.AccountData;
+import dev.blot.core.workspace.identity.Actor;
+import dev.blot.core.workspace.projects.ProjectData;
+import dev.blot.core.workspace.projects.RunData;
+import dev.blot.core.workspace.provider.ProviderSettingsData;
+import dev.blot.infrastructure.workspace.artifacts.LocalArtifactStore;
+import dev.blot.infrastructure.workspace.database.SqliteWorkspaceStore;
 import java.nio.file.*;
 import java.time.*;
 import java.util.*;
 import java.util.function.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 class AgentWorkflowTest {
   @TempDir Path directory;

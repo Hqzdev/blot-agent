@@ -1,4 +1,5 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
 struct SkillEditorView: View {
@@ -22,52 +23,68 @@ struct SkillEditorView: View {
         _enabled = State(initialValue: item?.data.flag("enabled") ?? true)
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(item == nil ? "Новый навык" : "Изменить навык").font(KFont.ui(20, .semibold))
-            Group {
-                TextField("Название", text: $name)
-                Picker("Область", selection: $project) {
-                    Text("Все проекты аккаунта").tag("")
-                    ForEach(app.projects) { Text($0.name).tag($0.id) }
-                }.disabled(item != nil)
-                Text("Роли специалистов")
-                ScrollView {
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 160))], alignment: .leading) {
-                        ForEach(availableRoles, id: \.self) { role in
-                            Toggle(
-                                role,
-                                isOn: Binding(
-                                    get: { roles.contains(role) },
-                                    set: { if $0 { roles.insert(role) } else { roles.remove(role) } })
-                            ).toggleStyle(.checkbox)
+        let saving = app.workspace.commands.active.contains(key)
+        let retrying = app.workspace.commands.pending[key] != nil && !saving
+        KSheet(item == nil ? "New skill" : "Edit skill",
+               subtitle: "Skills give specialists an instruction. They never grant tool permissions.", width: 620) {
+            VStack(alignment: .leading, spacing: KSpace.lg) {
+                HStack(alignment: .top, spacing: KSpace.md) {
+                    KTextField("Name", text: $name, placeholder: "Release notes in my voice", required: true,
+                               autofocus: item == nil)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Available in").font(KFont.caption(.medium)).foregroundStyle(K.text2)
+                        ChoiceMenu(selection: $project,
+                                   options: [ChoiceOption(id: "", title: "All projects")]
+                                       + app.projects.map { ChoiceOption(id: $0.id, title: $0.name) },
+                                   accessibilityTitle: "Available in")
+                            .disabled(item != nil)
+                    }
+                }
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Roles").font(KFont.caption(.medium)).foregroundStyle(K.text2)
+                    if availableRoles.isEmpty && error == nil {
+                        HStack(spacing: KSpace.sm) {
+                            ProgressView().controlSize(.mini)
+                            Text("Loading roles…").font(KFont.caption()).foregroundStyle(K.text3)
                         }
                     }
-                }.frame(height: 90)
-                TextEditor(text: $instruction).font(KFont.mono(12)).frame(height: 240).padding(8).kCard(
-                    fill: K.surface)
-                Toggle("Включён для новых сессий", isOn: $enabled)
-            }.disabled(app.workspace.commands.pending[key] != nil)
-            if let error { Text(error).foregroundStyle(K.warning).textSelection(.enabled) }
-            HStack {
-                Spacer()
-                Button("Отмена") { dismiss() }
-                Button(
-                    app.workspace.commands.pending[key] == nil ? "Сохранить" : "Повторить исходное сохранение"
-                ) { save() }
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 140), spacing: 6, alignment: .leading)],
+                              alignment: .leading, spacing: 6) {
+                        ForEach(availableRoles, id: \.self) { role in
+                            KToggleChip(title: AgentRole.displayName(role), isOn: Binding(
+                                get: { roles.contains(role) },
+                                set: { if $0 { roles.insert(role) } else { roles.remove(role) } }))
+                        }
+                    }
+                }
+                KTextArea("Instruction", text: $instruction, placeholder: "How should the specialist work?",
+                          mono: true, minHeight: 200, maxHeight: 280)
+                HStack(spacing: KSpace.md) {
+                    KToggle(isOn: $enabled).accessibilityLabel("Enabled for new sessions")
+                    Text("Enabled for new sessions").font(KFont.ui(13)).foregroundStyle(K.text)
+                    Spacer()
+                }
+            }
+            .disabled(app.workspace.commands.pending[key] != nil)
+            if retrying {
+                InlineFeedback(text: "The server has not confirmed the last save. Send it again unchanged.", tone: .warning)
+            }
+            if let error { InlineFeedback(text: error, tone: .error) }
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            KButton(title: retrying ? "Send save again" : "Save", kind: .primary, loading: saving) { save() }
                 .disabled(
                     name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                         || instruction.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                        || roles.isEmpty || app.workspace.commands.active.contains(key)
-                )
+                        || roles.isEmpty)
                 .keyboardShortcut(.defaultAction)
-            }
-        }.padding(24).frame(width: 620).background(K.bg).foregroundStyle(K.text)
-            .task {
-                do {
-                    let rows = try await BackendRuntime.shared.client.get("v2/roles", as: [BackendJSON].self)
-                    availableRoles = rows.map { $0.text("role") }.sorted()
-                } catch { self.error = error.localizedDescription }
-            }
+        }
+        .task {
+            do {
+                let rows = try await BackendRuntime.shared.client.get("v2/roles", as: [BackendJSON].self)
+                availableRoles = rows.map { $0.text("role") }.sorted()
+            } catch { self.error = error.localizedDescription }
+        }
     }
     private func save() {
         let data = BackendJSON.object([
@@ -82,6 +99,7 @@ struct SkillEditorView: View {
                 let receipt = try await app.workspace.send(
                     "skill.save", payload: payload, row: item, projectID: UUID(uuidString: project), key: key)
                 app.skills.selectedID = receipt.operationId
+                app.toasts.show(item == nil ? "Skill created" : "Skill saved")
                 dismiss()
             } catch { self.error = error.localizedDescription }
         }

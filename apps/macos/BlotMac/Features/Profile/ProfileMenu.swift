@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct ProfileMenuButton: View {
@@ -9,8 +10,8 @@ struct ProfileMenuButton: View {
     var body: some View {
         Button(action: toggle) {
             InitialsAvatar(initials: app.profileDetails.initials, size: 24,
-                           fill: K.profileAvatar, foreground: .white, bordered: false)
-                .frame(width: 36, height: 36).kHover(radius: 10, active: isOpen || app.profileVisible)
+                           fill: K.profileAvatar, foreground: K.onInverse, bordered: false)
+                .frame(width: 36, height: 36).kHover(radius: K.rMd, active: isOpen || app.profileVisible)
         }
         .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).help("Profile").accessibilityLabel("Open profile menu")
         .background(KMenuAnchorView(anchor: anchor))
@@ -28,7 +29,7 @@ struct ProfileMenuButton: View {
         let rect = window.convertToScreen(view.convert(view.bounds, to: nil))
         isOpen = true
         let menu = ProfileMenuCard(action: perform).environment(app)
-            .preferredColorScheme(app.theme.colorScheme)
+            .blotTheme(app.theme).tint(K.inverse)
         KMenuController.shared.showProfile(menu, beside: rect, in: window) { isOpen = false }
     }
 
@@ -62,10 +63,8 @@ struct ProfileMenuCard: View {
         VStack(spacing: 0) {
             if showingHelp { helpMenu } else { profileMenu }
         }
-        .padding(8).frame(width: 228, height: 242)
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(K.surface2))
-        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(K.borderStrong, lineWidth: 1))
-        .shadow(color: .black.opacity(0.32), radius: 16, y: 8)
+        .padding(6).frame(width: 232, height: 250)
+        .kPopover()
     }
 
     private var profileMenu: some View {
@@ -73,16 +72,17 @@ struct ProfileMenuCard: View {
             Button { action(.profile) } label: {
                 HStack(spacing: 6) {
                     InitialsAvatar(initials: app.profileDetails.initials, size: 18,
-                                   fill: K.profileAvatar, foreground: .white, bordered: false)
+                                   fill: K.profileAvatar, foreground: K.onInverse, bordered: false)
                     VStack(alignment: .leading, spacing: 1) {
                         Text(app.profileDetails.name).font(KFont.body()).foregroundStyle(K.text).lineLimit(1)
-                        Text("Pro").font(KFont.caption()).foregroundStyle(K.text3)
+                        Text(app.currentUser?.email ?? "View profile").font(KFont.caption()).foregroundStyle(K.text3)
+                            .lineLimit(1)
                     }
                     Spacer(minLength: 0)
                 }.padding(.horizontal, 4).frame(height: 40).contentShape(Rectangle())
             }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).help("View profile")
             separator
-            row("Usage", icon: "gauge", detail: "\(app.settings.weeklyUsage.remainingPercent)% left") { action(.usage) }
+            row("Usage", icon: "gauge") { action(.usage) }
             row("Show Pet", icon: "blot", detail: "⌥Space") { action(.pet) }
             row("Invite a friend", icon: "paperplane") { action(.invitation) }
             row("Settings", icon: "gearshape", detail: "⌘,") { action(.settings) }
@@ -123,11 +123,11 @@ struct ProfileMenuCard: View {
                 } else {
                     KIcon(icon, size: 14, color: K.text2)
                 }
-                Text(title).font(KFont.body()).foregroundStyle(K.text).lineLimit(1)
+                Text(title).font(KFont.ui(13)).foregroundStyle(K.text).lineLimit(1)
                 Spacer(minLength: 0)
-                if let detail { Text(detail).font(KFont.body()).foregroundStyle(K.text3).fixedSize() }
+                if let detail { Text(detail).font(KFont.caption()).foregroundStyle(K.text3).fixedSize() }
                 if submenu { KIcon("chevron-right", size: 12, color: K.text3) }
-            }.padding(.horizontal, 6).frame(height: 28).contentShape(Rectangle()).kHover(radius: 6)
-        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
+            }.padding(.horizontal, 8).frame(height: 30).contentShape(Rectangle()).kHover(radius: K.rMd)
+        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
     }
 }

@@ -1519,6 +1519,58 @@
           }
         }
       }
+    },
+    "/v2/setup/status": {
+      "get": {
+        "summary": "Публичные параметры настройки установки без секретов",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Настройки SMTP и модели заданы владельцем",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "emailManaged",
+                    "providerManaged",
+                    "modelSettings"
+                  ],
+                  "properties": {
+                    "emailManaged": {
+                      "type": "boolean"
+                    },
+                    "providerManaged": {
+                      "type": "boolean"
+                    },
+                    "modelSettings": {
+                      "type": [
+                        "object",
+                        "null"
+                      ],
+                      "properties": {
+                        "model": {
+                          "type": "string"
+                        },
+                        "contextTokens": {
+                          "type": "integer"
+                        },
+                        "outputTokens": {
+                          "type": "integer"
+                        },
+                        "runTokenBudget": {
+                          "type": "integer",
+                          "format": "int64"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {

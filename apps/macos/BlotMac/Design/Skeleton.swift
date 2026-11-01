@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct SkeletonBlock: View {
@@ -11,18 +12,11 @@ struct SkeletonBlock: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !animated)) { context in
             GeometryReader { geometry in
-                let progress = animated ? context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6 : 0
+                // Flat placeholder that gently pulses; no gradients.
+                let phase = animated ? context.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.6) / 1.6 : 0
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
-                    .fill(K.text.opacity(0.07))
-                    .overlay {
-                        if animated {
-                            LinearGradient(colors: [.clear, K.text.opacity(0.06), .clear], startPoint: .leading, endPoint: .trailing)
-                                .frame(width: geometry.size.width * 0.65)
-                                .offset(x: geometry.size.width * (progress * 1.65 - 0.65))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
+                    .fill(K.text.opacity(0.05 + 0.035 * (1 - cos(phase * 2 * .pi)) / 2))
+                    .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
         .accessibilityHidden(true)

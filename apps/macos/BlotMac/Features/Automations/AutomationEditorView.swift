@@ -1,4 +1,5 @@
 import BlotAPI
+import BlotDesign
 import SwiftUI
 
 struct AutomationEditorView: View {
@@ -37,59 +38,68 @@ struct AutomationEditorView: View {
         _enabled = State(initialValue: item?.data.flag("enabled") ?? true)
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(item == nil ? "Новое расписание" : "Изменить расписание").font(KFont.ui(20, .semibold))
-            Group {
-                TextField("Название", text: $name)
-                Picker("Проект", selection: $project) {
-                    Text("Выберите проект").tag("")
-                    ForEach(app.projects) { Text($0.name).tag($0.id) }
-                }.disabled(item != nil)
-                HStack {
-                    TextField("Время HH:mm", text: $time)
-                    TextField("Часовой пояс", text: $timezone)
-                }
-                HStack {
-                    ForEach(Array(["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].enumerated()), id: \.offset) {
-                        day in
-                        Toggle(
-                            day.element,
-                            isOn: Binding(
-                                get: { weekdays.contains(day.offset + 1) },
-                                set: {
-                                    if $0 {
-                                        weekdays.insert(day.offset + 1)
-                                    } else {
-                                        weekdays.remove(day.offset + 1)
-                                    }
-                                })
-                        ).toggleStyle(.checkbox)
+        let saving = app.workspace.commands.active.contains(key)
+        let retrying = app.workspace.commands.pending[key] != nil && !saving
+        KSheet(item == nil ? "New schedule" : "Edit schedule",
+               subtitle: "Blot starts a run on these days. It works while the app and this Mac are running.", width: 640) {
+            VStack(alignment: .leading, spacing: KSpace.lg) {
+                HStack(alignment: .top, spacing: KSpace.md) {
+                    KTextField("Name", text: $name, placeholder: "Triage new issues", required: true, autofocus: item == nil)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Project").font(KFont.caption(.medium)).foregroundStyle(K.text2)
+                        ChoiceMenu(selection: $project, options: app.projects.map { ChoiceOption(id: $0.id, title: $0.name) },
+                                   placeholder: "Choose project", accessibilityTitle: "Project")
+                            .disabled(item != nil)
+                            .help(item != nil ? "A schedule stays in its project" : "")
                     }
                 }
-                TextField("Бюджет токенов на запуск", text: $budget)
-                TextEditor(text: $goal).font(KFont.body()).frame(height: 180).padding(8).kCard(
-                    fill: K.surface)
-                Toggle("Расписание включено", isOn: $enabled)
-            }.disabled(app.workspace.commands.pending[key] != nil)
-            if let error { Text(error).foregroundStyle(K.warning).textSelection(.enabled) }
-            HStack {
-                Spacer()
-                Button("Отмена") { dismiss() }
-                Button(
-                    app.workspace.commands.pending[key] == nil ? "Сохранить" : "Повторить исходное сохранение"
-                ) { save() }
-                .disabled(!valid || app.workspace.commands.active.contains(key)).keyboardShortcut(
-                    .defaultAction)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Days").font(KFont.caption(.medium)).foregroundStyle(K.text2)
+                    HStack(spacing: 6) {
+                        ForEach(Array(AutomationSchedule.dayNames.enumerated()), id: \.offset) { day in
+                            KToggleChip(title: day.element, isOn: Binding(
+                                get: { weekdays.contains(day.offset + 1) },
+                                set: { if $0 { weekdays.insert(day.offset + 1) } else { weekdays.remove(day.offset + 1) } }))
+                        }
+                    }
+                    if weekdays.isEmpty { InlineFeedback(text: "Choose at least one day.", tone: .error) }
+                }
+                HStack(alignment: .top, spacing: KSpace.md) {
+                    KTextField("Time", text: $time, placeholder: "09:00", mono: true,
+                               error: timeValid || time.isEmpty ? nil : "Use 24-hour HH:mm.").frame(width: 120)
+                    KTextField("Time zone", text: $timezone, placeholder: "Europe/Moscow", mono: true,
+                               error: TimeZone(identifier: timezone) == nil && !timezone.isEmpty ? "Unknown time zone." : nil)
+                    KTextField("Token budget per run", text: $budget, mono: true,
+                               error: (Int64(budget) ?? 0) >= 8192 || budget.isEmpty ? nil : "At least 8,192.").frame(width: 180)
+                }
+                KTextArea("Instructions", text: $goal, placeholder: "What should Blot do on every run?", minHeight: 150, maxHeight: 240)
+                HStack(spacing: KSpace.md) {
+                    KToggle(isOn: $enabled).accessibilityLabel("Schedule enabled")
+                    Text("Run on schedule").font(KFont.ui(13)).foregroundStyle(K.text)
+                    Spacer()
+                }
             }
-        }.padding(24).frame(width: 640).background(K.bg).foregroundStyle(K.text)
-            .onAppear { if project.isEmpty { project = app.projects.first?.id ?? "" } }
+            .disabled(app.workspace.commands.pending[key] != nil)
+            if retrying {
+                InlineFeedback(text: "The server has not confirmed the last save. Send it again unchanged.", tone: .warning)
+            }
+            if let error { InlineFeedback(text: error, tone: .error) }
+        } footer: {
+            KButton(title: "Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+            KButton(title: retrying ? "Send save again" : "Save", kind: .primary, loading: saving) { save() }
+                .disabled(!valid)
+                .keyboardShortcut(.defaultAction)
+        }
+        .onAppear { if project.isEmpty { project = app.projects.first?.id ?? "" } }
+    }
+    private var timeValid: Bool {
+        time.range(of: "^([01][0-9]|2[0-3]):[0-5][0-9]$", options: .regularExpression) != nil
     }
     private var valid: Bool {
         !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && !goal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             && UUID(uuidString: project) != nil && !weekdays.isEmpty && (Int64(budget) ?? 0) >= 8192
-            && TimeZone(identifier: timezone) != nil
-            && time.range(of: "^([01][0-9]|2[0-3]):[0-5][0-9]$", options: .regularExpression) != nil
+            && TimeZone(identifier: timezone) != nil && timeValid
     }
     private func save() {
         let data = BackendJSON.object([
@@ -106,6 +116,7 @@ struct AutomationEditorView: View {
                     "automation.save", payload: payload, row: item, projectID: UUID(uuidString: project),
                     key: key)
                 app.automations.selectedID = receipt.operationId
+                app.toasts.show(item == nil ? "Schedule created" : "Schedule saved")
                 dismiss()
             } catch { self.error = error.localizedDescription }
         }

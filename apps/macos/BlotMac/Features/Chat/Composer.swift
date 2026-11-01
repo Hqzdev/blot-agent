@@ -2,39 +2,62 @@
 //  Composer.swift
 //  BlotMac
 //
-//  «Composer» block: optional context bar, multi-line input and a toolbar with
-//  approval mode, model and send.
+//  Composer: one flat card (panel fill, hairline border, 10 pt corners) with an optional
+//  context line at the top, a multi-line input and a compact toolbar. The toolbar only shows controls that do something: the approval chip
+//  and the model chip open their settings pages, the send button shows progress while a message
+//  is on its way, and Stop appears while the agent is working.
 //
 
+import BlotDesign
 import SwiftUI
 
-struct Composer: View {
+struct Composer<Context: View, Tools: View>: View {
     @Environment(AppState.self) private var app
     @Binding var text: String
     var placeholder: String
-    var context: ComposerContext? = nil
-    var petContext: BlotContext? = nil
-    var approvalModes: [String] = ["Ask before running", "Auto-approve in workspace", "Read-only"]
-    var models: [String] = ["Blot 1 · High", "Blot 1 · Medium", "Blot 1 Mini"]
-    var canSend = true
+    var petContext: BlotContext?
+    var canSend: Bool
+    var sending: Bool
+    var showsApproval: Bool
+    var showsModel: Bool
     var status: String?
-    var statusTone: InlineFeedback.Tone = .information
+    var statusTone: InlineFeedback.Tone
     var onStop: (() -> Void)?
     var onSend: () -> Void
+    @ViewBuilder var context: () -> Context
+    @ViewBuilder var tools: () -> Tools
 
-    @State private var approval = ""
-    @State private var model = ""
-    @State private var reasoningEffort: ReasoningEffort = .high
     @FocusState private var focused: Bool
+
+    init(text: Binding<String>, placeholder: String, petContext: BlotContext? = nil, canSend: Bool = true,
+         sending: Bool = false, showsApproval: Bool = false, showsModel: Bool = true, status: String? = nil,
+         statusTone: InlineFeedback.Tone = .information, onStop: (() -> Void)? = nil,
+         onSend: @escaping () -> Void, @ViewBuilder context: @escaping () -> Context,
+         @ViewBuilder tools: @escaping () -> Tools) {
+        _text = text
+        self.placeholder = placeholder
+        self.petContext = petContext
+        self.canSend = canSend
+        self.sending = sending
+        self.showsApproval = showsApproval
+        self.showsModel = showsModel
+        self.status = status
+        self.statusTone = statusTone
+        self.onStop = onStop
+        self.onSend = onSend
+        self.context = context
+        self.tools = tools
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: KSpace.sm) {
-            if let status { InlineFeedback(text: status, tone: statusTone).padding(.horizontal, KSpace.md) }
-            VStack(spacing: -K.composerContextOverlap) {
-                if let context { ComposerContextBar(context: context).padding(.horizontal, 13) }
-                input
+            if let status {
+                InlineFeedback(text: status, tone: statusTone).padding(.horizontal, KSpace.md)
+                    .transition(.kAppear)
             }
+            input
         }
+        .kAnimation(value: status)
         .onChange(of: text) { _, _ in
             if !text.isEmpty, let petContext { app.pokeBlot(.typing, context: petContext) }
         }
@@ -45,58 +68,91 @@ struct Composer: View {
 
     private var input: some View {
         VStack(spacing: 0) {
-            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(K.text3), axis: .vertical)
+            if Context.self != EmptyView.self {
+                // Context is its own line inside the card, separated by a hairline.
+                HStack(spacing: KSpace.element) {
+                    context()
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, KSpace.sm)
+                .frame(minHeight: K.composerContextHeight)
+                .kBorder(.bottom)
+            }
+            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(K.disabled), axis: .vertical)
                 .textFieldStyle(.plain)
                 .font(KFont.body())
                 .foregroundStyle(K.text)
                 .lineLimit(1...8)
                 .lineSpacing(4)
                 .focused($focused)
-                .accessibilityLabel("Message")
-                .accessibilityHint(canSend ? "Press Return to send" : status ?? "Sending is unavailable")
+                .accessibilityLabel(placeholder)
+                .accessibilityHint(canSend ? "Return — отправить" : status ?? "Отправка недоступна")
                 .onSubmit(send)
-                .frame(minHeight: 36, alignment: .topLeading)
-                .padding(EdgeInsets(top: 14, leading: 12, bottom: 0, trailing: 16))
+                .frame(minHeight: 44, alignment: .topLeading)
+                .padding(EdgeInsets(top: 14, leading: 16, bottom: 0, trailing: 16))
 
-            ViewThatFits(in: .horizontal) {
-                toolbar(compact: false)
-                toolbar(compact: true)
+            HStack(spacing: 4) {
+                tools()
+                if showsApproval {
+                    Button { app.openProfileSettings(.permissions) } label: {
+                        Chip(icon: "checkmark.shield", label: "С подтверждением", chevron: false)
+                    }
+                    .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
+                    .help("Every command, file change, commit and push waits for your approval. Open Permissions.")
+                }
+                Spacer(minLength: 0)
+                if showsModel {
+                    Button { app.openProfileSettings(.models) } label: {
+                        Chip(icon: nil, label: app.settings.model.isEmpty ? "Модель" : app.settings.model, chevron: false)
+                    }
+                    .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
+                    .help("Model and token limits are set in Settings › Models.")
+                }
+                if let onStop {
+                    IconButton(icon: "stop", help: "Остановить", action: onStop)
+                        .transition(.opacity)
+                }
+                SendButton(enabled: canSend && !trimmed.isEmpty, sending: sending, action: send).padding(.leading, 4)
             }
-            .padding(EdgeInsets(top: 4, leading: 8, bottom: 12, trailing: 8))
-
+            .padding(EdgeInsets(top: 4, leading: 8, bottom: 12, trailing: 10))
+            .kAnimation(KMotion.quick, value: onStop == nil)
         }
         .frame(minHeight: K.composerHeight, alignment: .top)
-        .background(RoundedRectangle(cornerRadius: K.composerRadius, style: .continuous).fill(K.composer))
+        .background(K.composer, in: RoundedRectangle(cornerRadius: K.composerRadius, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: K.composerRadius, style: .continuous)
-            .strokeBorder(focused ? K.focus : K.border, lineWidth: focused ? 2 : 1))
+            .strokeBorder(focused ? K.focus : K.borderStrong, lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: K.composerRadius, style: .continuous))
         .contentShape(Rectangle())
         .onTapGesture { focused = true }
-    }
-
-    private func toolbar(compact: Bool) -> some View {
-        HStack(spacing: 4) {
-            IconButton(icon: "plus", help: "Attachments are unavailable in this local preview").disabled(true)
-            if !approvalModes.isEmpty {
-                MenuChip(icon: "checkmark.shield", label: compact ? "Approval" : currentApproval) {
-                    KMenuItem.choices(approvalModes, selected: currentApproval) { approval = $0 }
-                }
-            }
-            Spacer(minLength: 0)
-            ModelPicker(options: ModelOption.options(from: models), selectedModel: $model,
-                        effort: $reasoningEffort, compact: compact)
-                .fixedSize()
-            if let onStop {
-                IconButton(icon: "stop", help: "Stop · Esc", action: onStop)
-            }
-            SendButton(enabled: canSend && !trimmed.isEmpty, size: 28, action: send).padding(.leading, 4)
-        }
+        .kAnimation(KMotion.quick, value: focused)
     }
 
     private var trimmed: String { text.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var currentApproval: String { approval.isEmpty ? (approvalModes.first ?? "") : approval }
 
     private func send() {
-        guard canSend, !trimmed.isEmpty else { return }
+        guard canSend, !sending, !trimmed.isEmpty else { return }
         onSend()
+    }
+}
+
+extension Composer where Context == EmptyView, Tools == EmptyView {
+    init(text: Binding<String>, placeholder: String, petContext: BlotContext? = nil, canSend: Bool = true,
+         sending: Bool = false, showsApproval: Bool = false, showsModel: Bool = true, status: String? = nil,
+         statusTone: InlineFeedback.Tone = .information, onStop: (() -> Void)? = nil,
+         onSend: @escaping () -> Void) {
+        self.init(text: text, placeholder: placeholder, petContext: petContext, canSend: canSend, sending: sending,
+                  showsApproval: showsApproval, showsModel: showsModel, status: status, statusTone: statusTone,
+                  onStop: onStop, onSend: onSend, context: { EmptyView() }, tools: { EmptyView() })
+    }
+}
+
+extension Composer where Tools == EmptyView {
+    init(text: Binding<String>, placeholder: String, petContext: BlotContext? = nil, canSend: Bool = true,
+         sending: Bool = false, showsApproval: Bool = false, showsModel: Bool = true, status: String? = nil,
+         statusTone: InlineFeedback.Tone = .information, onStop: (() -> Void)? = nil,
+         onSend: @escaping () -> Void, @ViewBuilder context: @escaping () -> Context) {
+        self.init(text: text, placeholder: placeholder, petContext: petContext, canSend: canSend, sending: sending,
+                  showsApproval: showsApproval, showsModel: showsModel, status: status, statusTone: statusTone,
+                  onStop: onStop, onSend: onSend, context: context, tools: { EmptyView() })
     }
 }

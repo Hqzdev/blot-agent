@@ -1,5 +1,6 @@
 import BlotAPI
 import Observation
+import BlotDesign
 import SwiftUI
 
 enum Product: String {
@@ -68,21 +69,26 @@ final class AppState {
     private(set) var isSigningOut = false
     let workspace = LiveWorkspace(client: { BackendRuntime.shared.client })
     let workChat = WorkChatState()
-    var product: Product = .code
+    var product: Product = .work
     var codeRoute: CodeRoute = .home
     var workRoute: WorkRoute = .home
     var teamRoute: TeamRoute = .newRun
     var sidebarVisible = true
-    var theme: ThemePreference = .dark
+    /// Loaded from this Mac's defaults; `chooseTheme` saves a new choice. Previews and render
+    /// checks may set `theme` directly without touching the stored preference.
+    var theme: ThemePreference = ThemeStore.load()
     let shell = ShellState()
     var activeTool: WorkspaceTool?
     var profileVisible = false
     let workspaceLibrary = WorkspaceLibrary()
     let pluginUsage = AccountPluginUsage()
     let settings = SettingsState()
+    let toasts = ToastCenter()
     var showingSettings = false
     var showDevicePairing = false
     var paletteVisible = false
+    /// Stop run asks first: a stopped run cannot be resumed.
+    var confirmingStopRun = false
     let newTask = NewTaskState()
     let newRun = NewRunState()
     let skills = LibrarySelection()
@@ -96,6 +102,11 @@ final class AppState {
     var graphSelection: GraphSelection?
     var inspectorVisible = false
     var liveSeq: Int { Int(clamping: workspace.cursor) }
+
+    func chooseTheme(_ preference: ThemePreference) {
+        theme = preference
+        ThemeStore.save(preference)
+    }
 
     func pokeBlot(_ kind: BlotStimulusKind, context: BlotContext? = nil) {
         blotStimulus = BlotStimulus(
@@ -123,6 +134,7 @@ final class AppState {
         shell.clearAccount()
         workChat.clear()
         workRoute = .home
+        product = .work
         if let accountID = user.accountID { workspace.selectAccount(accountID) }
         workspace.beginCommandRecovery()
         workspaceLibrary.selectAccount(user.email)
@@ -133,7 +145,7 @@ final class AppState {
         selectedRunID = ""
         newTask.projectID = ""
         newRun.projectID = ""
-        withAnimation(.snappy(duration: 0.3)) { currentUser = user }
+        withAnimation(KMotion.panel) { currentUser = user }
         Task {
             await recoverWorkspaceCommands()
             guard currentUser?.accountID == user.accountID else { return }
@@ -165,7 +177,7 @@ final class AppState {
                 "v2/auth/logout", body: [String: String](), as: [String: Bool].self)
             await client.useToken(nil)
             isSigningOut = false
-            withAnimation(.snappy(duration: 0.3)) { currentUser = nil }
+            withAnimation(KMotion.panel) { currentUser = nil }
         }
         workspace.clear()
         skills.clear()
@@ -224,7 +236,7 @@ final class AppState {
         self.product = product
     }
     func toggleProject(_ id: String) {
-        withAnimation(.snappy(duration: 0.2)) { expandedProjectID = expandedProjectID == id ? nil : id }
+        withAnimation(KMotion.standard) { expandedProjectID = expandedProjectID == id ? nil : id }
     }
     func openGraph() {
         resetPanels()
@@ -260,8 +272,17 @@ final class AppState {
     }
     private func controlCurrentRun(_ type: String) {
         guard let run = workspace.find("RUN", selectedRunID) else { return }
+        let verb = switch type {
+        case "run.stop": "stop"
+        case "run.pause": "pause"
+        default: "resume"
+        }
         Task {
-            try? await workspace.send(type, payload: .object(["id": .string(run.id.uuidString)]), row: run)
+            do {
+                try await workspace.send(type, payload: .object(["id": .string(run.id.uuidString)]), row: run)
+            } catch {
+                toasts.show("Couldn't \(verb) the run. \(error.localizedDescription)", tone: .error)
+            }
         }
     }
 }

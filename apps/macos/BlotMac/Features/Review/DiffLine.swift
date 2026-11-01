@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 enum DiffTone { case context, added, removed, header }

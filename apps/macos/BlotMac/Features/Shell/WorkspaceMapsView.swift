@@ -1,5 +1,6 @@
 import MapKit
 import Observation
+import BlotDesign
 import SwiftUI
 
 @Observable
@@ -45,19 +46,16 @@ struct WorkspaceMapsView: View {
     var body: some View {
         @Bindable var search = search
         VStack(alignment: .leading, spacing: 16) {
-            Text("Maps").font(KFont.pageTitle()).foregroundStyle(K.text)
-            HStack(spacing: 10) {
-                KIcon("search", size: 16, color: K.text2)
-                TextField("Search for a place or address", text: $query)
-                    .textFieldStyle(.plain).font(KFont.body()).onSubmit(submit)
-                    .accessibilityLabel("Search places")
-                if search.searching { ProgressView().controlSize(.small) }
-                KButton(title: "Search") { submit() }.disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }.padding(10).kCard(fill: K.surface2)
+            PageHeader(title: "Maps", subtitle: "Find a place or address and open it in Apple Maps.")
+            HStack(spacing: KSpace.sm) {
+                KSearchField(placeholder: "Search for a place or address", text: $query, onSubmit: submit)
+                KButton(title: "Search", icon: "search", kind: .primary, loading: search.searching) { submit() }
+                    .disabled(query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
             if let error = search.error {
-                Text(error).font(KFont.body()).foregroundStyle(K.danger)
+                InlineFeedback(text: error, tone: .error)
             } else if search.completed && search.places.isEmpty {
-                Text("No places found. Try another name or address.").font(KFont.body()).foregroundStyle(K.text2)
+                InlineFeedback(text: "No places found. Try another name or address.")
             }
             HStack(spacing: 0) {
                 if search.searching {
@@ -75,8 +73,8 @@ struct WorkspaceMapsView: View {
                                     selected = place.id
                                     search.camera = .item(place.item)
                                 } label: {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        Text(place.item.name ?? "Place").font(KFont.body(.medium)).foregroundStyle(K.text)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(place.item.name ?? "Place").font(KFont.label()).foregroundStyle(K.text)
                                         Text(place.item.address?.fullAddress ?? "").font(KFont.caption()).foregroundStyle(K.text2)
                                     }.frame(maxWidth: .infinity, alignment: .leading).padding(12)
                                         .contentShape(Rectangle()).kHover(radius: K.rMd, active: selected == place.id)
@@ -94,12 +92,14 @@ struct WorkspaceMapsView: View {
                         ForEach(search.places) { place in Marker(item: place.item).tag(place.id) }
                     }.mapControls { MapCompass(); MapZoomStepper() }
                 }
-            }.clipShape(RoundedRectangle(cornerRadius: K.rLg)).frame(maxHeight: .infinity)
+            }.clipShape(RoundedRectangle(cornerRadius: K.rLg, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).strokeBorder(K.border, lineWidth: 1))
+                .frame(maxHeight: .infinity)
                 .loadingTransition(isLoading: search.searching)
             if let place = search.places.first(where: { $0.id == selected }) {
                 KButton(title: "Open in Apple Maps", icon: "square-arrow-out-up-right") { place.item.openInMaps() }
             }
-        }.padding(K.pageInset)
+        }.padding(.horizontal, K.pageInset).padding(.vertical, K.pageTopInset)
         .task(id: requestID) { await search.search(submitted) }
     }
     private func submit() {

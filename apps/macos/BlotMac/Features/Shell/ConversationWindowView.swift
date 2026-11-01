@@ -1,4 +1,5 @@
 import Foundation
+import BlotDesign
 import SwiftUI
 
 struct ConversationWindowRequest: Codable, Hashable {
@@ -20,23 +21,27 @@ struct ConversationWindowView: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text(request.title).font(KFont.ui(20, .semibold)).foregroundStyle(K.text).lineLimit(2)
+        VStack(alignment: .leading, spacing: KSpace.lg) {
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(request.title).font(KFont.sheetTitle()).foregroundStyle(K.text).lineLimit(2)
+                    if request.chatID == nil {
+                        Text("Snapshot · read-only").font(KFont.caption()).foregroundStyle(K.text3)
+                    }
+                }
                 Spacer()
                 CopyButton(text: exportedText, title: "Copy conversation")
             }
             if let id = request.chatID, let session = app.workChat.session(id) {
                 SideChatContent(session: session)
             } else {
-                Text("Conversation snapshot · read-only").font(KFont.caption()).foregroundStyle(K.text3)
                 ScrollView {
-                    Text(request.transcript).font(KFont.body()).foregroundStyle(K.text)
+                    Text(request.transcript).font(KFont.body()).foregroundStyle(K.text).lineSpacing(4)
                         .textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-        }.padding(24).frame(minWidth: 560, minHeight: 480).background(K.bg)
-            .preferredColorScheme(app.theme.colorScheme)
+        }.padding(KSpace.xl).frame(minWidth: 560, minHeight: 480).background(K.bg)
+            .blotTheme(app.theme).tint(K.inverse)
             .navigationTitle(request.title)
     }
 }
@@ -49,15 +54,25 @@ private struct SideChatContent: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     ForEach(session.messages) { message in
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(message.fromUser ? "You" : "Blot").font(KFont.caption()).foregroundStyle(K.text3)
-                            Text(message.text).font(KFont.body()).foregroundStyle(K.text).textSelection(.enabled)
-                        }.frame(maxWidth: .infinity, alignment: .leading)
+                        if message.fromUser { UserBubble(text: message.text) }
+                        else {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Blot").font(KFont.label()).foregroundStyle(K.text3)
+                                AgentText(text: message.text)
+                            }
+                        }
+                    }
+                    if session.isSending {
+                        HStack(spacing: KSpace.sm) {
+                            TypingDots()
+                            Text("Blot is writing…").font(KFont.ui(13)).foregroundStyle(K.text3)
+                        }
                     }
                 }
             }.defaultScrollAnchor(.bottom)
-            Composer(text: $session.draft, placeholder: "Message in side chat", approvalModes: [],
-                     status: "Local conversation · AI is not connected") {
+            Composer(text: $session.draft, placeholder: "Message in side chat", sending: session.isSending,
+                     showsModel: false, status: session.error, statusTone: .error,
+                     onStop: session.isSending ? { session.cancel() } : nil) {
                 let text = session.draft.trimmingCharacters(in: .whitespacesAndNewlines)
                 if !text.isEmpty { session.send(text) }
             }

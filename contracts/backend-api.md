@@ -126,6 +126,7 @@ Entity: `id, ownerId, projectId, parentId, version, createdAt, updatedAt, data`.
 | POST /v2/auth/password/request | email |
 | POST /v2/auth/password/reset | email, code, password |
 | PUT /v2/setup/smtp | host, port, username, password, from; только Mac |
+| GET /v2/setup/status | Режим настроек владельца: emailManaged, providerManaged и публичные modelSettings; без секретов |
 | PUT /v2/provider/key | key; только Mac, нет активного/ожидающего модельного запроса |
 | POST /v2/provider/certificate/inspect | pem; метаданные и SHA-256 выбранного CA, только Mac |
 | PUT /v2/provider/certificate | pem; доверие выбранному CA только для GigaChat этого аккаунта |

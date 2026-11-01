@@ -7,6 +7,7 @@
 //
 
 import AppKit
+import BlotDesign
 import SwiftUI
 
 // MARK: - Items
@@ -106,7 +107,7 @@ final class KMenuController {
     static let shared = KMenuController()
     private enum Placement { case below, profile, navigation, dropdown }
 
-    /// Transparent margin around the card so its shadow is not clipped by the panel.
+    /// Transparent margin around the card so the panel can be positioned freely near screen edges.
     private let inset = NSEdgeInsets(top: 4, left: 24, bottom: 36, right: 24)
     private let gap: CGFloat = 6
 
@@ -164,7 +165,7 @@ final class KMenuController {
         panel.level = .popUpMenu
         panel.isReleasedWhenClosed = false
         panel.becomesKeyOnlyIfNeeded = true
-        panel.acceptsKeyFocus = placement != .below
+        panel.acceptsKeyFocus = true
         panel.title = title ?? (placement == .navigation ? "More" : placement == .profile ? "Profile" : "")
         panel.appearance = window.effectiveAppearance
         panel.contentView = host
@@ -238,7 +239,6 @@ final class KMenuController {
 // MARK: - Content
 
 private struct KMenuPanelView: View {
-    @Environment(\.colorScheme) private var colorScheme
     let items: [KMenuItem]
     let minWidth: CGFloat
     let inset: NSEdgeInsets
@@ -252,7 +252,7 @@ private struct KMenuPanelView: View {
                     HDivider().padding(.vertical, 4).padding(.horizontal, 6)
                 case .header:
                     Text(item.title)
-                        .font(KFont.body())
+                        .font(KFont.caption(.medium))
                         .foregroundStyle(K.text3)
                         .lineLimit(1)
                         .padding(.horizontal, 10)
@@ -266,12 +266,10 @@ private struct KMenuPanelView: View {
                 }
             }
         }
-        .padding(5)
+        .padding(6)
         .frame(minWidth: minWidth, alignment: .leading)
         .fixedSize()
-        .background(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).fill(K.surface))
-        .overlay(RoundedRectangle(cornerRadius: K.rLg, style: .continuous).strokeBorder(K.borderStrong, lineWidth: 1))
-        .shadow(color: .black.opacity(colorScheme == .dark ? 0.16 : 0.12), radius: 18, y: 8)
+        .kPopover()
         .padding(EdgeInsets(top: inset.top, leading: inset.left, bottom: inset.bottom, trailing: inset.right))
     }
 }
@@ -287,7 +285,7 @@ private struct KMenuRow: View {
                     KIcon(icon, size: 14, color: item.destructive ? K.danger : K.text2)
                 }
                 Text(item.title)
-                    .font(KFont.body())
+                    .font(KFont.ui(13))
                     .foregroundStyle(item.destructive ? K.danger : K.text)
                     .lineLimit(1)
                 Spacer(minLength: 16)
@@ -300,7 +298,8 @@ private struct KMenuRow: View {
             .contentShape(Rectangle())
             .kHover(radius: K.rMd)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(KIconButtonStyle())
+        .kFocusRing(radius: K.rMd)
         .accessibilityAddTraits(item.selected ? .isSelected : [])
     }
 }

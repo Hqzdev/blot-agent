@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct ProfilePageView: View {
@@ -34,7 +35,7 @@ struct ProfilePageView: View {
     private var identity: some View {
         VStack(spacing: 12) {
             InitialsAvatar(initials: app.profileDetails.initials, size: 112, fill: K.profileAvatar,
-                           foreground: .white, bordered: false, weight: .regular)
+                           foreground: K.onInverse, bordered: false, weight: .regular)
             Text(app.profileDetails.name).font(KFont.ui(26)).foregroundStyle(K.text)
                 .multilineTextAlignment(.center).textSelection(.enabled)
             Text("@" + app.profileDetails.username).font(KFont.body()).foregroundStyle(K.text3)

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct CommandPaletteView: View {
@@ -20,17 +21,18 @@ struct CommandPaletteView: View {
                         resultList.frame(maxHeight: min(420, geometry.size.height - 200))
                     }
                     HStack(spacing: 18) {
-                        Text("↑↓ navigate")
-                        Text("↵ open")
+                        hint("↑↓", "navigate")
+                        hint("↵", "open")
                         Spacer()
-                        Text("esc close")
+                        hint("esc", "close")
                     }
-                    .font(KFont.mono(10)).foregroundStyle(K.text3)
                     .padding(.horizontal, 16).frame(height: 36).kBorder(.top)
                 }
                 .frame(width: min(640, geometry.size.width - 48))
-                .kCard(radius: 16, fill: K.surface, stroke: K.borderStrong)
-                .shadow(color: .black.opacity(0.4), radius: 40, y: 24)
+                .kPopover(radius: K.rXl)
+                .accessibilityElement(children: .contain)
+                .accessibilityAddTraits(.isModal)
+                .accessibilityLabel("Command palette")
                 .padding(.top, max(64, min(150, geometry.size.height * 0.17)))
             }.frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -40,15 +42,14 @@ struct CommandPaletteView: View {
     }
     private var header: some View {
         HStack(spacing: 10) {
-            KIcon("magnifyingglass", size: 18)
+            KIcon("magnifyingglass", size: 18).accessibilityHidden(true)
             TextField("Search tasks, files and actions", text: $query)
                 .textFieldStyle(.plain).font(KFont.ui(15)).foregroundStyle(K.text)
                 .focused($searchFocused).onSubmit { activateSelected() }
                 .onKeyPress(.downArrow) { move(1); return .handled }
                 .onKeyPress(.upArrow) { move(-1); return .handled }
             Button(action: dismiss) {
-                Text("esc").font(KFont.mono(11)).foregroundStyle(K.text3)
-                    .padding(.horizontal, 6).padding(.vertical, 3).kCard(radius: 4)
+                Badge(text: "esc", fg: K.text3)
             }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).accessibilityLabel("Close command palette")
         }.padding(.horizontal, 16).frame(height: 52).kBorder(.bottom)
     }
@@ -62,12 +63,15 @@ struct CommandPaletteView: View {
                             SectionLabel(title: group, actionIcon: nil)
                             ForEach(entries) { entry in
                                 Button { selectedID = entry.id; activate(entry) } label: {
-                                    HStack(spacing: 10) {
-                                        KIcon(entry.icon, size: 15)
+                                    HStack(spacing: 8) {
+                                        KIcon(entry.icon, size: 15, color: selectedID == entry.id ? K.text : K.text2)
                                         Text(entry.title).font(KFont.body()).foregroundStyle(K.text).lineLimit(1)
-                                        Spacer(minLength: 12)
                                         Text(entry.detail).font(KFont.caption()).foregroundStyle(K.text3).lineLimit(1)
-                                    }.padding(.horizontal, 10).frame(height: 36)
+                                        Spacer(minLength: 12)
+                                        if selectedID == entry.id {
+                                            KIcon("arrow-right", size: 12, color: K.text3).accessibilityHidden(true)
+                                        }
+                                    }.padding(.horizontal, 10).padding(.vertical, 4).frame(minHeight: 34).contentShape(Rectangle())
                                         .kHover(radius: K.rMd, active: selectedID == entry.id)
                                 }
                                 .buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm).id(entry.id)
@@ -76,7 +80,13 @@ struct CommandPaletteView: View {
                         }
                     }
                     if !query.isEmpty && !results.contains(where: { $0.group != "Actions" }) {
-                        Text("No matching tasks or files").font(KFont.body()).foregroundStyle(K.text3).padding(12)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("No tasks or files match “\(query)”").font(KFont.ui(13, .medium)).foregroundStyle(K.text2)
+                            Text("Check the spelling or start a new task with this text from Actions above.")
+                                .font(KFont.caption()).foregroundStyle(K.text3)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(12)
                     }
                 }.padding(.horizontal, 8).padding(.bottom, 8)
             }
@@ -91,15 +101,22 @@ struct CommandPaletteView: View {
                     Text("Back to results").font(KFont.body()).foregroundStyle(K.text2)
                 }
             }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rSm)
-            if case let .file(_, _, path) = entry.action {
-                Text(path).font(KFont.mono(12)).textSelection(.enabled)
-                Text("Фактические изменения доступны в артефактах запуска.").font(KFont.body()).foregroundStyle(K.text2)
-                if case let .file(projectID, taskID, _) = entry.action {
-                    Button("Открыть результаты запуска") { app.openTask(projectID: projectID, taskID: taskID); app.reviewVisible = true; dismiss() }
+            if case let .file(projectID, taskID, path) = entry.action {
+                CodeBlock(title: path, icon: "file-text", text: path, maxHeight: nil, copyable: true)
+                Text("The actual changes are stored in the run's artifacts.").font(KFont.ui(13)).foregroundStyle(K.text2)
+                KButton(title: "Open run results", icon: "git-pull-request", kind: .primary) {
+                    app.openTask(projectID: projectID, taskID: taskID); app.reviewVisible = true; dismiss()
                 }
-
+                .keyboardShortcut(.defaultAction)
             }
-        }.padding(16)
+            Spacer(minLength: 0)
+        }.padding(16).frame(maxWidth: .infinity, alignment: .leading)
+    }
+    private func hint(_ key: String, _ label: String) -> some View {
+        HStack(spacing: 5) {
+            Text(key).font(KFont.mono(11)).foregroundStyle(K.text2)
+            Text(label).font(KFont.caption()).foregroundStyle(K.text3)
+        }
     }
     private func move(_ offset: Int) {
         guard preview == nil, !results.isEmpty else { return }
@@ -115,7 +132,7 @@ struct CommandPaletteView: View {
         case .file: preview = entry
         case let .task(projectID, taskID): app.openTask(projectID: projectID, taskID: taskID)
         case let .newTask(prompt): app.openHome(draft: prompt)
-        case .settings: dismiss(); app.showingSettings = true
+        case .settings: dismiss(); app.openProfileSettings(app.settings.section)
         case .automations: navigate(.automations)
         case .skills: navigate(.skills)
         case .graph: dismiss(); app.showingSettings = false; app.openGraph()

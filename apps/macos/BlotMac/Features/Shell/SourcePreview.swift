@@ -1,5 +1,6 @@
 import AppKit
 import PDFKit
+import BlotDesign
 import SwiftUI
 
 struct SourcePreview: View {
@@ -14,12 +15,12 @@ struct SourcePreview: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 IconButton(icon: "chevron-left", help: "Back to project") { app.shell.previewSource = nil }
-                Text(source.name).font(KFont.body(.medium)).foregroundStyle(K.text).lineLimit(1)
+                Text(source.name).font(KFont.label()).foregroundStyle(K.text).lineLimit(1)
                 Spacer()
                 if let text { CopyButton(text: text, title: "Copy file") }
             }
             if source.url == nil {
-                CatalogEmptyView(title: "Источник не открыт", detail: "Выберите локальный файл или откройте сохранённый артефакт запуска.")
+                EmptyState(icon: "file-text", title: "No local copy", detail: "This path comes from a run. Add the file from your Mac, or open the run artifact from Results.")
             } else if loadedSourceID != source.id {
                 VStack(spacing: 24) {
                     SkeletonBlock().frame(height: 160)
@@ -31,11 +32,11 @@ struct SourcePreview: View {
             } else if let pdf { LocalPDFPreview(document: pdf) }
             else if let text {
                 ScrollView([.horizontal, .vertical]) {
-                    Text(text).font(KFont.mono(12)).foregroundStyle(K.text2).textSelection(.enabled)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
+                    Text(text).font(KFont.mono(12)).foregroundStyle(K.text2).lineSpacing(3).textSelection(.enabled)
+                        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+                }.kCard(radius: K.rLg, fill: K.surface)
             } else if let error {
-                CatalogEmptyView(title: "Cannot preview this file", detail: error)
+                EmptyState(icon: "circle-alert", title: "Cannot preview this file", detail: error)
             }
             Spacer(minLength: 0)
             HStack(alignment: .top, spacing: KSpace.sm) {

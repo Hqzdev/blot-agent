@@ -1,8 +1,10 @@
+import BlotDesign
+import BlotAPI
 import Foundation
 
 extension AppState {
     var shellSidebarVisible: Bool {
-        sidebarVisible && (showingSettings || (activeTool == nil && !profileVisible))
+        sidebarVisible
     }
 
     var shellPanelVisible: Bool {
@@ -71,7 +73,7 @@ extension AppState {
             }
         }
         switch workRoute {
-        case .home: return "New chat"
+        case .home: return workChat.selectedProject?.name ?? "Новый чат"
         case .chat: return currentWorkChat?.title ?? "Chat"
         case .blot: return "Blot"
         case .automations: return "Scheduled"
@@ -128,6 +130,28 @@ extension AppState {
         if isMotes { return teamRoute != .newRun }
         if product == .code { if case .task = codeRoute { return true }; return false }
         return currentWorkChat != nil
+    }
+    /// Status of the run behind the current task or Motes conversation.
+    var currentRunStatus: String? {
+        guard isSignedIn, activeTool == nil, !profileVisible, !showingSettings, product == .code else { return nil }
+        if case .task = codeRoute, let task = currentTask { return workspace.find("RUN", task.id)?.data.text("status") }
+        if isMotes && shellHasConversation { return workspace.find("RUN", selectedRunID)?.data.text("status") }
+        return nil
+    }
+    /// Pause, resume and stop act on the Motes run that is open.
+    var runControlsAvailable: Bool {
+        isMotes && shellHasConversation && !showingSettings && currentRunStatus != nil
+    }
+    var currentRunPaused: Bool {
+        ["PAUSED", "WAITING", "INTERRUPTED"].contains(currentRunStatus ?? "")
+    }
+    var canPauseOrResumeRun: Bool {
+        runControlsAvailable &&
+            ["RUNNING", "PLANNING", "PAUSED", "WAITING", "INTERRUPTED"].contains(currentRunStatus ?? "")
+    }
+    var canStopRun: Bool {
+        guard runControlsAvailable, let status = currentRunStatus, !status.isEmpty else { return false }
+        return !BackendStatus(status).isTerminal
     }
     func showShellReview() {
         shell.rightVisible = true

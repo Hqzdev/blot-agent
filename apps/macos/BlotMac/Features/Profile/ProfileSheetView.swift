@@ -1,4 +1,5 @@
 import AppKit
+import BlotDesign
 import SwiftUI
 
 struct ProfileSheetView: View {
@@ -8,25 +9,16 @@ struct ProfileSheetView: View {
     @State private var invitation = "Try Blot with me — a workspace for building with AI, reviewing changes and working with a team of agents."
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text(title).font(KFont.ui(20, .semibold)).foregroundStyle(K.text)
-                Spacer()
-                IconButton(icon: "xmark", help: "Close") { dismiss() }
-            }
+        KSheet(title, width: 440) {
             switch sheet {
             case .invitation: invite
             case .guide: guide
             case .about: about
             }
-            HStack {
-                Spacer()
-                KButton(title: "Done") { dismiss() }.keyboardShortcut(.cancelAction)
-            }
+        } footer: {
+            KButton(title: "Done", kind: .primary) { dismiss() }.keyboardShortcut(.defaultAction)
         }
-        .padding(24).frame(width: 440).background(K.bg)
-        .preferredColorScheme(app.theme.colorScheme)
-        .onExitCommand { dismiss() }
+        .blotTheme(app.theme).tint(K.inverse)
     }
 
     private var title: String {
@@ -39,10 +31,8 @@ struct ProfileSheetView: View {
 
     private var invite: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Copy a message to share Blot with a friend.").font(KFont.body()).foregroundStyle(K.text2)
-            TextEditor(text: $invitation).font(KFont.body()).foregroundStyle(K.text)
-                .scrollContentBackground(.hidden).frame(height: 110).padding(10).kCard()
-                .kFocusRing()
+            Text("Copy a message to share Blot with a friend.").font(KFont.ui(13)).foregroundStyle(K.text2)
+            KTextArea(text: $invitation, minHeight: 110)
                 .accessibilityLabel("Invitation message")
             CopyButton(text: invitation, title: "Copy invitation", kind: .primary)
         }
@@ -50,10 +40,10 @@ struct ProfileSheetView: View {
 
     private var guide: some View {
         VStack(alignment: .leading, spacing: 16) {
-            guideSection("Start a task", "Choose a project in Code, write your request and send it. ⌘N opens a new task.")
-            guideSection("Work with a team", "Open Motes in Code and create a run. Choose roles, then follow the team in Chat or Graph.")
-            guideSection("Review the result", "Open Review to inspect Changes, Terminal and Preview. Keep the conversation open for follow-up changes.")
-            guideSection("Find your way", "⌘K searches tasks, files and actions. Esc closes menus or stops the active task.")
+            guideSection("Start a task", "Choose a project in Code, describe what to build and send it. Blot drafts a plan for you to approve. ⌘N opens a new task.")
+            guideSection("Work with a team", "Open Motes in Code and start a run. The plan assigns specialists; follow them in the conversation or the graph.")
+            guideSection("Review the result", "Open Results & Git to inspect artifacts, reviews and tool operations, then accept the result and prepare a commit.")
+            guideSection("Find your way", "⌘K searches tasks, files and actions. Esc closes menus, sheets and the command palette.")
         }
     }
 
@@ -69,8 +59,8 @@ struct ProfileSheetView: View {
 
     private func guideSection(_ heading: String, _ text: String) -> some View {
         VStack(alignment: .leading, spacing: 5) {
-            Text(heading).font(KFont.body(.semibold)).foregroundStyle(K.text)
-            Text(text).font(KFont.body()).foregroundStyle(K.text2).fixedSize(horizontal: false, vertical: true)
+            Text(heading).font(KFont.label()).foregroundStyle(K.text)
+            Text(text).font(KFont.ui(13)).foregroundStyle(K.text2).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

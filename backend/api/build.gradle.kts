@@ -9,6 +9,13 @@ dependencies {
 
 tasks.withType<JavaExec>().configureEach { jvmArgs("--enable-native-access=ALL-UNNAMED") }
 
+tasks.named<JavaExec>("bootRun") {
+    val operatorEnv = rootProject.file("../.env")
+    if (operatorEnv.isFile && !System.getenv().containsKey("BLOT_ENV_FILE")) {
+        environment("BLOT_ENV_FILE", operatorEnv.absolutePath)
+    }
+}
+
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootJar>("bootJar") {
     archiveFileName.set("blot-backend.jar")
 }

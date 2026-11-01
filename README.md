@@ -28,4 +28,6 @@ npm run dev
 
 ## Проверки backend и Swift-пакетов
 
+Настройка SMTP и общего доступа к модели: заполните `.env` по [.env.example](.env.example) и используйте `scripts/run-backend.sh`. [Инструкция](docs/installation-environment.md).
+
 Требования к JDK, Gradle, Swift и Xcode, а также локальные команды и ограничения CI собраны в [инструкции backend](backend/README.md).

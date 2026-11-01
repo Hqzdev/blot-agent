@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 /// Bonjour находит текущий порт установки; доверие серверу затем проверяет TLS pin.

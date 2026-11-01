@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 import AppKit
 import UniformTypeIdentifiers
@@ -10,24 +11,41 @@ struct ProviderCertificateSettingsView: View {
     @State private var busy = false
 
     var body: some View {
-        SettingsGroup(title: "GigaChat TLS certificate") {
-            VStack(alignment: .leading, spacing: 12) {
-                Link("Download CA from the provider’s instructions", destination: URL(string: "https://developers.sber.ru/docs/ru/gigachat/certificates")!)
-                Text("Choose a PEM certificate and compare its SHA-256 fingerprint with your trusted source. Approval applies to GigaChat requests for this account.")
-                    .font(KFont.body()).foregroundStyle(K.text2)
-                Button("Choose CA certificate…") { choose() }.disabled(busy)
-                ForEach(certificates, id: \.sha256) { item in
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(item.subject)
-                        Text("SHA-256: " + item.sha256).font(.caption.monospaced()).textSelection(.enabled)
-                        Text("Valid until " + item.notAfter).font(KFont.caption()).foregroundStyle(K.text2)
+        SettingsGroup(title: "GigaChat TLS certificate",
+                      detail: "Choose a PEM certificate and compare its SHA-256 fingerprint with a source you trust. Approval applies to GigaChat requests for this account.") {
+            SettingsRow(title: "Certificate authority", detail: "Download the CA from the provider’s instructions, then choose the file.") {
+                HStack(spacing: KSpace.sm) {
+                    Link(destination: URL(string: "https://developers.sber.ru/docs/ru/gigachat/certificates")!) {
+                        Text("Instructions").font(KFont.label()).foregroundStyle(K.text2).underline()
+                    }
+                    .help("Opens the provider’s documentation in your browser")
+                    KButton(title: "Choose file…", icon: "file-text", loading: busy && pending == nil) { choose() }
+                        .disabled(busy)
+                }
+            }
+            ForEach(certificates, id: \.sha256) { item in
+                SettingsDivider()
+                GroupContent(spacing: 6) {
+                    Text(item.subject).font(KFont.label()).foregroundStyle(K.text)
+                    KeyValueRow(label: "SHA-256", value: item.sha256, mono: true, labelWidth: 80)
+                    KeyValueRow(label: "Valid until", value: item.notAfter, labelWidth: 80)
+                }
+            }
+            if pending != nil || !certificates.isEmpty || error != nil {
+                SettingsDivider()
+                HStack(spacing: KSpace.sm) {
+                    if let error { InlineFeedback(text: error, tone: .error) }
+                    else if pending == nil { InlineFeedback(text: "Trusted for this account", tone: .success) }
+                    else { InlineFeedback(text: "Check the fingerprint before trusting it.", tone: .warning) }
+                    Spacer()
+                    if pending != nil {
+                        KButton(title: "Trust for GigaChat", icon: "check", kind: .primary, loading: busy) { save() }
                     }
                 }
-                if pending != nil { Button("Trust for GigaChat") { save() }.disabled(busy) }
-                else if !certificates.isEmpty { Text("Configured for this account").foregroundStyle(K.success) }
-                if let error { Text(error).foregroundStyle(K.warning).textSelection(.enabled) }
-            }.padding(16)
-        }.task {
+                .padding(KSpace.lg)
+            }
+        }
+        .task {
             do { certificates = try await BackendRuntime.shared.client.get("v2/provider/certificate", as: [CertificateInfo].self) }
             catch { self.error = error.localizedDescription }
         }
