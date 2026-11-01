@@ -1,6 +1,8 @@
 # Blot
 
-Приложение для Mac и iPhone, сайт и план разработки. Код приложений, сервера и библиотек пишет пользователь. Подготовлены папки, документы и настройки без заглушек реализации.
+ИИ-помощник с агентами. В репозитории находятся наработки приложений Mac/iPhone, Java backend, Swift packages и лендинг. Новый план расширяет продукт до macOS, iOS, Android и Windows; код разрабатывает команда с помощью ИИ.
+
+Требования от 1 ноября 2026: [план и оценка кода](docs/blot-product-plan.md), [полное ТЗ](docs/blot-technical-specification.md), [руководство MCP](docs/integrations/mcp-developer-guide.md). При расхождении с прежними планами применяются эти документы. Целевая основная поставка — 1 декабря 2026; наличие спецификации не означает готовность функций.
 
 ## Приложения
 
@@ -9,8 +11,8 @@
 - apps/macos/BlotMac — приложение Mac, папки Features, Models и Services.
 - apps/ios/BlotIOS — приложение iOS, папки Features, Models и Services.
 - apps/shared — пользовательский общий экран и ресурсы.
-- packages — Package.swift и папки Sources/Tests четырёх пакетов, без реализации.
-- backend — настройки четырёх модулей Gradle, Wrapper и папки Java; сервера пока нет.
+- packages — четыре Swift package с общими компонентами, исходниками и тестами.
+- backend — четыре модуля Gradle, Java-сервер и системные адаптеры; границы проверки описаны в backend/README.md.
 - contracts — OpenAPI и JSON Schema.
 - fixtures/contracts — общие примеры данных.
 

@@ -45,7 +45,13 @@ export const futureDocuments = Object.freeze([
   document("optimization", "optimization.md", "Оптимизация работы Blot", "Целевые правила расходов, скорости и качества.", null),
   document("google-workspace", "integrations/google-workspace.md", "Будущая интеграция Google Workspace", "План Gmail, Calendar и Drive; статус за пределами первой поставки.", null),
 ]);
-export const documents = Object.freeze([...architectureDocuments, documentationIndex, documentationReview, implementationPlan, ...agentDocuments, ...futureDocuments]);
+export const currentProductDocuments = Object.freeze([
+  document("grok-bot-character-catalog", "design/grok-bot-character-catalog.md", "Персонажи роли и движения", "Сохранённые варианты Grok Bot, наблюдаемая анимация и требования к компоненту Blot.", null),
+  document("blot-product-plan", "blot-product-plan.md", "План Blot для четырёх платформ", "Требования от 1 ноября: блоки, архитектура, инфраструктура, сроки и оценка кода.", null),
+  document("blot-technical-specification", "blot-technical-specification.md", "Техническое задание Blot", "Четыре платформы, CEO и агенты, локальные данные, инструменты, интеграции и приёмка.", null),
+  document("mcp-developer-guide", "integrations/mcp-developer-guide.md", "Подключение MCP серверов", "Целевой контракт внешних инструментов: transports, авторизация, разрешения и проверка совместимости.", null),
+]);
+export const documents = Object.freeze([...currentProductDocuments, ...architectureDocuments, documentationIndex, documentationReview, implementationPlan, ...agentDocuments, ...futureDocuments]);
 
 export function getDocument(id) { return documents.find((item) => item.id === id); }
 
