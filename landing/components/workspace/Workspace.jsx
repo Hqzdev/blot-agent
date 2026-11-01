@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowDownToLine, ArrowUpRight, Layers3, Route, FileText } from "lucide-react";
 import Link from "next/link";
-import { Footer } from "@/components/Shell";
 import { projectPlan, schedule } from "@/lib/workspace/data.mjs";
 import TaskCatalog from "./TaskCatalog";
 import TaskDetail from "./TaskDetail";
@@ -118,13 +117,13 @@ export default function Workspace() {
     <main className="ws-page" lang="ru" id="main-content" tabIndex={-1}>
       <div className="ws-topline">
         <div className="ws-breadcrumb"><Link href="/">Blot</Link><span>/</span><span>Рабочая среда проекта</span></div>
-        <span className="ws-version">План v1.2 · 11.10.2026</span>
+        <span className="ws-version">План · 01.11.2026</span>
       </div>
       <header className="ws-header">
         <div>
           <div className="ws-eyebrow"><span /> ОТ КОНЦЕПЦИИ ДО РЕЛИЗА</div>
           <h1>Рабочая среда.</h1>
-          <p>Все шаги к виртуальной инженерной команде.<br className="ws-desktop-break" /> SwiftUI на Mac и iPhone. Java и GigaChat — на компьютере.</p>
+          <p>План команды агентов для macOS и Windows.<br className="ws-desktop-break" /> Чаты, расписания и подтверждения — на iOS и Android.</p>
           <a className="ws-download" href="/BLOT_TECHNICAL_SPECIFICATION.md" download><ArrowDownToLine size={16} /> Скачать полное ТЗ <span>MD</span></a>
         </div>
         <div className="ws-dates" aria-label="Контрольные даты">
@@ -146,7 +145,6 @@ export default function Workspace() {
         {activeTab === "roadmap" && <Roadmap onOpenStream={openStream} onOpenTask={(task) => { selectTab("tasks"); openTask(task); }} />}
         {activeTab === "specification" && <SpecificationView />}
       </section>
-      <Footer className="ws-footer" />
       <TaskDetail task={selectedTask} onClose={closeTask} onOpenTask={openTask} />
     </main>
   );

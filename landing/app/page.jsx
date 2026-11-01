@@ -1,32 +1,10 @@
-import { Stage } from "@/components/Shell";
-import {
-  Manifesto, Tasks, AgentCrop, Builder, PromptStack, BetaPass, AgentLoop, CommandCard,
-  Keycaps, DiffCrop, LocalType, BlotMark, AgentLog, Sandbox, DownloadCard,
-} from "@/components/home";
-import { projectPlan } from "@/lib/workspace/data.mjs";
+import { LandingPage } from "@/components/landing/LandingPage";
 
-const progress = { done: projectPlan.completedTasks.length, total: projectPlan.tasks.length };
+export const metadata = {
+  title: "Blot — AI teammates that finish the work",
+  description: "AI teammates you can give real work to. Work with a team of Bots across your apps, files, and projects.",
+};
 
 export default function Home() {
-  return (
-    <Stage>
-      <div className="grid">
-        <Manifesto />
-        <Tasks />
-        <AgentCrop />
-        <Builder progress={progress} />
-        <PromptStack />
-        <BetaPass />
-        <AgentLoop />
-        <CommandCard />
-        <Keycaps />
-        <DiffCrop />
-        <LocalType />
-        <BlotMark />
-        <AgentLog />
-        <Sandbox />
-        <DownloadCard />
-      </div>
-    </Stage>
-  );
+  return <LandingPage />;
 }

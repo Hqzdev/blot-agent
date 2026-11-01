@@ -1,4 +1,4 @@
-.ws-doc-page { width: min(980px, calc(100% - 64px)); margin: 138px auto 0; }
+.ws-doc-page { width: min(980px, calc(100% - 64px)); margin: 64px auto 96px; }
 .ws-doc-page :focus-visible { outline: 2px solid var(--focus); outline-offset: 4px; }
 .ws-doc-back { display: inline-flex; align-items: center; gap: 9px; font-size: 12px; color: var(--text-3); }
 .ws-doc-back:hover { color: var(--text); }
@@ -30,7 +30,7 @@
 .ws-doc-code pre { padding: 18px; overflow-x: auto; font-family: var(--font-mono); font-size: 12px; line-height: 1.95; }
 .ws-doc-code pre code { font-family: inherit; }
 @media (max-width: 760px) {
-  .ws-doc-page { width: calc(100% - 32px); margin-top: 113px; }
+  .ws-doc-page { width: calc(100% - 32px); margin-top: 48px; }
   .ws-doc-header { padding-top: 28px; }
   .ws-doc-meta { gap: 16px; font-size: 12px; }
   .ws-doc-header h1 { font-size: 30px; }

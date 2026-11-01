@@ -3,7 +3,6 @@ import { join } from "node:path";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowDownToLine, Check } from "lucide-react";
-import { Footer } from "@/components/Shell";
 import MarkdownDocument from "@/components/workspace/MarkdownDocument";
 import { documents, getDocument } from "@/lib/workspace/documentation.mjs";
 import "../../workspace.css";
@@ -28,6 +27,5 @@ export default async function DocumentPage({ params }) {
     <Link className="ws-doc-back" href={`/workspace#${document.completed ? "completed" : "tasks"}`}><ArrowLeft size={14} />{document.completed ? "К выполненным задачам" : "К рабочей среде"}</Link>
     <header className="ws-doc-header"><div className="ws-doc-meta"><span>{document.taskId || "АРХИТЕКТУРА"}</span><span className={document.completed ? "completed" : ""}>{document.completed && <Check size={12} />}{document.completed ? "Задача выполнена" : "Документ подготовлен"}</span></div><h1>{title}</h1><p>{document.summary}</p><div className="ws-doc-actions"><code>{document.path}</code><a href={document.downloadUrl} download><ArrowDownToLine size={15} /> Скачать MD</a></div></header>
     <MarkdownDocument content={content} sourcePath={document.path} />
-    <Footer className="ws-footer" />
   </main>;
 }
