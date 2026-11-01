@@ -1,0 +1,486 @@
+{
+  "source": "https://x.ai/bot",
+  "kind": "Observed vector frames of the heading mascot, not the full application animation library",
+  "frames": [
+    {
+      "file": "vector-frames/frame-0000.svg",
+      "timeMs": 31
+    },
+    {
+      "file": "vector-frames/frame-0001.svg",
+      "timeMs": 162
+    },
+    {
+      "file": "vector-frames/frame-0002.svg",
+      "timeMs": 213
+    },
+    {
+      "file": "vector-frames/frame-0003.svg",
+      "timeMs": 265
+    },
+    {
+      "file": "vector-frames/frame-0004.svg",
+      "timeMs": 368
+    },
+    {
+      "file": "vector-frames/frame-0005.svg",
+      "timeMs": 446
+    },
+    {
+      "file": "vector-frames/frame-0006.svg",
+      "timeMs": 577
+    },
+    {
+      "file": "vector-frames/frame-0007.svg",
+      "timeMs": 664
+    },
+    {
+      "file": "vector-frames/frame-0008.svg",
+      "timeMs": 784
+    },
+    {
+      "file": "vector-frames/frame-0009.svg",
+      "timeMs": 847
+    },
+    {
+      "file": "vector-frames/frame-0010.svg",
+      "timeMs": 883
+    },
+    {
+      "file": "vector-frames/frame-0011.svg",
+      "timeMs": 910
+    },
+    {
+      "file": "vector-frames/frame-0012.svg",
+      "timeMs": 991
+    },
+    {
+      "file": "vector-frames/frame-0013.svg",
+      "timeMs": 1053
+    },
+    {
+      "file": "vector-frames/frame-0014.svg",
+      "timeMs": 1169
+    },
+    {
+      "file": "vector-frames/frame-0015.svg",
+      "timeMs": 1302
+    },
+    {
+      "file": "vector-frames/frame-0016.svg",
+      "timeMs": 1364
+    },
+    {
+      "file": "vector-frames/frame-0017.svg",
+      "timeMs": 1412
+    },
+    {
+      "file": "vector-frames/frame-0018.svg",
+      "timeMs": 1449
+    },
+    {
+      "file": "vector-frames/frame-0019.svg",
+      "timeMs": 1511
+    },
+    {
+      "file": "vector-frames/frame-0020.svg",
+      "timeMs": 1615
+    },
+    {
+      "file": "vector-frames/frame-0021.svg",
+      "timeMs": 1671
+    },
+    {
+      "file": "vector-frames/frame-0022.svg",
+      "timeMs": 1719
+    },
+    {
+      "file": "vector-frames/frame-0023.svg",
+      "timeMs": 1769
+    },
+    {
+      "file": "vector-frames/frame-0024.svg",
+      "timeMs": 1826
+    },
+    {
+      "file": "vector-frames/frame-0025.svg",
+      "timeMs": 1928
+    },
+    {
+      "file": "vector-frames/frame-0026.svg",
+      "timeMs": 2031
+    },
+    {
+      "file": "vector-frames/frame-0027.svg",
+      "timeMs": 2086
+    },
+    {
+      "file": "vector-frames/frame-0028.svg",
+      "timeMs": 2132
+    },
+    {
+      "file": "vector-frames/frame-0029.svg",
+      "timeMs": 2181
+    },
+    {
+      "file": "vector-frames/frame-0030.svg",
+      "timeMs": 2237
+    },
+    {
+      "file": "vector-frames/frame-0031.svg",
+      "timeMs": 2340
+    },
+    {
+      "file": "vector-frames/frame-0032.svg",
+      "timeMs": 2433
+    },
+    {
+      "file": "vector-frames/frame-0033.svg",
+      "timeMs": 2545
+    },
+    {
+      "file": "vector-frames/frame-0034.svg",
+      "timeMs": 2648
+    },
+    {
+      "file": "vector-frames/frame-0035.svg",
+      "timeMs": 2687
+    },
+    {
+      "file": "vector-frames/frame-0036.svg",
+      "timeMs": 2751
+    },
+    {
+      "file": "vector-frames/frame-0037.svg",
+      "timeMs": 2861
+    },
+    {
+      "file": "vector-frames/frame-0038.svg",
+      "timeMs": 2943
+    },
+    {
+      "file": "vector-frames/frame-0039.svg",
+      "timeMs": 3027
+    },
+    {
+      "file": "vector-frames/frame-0040.svg",
+      "timeMs": 3080
+    },
+    {
+      "file": "vector-frames/frame-0041.svg",
+      "timeMs": 3113
+    },
+    {
+      "file": "vector-frames/frame-0042.svg",
+      "timeMs": 3161
+    },
+    {
+      "file": "vector-frames/frame-0043.svg",
+      "timeMs": 3198
+    },
+    {
+      "file": "vector-frames/frame-0044.svg",
+      "timeMs": 3263
+    },
+    {
+      "file": "vector-frames/frame-0045.svg",
+      "timeMs": 3367
+    },
+    {
+      "file": "vector-frames/frame-0046.svg",
+      "timeMs": 3453
+    },
+    {
+      "file": "vector-frames/frame-0047.svg",
+      "timeMs": 3512
+    },
+    {
+      "file": "vector-frames/frame-0048.svg",
+      "timeMs": 3573
+    },
+    {
+      "file": "vector-frames/frame-0049.svg",
+      "timeMs": 3678
+    },
+    {
+      "file": "vector-frames/frame-0050.svg",
+      "timeMs": 3781
+    },
+    {
+      "file": "vector-frames/frame-0051.svg",
+      "timeMs": 3886
+    },
+    {
+      "file": "vector-frames/frame-0052.svg",
+      "timeMs": 3964
+    },
+    {
+      "file": "vector-frames/frame-0053.svg",
+      "timeMs": 4096
+    },
+    {
+      "file": "vector-frames/frame-0054.svg",
+      "timeMs": 4160
+    },
+    {
+      "file": "vector-frames/frame-0055.svg",
+      "timeMs": 4198
+    },
+    {
+      "file": "vector-frames/frame-0056.svg",
+      "timeMs": 4299
+    },
+    {
+      "file": "vector-frames/frame-0057.svg",
+      "timeMs": 4406
+    },
+    {
+      "file": "vector-frames/frame-0058.svg",
+      "timeMs": 4457
+    },
+    {
+      "file": "vector-frames/frame-0059.svg",
+      "timeMs": 4503
+    },
+    {
+      "file": "vector-frames/frame-0060.svg",
+      "timeMs": 4610
+    },
+    {
+      "file": "vector-frames/frame-0061.svg",
+      "timeMs": 4714
+    },
+    {
+      "file": "vector-frames/frame-0062.svg",
+      "timeMs": 4819
+    },
+    {
+      "file": "vector-frames/frame-0063.svg",
+      "timeMs": 4926
+    },
+    {
+      "file": "vector-frames/frame-0064.svg",
+      "timeMs": 4976
+    },
+    {
+      "file": "vector-frames/frame-0065.svg",
+      "timeMs": 5027
+    },
+    {
+      "file": "vector-frames/frame-0066.svg",
+      "timeMs": 5129
+    },
+    {
+      "file": "vector-frames/frame-0067.svg",
+      "timeMs": 5183
+    },
+    {
+      "file": "vector-frames/frame-0068.svg",
+      "timeMs": 5220
+    },
+    {
+      "file": "vector-frames/frame-0069.svg",
+      "timeMs": 5335
+    },
+    {
+      "file": "vector-frames/frame-0070.svg",
+      "timeMs": 5399
+    },
+    {
+      "file": "vector-frames/frame-0071.svg",
+      "timeMs": 5439
+    },
+    {
+      "file": "vector-frames/frame-0072.svg",
+      "timeMs": 5545
+    },
+    {
+      "file": "vector-frames/frame-0073.svg",
+      "timeMs": 5649
+    },
+    {
+      "file": "vector-frames/frame-0074.svg",
+      "timeMs": 5726
+    },
+    {
+      "file": "vector-frames/frame-0075.svg",
+      "timeMs": 5853
+    },
+    {
+      "file": "vector-frames/frame-0076.svg",
+      "timeMs": 5904
+    },
+    {
+      "file": "vector-frames/frame-0077.svg",
+      "timeMs": 5957
+    },
+    {
+      "file": "vector-frames/frame-0078.svg",
+      "timeMs": 6035
+    },
+    {
+      "file": "vector-frames/frame-0079.svg",
+      "timeMs": 6165
+    },
+    {
+      "file": "vector-frames/frame-0080.svg",
+      "timeMs": 6213
+    },
+    {
+      "file": "vector-frames/frame-0081.svg",
+      "timeMs": 6265
+    },
+    {
+      "file": "vector-frames/frame-0082.svg",
+      "timeMs": 6370
+    },
+    {
+      "file": "vector-frames/frame-0083.svg",
+      "timeMs": 6462
+    },
+    {
+      "file": "vector-frames/frame-0084.svg",
+      "timeMs": 6578
+    },
+    {
+      "file": "vector-frames/frame-0085.svg",
+      "timeMs": 6682
+    },
+    {
+      "file": "vector-frames/frame-0086.svg",
+      "timeMs": 6731
+    },
+    {
+      "file": "vector-frames/frame-0087.svg",
+      "timeMs": 6784
+    },
+    {
+      "file": "vector-frames/frame-0088.svg",
+      "timeMs": 6885
+    },
+    {
+      "file": "vector-frames/frame-0089.svg",
+      "timeMs": 6964
+    },
+    {
+      "file": "vector-frames/frame-0090.svg",
+      "timeMs": 7094
+    },
+    {
+      "file": "vector-frames/frame-0091.svg",
+      "timeMs": 7194
+    },
+    {
+      "file": "vector-frames/frame-0092.svg",
+      "timeMs": 7239
+    },
+    {
+      "file": "vector-frames/frame-0093.svg",
+      "timeMs": 7296
+    },
+    {
+      "file": "vector-frames/frame-0094.svg",
+      "timeMs": 7397
+    },
+    {
+      "file": "vector-frames/frame-0095.svg",
+      "timeMs": 7465
+    },
+    {
+      "file": "vector-frames/frame-0096.svg",
+      "timeMs": 7496
+    },
+    {
+      "file": "vector-frames/frame-0097.svg",
+      "timeMs": 7606
+    },
+    {
+      "file": "vector-frames/frame-0098.svg",
+      "timeMs": 7707
+    },
+    {
+      "file": "vector-frames/frame-0099.svg",
+      "timeMs": 7806
+    },
+    {
+      "file": "vector-frames/frame-0100.svg",
+      "timeMs": 7912
+    },
+    {
+      "file": "vector-frames/frame-0101.svg",
+      "timeMs": 7995
+    },
+    {
+      "file": "vector-frames/frame-0102.svg",
+      "timeMs": 8115
+    },
+    {
+      "file": "vector-frames/frame-0103.svg",
+      "timeMs": 8219
+    },
+    {
+      "file": "vector-frames/frame-0104.svg",
+      "timeMs": 8267
+    },
+    {
+      "file": "vector-frames/frame-0105.svg",
+      "timeMs": 8326
+    },
+    {
+      "file": "vector-frames/frame-0106.svg",
+      "timeMs": 8429
+    },
+    {
+      "file": "vector-frames/frame-0107.svg",
+      "timeMs": 8468
+    },
+    {
+      "file": "vector-frames/frame-0108.svg",
+      "timeMs": 8530
+    },
+    {
+      "file": "vector-frames/frame-0109.svg",
+      "timeMs": 8636
+    },
+    {
+      "file": "vector-frames/frame-0110.svg",
+      "timeMs": 8741
+    },
+    {
+      "file": "vector-frames/frame-0111.svg",
+      "timeMs": 8845
+    },
+    {
+      "file": "vector-frames/frame-0112.svg",
+      "timeMs": 8950
+    },
+    {
+      "file": "vector-frames/frame-0113.svg",
+      "timeMs": 9006
+    },
+    {
+      "file": "vector-frames/frame-0114.svg",
+      "timeMs": 9052
+    },
+    {
+      "file": "vector-frames/frame-0115.svg",
+      "timeMs": 9157
+    },
+    {
+      "file": "vector-frames/frame-0116.svg",
+      "timeMs": 9215
+    },
+    {
+      "file": "vector-frames/frame-0117.svg",
+      "timeMs": 9260
+    },
+    {
+      "file": "vector-frames/frame-0118.svg",
+      "timeMs": 9360
+    },
+    {
+      "file": "vector-frames/frame-0119.svg",
+      "timeMs": 9467
+    }
+  ]
+}

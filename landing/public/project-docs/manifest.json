@@ -4,6 +4,42 @@
   "completedTasks": 12,
   "documents": [
     {
+      "id": "grok-bot-character-catalog",
+      "taskId": null,
+      "source": "docs/design/grok-bot-character-catalog.md",
+      "downloadUrl": "/project-docs/design/grok-bot-character-catalog.md",
+      "sha256": "4264b6547837a10e78e3d4bfef54e2109afbf5e2e20a8173111b0b4237670336",
+      "bytes": 10234,
+      "taskCompleted": false
+    },
+    {
+      "id": "blot-product-plan",
+      "taskId": null,
+      "source": "docs/blot-product-plan.md",
+      "downloadUrl": "/project-docs/blot-product-plan.md",
+      "sha256": "342ea965acc6d112e277ed5a1a88e7ab5beb000880f2defac3aff40f60e6507e",
+      "bytes": 16667,
+      "taskCompleted": false
+    },
+    {
+      "id": "blot-technical-specification",
+      "taskId": null,
+      "source": "docs/blot-technical-specification.md",
+      "downloadUrl": "/project-docs/blot-technical-specification.md",
+      "sha256": "3ceb63a7c8134050382abf63601a48645a753bcb980e5498694a22397b86f4f3",
+      "bytes": 90051,
+      "taskCompleted": false
+    },
+    {
+      "id": "mcp-developer-guide",
+      "taskId": null,
+      "source": "docs/integrations/mcp-developer-guide.md",
+      "downloadUrl": "/project-docs/integrations/mcp-developer-guide.md",
+      "sha256": "ac746927f80a4fafb7fb452154612835cb39edc078f3d31dd2345e2453ee7fc9",
+      "bytes": 14214,
+      "taskCompleted": false
+    },
+    {
       "id": "P0.1",
       "taskId": "P0.1",
       "source": "docs/product-scope.md",
@@ -206,8 +242,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "86ab4c48426c8f6df9a7c9bc60c36441231b4cf3b2e90c784d6353d7d7523e24",
-      "bytes": 8663,
+      "sha256": "94635173310883345a53b9e89216b59dee3e7de1304d1ec2f490ae64552fb62f",
+      "bytes": 10543,
       "taskCompleted": false
     },
     {

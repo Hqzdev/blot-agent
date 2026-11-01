@@ -6,6 +6,7 @@ import { Search, Copy, Check, Info, TriangleAlert, ArrowRight } from "lucide-rea
 import { Label, Badge } from "./ui";
 import { play } from "@/lib/sound";
 import { useClipboard } from "@/lib/useClipboard";
+import { currentProductDocuments } from "@/lib/workspace/documentation.mjs";
 import FormFeedback from "./FormFeedback";
 
 /* ---------- shared bits for long-form pages ---------- */
@@ -98,6 +99,7 @@ export function Reveal({ children, id, className = "" }) {
 
 /* ---------- Docs ---------- */
 const NAV = [
+  ["Product requirements", [["product-plan", "Four-platform specification"]]],
   ["Getting started", [["install", "Install"], ["first-task", "Your first task"], ["projects", "Projects & worktrees"]]],
   ["The agent", [["approvals", "Sandbox & approvals"], ["allow-list", "Allow list"], ["models", "Models & keys"]]],
   ["Extend", [["automations", "Automations"], ["skills", "Skills"]]],
@@ -141,10 +143,17 @@ export function DocsPage() {
 
       <article className="prose">
         <header className="prose-head">
-          <Label dot="var(--ember)">Docs · v1.4</Label>
+          <Label dot="var(--ember)">Product requirements · November 2026</Label>
           <h1>Blot documentation</h1>
-          <p className="lead">Everything you need to go from download to your first merged diff. Ten minutes, start to finish.</p>
+          <p className="lead">The current product plan, technical specification and MCP integration contract for Blot.</p>
         </header>
+
+        <Reveal id="product-plan">
+          <h2>Four-platform specification</h2>
+          <p>The November requirements cover macOS, iOS, Android and Windows, with CEO coordination, local computer execution and mobile control.</p>
+          <ul>{currentProductDocuments.map((document) => <li key={document.id}><a href={document.href}>{document.title}</a></li>)}</ul>
+          <Note>These documents describe the target product. The earlier interface examples below are historical drafts and do not confirm available commands, installation methods or implemented features.</Note>
+        </Reveal>
 
         <Reveal id="install">
           <h2>Install</h2>
