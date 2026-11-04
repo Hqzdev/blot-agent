@@ -643,10 +643,17 @@ final class WorkspaceStore {
                 }
             } catch {
                 guard self.sessionGeneration == generation else { return }
+                let log = Logger(subsystem: "dev.blot.model", category: "Response")
+                if let modelError = error as? ChatModelError {
+                    log.error("Model response failed: \(String(describing: modelError), privacy: .public)")
+                } else {
+                    let failure = error as NSError
+                    log.error("Model response failed domain=\(failure.domain, privacy: .public) code=\(failure.code)")
+                }
                 // Reload the persisted terminal state even if a canceled consumer missed the final yield.
                 if let local = self.commands,
                    let saved = try? await local.currentSnapshot() { self.snapshot = saved }
-                self.error = "Сообщение сохранено. Ответ не завершён. Проверьте подключение и настройки модели."
+                self.error = WorkspaceFailureCopy.message(error)
             }
         }
     }

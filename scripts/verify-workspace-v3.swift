@@ -8,6 +8,10 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if let index = CommandLine.arguments.firstIndex(of: "--live-model-check"), index + 1 < CommandLine.arguments.count {
+            try await verifyLiveModel(configurationURL: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
+            return
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--render-live-settings"), index + 1 < CommandLine.arguments.count {
             try renderLiveSettings(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
             return
@@ -151,6 +155,43 @@ struct WorkspaceVerification {
             window.contentView = nil; window.close()
         }
         print("PASS: original settings layout renders general, appearance and personalization without a demo presentation")
+    }
+
+    static func verifyLiveModel(configurationURL: URL) async throws {
+        let configuration = try AppleInstallationConfiguration.decode(Data(contentsOf: configurationURL))
+        let model = try configuration.makeModel()
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"),
+            maximumOutputTokens: configuration.gigaChat.outputTokens, runTokenBudget: configuration.gigaChat.runTokenBudget,
+            makeModel: { _ in model })
+        do {
+            let store = WorkspaceStore(mode: .live, service: service)
+            await store.loadWorkspace()
+            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Отвечай кратко, одним словом.")
+            await store.perform(.createAgent)
+            guard store.error == nil, store.selectedAgentID != nil else { throw CheckFailure.timedOut }
+            await store.perform(.createConversation, next: .chat)
+            store.form.composer.draft = "Ответь одним словом: работает"
+            await store.perform(.send)
+            let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+            while store.isReplying {
+                guard ContinuousClock.now < deadline else { throw CheckFailure.timedOut }
+                try await _Concurrency.Task.sleep(for: .milliseconds(50))
+            }
+            guard store.error == nil, store.currentMessages.count == 2,
+                  let response = store.currentMessages.last, response.role == .assistant,
+                  response.delivery == .completed, !response.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                print("Live app model verification failed: \(store.error ?? "missing completed response")")
+                throw CheckFailure.timedOut
+            }
+            print("PASS: live WorkspaceStore -> LocalWorkspaceService -> GigaChat -> persisted completed response; characters=\(response.content.count)")
+            try await service.close()
+            try FileManager.default.removeItem(at: directory)
+        } catch {
+            try? await service.close()
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
     }
 
     static func verifyLocalWorkspace() async throws {
