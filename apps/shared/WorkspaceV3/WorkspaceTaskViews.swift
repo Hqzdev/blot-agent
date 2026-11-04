@@ -26,7 +26,7 @@ struct WorkspaceTaskView: View {
         VStack(spacing: 30) {
             Spacer(minLength: 30)
             WorkspaceAvatar(size: 100)
-            Text(store.t("What are we doing today?")).font(.system(size: 34)).multilineTextAlignment(.center)
+            WorkspaceWelcomeGreeting().font(.system(size: 34)).multilineTextAlignment(.center)
             Text(store.t("Give Blot a task — it assembles the team and delivers the result."))
                 .foregroundStyle(WorkspaceStyle.secondary).multilineTextAlignment(.center)
             WorkspaceComposer().padding(.top, 10)

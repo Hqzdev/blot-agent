@@ -38,7 +38,7 @@ struct MacWorkspaceChatPage: View {
                 if let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
                     WorkspaceAvatarView(agent: agent, size: 68, animated: true)
                 } else { WorkspaceAnimatedAvatar(size: 68) }
-                Text(store.t("What are we doing today?"))
+                WorkspaceWelcomeGreeting()
                     .font(.system(size: 26, weight: .regular))
                     .multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
             }

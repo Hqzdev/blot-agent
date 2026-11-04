@@ -50,7 +50,7 @@ struct PhoneConversationView: View {
                     }
                     if rows.isEmpty, activeDraft == nil {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(store.t("What would you like to work on?")).font(.title3.weight(.medium))
+                            WorkspaceWelcomeGreeting().font(.title3.weight(.medium))
                             if let agent { Text(agent.instructions).foregroundStyle(WorkspaceStyle.secondary) }
                         }.padding(16)
                     }
