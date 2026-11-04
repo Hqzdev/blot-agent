@@ -93,11 +93,22 @@ struct WorkspaceRootView: View {
     @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         Group {
-            #if os(macOS)
-            desktop
-            #else
-            phone
-            #endif
+            if store.isRestoringSession {
+                ProgressView()
+                    .controlSize(.small)
+                    .accessibilityLabel(store.t("Loading…"))
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    #if os(macOS)
+                    .frame(minWidth: 900, minHeight: 620)
+                    #endif
+                    .accessibilityIdentifier("workspace.restoring-session")
+            } else {
+                #if os(macOS)
+                desktop
+                #else
+                phone
+                #endif
+            }
         }
         .environment(store)
         .environment(\.locale, Locale(identifier: store.language == "ru" ? "ru_RU" : "en_GB"))
@@ -140,7 +151,7 @@ struct WorkspaceRootView: View {
     }
     private var effectiveTheme: ThemePreference {
         #if os(macOS)
-        store.route.isAuthentication && store.route != .firstAgent ? .dark : theme
+        !store.isRestoringSession && store.route.isAuthentication && store.route != .firstAgent ? .dark : theme
         #else
         theme
         #endif
