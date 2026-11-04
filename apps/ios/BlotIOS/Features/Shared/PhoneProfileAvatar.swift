@@ -7,6 +7,7 @@ struct PhoneProfileAvatar: View {
     let data: Data?
     var size: CGFloat = 72
     @State private var image: UIImage?
+    @Environment(\.displayScale) private var displayScale
 
     var body: some View {
         Group {
@@ -18,7 +19,15 @@ struct PhoneProfileAvatar: View {
             }
         }
         .frame(width: size, height: size).clipShape(Circle())
-        .task(id: data) { image = data.flatMap { UIImage(data: $0) } }
+        .task(id: data) {
+            guard let data else { image = nil; return }
+            let pixels = max(1, Int(size * displayScale))
+            let thumbnail = await Task.detached(priority: .userInitiated) {
+                PhoneAvatarImage.thumbnail(data, pixels: pixels)
+            }.value
+            guard !Task.isCancelled else { return }
+            image = thumbnail.map { UIImage(cgImage: $0) }
+        }
         .accessibilityHidden(true)
     }
 }

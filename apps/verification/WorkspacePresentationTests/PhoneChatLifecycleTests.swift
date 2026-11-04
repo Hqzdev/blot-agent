@@ -6,6 +6,35 @@ import XCTest
 /// preview store. Never opens or changes the signed-in user's workspace.
 @MainActor
 final class PhoneChatLifecycleTests: XCTestCase {
+    func testRapidTabChangesAndDraftEdits() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+        let store = WorkspaceStore(mode: .live, service: service)
+        await store.loadWorkspace()
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        await settle(window)
+
+        for cycle in 0..<5 {
+            for tab in [WorkspaceRoute.chats, .agents, .files, .settings] {
+                for index in 0..<40 { store.form.composer.draft = "Draft \(cycle)-\(index)" }
+                store.selectTab(tab)
+                await settle(window)
+                XCTAssertEqual(store.tab, tab)
+                XCTAssertEqual(store.rootRoute, tab)
+                XCTAssertFalse(store.busy)
+            }
+        }
+        store.persistChatState(immediately: true)
+        try await Task.sleep(for: .milliseconds(300))
+        try await service.close()
+        try FileManager.default.removeItem(at: directory)
+    }
+
     func testDeletePinnedAndLastChatsThenSwitchTabs() async throws {
         let store = WorkspaceStore(mode: .preview, route: .chats)
         // Presentation fixtures may contain only archived pins. Explicitly seed

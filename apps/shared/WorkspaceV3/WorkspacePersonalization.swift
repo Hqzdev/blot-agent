@@ -1,15 +1,15 @@
 import Foundation
 
-struct WorkspacePersonalization: Codable, Equatable {
-    enum Tone: String, Codable, CaseIterable, Identifiable {
+nonisolated struct WorkspacePersonalization: Codable, Equatable, Sendable {
+    enum Tone: String, Codable, CaseIterable, Identifiable, Sendable {
         case friendly = "Friendly", professional = "Professional", strict = "Strict"
         var id: String { rawValue }
     }
-    enum Length: String, Codable, CaseIterable, Identifiable {
+    enum Length: String, Codable, CaseIterable, Identifiable, Sendable {
         case concise = "Concise", standard = "Medium", detailed = "Detailed"
         var id: String { rawValue }
     }
-    enum Format: String, Codable, CaseIterable, Identifiable {
+    enum Format: String, Codable, CaseIterable, Identifiable, Sendable {
         case expressive = "Markdown and emoji", markdown = "Markdown without emoji", plain = "Plain text"
         var id: String { rawValue }
     }

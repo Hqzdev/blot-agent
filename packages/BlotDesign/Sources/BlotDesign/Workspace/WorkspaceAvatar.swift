@@ -7,9 +7,11 @@ public struct WorkspaceAvatar: View {
     let color: Color
     let size: CGFloat
     let showsEyes: Bool
+    let pose: BlotPose
     @Environment(\.colorScheme) private var scheme
-    public init(shape: ShapeKind = .round, color: Color = .primary, size: CGFloat = 44, showsEyes: Bool = true) {
-        self.shape = shape; self.color = color; self.size = size; self.showsEyes = showsEyes
+    public init(shape: ShapeKind = .round, color: Color = .primary, size: CGFloat = 44, showsEyes: Bool = true,
+                pose: BlotPose = BlotPose()) {
+        self.shape = shape; self.color = color; self.size = size; self.showsEyes = showsEyes; self.pose = pose
     }
     public var body: some View {
         ZStack {
@@ -20,14 +22,19 @@ public struct WorkspaceAvatar: View {
                 .position(x: size * faceCenter.x, y: size * faceCenter.y)
             }
         }.frame(width: size, height: size)
+            .scaleEffect(x: pose.scaleX, y: pose.scaleY, anchor: .bottom)
+            .rotationEffect(.degrees(pose.tilt), anchor: .bottom)
+            .offset(x: size * pose.x / 120, y: size * pose.y / 100)
             .accessibilityHidden(true)
     }
 
     private var eyes: some View {
         HStack(spacing: size * 0.08) {
             Capsule().frame(width: size * 0.095, height: size * 0.22)
+                .scaleEffect(y: max(0.12, pose.openL))
                 .rotationEffect(.degrees(shape == .drop ? 15 : -25))
             Capsule().frame(width: size * 0.08, height: size * 0.18)
+                .scaleEffect(y: max(0.12, pose.openR))
                 .rotationEffect(.degrees(shape == .drop ? 15 : -25)).offset(y: -size * 0.035)
         }
     }
