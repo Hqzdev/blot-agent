@@ -21,8 +21,30 @@ This repository is developed on two computers: macOS for Mac/iPhone, and Windows
 - Before editing, inspect `git status`, the current branch, and worktrees. Fetch `origin`, then create a task branch from the current remote platform base: `git switch -c ios/auth origin/ios/main`. Replace the platform and task as appropriate.
 - Use a separate branch/worktree per task. Do not switch, reset, stash, or include another task's uncommitted changes without authorization. If an existing task branch matches the work, continue on it.
 - Push explicitly to the matching remote branch, for example `git push -u origin ios/auth`. Never push iOS work to `mac/*`, Android work to `windows/*`, or vice versa. These names replace the earlier `codex/*` and `work/*` conventions.
-- Platform bases receive reviewed task changes through pull requests. `main` remains the shared integration/default branch; integrate platform changes into `main` through a reviewed pull request. Fetch and merge updated `origin/main` into a platform base before starting work that needs those updates. Never force-push shared branches.
+- Platform bases receive reviewed task changes through pull requests. `main` remains the shared integration/default branch; integrate platform changes into `main` through a reviewed pull request. Bring updates from `origin/main` into a platform through an adaptation task branch and validate before merging into its base, as described below. Never force-push shared branches.
 - Work spanning both Apple clients goes into one owning platform task branch (for example, `mac/shared-auth`), then reaches the other platform through `main`. Do not independently duplicate shared changes in several branches.
+
+## Transferring core updates between computers
+
+Branches and computers do not synchronize automatically. Transfer shared core changes through Git and `main`; do not copy source files manually between computers.
+
+1. On the source computer, implement the core update in an owning platform task branch, for example `mac/core-update`. Keep shared changes focused, update contracts/generated models together, and run the relevant checks.
+2. Describe changed API methods, fields, states, storage/sync formats, compatibility, and required migrations in the pull request. Merge the task into its platform base through review, then integrate that base into `main` through a reviewed pull request.
+3. On the receiving computer, inspect the working tree and fetch `origin`. Create `<platform>/adapt-core` from the current remote platform base, or use a unique task suffix if that name is already occupied. Merge `origin/main` into this task branch. For Android, the sequence in a clean working tree is:
+
+   ```sh
+   git fetch --prune origin
+   git switch -c android/adapt-core origin/android/main
+   git merge origin/main
+   ```
+
+4. Resolve conflicts by checking both implementations and the shared contract. Adapt the client's models, API calls, state/error handling, and local storage migrations as required. Preserve existing user data. Do not replace conflicting files wholesale with one side.
+5. Build the receiving application and verify the affected scenarios against the updated core. Check shared fixtures/contracts where applicable. Report any checks that could not run; do not treat a successful merge as successful adaptation.
+6. Commit only the adaptation changes and push explicitly to the matching task branch, for example `git push -u origin android/adapt-core`. Open a pull request into `android/main`; merge only after review and validation. Integrate resulting changes into `main` through a reviewed pull request when ready. Apply the same workflow to `windows/`, `ios/`, and `mac/`.
+
+Keep the receiving platform base on its previous working version until its adaptation is validated. If a core change cannot remain compatible with older clients, coordinate its rollout and versioning before replacing a shared deployed service.
+
+Distinguish shared Java backend/contracts from the Apple-local Swift core in `packages/BlotWorkspace`. Git transfers Swift source, but does not make it executable in the Java Android/Windows applications. Implement the corresponding behavior in Java or expose it through an agreed API; use common contracts and fixtures to verify parity.
 
 ## Shared code and compatibility
 
