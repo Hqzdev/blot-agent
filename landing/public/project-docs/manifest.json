@@ -4,6 +4,15 @@
   "completedTasks": 12,
   "documents": [
     {
+      "id": "apple-apps",
+      "taskId": null,
+      "source": "docs/integrations/apple-apps.md",
+      "downloadUrl": "/project-docs/integrations/apple-apps.md",
+      "sha256": "fbb321590cec1ff8ecaa932070c71c5b461704d8e50f7b25a223fcb64b94ce17",
+      "bytes": 13015,
+      "taskCompleted": false
+    },
+    {
       "id": "apple-v3-implementation",
       "taskId": null,
       "source": "docs/status/apple-v3-implementation.md",
@@ -269,8 +278,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "5911c8c7466ba550773044d21be3d270742b838edc5681f97bbedb8b4b2709c3",
-      "bytes": 8327,
+      "sha256": "3ba2c58f74b09bbfaf0a2e1d55405d79c7115e10a4fd4df21c656697f8fdc94c",
+      "bytes": 8488,
       "taskCompleted": false
     },
     {

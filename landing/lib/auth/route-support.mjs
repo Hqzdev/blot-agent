@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from "next/server.js";
 import { AuthError, accountRequest } from "./config.mjs";
 import { COOKIE_OPTIONS, SESSION_COOKIE, seal, unseal } from "./browser-session.mjs";
 
