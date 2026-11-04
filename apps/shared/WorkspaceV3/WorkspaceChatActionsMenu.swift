@@ -7,9 +7,6 @@ struct WorkspaceChatActionsMenu: View {
     @Environment(WorkspaceStore.self) private var store
 
     var body: some View {
-        BlotIconButton(store.t("New chat"), symbol: "square.and.pencil") {
-            _Concurrency.Task { await store.newChat(with: chat.agentId) }
-        }
         BlotIconButton(store.t("Rename chat"), symbol: "pencil") { store.beginChatRename(chat.metadata.id) }
         Divider()
         BlotIconButton(store.t(chat.pinned ? "Unpin chat" : "Pin chat"), symbol: "pin") {

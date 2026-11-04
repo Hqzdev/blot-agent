@@ -8,6 +8,10 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if CommandLine.arguments.contains("--conversation-only") {
+            try await verifyAgentConversations()
+            return
+        }
         if CommandLine.arguments.contains("--responsiveness-only") {
             try await verifyPresentationWrites()
             try verifyMessageIndex()
@@ -97,6 +101,45 @@ struct WorkspaceVerification {
             try render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1], isDirectory: true))
         }
     }
+    static func verifyAgentConversations() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let model = CompactingChatModel()
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"),
+            maximumOutputTokens: 512, runTokenBudget: 14000, makeModel: { _ in model })
+        do {
+            let store = WorkspaceStore(mode: .live, service: service)
+            await store.loadWorkspace()
+            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Help with this project")
+            await store.perform(.createAgent)
+            let agent = store.selectedAgentID
+            await store.newChat(with: agent)
+            let conversation = store.selectedConversationID
+            for index in 0..<20 {
+                await store.newChat(with: agent)
+                precondition(store.selectedConversationID == conversation && store.snapshot.conversations.count == 1)
+                store.form.composer.draft = "Project Atlas, entry \(index): " + String(repeating: "Preserve facts and decisions. ", count: 12)
+                await store.perform(.send)
+                try await waitUntil { !store.isReplying }
+                precondition(store.error == nil)
+            }
+            precondition(store.currentMessages.count == 40)
+            precondition(!(store.snapshot.summaries ?? []).isEmpty)
+            let summaries = await model.summaryCount
+            precondition(summaries > 0)
+            try await service.close()
+            let reopened = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+            let restored = try await reopened.load()
+            precondition(restored?.conversations.count == 1 && restored?.messages.count == 40)
+            try await reopened.close()
+            try FileManager.default.removeItem(at: directory)
+            print("PASS: repeated agent opens reuse one chat; long dialogue compacts automatically, retains all 40 messages, and reopens")
+        } catch {
+            try? await service.close()
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+    }
+
     static func verifyPresentationWrites() async throws {
         let writer = WorkspacePresentationWriter()
         var writes: [Data] = []
@@ -466,4 +509,21 @@ private final class BrowserLaunchGateService: WorkspaceService {
         throw WorkspaceServiceError.unavailable
     }
     func finish() { continuation?.resume(); continuation = nil }
+}
+
+private actor CompactingChatModel: ChatModel {
+    private(set) var summaryCount = 0
+    nonisolated func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let worker = _Concurrency.Task {
+                let summary = request.messages.first?.content.hasPrefix("Сожми историю") == true
+                if summary { await recordSummary() }
+                continuation.yield(.text(summary ? "Project Atlas: preserve facts and decisions; continue the pending work." : "Recorded."))
+                continuation.yield(.finished(.stop))
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in worker.cancel() }
+        }
+    }
+    private func recordSummary() { summaryCount += 1 }
 }

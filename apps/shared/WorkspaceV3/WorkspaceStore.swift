@@ -20,6 +20,10 @@ final class WorkspaceStore {
     private(set) var snapshot = WorkspaceSnapshot() {
         didSet {
             if mode == .live {
+                if let selectedConversationID, !snapshot.conversations.contains(where: { $0.metadata.id == selectedConversationID }),
+                   let previous = oldValue.conversations.first(where: { $0.metadata.id == selectedConversationID }), previous.kind != .group {
+                    self.selectedConversationID = snapshot.conversations.first { $0.kind != .group && $0.agentId == previous.agentId }?.metadata.id
+                }
                 if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
                 refreshLocalChatState()
             }
@@ -297,6 +301,7 @@ final class WorkspaceStore {
         guard !busy, !form.composer.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !form.composer.attachments.isEmpty else { return }
         if [.home, .newChat].contains(route) || selectedConversationID == nil {
             let composer = form.composer
+            if selectedAgentID == nil { selectedAgentID = snapshot.agents.first?.metadata.id }
             await perform(.createConversation)
             guard error == nil else { return }
             form.composer = composer
@@ -466,13 +471,15 @@ final class WorkspaceStore {
                 form.model.secret = ""
                 if mode == .live { notice = "Ключ сохранён на этом устройстве." }
             }
-            if action == .createConversation { selectedConversationID = snapshot.conversations.last?.metadata.id }
+            if action == .createConversation {
+                selectedConversationID = snapshot.conversations.first { $0.kind != .group && $0.agentId == selectedAgentID }?.metadata.id
+            }
             if action == .createAgent { selectedAgentID = snapshot.agents.last?.metadata.id }
             if action == .send {
                 if submittedConversationID == selectedConversationID { form.composer = WorkspaceComposerForm() }
                 if let submittedConversationID { conversationDrafts[submittedConversationID] = nil }
             }
-            if action == .send, let sent = snapshot.messages.last, sent.role == .user {
+            if action == .send, let sent = snapshot.messages.last(where: { $0.role == .user && $0.commandId == request.commandID }) {
                 pendingSendCommands[sent.conversationId] = nil
                 chatInteractions.messages[sent.metadata.id, default: WorkspaceMessageMetadata()].replyToMessageID = submittedComposer.replyToMessageID
                 failedSends[sent.conversationId] = nil
@@ -654,11 +661,9 @@ final class WorkspaceStore {
             guard let self else { return }
             defer { if self.sessionGeneration == generation { self.liveResponses[message.conversationId] = nil } }
             do {
-                for try await response in try await service.responses(to: message) {
+                for try await _ in try await service.responses(to: message) {
                     guard self.sessionGeneration == generation else { return }
-                    if let index = self.snapshot.messages.firstIndex(where: { $0.metadata.id == response.metadata.id }) {
-                        self.snapshot.messages[index] = response
-                    } else { self.snapshot.messages.append(response) }
+                    self.snapshot = try await service.currentSnapshot()
                 }
             } catch {
                 guard self.sessionGeneration == generation else { return }
@@ -1030,6 +1035,11 @@ final class WorkspaceStore {
 
     func chooseChatAgent(_ agentID: UUID?) async {
         guard !busy else { return }
+        if mode == .live {
+            await startNewChat(with: agentID)
+            if error == nil { agentPickerVisible = false }
+            return
+        }
         if currentMessages.isEmpty, let index = snapshot.conversations.firstIndex(where: { $0.metadata.id == selectedConversationID }) {
             do {
                 let conversation = snapshot.conversations[index]

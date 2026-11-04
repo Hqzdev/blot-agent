@@ -171,6 +171,48 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         if let configuration, !["compatible", "gigachat"].contains(configuration.modelId) { throw WorkspaceServiceError.unavailable }
         let modelID = configuration?.modelId ?? "gigachat"
         let model = try makeModel(modelID)
+        let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
+        let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService())])
+        let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: executorPool, tools: tools)
+        let responseID = UUID()
+        try _Concurrency.Task.checkCancellation()
+        let initial = try await recorder.begin(id: responseID, replyingTo: message, agentID: agentID)
+        if _Concurrency.Task.isCancelled {
+            _ = try await recorder.finish(responseID, delivery: .canceled)
+            throw CancellationError()
+        }
+        return AsyncThrowingStream { continuation in
+            let worker = _Concurrency.Task {
+                defer { responseWorkers[message.conversationId] = nil }
+                var generating = false
+                do {
+                    continuation.yield(initial)
+                    let maximumCharacters = message.artifactIds.isEmpty ? 48_000 : 24_000
+                    let prepared = try await WorkspaceContextCompactor(repository: repository, identity: identity, pool: executorPool)
+                        .prepare(source: message, responseID: responseID, configuration: configuration, model: model, modelID: modelID,
+                            maximumCharacters: maximumCharacters, maximumOutputTokens: maximumOutputTokens, budgetTokenLimit: runTokenBudget)
+                    let context = try await responseContext(for: message, projection: prepared, configuration: configuration)
+                    let modelRequest = ChatModelRequest(messages: context, maximumOutputTokens: maximumOutputTokens)
+                    generating = true
+                    try await runtime.generate(source: message, responseID: responseID, request: modelRequest, model: model,
+                        modelID: modelID, configuration: configuration, budgetTokenLimit: runTokenBudget,
+                        emit: { continuation.yield($0) })
+                    continuation.finish()
+                } catch {
+                    if !generating {
+                        let state: BlotV3.DeliveryState = _Concurrency.Task.isCancelled ? .canceled : .interrupted
+                        if let saved = try? await recorder.finish(responseID, delivery: state) { continuation.yield(saved) }
+                    }
+                    continuation.finish(throwing: error)
+                }
+            }
+            responseWorkers[message.conversationId] = worker
+            continuation.onTermination = { _ in worker.cancel() }
+        }
+    }
+
+    private func responseContext(for message: BlotV3.Message, projection: WorkspaceProjection,
+                                 configuration: BlotV3.AgentConfigurationRevision?) async throws -> [ChatModelMessage] {
         var context = try WorkspaceContextBuilder().messages(for: message, projection: projection, configuration: configuration,
             maximumCharacters: message.artifactIds.isEmpty ? 48_000 : 24_000)
         if !message.artifactIds.isEmpty {
@@ -185,33 +227,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
             context.removeLast()
             context.append(.init(role: "user", content: content))
         }
-        let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
-        let modelRequest = ChatModelRequest(messages: context, maximumOutputTokens: maximumOutputTokens)
-        let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService())])
-        let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: executorPool, tools: tools)
-        let responseID = UUID()
-        try _Concurrency.Task.checkCancellation()
-        let initial = try await recorder.begin(id: responseID, replyingTo: message, agentID: agentID)
-        if _Concurrency.Task.isCancelled {
-            _ = try await recorder.finish(responseID, delivery: .canceled)
-            throw CancellationError()
-        }
-        return AsyncThrowingStream { continuation in
-            let worker = _Concurrency.Task {
-                defer { responseWorkers[message.conversationId] = nil }
-                do {
-                    continuation.yield(initial)
-                    try await runtime.generate(source: message, responseID: responseID, request: modelRequest, model: model,
-                        modelID: modelID, configuration: configuration, budgetTokenLimit: runTokenBudget,
-                        emit: { continuation.yield($0) })
-                    continuation.finish()
-                } catch {
-                    continuation.finish(throwing: error)
-                }
-            }
-            responseWorkers[message.conversationId] = worker
-            continuation.onTermination = { _ in worker.cancel() }
-        }
+        return context
     }
 
     private func context() async throws -> WorkspaceIdentity {
