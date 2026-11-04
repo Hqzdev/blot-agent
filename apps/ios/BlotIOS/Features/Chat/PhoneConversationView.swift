@@ -10,13 +10,7 @@ struct PhoneConversationView: View {
     @Environment(\.blotReduceMotion) private var reduceMotion
 
     private var activeDraft: WorkspaceChatActivity.Draft? {
-        guard let id = store.selectedConversationID else { return nil }
-        if let draft = store.chatActivity.drafts[id] { return draft }
-        if store.mode == .live, store.isReplying,
-           let message = store.currentMessages.last(where: { $0.role == .user }) {
-            return .init(messageID: message.metadata.id)
-        }
-        return nil
+        store.currentReplyDraft
     }
 
     private var agent: BlotV3.AgentProfile? {
@@ -56,8 +50,12 @@ struct PhoneConversationView: View {
                     }
                     if rows.isEmpty, activeDraft == nil {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(store.t("What would you like to work on?")).font(.title3.weight(.medium))
-                            if let agent { Text(agent.instructions).foregroundStyle(WorkspaceStyle.secondary) }
+                            if store.currentConversation?.kind == .group {
+                                Text(store.t("Set a shared task for the team")).font(.title3.weight(.medium))
+                            } else {
+                                WorkspaceWelcomeGreeting().font(.title3.weight(.medium))
+                                if let agent { Text(agent.instructions).foregroundStyle(WorkspaceStyle.secondary) }
+                            }
                         }.padding(16)
                     }
                     if let activeDraft {
@@ -145,9 +143,6 @@ struct PhoneConversationView: View {
                 }
             }.buttonStyle(.plain).accessibilityLabel(store.t("Choose an agent"))
             Spacer(minLength: 0)
-            PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("New chat")) {
-                _Concurrency.Task { await store.startNewChat() }
-            }.disabled(store.busy)
             Menu {
                 BlotIconButton(store.t("Schedule this task"), symbol: "calendar.badge.plus") { store.navigate(.createSchedule) }
                 BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }

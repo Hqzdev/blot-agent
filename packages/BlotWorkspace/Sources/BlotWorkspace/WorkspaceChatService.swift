@@ -12,6 +12,16 @@ public struct WorkspaceChatService: Sendable {
         return try await repository.execute(commandID: commandID, command: input, identity: identity, legacyResultID: commandID) { tx in
             guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw WorkspaceStorageError.invalidRecord }
             if let agentID { _ = try tx.require(BlotV3.AgentProfile.self, id: agentID) }
+            let index = WorkspaceDirectConversations(try tx.records(BlotV3.Conversation.self))
+            if let existing = index.conversations.first(where: { $0.kind != .group && $0.agentId == agentID }) {
+                if existing.archived {
+                    let reopened = try BlotV3.Conversation(metadata: tx.metadata(id: existing.metadata.id, now: now, replacing: existing.metadata),
+                        agentId: existing.agentId, title: existing.title, mobileOwned: existing.mobileOwned,
+                        pinned: existing.pinned, archived: false, kind: existing.kind)
+                    try tx.put(reopened, expectedVersion: existing.metadata.version)
+                }
+                return existing.metadata.id
+            }
             let conversation = try BlotV3.Conversation(metadata: tx.metadata(id: commandID, now: now), agentId: agentID,
                 title: title, mobileOwned: false, pinned: false, archived: false, kind: .direct)
             try tx.put(conversation, expectedVersion: 0)
@@ -34,7 +44,8 @@ public struct WorkspaceChatService: Sendable {
             guard let chat = try tx.record(BlotV3.Conversation.self, id: conversationID) else { throw WorkspaceStorageError.missingConversation }
             if let replyToMessageID {
                 let source = try tx.require(BlotV3.Message.self, id: replyToMessageID)
-                guard source.conversationId == conversationID else { throw WorkspaceStorageError.invalidRecord }
+                let index = WorkspaceDirectConversations(try tx.records(BlotV3.Conversation.self))
+                guard index.canonicalID(source.conversationId) == index.canonicalID(conversationID) else { throw WorkspaceStorageError.invalidRecord }
             }
             let participants = try tx.records(BlotV3.ConversationParticipant.self)
             for mention in mentions {

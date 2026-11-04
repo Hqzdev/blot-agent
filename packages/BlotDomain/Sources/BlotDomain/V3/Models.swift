@@ -1255,7 +1255,11 @@ extension BlotV3 {
         public let scopes: [String]
         public let state: ConnectionState
         public let deviceId: UUID?
-        public init(metadata: RecordMetadata, service: String, accountName: String, scopes: [String], state: ConnectionState, deviceId: UUID? = nil) throws {
+        public let pluginId: String?
+        public let resourceIds: [String]?
+        public let agentIds: [UUID]?
+        public let allowedOperations: [String]?
+        public init(metadata: RecordMetadata, service: String, accountName: String, scopes: [String], state: ConnectionState, deviceId: UUID? = nil, pluginId: String? = nil, resourceIds: [String]? = nil, agentIds: [UUID]? = nil, allowedOperations: [String]? = nil) throws {
 
 
             self.metadata = metadata
@@ -1264,6 +1268,10 @@ extension BlotV3 {
             self.scopes = scopes
             self.state = state
             self.deviceId = deviceId
+            self.pluginId = pluginId
+            self.resourceIds = resourceIds
+            self.agentIds = agentIds
+            self.allowedOperations = allowedOperations
         }
         public func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
@@ -1272,9 +1280,13 @@ extension BlotV3 {
             try c.encode(accountName, forKey: .accountName)
             try c.encode(scopes, forKey: .scopes)
             try c.encode(state, forKey: .state)
-            try c.encode(deviceId, forKey: .deviceId)
+            try c.encodeIfPresent(deviceId, forKey: .deviceId)
+            try c.encodeIfPresent(pluginId, forKey: .pluginId)
+            try c.encodeIfPresent(resourceIds, forKey: .resourceIds)
+            try c.encodeIfPresent(agentIds, forKey: .agentIds)
+            try c.encodeIfPresent(allowedOperations, forKey: .allowedOperations)
         }
-        private enum CodingKeys: String, CodingKey { case metadata, service, accountName, scopes, state, deviceId }
+        private enum CodingKeys: String, CodingKey { case metadata, service, accountName, scopes, state, deviceId, pluginId, resourceIds, agentIds, allowedOperations }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             try self.init(
@@ -1283,7 +1295,11 @@ extension BlotV3 {
                 accountName: try c.decode(String.self, forKey: .accountName),
                 scopes: try c.decode([String].self, forKey: .scopes),
                 state: try c.decode(ConnectionState.self, forKey: .state),
-                deviceId: try c.decodeIfPresent(UUID.self, forKey: .deviceId))
+                deviceId: try c.decodeIfPresent(UUID.self, forKey: .deviceId),
+                pluginId: try c.decodeIfPresent(String.self, forKey: .pluginId),
+                resourceIds: try c.decodeIfPresent([String].self, forKey: .resourceIds),
+                agentIds: try c.decodeIfPresent([UUID].self, forKey: .agentIds),
+                allowedOperations: try c.decodeIfPresent([String].self, forKey: .allowedOperations))
         }
     }
 }

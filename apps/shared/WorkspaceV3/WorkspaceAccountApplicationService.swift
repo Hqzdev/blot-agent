@@ -150,12 +150,12 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
             // Offline access remains available; the worker retries when connectivity returns.
             try? await backup.synchronize()
             _ = try await WorkspaceDeviceKeys.open(identity: identity, credentials: credentials)
-            let model = try installation.makeModel()
+            let installation = self.installation
             let modelCredentials = WorkspaceModelCredentialStore(accountNamespace: identity.ownerID.uuidString + ":" + identity.deviceID.uuidString)
             let service = try LocalWorkspaceService(databaseURL: database, repository: repository, identity: identity,
                 maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget,
                 makeModel: { modelID in
-                    if modelID == "gigachat" { return model }
+                    if modelID == "gigachat" { return try installation.makeModel() }
                     let config = try modelCredentials.load()
                     return try CompatibleChatModel(endpoint: config.endpoint, model: config.model, apiKey: config.apiKey)
                 })

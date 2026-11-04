@@ -2,6 +2,8 @@ import BlotDomain
 import Foundation
 
 struct WorkspaceSnapshot: Codable, Equatable {
+    var toolInvocations: [BlotV3.ToolInvocation]?
+    var preparedActions: [BlotV3.PreparedAction]?
     var modelSteps: [BlotV3.ModelStep]?
     var ownerID: UUID?
     var localDeviceID: UUID?

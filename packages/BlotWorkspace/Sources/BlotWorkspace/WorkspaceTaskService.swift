@@ -63,6 +63,30 @@ public struct WorkspaceTaskService: Sendable {
             return taskID
     }
 
+    /// Completes a local action task only when its recorded invocations have a known successful outcome.
+    public func completeActionTask(taskID: UUID) async throws {
+        struct Input: Encodable { let taskID: UUID }
+        let command = try WorkspaceCommand(type: "task.complete-action", workspaceID: identity.workspaceID, payload: Input(taskID: taskID)).data()
+        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
+            let task = try tx.require(BlotV3.Task.self, id: taskID)
+            let invocations = try tx.records(BlotV3.ToolInvocation.self).filter { $0.execution.taskId == taskID }
+            guard task.execution.executorDeviceId == identity.deviceID, !Self.terminal(task.state),
+                  !invocations.isEmpty, invocations.allSatisfy({ $0.state == .succeeded }) else { throw WorkspaceStorageError.permissionDenied }
+            let updated = try BlotV3.Task(metadata: tx.metadata(id: taskID, now: Date(), replacing: task.metadata),
+                execution: task.execution, projectId: task.projectId, conversationId: task.conversationId, goal: task.goal,
+                state: .completed, plan: task.plan, configurationId: task.configurationId, parentTaskId: task.parentTaskId,
+                skillRevisionId: task.skillRevisionId, budgetTokenLimit: task.budgetTokenLimit, executionMode: task.executionMode)
+            try tx.put(updated, expectedVersion: task.metadata.version)
+            for session in try tx.records(BlotV3.AgentSession.self) where session.execution.taskId == taskID {
+                let finished = try BlotV3.AgentSession(metadata: tx.metadata(id: session.metadata.id, now: Date(), replacing: session.metadata),
+                    execution: session.execution, agentId: session.agentId, configurationId: session.configurationId,
+                    parentSessionId: session.parentSessionId, state: .completed)
+                try tx.put(finished, expectedVersion: session.metadata.version)
+            }
+            return taskID
+        }
+    }
+
     public func cancel(commandID: UUID, taskID: UUID, now: Date = Date()) async throws {
         struct Input: Encodable { let taskID: UUID }
         let command = try WorkspaceCommand(type: "task.cancel", workspaceID: identity.workspaceID, payload: Input(taskID: taskID)).data()

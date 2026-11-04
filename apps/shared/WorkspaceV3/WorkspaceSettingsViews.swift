@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -92,7 +93,7 @@ struct WorkspaceSettingsView: View {
             WorkspaceHeading(title: "Choose a model", subtitle: "Default model for new chats.")
             WorkspaceCard {
                 BlotLabel("GigaChat", symbol: "bubble.left").font(.headline)
-                Text(store.t(store.isPreview ? "Trial access is set up. You can start without your own key." : "GigaChat connects directly from this device. The key is managed by this personal build.")).foregroundStyle(WorkspaceStyle.secondary)
+                Text(store.t(store.isPreview ? "Trial access is set up. You can start without your own key." : "Public beta: add your own compatible API key below and select Compatible API in your agent settings. Personal development builds may include managed GigaChat access.")).foregroundStyle(WorkspaceStyle.secondary)
             }
             Text(store.t("YOUR API KEY")).font(.caption.monospaced()).foregroundStyle(WorkspaceStyle.secondary)
             ForEach(store.mode == .live ? ["Compatible API"] : ["OpenAI", "Anthropic", "Gemini", "xAI", "Compatible API"], id: \.self) { name in
@@ -149,8 +150,8 @@ struct WorkspaceSettingsView: View {
                     VStack(alignment: .leading, spacing: 7) { Text(connection.service).font(.headline); Text(connection.accountName).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
                     Spacer(); BlotIcon(symbol: "checkmark.circle").accessibilityLabel(store.t("Connected")) }
             }
-            ForEach(["Gmail", "Yandex Mail", "Google Calendar", "Yandex Calendar", "Telegram", "Slack", "Notion", "GitHub"], id: \.self) { name in
-                settingRow(name) { WorkspaceV3ActionButton(title: "Connect", action: .connect, kind: .secondary) }
+            ForEach(PluginCatalog.external) { plugin in
+                settingRow(plugin.name) { WorkspaceV3ActionButton(title: "Connect", action: .connect, kind: .secondary) }
             }
             WorkspaceLink(title: "MCP server", route: .mcp)
             WorkspaceCard { Text(store.t("You control access")).font(.headline)

@@ -46,6 +46,7 @@ export const futureDocuments = Object.freeze([
   document("google-workspace", "integrations/google-workspace.md", "Будущая интеграция Google Workspace", "План Gmail, Calendar и Drive; статус за пределами первой поставки.", null),
 ]);
 export const currentProductDocuments = Object.freeze([
+  document("apple-apps", "integrations/apple-apps.md", "Системные приложения Apple", "Подключение, разрешения, инструменты и ограничения нативных интеграций.", null),
   document("apple-v3-implementation", "status/apple-v3-implementation.md", "Интерфейс Apple v3", "Сверка сущностей, каталог экранов и границы проверки серверных функций.", null),
   document("module-map", "architecture/module-map.md", "Карта модулей Blot", "Кто за что отвечает: 16 блоков ядра, клиенты, облако и приёмка.", null),
   document("domain-model", "architecture/domain-model.md", "Сущности и состояния", "25 сущностей ТЗ, состояния задачи и расхождения с кодом.", null),

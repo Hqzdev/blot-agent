@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import BlotWorkspace
@@ -85,6 +86,7 @@ struct WorkspacePage: View {
 struct WorkspaceRootView: View {
     @State var store: WorkspaceStore
     #if os(macOS)
+    @Environment(\.openWindow) private var openWindow
     @AppStorage(ThemeStore.defaultsKey) private var theme: ThemePreference = .light
     #else
     @AppStorage(ThemeStore.defaultsKey) private var theme: ThemePreference = .system
@@ -99,7 +101,7 @@ struct WorkspaceRootView: View {
                     .accessibilityLabel(store.t("Loading…"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     #if os(macOS)
-                    .frame(minWidth: 900, minHeight: 620)
+                    .frame(minWidth: MacWorkspaceLayout.minimumWidth, minHeight: MacWorkspaceLayout.minimumHeight)
                     #endif
                     .accessibilityIdentifier("workspace.restoring-session")
             } else {
@@ -118,7 +120,10 @@ struct WorkspaceRootView: View {
         .tint(WorkspaceStyle.ink)
         .kMotionRoot(reduceMotion: reduceMotion)
         .sheet(isPresented: $store.catalogVisible) { WorkspaceCatalogView().environment(store) }
-        .sheet(isPresented: $store.groupCreationVisible) { WorkspaceGroupEditor().environment(store) }
+        .sheet(isPresented: $store.groupCreationVisible, onDismiss: { store.groupEditingID = nil }) {
+            WorkspaceGroupEditor(conversation: store.snapshot.conversations.first { $0.metadata.id == store.groupEditingID },
+                participants: store.snapshot.participants ?? []).environment(store)
+        }
         .sheet(isPresented: $store.conflictsVisible) { WorkspaceConflictsView().environment(store) }
         .task { await store.loadWorkspace() }
         .task(id: scenePhase) {
@@ -132,7 +137,16 @@ struct WorkspaceRootView: View {
             if phase != .active { store.updateChatVisibility(nil, atLatest: false); store.persistChatState(immediately: true) }
         }
         .onDisappear { store.persistChatState(immediately: true) }
-        .onOpenURL { store.handleBrowserLaunch($0) }
+        .modifier(AppleInteractionHost(center: store.appleIntegrations?.interactions))
+        .onOpenURL {
+            if ["blot-agent-ios", "blot-agent-macos"].contains($0.scheme ?? ""), $0.host == "apple-connections" {
+                #if os(macOS)
+                openWindow(id: MacMarketplaceWindow.sceneID)
+                #else
+                store.pluginCatalogVisible = true
+                #endif
+            } else if store.appleIntegrations?.interactions.handle($0) != true { store.handleBrowserLaunch($0) }
+        }
         .confirmationDialog(store.t("Delete chat?"), isPresented: Binding(
             get: { store.pendingChatDeletionID != nil },
             set: { if !$0 { store.pendingChatDeletionID = nil } }), titleVisibility: .visible,
@@ -148,6 +162,9 @@ struct WorkspaceRootView: View {
                     .disabled(store.chatTitleDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 Button(store.t("Cancel"), role: .cancel) { store.pendingChatRenameID = nil }
         }
+        #if os(macOS)
+        .modifier(MacAdaptiveSheetHost())
+        #endif
     }
     private var effectiveTheme: ThemePreference {
         #if os(macOS)
@@ -161,7 +178,7 @@ struct WorkspaceRootView: View {
         Group {
             if store.route.isAuthentication && store.route != .firstAgent { WorkspacePage(route: store.route) }
             else { MacWorkspaceShell() }
-        }.frame(minWidth: 900, minHeight: 620)
+        }.frame(minWidth: MacWorkspaceLayout.minimumWidth, minHeight: MacWorkspaceLayout.minimumHeight)
             .overlay {
                 if store.mode == .preview && !ProcessInfo.processInfo.arguments.contains("--team-design") && store.route.isSetting {
                     Color.black.opacity(0.25)

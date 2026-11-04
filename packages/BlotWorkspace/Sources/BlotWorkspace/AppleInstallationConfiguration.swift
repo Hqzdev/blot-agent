@@ -38,22 +38,31 @@ public struct AppleInstallationConfiguration: Codable, Sendable {
         }
         if let ca = object["ProviderCA"] as? Data { object["ProviderCA"] = ca.base64EncodedString() }
         let value = try JSONDecoder().decode(Self.self, from: JSONSerialization.data(withJSONObject: object))
-        guard value.profile == "personal-dev", value.gigaChat.outputTokens > 0,
+        guard ["personal-dev", "public-beta"].contains(value.profile), value.gigaChat.outputTokens > 0,
               value.gigaChat.contextTokens > 0, value.gigaChat.runTokenBudget > 0 else { throw ChatModelError.invalidConfiguration }
         #if !DEBUG
-        throw ChatModelError.invalidConfiguration
-        #else
-        if let origin = value.accountServiceURL { _ = try WorkspaceCloudHTTP(origin: origin, allowLoopbackHTTP: true) }
-        try ModelHTTP.validate(endpoint: value.gigaChat.apiURL, model: value.gigaChat.model, secret: value.gigaChat.authorizationKey)
-        _ = try GigaChatTokenProvider(endpoint: value.gigaChat.oauthURL, authorizationKey: value.gigaChat.authorizationKey, scope: value.gigaChat.scope)
-        return value
+        guard value.profile == "public-beta" else { throw ChatModelError.invalidConfiguration }
         #endif
+        if let origin = value.accountServiceURL { _ = try WorkspaceCloudHTTP(origin: origin, allowLoopbackHTTP: true) }
+        if value.profile == "public-beta" {
+            guard value.gigaChat.authorizationKey.isEmpty, value.accountServiceURL?.scheme == "https",
+                  value.authURL?.scheme == "https" else { throw ChatModelError.invalidConfiguration }
+            for endpoint in [value.gigaChat.apiURL, value.gigaChat.oauthURL] {
+                guard endpoint.scheme == "https", endpoint.host != nil, endpoint.user == nil, endpoint.password == nil,
+                      endpoint.query == nil, endpoint.fragment == nil else { throw ChatModelError.invalidConfiguration }
+            }
+        } else {
+            try ModelHTTP.validate(endpoint: value.gigaChat.apiURL, model: value.gigaChat.model, secret: value.gigaChat.authorizationKey)
+            _ = try GigaChatTokenProvider(endpoint: value.gigaChat.oauthURL, authorizationKey: value.gigaChat.authorizationKey, scope: value.gigaChat.scope)
+        }
+        return value
     }
     public func install(credentials: any WorkspaceCredentialStore) async throws {
         // Replace only this managed item. No enumeration, deletion or migration of user OAuth tokens.
         try await credentials.write(PropertyListEncoder().encode(self), name: "apple-installation")
     }
     public func makeModel() throws -> GigaChatModel {
+        guard !gigaChat.authorizationKey.isEmpty else { throw ChatModelError.invalidConfiguration }
         let hosts = Set([gigaChat.apiURL.host!, gigaChat.oauthURL.host!])
         let session = try ProviderTrustSession.make(certificatePEM: providerCA, hosts: hosts)
         let tokens = try GigaChatTokenProvider(endpoint: gigaChat.oauthURL, authorizationKey: gigaChat.authorizationKey,

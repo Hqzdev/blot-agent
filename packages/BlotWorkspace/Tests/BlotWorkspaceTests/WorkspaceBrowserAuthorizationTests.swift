@@ -3,6 +3,22 @@ import Foundation
 import Testing
 @testable import BlotWorkspace
 
+@Test func publicBetaAcceptsCredentialFreeConfigurationAndRejectsEmbeddedModelKeys() throws {
+    var raw: [String: Any] = ["Profile": "public-beta", "Revision": "beta", "AuthURL": "https://example.com/login",
+        "AccountServiceURL": "https://example.com", "GoogleClientIDs": [:], "GigaChat": [
+            "AuthorizationKey": "", "Model": "GigaChat", "APIURL": "https://api.giga.chat/v1/",
+            "OAuthURL": "https://ngw.devices.sberbank.ru:9443/api/v2/oauth", "Scope": "GIGACHAT_API_PERS",
+            "OutputTokens": 64, "ContextTokens": 4096, "RunTokenBudget": 10000]]
+    let configuration = try AppleInstallationConfiguration.decode(PropertyListSerialization.data(fromPropertyList: raw, format: .xml, options: 0))
+    #expect(configuration.profile == "public-beta")
+    #expect(throws: ChatModelError.invalidConfiguration) { _ = try configuration.makeModel() }
+    var model = raw["GigaChat"] as! [String: Any]
+    model["AuthorizationKey"] = Data("test:only".utf8).base64EncodedString()
+    raw["GigaChat"] = model
+    let data = try PropertyListSerialization.data(fromPropertyList: raw, format: .xml, options: 0)
+    #expect(throws: ChatModelError.invalidConfiguration) { _ = try AppleInstallationConfiguration.decode(data) }
+}
+
 @Test func browserCallbackBindsStateClientAndPKCEWithoutCarryingSessionTokens() throws {
     let authorization = try WorkspaceBrowserAuthorization(loginURL: URL(string: "https://blot-agent.vercel.app/login")!, platform: "ios")
     let items = try #require(URLComponents(url: authorization.url, resolvingAgainstBaseURL: false)?.queryItems)

@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -85,12 +86,12 @@ struct PhonePluginsView: View {
     }
 
     private func isAdded(_ plugin: PhonePlugin) -> Bool {
-        store.snapshot.connections.contains { $0.service == plugin.name && $0.state == .connected }
+        store.snapshot.connections.contains { ($0.pluginId == plugin.id || $0.service == plugin.name) && $0.state == .connected && (plugin.appleID == nil || $0.deviceId == store.snapshot.localDeviceID) }
     }
 
     private func row(_ plugin: PhonePlugin) -> some View {
         HStack(spacing: 12) {
-            Image(plugin.asset).resizable().scaledToFit().frame(width: 32, height: 32)
+            Group { if let apple = plugin.appleID { ApplePluginIcon(plugin: apple, size: 32) } else { Image(plugin.asset).resizable().scaledToFit().frame(width: 32, height: 32) } }
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(plugin.name).font(.subheadline.weight(.medium))
@@ -98,7 +99,7 @@ struct PhonePluginsView: View {
             }.frame(maxWidth: .infinity, alignment: .leading)
             Button {
                 _Concurrency.Task {
-                    if store.snapshot.connections.contains(where: { $0.service == plugin.name }) {
+                    if plugin.appleID != nil || store.snapshot.connections.contains(where: { $0.service == plugin.name }) {
                         managedPlugin = plugin
                     } else {
                         store.form.connection = .init(service: plugin.name, scopes: plugin.scopes)
@@ -107,10 +108,11 @@ struct PhonePluginsView: View {
                 }
             } label: {
                 HStack(spacing: 3) {
-                    if isAdded(plugin) { BlotIcon(symbol: "checkmark", size: 12) }
-                    Text(store.t(isAdded(plugin) ? "Added" : "Add"))
+                    if isAdded(plugin) && plugin.appleID == nil { BlotIcon(symbol: "checkmark", size: 12) }
+                    if let apple = plugin.appleID { ApplePluginStatusText(plugin: apple) }
+                    else { Text(store.t(isAdded(plugin) ? "Added" : "Add")) }
                 }.font(.caption2.weight(.medium))
-                    .foregroundStyle(isAdded(plugin) ? Color(red: 0.21, green: 0.66, blue: 0.49) : WorkspaceStyle.ink)
+                    .foregroundStyle(isAdded(plugin) && plugin.appleID == nil ? Color(red: 0.21, green: 0.66, blue: 0.49) : WorkspaceStyle.ink)
                     .padding(.horizontal, 8).padding(.vertical, 5)
                     .background(isAdded(plugin) ? Color.green.opacity(0.09) : WorkspaceStyle.surface, in: Capsule())
                     .frame(minHeight: 44)

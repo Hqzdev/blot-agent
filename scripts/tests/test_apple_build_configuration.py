@@ -26,6 +26,22 @@ class AppleConfigurationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'personal Debug'):
             config.configuration(self.environment(), 'Release')
 
+    def test_public_beta_release_has_no_embedded_model_or_server_credentials(self):
+        env = self.environment()
+        env.pop('BLOT_GIGACHAT_AUTH_KEY')
+        env['BLOT_DISTRIBUTION'] = 'public-beta'
+        value = config.configuration(env, 'Release')
+        self.assertEqual(value['Profile'], 'public-beta')
+        self.assertEqual(value['GigaChat']['AuthorizationKey'], '')
+        self.assertNotIn('server-only-secret', repr(value))
+        self.assertEqual(value['AccountServiceURL'], 'https://example.com')
+
+    def test_public_beta_rejects_personal_model_key(self):
+        env = self.environment()
+        env['BLOT_DISTRIBUTION'] = 'public-beta'
+        with self.assertRaisesRegex(ValueError, 'must not embed'):
+            config.configuration(env, 'Release')
+
     def test_missing_and_invalid_parameters_report_only_names(self):
         for name, value in [('BLOT_GIGACHAT_AUTH_KEY', 'sensitive-invalid-key'), ('BLOT_AUTH_URL', 'http://example.com/login'),
                             ('BLOT_RUN_TOKEN_BUDGET', 'sensitive-invalid-budget')]:

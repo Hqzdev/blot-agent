@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read dotenv as data; produce a private, self-contained personal Apple dev configuration."""
+"""Produce personal Debug or credential-free public beta Apple configuration."""
 import argparse
 import hashlib
 import os
@@ -66,19 +66,27 @@ def positive(env, name, default):
 
 
 def configuration(env, build):
-    if build != 'Debug' or env.get('BLOT_DISTRIBUTION', 'personal-dev') != 'personal-dev':
+    profile = env.get('BLOT_DISTRIBUTION', 'personal-dev')
+    if profile not in ['personal-dev', 'public-beta']:
+        raise ValueError('Invalid BLOT_DISTRIBUTION')
+    if profile == 'personal-dev' and build != 'Debug':
         raise ValueError('Embedded GigaChat credentials are allowed only in personal Debug builds')
-    key = required(env, 'BLOT_GIGACHAT_AUTH_KEY')
-    import base64
-    try:
-        if b':' not in base64.b64decode(key, validate=True):
-            raise ValueError()
-    except (ValueError, base64.binascii.Error):
-        raise ValueError('Invalid BLOT_GIGACHAT_AUTH_KEY') from None
+    if profile == 'public-beta':
+        if env.get('BLOT_GIGACHAT_AUTH_KEY', '').strip():
+            raise ValueError('Public beta must not embed BLOT_GIGACHAT_AUTH_KEY')
+        key = ''
+    else:
+        key = required(env, 'BLOT_GIGACHAT_AUTH_KEY')
+        import base64
+        try:
+            if b':' not in base64.b64decode(key, validate=True):
+                raise ValueError()
+        except (ValueError, base64.binascii.Error):
+            raise ValueError('Invalid BLOT_GIGACHAT_AUTH_KEY') from None
     result = {
-        'Profile': 'personal-dev',
+        'Profile': profile,
         'GigaChat': {
-            'AuthorizationKey': key, 'Model': required(env, 'BLOT_GIGACHAT_MODEL'),
+            'AuthorizationKey': key, 'Model': env.get('BLOT_GIGACHAT_MODEL', 'GigaChat') if profile == 'public-beta' else required(env, 'BLOT_GIGACHAT_MODEL'),
             'APIURL': endpoint(env, 'BLOT_GIGACHAT_API_URL', 'https://gigachat.devices.sberbank.ru/api/v1'),
             'OAuthURL': endpoint(env, 'BLOT_GIGACHAT_OAUTH_URL', 'https://ngw.devices.sberbank.ru:9443/api/v2/oauth'),
             'Scope': env.get('BLOT_GIGACHAT_SCOPE', 'GIGACHAT_API_PERS'),
@@ -172,7 +180,7 @@ def main():
                 bundles = {'iOS': 'yaroslavstrelkov.blot-agent.ios', 'macOS': 'yaroslavstrelkov.blot-agent'}
                 oauth = {'Enabled': bool(clients), 'Clients': {platform: {'ClientID': value, 'BundleID': bundles[platform], 'RedirectURI': '.'.join(reversed(value.split('.'))) + ':/oauthredirect'} for platform, value in clients.items()}}
                 atomic_write(args.output.parent / 'GoogleOAuth.plist', plistlib.dumps(oauth, sort_keys=False))
-        print('Apple personal-dev configuration validated; Google OAuth ' + ('configured' if result['GoogleClientIDs'] else 'not configured'))
+        print('Apple ' + result['Profile'] + ' configuration validated; Google OAuth ' + ('configured' if result['GoogleClientIDs'] else 'not configured'))
     except (ValueError, OSError, UnicodeError):
         # Validation errors contain names only; filesystem exceptions can include secret paths.
         failure = sys.exc_info()[1]

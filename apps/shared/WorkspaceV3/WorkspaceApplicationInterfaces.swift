@@ -30,7 +30,8 @@ protocol WorkspaceCommandService: WorkspaceObservationService, WorkspaceExecutio
     func setReaction(messageID: UUID, emoji: String, removed: Bool) async throws -> WorkspaceSnapshot
     func markRead(conversationID: UUID, messageID: UUID) async throws -> WorkspaceSnapshot
     func deleteMemory(_ memory: BlotV3.MemoryEntry) async throws -> WorkspaceSnapshot
-    func createGroup(title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot
+    func createGroup(commandID: UUID, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot
+    func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot
     func fileURL(_ id: UUID) async throws -> URL
     func enqueueDueSchedules() async throws -> WorkspaceSnapshot
     func runScheduleManually(_ id: UUID) async throws -> WorkspaceSnapshot

@@ -30,7 +30,7 @@ struct MacAgentCreationView: View {
                     .id(store.form.agent.shape + store.form.agent.color)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             }.frame(height: 96).animation(.easeInOut(duration: 0.18), value: store.form.agent.shape + store.form.agent.color)
-            HStack(spacing: 12) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 12)], spacing: 10) {
                 ForEach(colors, id: \.self) { color in
                     Button { store.form.agent.color = color } label: {
                         Circle().fill(WorkspaceAvatarView.color(color)).frame(width: 24, height: 24)
@@ -39,7 +39,7 @@ struct MacAgentCreationView: View {
                         .accessibilityAddTraits(store.form.agent.color == color ? .isSelected : [])
                 }
             }
-            HStack(spacing: 6) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 34), spacing: 6)], spacing: 10) {
                 ForEach(shapes, id: \.self) { shape in
                     Button { store.form.agent.shape = shape.rawValue } label: {
                         WorkspaceAvatar(shape: shape, color: WorkspaceAvatarView.color(store.form.agent.color), size: 28)

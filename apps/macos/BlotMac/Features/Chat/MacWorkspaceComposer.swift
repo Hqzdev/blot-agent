@@ -71,7 +71,7 @@ struct MacWorkspaceComposer: View {
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
             if teamLayout && composerHints {
-                Text("Прикрепите файл или задайте агенту задачу сообщением")
+                Text(store.currentConversation?.kind == .group ? "Задайте общую задачу — команда распределит работу по ролям" : "Прикрепите файл или задайте агенту задачу сообщением")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.horizontal, 14)
             }
         }
@@ -90,6 +90,7 @@ struct MacWorkspaceComposer: View {
     }
 
     private var placeholder: String {
+        if let group = store.currentConversation, group.kind == .group { return store.t("Message group") + " «" + group.title + "»" }
         let id = store.route == .home ? store.selectedAgentID : store.currentConversation?.agentId
         let name = store.snapshot.agents.first { $0.metadata.id == id }?.name ?? "Blot Agent"
         return store.t("Message agent") + " " + name

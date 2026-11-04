@@ -13,6 +13,8 @@
 		B20000000000000000000013 /* BlotDesign in Frameworks */ = {isa = PBXBuildFile; productRef = B20000000000000000000014 /* BlotDesign */; };
 		C30000000000000000000001 /* BlotWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = C30000000000000000000002 /* BlotWorkspace */; };
 		C30000000000000000000003 /* BlotWorkspace in Frameworks */ = {isa = PBXBuildFile; productRef = C30000000000000000000004 /* BlotWorkspace */; };
+		E50000000000000000000001 = {isa = PBXBuildFile; productRef = E50000000000000000000002; };
+		E50000000000000000000003 = {isa = PBXBuildFile; productRef = E50000000000000000000004; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,6 +47,7 @@
 				B20000000000000000000001 /* BlotAPI in Frameworks */,
 				B20000000000000000000011 /* BlotDesign in Frameworks */,
 				C30000000000000000000001 /* BlotWorkspace in Frameworks */,
+				E50000000000000000000001 /* BlotAppleIntegrations in Frameworks */,
 			);
 		};
 		A20000000000000000000007 /* Frameworks */ = {
@@ -53,6 +56,7 @@
 				B20000000000000000000003 /* BlotAPI in Frameworks */,
 				B20000000000000000000013 /* BlotDesign in Frameworks */,
 				C30000000000000000000003 /* BlotWorkspace in Frameworks */,
+				E50000000000000000000003 /* BlotAppleIntegrations in Frameworks */,
 			);
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -101,6 +105,7 @@
 				B20000000000000000000002 /* BlotAPI */,
 				B20000000000000000000012 /* BlotDesign */,
 				C30000000000000000000002 /* BlotWorkspace */,
+				E50000000000000000000002 /* BlotAppleIntegrations */,
 			);
 			productName = BlotMac;
 			productReference = 13CB0E71307BE25300C7CE8A /* Blot.app */;
@@ -126,6 +131,7 @@
 				B20000000000000000000004 /* BlotAPI */,
 				B20000000000000000000014 /* BlotDesign */,
 				C30000000000000000000004 /* BlotWorkspace */,
+				E50000000000000000000004 /* BlotAppleIntegrations */,
 			);
 			productName = BlotIOS;
 			productReference = A20000000000000000000004 /* BlotIOS.app */;
@@ -162,6 +168,7 @@
 				B20000000000000000000005 /* XCLocalSwiftPackageReference "../packages/BlotAPI" */,
 				B20000000000000000000015 /* XCLocalSwiftPackageReference "../packages/BlotDesign" */,
 				C30000000000000000000005 /* XCLocalSwiftPackageReference "../packages/BlotWorkspace" */,
+				E50000000000000000000005 /* BlotAppleIntegrations */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 13CB0E72307BE25300C7CE8A /* Products */;
@@ -392,6 +399,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Blot;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
@@ -433,6 +444,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Blot;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
@@ -467,6 +482,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Blot;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
@@ -515,6 +534,10 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Blot;
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
 				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
@@ -592,6 +615,7 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../packages/BlotWorkspace;
 		};
+		E50000000000000000000005 = {isa = XCLocalSwiftPackageReference; relativePath = ../packages/BlotAppleIntegrations; };
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -619,6 +643,8 @@
 			isa = XCSwiftPackageProductDependency;
 			productName = BlotWorkspace;
 		};
+		E50000000000000000000002 = {isa = XCSwiftPackageProductDependency; productName = BlotAppleIntegrations; };
+		E50000000000000000000004 = {isa = XCSwiftPackageProductDependency; productName = BlotAppleIntegrations; };
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 13CB0E69307BE25300C7CE8A /* Project object */;

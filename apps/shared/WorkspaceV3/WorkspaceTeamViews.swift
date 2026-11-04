@@ -9,7 +9,7 @@ struct WorkspaceTeamView: View {
     var body: some View {
         switch route {
         case .createAgent, .editAgent: editor
-        case .agentProfile: profile
+        case .agentProfile: profileDetails
         case .files: files
         case .schedules: schedules
         case .createSchedule: scheduleEditor
@@ -25,7 +25,7 @@ struct WorkspaceTeamView: View {
     }
     private var agentColumns: [GridItem] {
         #if os(macOS)
-        Array(repeating: GridItem(.flexible(), alignment: .top), count: 3)
+        [GridItem(.adaptive(minimum: 200), alignment: .top)]
         #else
         Array(repeating: GridItem(.flexible(), alignment: .top), count: 2)
         #endif
@@ -50,23 +50,6 @@ struct WorkspaceTeamView: View {
             WorkspaceLink(title: "Create an agent for your task", route: .createAgent, symbol: "plus")
             if store.snapshot.agents.isEmpty { WorkspaceDataState(state: .empty) }
         }
-    }
-    private var profile: some View {
-        #if os(macOS)
-        HStack(alignment: .top, spacing: 28) {
-            WorkspaceCard {
-                if let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
-                    WorkspaceAvatarView(agent: agent, size: 110).frame(maxWidth: .infinity).padding(.vertical, 30)
-                    Text(agent.name).font(.title2)
-                    Text(store.t(agent.instructions)).foregroundStyle(WorkspaceStyle.secondary)
-                    Button(store.t("Open chat")) { _Concurrency.Task { await store.openAgentChat(agent.metadata.id) } }.buttonStyle(WorkspaceButtonStyle())
-                }
-            }.frame(width: 260)
-            profileDetails
-        }
-        #else
-        profileDetails
-        #endif
     }
     private var profileDetails: some View {
         @Bindable var store = store

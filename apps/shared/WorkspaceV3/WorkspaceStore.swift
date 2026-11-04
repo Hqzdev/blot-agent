@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDomain
 import BlotWorkspace
 import Foundation
@@ -20,6 +21,10 @@ final class WorkspaceStore {
     private(set) var snapshot = WorkspaceSnapshot() {
         didSet {
             if mode == .live {
+                if let selectedConversationID, !snapshot.conversations.contains(where: { $0.metadata.id == selectedConversationID }),
+                   let previous = oldValue.conversations.first(where: { $0.metadata.id == selectedConversationID }), previous.kind != .group {
+                    self.selectedConversationID = snapshot.conversations.first { $0.kind != .group && $0.agentId == previous.agentId }?.metadata.id
+                }
                 if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
                 refreshLocalChatState()
             }
@@ -67,6 +72,7 @@ final class WorkspaceStore {
     var sidebarVisible = true
     var catalogVisible = false
     var groupCreationVisible = false
+    var groupEditingID: UUID?
     var conflictsVisible = false
     var messageNavigationTarget: UUID?
     var taskPaused = false
@@ -234,11 +240,33 @@ final class WorkspaceStore {
         form.account.password = ""; form.account.code = ""
         #if os(macOS)
         selectTab(.home)
+        do { try await openFirstSidebarChat() }
+        catch { self.error = WorkspaceFailureCopy.message(error) }
         #else
         selectTab(.chats)
         #endif
         observeWorkspace()
     }
+
+    #if os(macOS)
+    private func openFirstSidebarChat() async throws {
+        guard let agent = snapshot.agents.first else {
+            if let group = snapshot.conversations.first(where: { $0.kind == .group && !$0.archived }) {
+                openConversation(group.metadata.id)
+            }
+            return
+        }
+        let agentID = agent.metadata.id
+        if !snapshot.conversations.contains(where: { $0.agentId == agentID && $0.kind != .group && !$0.archived }) {
+            let request = WorkspaceRequest(action: .createConversation, form: WorkspaceForm(),
+                selectedAgentID: agentID, selectedConversationID: nil, selectedRecordID: nil)
+            snapshot = try await service.execute(request, snapshot: snapshot)
+        }
+        if let chat = snapshot.conversations.first(where: { $0.agentId == agentID && $0.kind != .group && !$0.archived }) {
+            openConversation(chat.metadata.id)
+        }
+    }
+    #endif
 
     private func observeWorkspace() {
         observation?.cancel()
@@ -289,7 +317,7 @@ final class WorkspaceStore {
     }
     func openAgentChat(_ id: UUID?) async {
         selectedAgentID = id
-        if let id, let conversation = snapshot.conversations.filter({ $0.agentId == id && !$0.archived }).max(by: { $0.metadata.updatedAt < $1.metadata.updatedAt }) { openConversation(conversation.metadata.id) }
+        if let id, let conversation = snapshot.conversations.filter({ $0.agentId == id && $0.kind != .group && !$0.archived }).max(by: { $0.metadata.updatedAt < $1.metadata.updatedAt }) { openConversation(conversation.metadata.id) }
         else { await perform(.createConversation, next: .chat) }
     }
     #if os(macOS)
@@ -297,6 +325,7 @@ final class WorkspaceStore {
         guard !busy, !form.composer.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !form.composer.attachments.isEmpty else { return }
         if [.home, .newChat].contains(route) || selectedConversationID == nil {
             let composer = form.composer
+            if selectedAgentID == nil { selectedAgentID = snapshot.agents.first?.metadata.id }
             await perform(.createConversation)
             guard error == nil else { return }
             form.composer = composer
@@ -466,13 +495,15 @@ final class WorkspaceStore {
                 form.model.secret = ""
                 if mode == .live { notice = "Ключ сохранён на этом устройстве." }
             }
-            if action == .createConversation { selectedConversationID = snapshot.conversations.last?.metadata.id }
+            if action == .createConversation {
+                selectedConversationID = snapshot.conversations.first { $0.kind != .group && $0.agentId == selectedAgentID }?.metadata.id
+            }
             if action == .createAgent { selectedAgentID = snapshot.agents.last?.metadata.id }
             if action == .send {
                 if submittedConversationID == selectedConversationID { form.composer = WorkspaceComposerForm() }
                 if let submittedConversationID { conversationDrafts[submittedConversationID] = nil }
             }
-            if action == .send, let sent = snapshot.messages.last, sent.role == .user {
+            if action == .send, let sent = snapshot.messages.last(where: { $0.role == .user && $0.commandId == request.commandID }) {
                 pendingSendCommands[sent.conversationId] = nil
                 chatInteractions.messages[sent.metadata.id, default: WorkspaceMessageMetadata()].replyToMessageID = submittedComposer.replyToMessageID
                 failedSends[sent.conversationId] = nil
@@ -626,6 +657,14 @@ final class WorkspaceStore {
         selectedConversationID.map { liveResponses[$0] != nil || chatActivity.isResponding(in: $0) } ?? false
     }
 
+    var currentReplyDraft: WorkspaceChatActivity.Draft? {
+        guard let id = selectedConversationID else { return nil }
+        if let draft = chatActivity.drafts[id] { return draft }
+        guard mode == .live, isReplying,
+              let source = currentMessages.last(where: { $0.role == .user }) else { return nil }
+        return .init(messageID: source.metadata.id)
+    }
+
     func stopReply(in id: UUID? = nil) {
         guard let conversationID = id ?? selectedConversationID else { return }
         if liveResponses[conversationID] != nil, let service = commands {
@@ -646,11 +685,9 @@ final class WorkspaceStore {
             guard let self else { return }
             defer { if self.sessionGeneration == generation { self.liveResponses[message.conversationId] = nil } }
             do {
-                for try await response in try await service.responses(to: message) {
+                for try await _ in try await service.responses(to: message) {
                     guard self.sessionGeneration == generation else { return }
-                    if let index = self.snapshot.messages.firstIndex(where: { $0.metadata.id == response.metadata.id }) {
-                        self.snapshot.messages[index] = response
-                    } else { self.snapshot.messages.append(response) }
+                    self.snapshot = try await service.currentSnapshot()
                 }
             } catch {
                 guard self.sessionGeneration == generation else { return }
@@ -783,15 +820,57 @@ final class WorkspaceStore {
         return try await service.fileURL(id)
     }
 
-    func createGroup(title: String, agentIDs: [UUID]) async -> Bool {
+    /// Installs a catalog agent without changing another window's unsaved agent form.
+    func addCatalogAgent(_ draft: WorkspaceAgentForm, commandID: UUID) async -> Bool {
+        guard !busy, mode != .live || commands != nil else { return false }
+        busy = true; error = nil
+        defer { busy = false }
+        let generation = sessionGeneration
+        var input = WorkspaceForm()
+        input.agent = draft
+        do {
+            let request = WorkspaceRequest(commandID: commandID, action: .createAgent, form: input,
+                selectedAgentID: nil, selectedConversationID: nil, selectedRecordID: nil)
+            let result = try await service.execute(request, snapshot: snapshot)
+            guard sessionGeneration == generation else { return false }
+            applyMutationSnapshot(result)
+            return true
+        } catch {
+            if sessionGeneration == generation { self.error = WorkspaceFailureCopy.message(error) }
+            return false
+        }
+    }
+
+    func createGroup(title: String, agentIDs: [UUID], commandID: UUID = UUID()) async -> Bool {
         guard !busy, let service = commands else { return false }
         busy = true
         defer { busy = false }
+        error = nil
         do {
-            applyMutationSnapshot(try await service.createGroup(title: title, agentIDs: agentIDs))
-            if let group = snapshot.conversations.last { openConversation(group.metadata.id) }
+            applyMutationSnapshot(try await service.createGroup(commandID: commandID, title: title.trimmingCharacters(in: .whitespacesAndNewlines), agentIDs: agentIDs))
+            if snapshot.conversations.contains(where: { $0.metadata.id == commandID && $0.kind == .group }) {
+                openConversation(commandID)
+            }
             return true
-        } catch { self.error = "Не удалось создать группу."; return false }
+        } catch { self.error = t("Couldn't save the group."); return false }
+    }
+
+    func editGroup(_ id: UUID) {
+        guard snapshot.conversations.contains(where: { $0.metadata.id == id && $0.kind == .group }) else { return }
+        groupEditingID = id
+        groupCreationVisible = true
+    }
+
+    func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async -> Bool {
+        guard !busy, let service = commands else { return false }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            applyMutationSnapshot(try await service.updateGroup(id, expectedVersion: expectedVersion,
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines), agentIDs: agentIDs))
+            if selectedConversationID == id { selectedAgentID = currentConversation?.agentId }
+            return true
+        } catch { self.error = t("Couldn't save the group. Reopen it and try again."); return false }
     }
 
     func searchLocalMessages(_ query: String) async throws -> [BlotV3.Message] {
@@ -928,6 +1007,7 @@ final class WorkspaceStore {
         conversationDrafts = [:]; failedSends = [:]; pendingSendCommands = [:]
         pendingChatDeletionID = nil; pendingChatRenameID = nil
         chatInteractions = WorkspaceChatInteractions(); settingsRoute = nil
+        groupCreationVisible = false; groupEditingID = nil
         form = WorkspaceForm()
         #if os(iOS)
         notifications.clear(); authenticationRoute = nil; navigation.reset()
@@ -1022,6 +1102,11 @@ final class WorkspaceStore {
 
     func chooseChatAgent(_ agentID: UUID?) async {
         guard !busy else { return }
+        if mode == .live {
+            await startNewChat(with: agentID)
+            if error == nil { agentPickerVisible = false }
+            return
+        }
         if currentMessages.isEmpty, let index = snapshot.conversations.firstIndex(where: { $0.metadata.id == selectedConversationID }) {
             do {
                 let conversation = snapshot.conversations[index]
@@ -1096,5 +1181,36 @@ final class WorkspaceStore {
         default: break
         }
         return true
+    }
+}
+
+@MainActor
+extension WorkspaceStore {
+    var appleService: (any WorkspaceAppleIntegrationProviding)? { commands as? any WorkspaceAppleIntegrationProviding }
+    var appleIntegrations: AppleIntegrationController? { appleService?.appleIntegrations }
+    func connectApple(_ plugin: ApplePluginID, resources: [String], agentIDs: [UUID]) async {
+        guard let service = appleService, !busy else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do { snapshot = try await service.connectApple(plugin, resources: resources, agentIDs: agentIDs) }
+        catch { self.error = error.localizedDescription }
+    }
+    func disconnectApple(_ connection: BlotV3.Connection) async {
+        guard let service = appleService, !busy else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do { snapshot = try await service.disconnectApple(connection) }
+        catch { self.error = error.localizedDescription }
+    }
+}
+
+@MainActor
+extension WorkspaceStore {
+    func resolveAppleInvocation(_ id: UUID, succeeded: Bool) async {
+        guard let service = appleService, !busy else { return }
+        busy = true; error = nil
+        defer { busy = false }
+        do { snapshot = try await service.resolveAppleInvocation(id, succeeded: succeeded) }
+        catch { self.error = error.localizedDescription }
     }
 }

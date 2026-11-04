@@ -24,7 +24,7 @@ struct PhoneComposerBar: View {
             .buttonStyle(.plain).disabled(store.busy || loadingAttachments)
             .accessibilityLabel(store.t("Add attachment"))
 
-            TextField(store.t("Ask") + " " + agentName, text: $store.form.composer.draft, axis: .vertical)
+            TextField(store.currentConversation?.kind == .group ? store.t("Message group") + " «" + (store.currentConversation?.title ?? "") + "»" : store.t("Ask") + " " + agentName, text: $store.form.composer.draft, axis: .vertical)
                 .font(.body).textFieldStyle(.plain).lineLimit(1...5)
                 .focused($focused).disabled(store.busy)
                 .padding(.vertical, 14).padding(.leading, 2)

@@ -12,7 +12,11 @@ struct WorkspaceAccountForm {
 struct WorkspaceAgentForm {
     var name = ""
     var instructions = ""
+    #if DEBUG
     var modelID = "gigachat"
+    #else
+    var modelID = "compatible"
+    #endif
     var toolIDs: [String] = []
     var remember = true
     var shape = "round"

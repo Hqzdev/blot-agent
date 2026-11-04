@@ -1,4 +1,5 @@
 import AppKit
+import BlotAppleIntegrations
 import BlotDesign
 import SwiftUI
 
@@ -56,6 +57,12 @@ struct MacTeamPluginIcon: View {
     let plugin: MacTeamPlugin
     var size: CGFloat = 38
     var body: some View {
+        Group {
+            if let apple = ApplePluginID(rawValue: plugin.id) { ApplePluginIcon(plugin: apple, size: size) }
+            else { externalIcon }
+        }
+    }
+    private var externalIcon: some View {
         Image(plugin.assetName).renderingMode(.original)
             .resizable().scaledToFit().padding(size * 0.16)
             .frame(width: size, height: size)

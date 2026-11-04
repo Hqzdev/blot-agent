@@ -42,20 +42,25 @@ struct WorkspaceTypingPreview: View {
 
 struct WorkspaceTypingIndicator: View {
     var size: CGFloat = 6
+    var highlighted = false
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("blot.v3.reduceMotion") private var reduceMotion = false
+    @Environment(\.blotReduceMotion) private var reduceMotion
+
+    private var active: Bool { !systemReduceMotion && !reduceMotion && scenePhase == .active }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 20, paused: systemReduceMotion || reduceMotion || scenePhase != .active)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30, paused: !active)) { timeline in
             HStack(spacing: size * 0.7) {
                 ForEach(0..<3) { index in
-                    let phase = timeline.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.1 - Double(index) * 0.8
-                    let pulse = systemReduceMotion || reduceMotion ? 0.5 : max(0, sin(phase))
-                    Circle().fill(WorkspaceStyle.secondary).frame(width: size, height: size)
-                        .opacity(0.4 + pulse * 0.6).offset(y: -CGFloat(pulse) * size * 0.5)
+                    let phase = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.5) - Double(index) * 0.32
+                    let pulse = active && phase >= 0 && phase < 0.64 ? sin(.pi * phase / 0.64) : 0
+                    Circle().fill(highlighted ? Color(white: 0.55 + pulse * 0.45) : WorkspaceStyle.secondary)
+                        .frame(width: size, height: size)
+                        .scaleEffect(1 + pulse * 0.45)
                 }
             }.frame(height: size * 2)
         }
+        .accessibilityHidden(true)
     }
 }

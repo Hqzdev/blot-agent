@@ -77,7 +77,7 @@ struct PhoneChatsView: View {
                 }.buttonStyle(.plain)
                     .contextMenu {
                         BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agent.metadata.id) }
-                        BlotIconButton(store.t("New chat"), symbol: "square.and.pencil") {
+                        BlotIconButton(store.t("Open chat"), symbol: "square.and.pencil") {
                             _Concurrency.Task { await store.startNewChat(with: agent.metadata.id) }
                         }
                     }

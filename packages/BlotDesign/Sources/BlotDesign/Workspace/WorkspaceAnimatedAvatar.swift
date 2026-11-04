@@ -10,6 +10,7 @@ public struct WorkspaceAnimatedAvatar: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @State private var director = BlotDirector()
     @State private var visible = false
+    @State private var blinkStarted = Date()
 
     public init(shape: WorkspaceAvatar.ShapeKind = .round, color: Color = .primary, size: CGFloat = 68) {
         self.shape = shape; self.color = color; self.size = size
@@ -21,14 +22,20 @@ public struct WorkspaceAnimatedAvatar: View {
         TimelineView(.animation(minimumInterval: 1 / 30, paused: !active)) { timeline in
             let elapsed = max(0, timeline.date.timeIntervalSince(director.actStart))
             WorkspaceAvatar(shape: shape, color: color, size: size,
-                pose: active ? BlotMotion.pose(state: director.act, elapsed: elapsed) : BlotPose())
+                pose: active ? BlotMotion.pose(state: director.act, elapsed: elapsed, blink: blink(at: timeline.date), variant: director.variant) : BlotPose())
         }
         .onAppear { visible = true }
         .onDisappear { visible = false }
         .task(id: active) {
             guard active else { return }
-            await director.run(.lively, intro: true)
+            blinkStarted = Date()
+            await director.run(.subtle, intro: false)
         }
         .accessibilityHidden(true)
+    }
+
+    private func blink(at date: Date) -> Double {
+        let elapsed = max(0, date.timeIntervalSince(blinkStarted)).truncatingRemainder(dividingBy: 4.3)
+        return elapsed < 0.24 ? abs(elapsed - 0.12) / 0.12 : 1
     }
 }

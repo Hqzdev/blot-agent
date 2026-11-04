@@ -368,7 +368,11 @@
       "accountName": "text",
       "scopes": "[text]",
       "state": "ConnectionState",
-      "deviceId": "uuid?"
+      "deviceId": "uuid?",
+      "pluginId": "text?",
+      "resourceIds": "[text]?",
+      "agentIds": "[uuid]?",
+      "allowedOperations": "[text]?"
     },
     "McpConnection": {
       "metadata": "RecordMetadata",

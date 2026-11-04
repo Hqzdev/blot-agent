@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -8,6 +9,10 @@ struct PhonePluginConnectionView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
+        if let apple = plugin.appleID { ApplePluginConnectionView(plugin: apple) }
+        else { externalBody }
+    }
+    private var externalBody: some View {
         NavigationStack {
             List {
                 if let connection = store.snapshot.connections.first(where: { $0.service == plugin.name }) {

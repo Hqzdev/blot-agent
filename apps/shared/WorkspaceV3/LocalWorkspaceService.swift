@@ -1,11 +1,13 @@
+import BlotAppleIntegrations
 import BlotDomain
 import BlotWorkspace
 import Foundation
 
 /// Owns one authenticated account's local database and its command services.
 @MainActor
-final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, WorkspaceCommandProviding {
+final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, WorkspaceCommandProviding, WorkspaceAppleIntegrationProviding {
     var workspaceCommands: (any WorkspaceCommandService)? { self }
+    let appleIntegrations: AppleIntegrationController
     let repository: WorkspaceRepository
     private let executorPool = WorkspaceExecutorPool()
     private let credentials: WorkspaceModelCredentialStore
@@ -22,6 +24,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
 
     init(databaseURL: URL, repository: WorkspaceRepository? = nil, identity: WorkspaceIdentity? = nil,
          maximumOutputTokens: Int = 2048, runTokenBudget: Int = 20000, makeModel: (@MainActor (String) throws -> any ChatModel)? = nil) throws {
+        appleIntegrations = try AppleIntegrationController(bookmarkFile: databaseURL.deletingLastPathComponent().appendingPathComponent("AppleFolderBookmarks.plist"))
         self.repository = try repository ?? WorkspaceRepository(url: databaseURL)
         self.identity = identity
         self.maximumOutputTokens = maximumOutputTokens
@@ -42,6 +45,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
             let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
             recovery = _Concurrency.Task {
                 try await recorder.recoverInterruptedResponses()
+                try await WorkspacePermissionService(repository: repository, identity: identity).recoverUncertainInvocations()
                 try await WorkspaceModelStepService(repository: repository, identity: identity).recoverInterrupted()
             }
         }
@@ -55,6 +59,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
     func changes() async -> AsyncStream<Void> { await repository.changes() }
 
     func stopAll() async {
+        appleIntegrations.interactions.cancelAll()
         closed = true
         let workers = Array(responseWorkers.values)
         for worker in workers { worker.cancel() }
@@ -160,17 +165,98 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         return try await self.snapshot(identity)
     }
 
+    func connectApple(_ plugin: ApplePluginID, resources: [String], agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
+        guard await appleIntegrations.accessible(plugin, resources: resources) else { throw AppleIntegrationError.permissionDenied }
+        let identity = try await context()
+        try await WorkspaceConnectionService(repository: repository, identity: identity).save(pluginID: plugin.rawValue, name: plugin.name,
+            resources: resources, agentIDs: agentIDs, toolIDs: AppleToolCatalog.tools(for: plugin).map { $0.definition.name })
+        appleIntegrations.changed()
+        return try await snapshot(identity)
+    }
+    func resolveAppleInvocation(_ id: UUID, succeeded: Bool) async throws -> WorkspaceSnapshot {
+        let identity = try await context()
+        guard let invocation = try await repository.record(BlotV3.ToolInvocation.self, id: id, workspaceID: identity.workspaceID),
+              invocation.state == .unknown, invocation.execution.executorDeviceId == identity.deviceID,
+              let action = try await repository.record(BlotV3.PreparedAction.self, id: invocation.preparedActionId, workspaceID: identity.workspaceID),
+              action.toolId.hasPrefix("apple_") else { throw WorkspaceStorageError.permissionDenied }
+        try await WorkspacePermissionService(repository: repository, identity: identity).finish(commandID: UUID(), invocationID: id,
+            state: succeeded ? .succeeded : .failed, result: "{\"state\":\"verified_by_user\",\"succeeded\":\(succeeded)}")
+        if succeeded { try? await WorkspaceTaskService(repository: repository, identity: identity).completeActionTask(taskID: invocation.execution.taskId) }
+        else { try? await WorkspaceTaskService(repository: repository, identity: identity).cancel(commandID: UUID(), taskID: invocation.execution.taskId) }
+        appleIntegrations.changed()
+        return try await snapshot(identity)
+    }
+    func disconnectApple(_ connection: BlotV3.Connection) async throws -> WorkspaceSnapshot {
+        let identity = try await context()
+        try await WorkspaceConnectionService(repository: repository, identity: identity).disconnect(connection.metadata.id)
+        appleIntegrations.changed()
+        return try await snapshot(identity)
+    }
+
     func responses(to message: BlotV3.Message) async throws -> AsyncThrowingStream<BlotV3.Message, Error> {
         guard responseWorkers[message.conversationId] == nil,
               startingResponses.insert(message.conversationId).inserted else { throw WorkspaceStorageError.permissionDenied }
         defer { startingResponses.remove(message.conversationId) }
         let identity = try await context()
         let projection = try await repository.projection(identity: identity)
-        let agentID = projection.conversations.first { $0.metadata.id == message.conversationId }?.agentId
+        let conversation = projection.conversations.first { $0.metadata.id == message.conversationId }
+        let agentID = conversation?.agentId
         let configuration = try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection)
         if let configuration, !["compatible", "gigachat"].contains(configuration.modelId) { throw WorkspaceServiceError.unavailable }
         let modelID = configuration?.modelId ?? "gigachat"
         let model = try makeModel(modelID)
+        let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
+        let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService()),
+            AppleToolProvider(repository: repository, identity: identity, controller: appleIntegrations)])
+        let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: executorPool, tools: tools)
+        let responseID = UUID()
+        try _Concurrency.Task.checkCancellation()
+        let initial = try await recorder.begin(id: responseID, replyingTo: message, agentID: agentID)
+        if _Concurrency.Task.isCancelled {
+            _ = try await recorder.finish(responseID, delivery: .canceled)
+            throw CancellationError()
+        }
+        return AsyncThrowingStream { continuation in
+            let worker = _Concurrency.Task {
+                defer { responseWorkers[message.conversationId] = nil }
+                var generating = false
+                do {
+                    continuation.yield(initial)
+                    if conversation?.kind == .group {
+                        generating = true
+                        let group = WorkspaceGroupResponder(repository: repository, identity: identity, pool: executorPool,
+                            tools: tools, maximumOutputTokens: maximumOutputTokens, budgetTokenLimit: runTokenBudget,
+                            makeModel: makeModel, context: responseContext)
+                        try await group.respond(to: message, initialResponseID: responseID, emit: { continuation.yield($0) })
+                        continuation.finish()
+                        return
+                    }
+                    let maximumCharacters = message.artifactIds.isEmpty ? 48_000 : 24_000
+                    let prepared = try await WorkspaceContextCompactor(repository: repository, identity: identity, pool: executorPool)
+                        .prepare(source: message, responseID: responseID, configuration: configuration, model: model, modelID: modelID,
+                            maximumCharacters: maximumCharacters, maximumOutputTokens: maximumOutputTokens, budgetTokenLimit: runTokenBudget)
+                    let context = try await responseContext(for: message, projection: prepared, configuration: configuration)
+                    let modelRequest = ChatModelRequest(messages: context, maximumOutputTokens: maximumOutputTokens)
+                    generating = true
+                    try await runtime.generate(source: message, responseID: responseID, request: modelRequest, model: model,
+                        modelID: modelID, configuration: configuration, budgetTokenLimit: runTokenBudget,
+                        emit: { continuation.yield($0) })
+                    continuation.finish()
+                } catch {
+                    if !generating {
+                        let state: BlotV3.DeliveryState = _Concurrency.Task.isCancelled ? .canceled : .interrupted
+                        if let saved = try? await recorder.finish(responseID, delivery: state) { continuation.yield(saved) }
+                    }
+                    continuation.finish(throwing: error)
+                }
+            }
+            responseWorkers[message.conversationId] = worker
+            continuation.onTermination = { _ in worker.cancel() }
+        }
+    }
+
+    private func responseContext(for message: BlotV3.Message, projection: WorkspaceProjection,
+                                 configuration: BlotV3.AgentConfigurationRevision?) async throws -> [ChatModelMessage] {
         var context = try WorkspaceContextBuilder().messages(for: message, projection: projection, configuration: configuration,
             maximumCharacters: message.artifactIds.isEmpty ? 48_000 : 24_000)
         if !message.artifactIds.isEmpty {
@@ -185,35 +271,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
             context.removeLast()
             context.append(.init(role: "user", content: content))
         }
-        let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
-        let modelRequest = ChatModelRequest(messages: context, maximumOutputTokens: maximumOutputTokens)
-        let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService())])
-        let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: executorPool, tools: tools)
-        let responseID = UUID()
-        try _Concurrency.Task.checkCancellation()
-        let initial = try await recorder.begin(id: responseID, replyingTo: message, agentID: agentID)
-        if _Concurrency.Task.isCancelled {
-            _ = try await recorder.finish(responseID, delivery: .canceled)
-            throw CancellationError()
-        }
-        return AsyncThrowingStream { continuation in
-            let worker = _Concurrency.Task {
-                defer { responseWorkers[message.conversationId] = nil }
-                do {
-                    continuation.yield(initial)
-                    try await runtime.generate(source: message, responseID: responseID, request: modelRequest, model: model,
-                        modelID: modelID, configuration: configuration, budgetTokenLimit: runTokenBudget,
-                        emit: { continuation.yield($0) })
-                    continuation.finish()
-                } catch {
-                    let state: BlotV3.DeliveryState = _Concurrency.Task.isCancelled ? .canceled : .interrupted
-                    if let saved = try? await recorder.finish(responseID, delivery: state) { continuation.yield(saved) }
-                    continuation.finish(throwing: error)
-                }
-            }
-            responseWorkers[message.conversationId] = worker
-            continuation.onTermination = { _ in worker.cancel() }
-        }
+        return context
     }
 
     private func context() async throws -> WorkspaceIdentity {
@@ -245,9 +303,16 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         return try await snapshot(identity)
     }
 
-    func createGroup(title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
+    func createGroup(commandID: UUID, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
         let identity = try await context()
-        _ = try await WorkspaceGroupService(repository: repository, identity: identity).create(commandID: UUID(), title: title, agentIDs: agentIDs)
+        _ = try await WorkspaceGroupService(repository: repository, identity: identity).create(commandID: commandID, title: title, agentIDs: agentIDs)
+        return try await snapshot(identity)
+    }
+
+    func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
+        let identity = try await context()
+        try await WorkspaceGroupService(repository: repository, identity: identity).update(commandID: UUID(),
+            conversationID: id, expectedVersion: expectedVersion, title: title, agentIDs: agentIDs)
         return try await snapshot(identity)
     }
 
@@ -305,6 +370,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         result.agents = records.agents; result.configurations = records.configurations
         result.schedules = records.schedules; result.memories = records.memories.filter { $0.state != .deleted }
         result.artifacts = records.artifacts; result.connections = records.connections
+        result.toolInvocations = records.invocations; result.preparedActions = records.actions
         result.participants = records.participants; result.reactions = records.reactions; result.readPositions = records.readPositions
         result.skills = records.skills; result.skillRevisions = records.skillRevisions; result.summaries = records.summaries
         result.conflicts = records.conflicts

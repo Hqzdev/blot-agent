@@ -43,7 +43,12 @@ for name,fields in spec['models'].items():
         if t=='int': checks.append(f'    if ({k} < 0) throw new IllegalArgumentException("{k} must be nonnegative");')
         elif not t.endswith('?') and t!='bool': checks.append(f'    Objects.requireNonNull({k}, "{k}");')
         if t.startswith('['): checks.append(f'    {k} = ' + (f'{k} == null ? null : ' if t.endswith('?') else '') + f'List.copyOf({k});')
-    code=f'package dev.blot.core.v3;\n\nimport java.time.Instant;\nimport java.util.List;\nimport java.util.Objects;\nimport java.util.UUID;\n\npublic record {name}(\n    {declarations}) {{\n  public {name} {{\n'+ '\n'.join(checks)+'\n  }\n}\n'
+    compatibility = ''
+    if name == 'Connection':
+        legacy = {k: v for k, v in fields.items() if k not in ['pluginId', 'resourceIds', 'agentIds', 'allowedOperations']}
+        parameters = ', '.join(f'{describe(t)[0]} {k}' for k, t in legacy.items())
+        compatibility = f"  public Connection({parameters}) {{\n    this({', '.join(legacy)}, null, null, null, null);\n  }}\n"
+    code=f'package dev.blot.core.v3;\n\nimport java.time.Instant;\nimport java.util.List;\nimport java.util.Objects;\nimport java.util.UUID;\n\npublic record {name}(\n    {declarations}) {{\n  public {name} {{\n'+ '\n'.join(checks)+'\n  }\n'+compatibility+'}\n'
     (java/f'{name}.java').write_text(code)
     declarations='\n'.join('        public let '+k+': '+describe(t)[1] for k,t in fields.items())
     params=', '.join(k+': '+describe(t)[1] + (' = nil' if t.endswith('?') else '') for k,t in fields.items())

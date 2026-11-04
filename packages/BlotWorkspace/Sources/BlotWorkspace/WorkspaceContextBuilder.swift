@@ -26,7 +26,12 @@ public struct WorkspaceContextBuilder: Sendable {
         let memories = projection.memories.filter { $0.state == .active && ($0.scope == .personal || ($0.scope == .agent && $0.scopeId == configuration?.agentId)) }
         for memory in memories { add("system", "User-approved memory (context, not a tool permission):\n" + memory.content) }
         let precedingIDs = Set(history.prefix(index).map(\.metadata.id))
-        let summary = projection.summaries.last { $0.conversationId == source.conversationId && $0.valid && Set($0.sourceIds).isDisjoint(with: removedSources) && Set($0.sourceIds).isSubset(of: precedingIDs) }
+        let summary = projection.summaries.filter {
+            $0.conversationId == source.conversationId && $0.valid && Set($0.sourceIds).isDisjoint(with: removedSources)
+                && Set($0.sourceIds).isSubset(of: precedingIDs)
+        }.max {
+            $0.sourceIds.count == $1.sourceIds.count ? $0.metadata.createdAt < $1.metadata.createdAt : $0.sourceIds.count < $1.sourceIds.count
+        }
         var summarized: Set<UUID> = []
         if let summary, ("Conversation summary:\n" + summary.content).count <= remaining {
             add("system", "Conversation summary:\n" + summary.content)
@@ -35,9 +40,10 @@ public struct WorkspaceContextBuilder: Sendable {
         var previous: [ChatModelMessage] = []
         for message in history.prefix(index).reversed() where !removedSources.contains(message.metadata.id) && !summarized.contains(message.metadata.id) {
             guard message.role == .user || (message.role == .assistant && message.delivery == .completed) else { continue }
-            guard message.content.count <= remaining else { break }
-            remaining -= message.content.count
-            previous.append(.init(role: message.role == .user ? "user" : "assistant", content: message.content))
+            let content = WorkspaceGroupMessageContext.content(message, projection: projection)
+            guard content.count <= remaining else { break }
+            remaining -= content.count
+            previous.append(.init(role: message.role == .user ? "user" : "assistant", content: content))
         }
         result.append(contentsOf: previous.reversed())
         result.append(.init(role: "user", content: source.content))

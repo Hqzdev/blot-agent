@@ -1,7 +1,7 @@
 import BlotDomain
 import Foundation
 
-/// Every published delta is durable first. Recovery never starts a model request.
+/// Published messages are durable first. Recovery never starts a model request.
 public struct WorkspaceResponseRecorder: Sendable {
     private let repository: WorkspaceRepository
     private let identity: WorkspaceIdentity
@@ -39,17 +39,17 @@ public struct WorkspaceResponseRecorder: Sendable {
         return try await requireResponse(id)
     }
 
-    public func finish(_ id: UUID, delivery: BlotV3.DeliveryState, now: Date = Date()) async throws -> BlotV3.Message {
-        struct Input: Encodable { let responseID: UUID; let delivery: BlotV3.DeliveryState }
+    public func finish(_ id: UUID, delivery: BlotV3.DeliveryState, content: String? = nil, now: Date = Date()) async throws -> BlotV3.Message {
+        struct Input: Encodable { let responseID: UUID; let delivery: BlotV3.DeliveryState; let content: String? }
         let command = try WorkspaceCommand(type: "response.finish", workspaceID: identity.workspaceID,
-            payload: Input(responseID: id, delivery: delivery)).data()
+            payload: Input(responseID: id, delivery: delivery, content: content)).data()
         _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
             let message = try tx.require(BlotV3.Message.self, id: id)
             guard message.executorDeviceId == tx.identity.deviceID else { throw WorkspaceStorageError.permissionDenied }
             guard [.completed, .interrupted, .canceled, .failed].contains(delivery), message.role == .assistant else { throw WorkspaceStorageError.invalidRecord }
-            if message.delivery == delivery { return id }
+            if message.delivery == delivery, content == nil || content == message.content { return id }
             guard message.delivery == .running else { throw WorkspaceStorageError.invalidRecord }
-            try Self.replace(tx, message, content: message.content, delivery: delivery, now: now)
+            try Self.replace(tx, message, content: content ?? message.content, delivery: delivery, now: now)
             return id
         }
         return try await requireResponse(id)

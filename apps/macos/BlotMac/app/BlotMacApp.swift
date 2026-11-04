@@ -20,6 +20,7 @@ struct BlotMacApp: App {
             #endif
         }
         .defaultSize(width: 1280, height: 820)
+        .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unifiedCompact)
         .commands {
@@ -48,5 +49,10 @@ struct BlotMacApp: App {
                 #endif
             }
         }
+        Window("Приложения и шаблоны", id: MacMarketplaceWindow.sceneID) {
+            MacMarketplaceWindow().environment(workspace)
+        }
+        .defaultSize(width: 1040, height: 780)
+        .windowResizability(.contentMinSize)
     }
 }

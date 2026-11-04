@@ -4,6 +4,13 @@ import Foundation
 /// Product errors contain no remote response bodies, tokens, addresses or secret values.
 enum WorkspaceFailureCopy {
     static func message(_ error: any Error) -> String {
+        if let group = error as? WorkspaceGroupResponseError {
+            switch group {
+            case .membershipChanged: return "Состав группы изменился. Уже полученные ответы сохранены. Отправьте задачу обновлённой команде."
+            case .budgetExceeded: return "Команда достигла лимита этой задачи. Полученные результаты сохранены; уточните следующий шаг."
+            case .invalidPlan: return "Координатор не смог составить корректный план для участников. Сообщение сохранено."
+            }
+        }
         if let cloud = error as? WorkspaceCloudError {
             switch cloud {
             case .rejected(_, "email_not_verified"): return "Подтвердите почту кодом из письма."
