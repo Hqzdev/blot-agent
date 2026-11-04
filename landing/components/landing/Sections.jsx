@@ -6,6 +6,7 @@ import { AnimatePresence, motion, useInView, useReducedMotion } from "motion/rea
 import { ArrowRight, ArrowUpRight, Check, ChevronDown, Download, Laptop, Minus, Plus, Smartphone } from "lucide-react";
 import { siApple } from "simple-icons";
 import { enterpriseFeatures, faqs, features, individualPlans, roles, teamFeatures } from "@/lib/landing/content";
+import { betaRelease, releaseDownload, releasePlatforms } from "@/lib/releases.mjs";
 import { ChatDemo } from "./ChatDemo";
 import { Avatar, Pet } from "./Pet";
 
@@ -20,10 +21,10 @@ export function Reveal({ children, className = "" }) {
 
 export function Hero() {
   return <section id="hero" className="blot-hero">
-    <Reveal className="blot-hero-copy"><Link href="/changelog" className="blot-announcement"><span className="blot-announcement-desktop">Blot is here · Read the launch post</span><span className="blot-announcement-mobile">Blot is here</span><ArrowUpRight size={13} /></Link>
+    <Reveal className="blot-hero-copy"><Link href="/changelog" className="blot-announcement"><span className="blot-announcement-desktop">1.0 Beta is here · See what’s new</span><span className="blot-announcement-mobile">1.0 Beta is here</span><ArrowUpRight size={13} /></Link>
       <h1>Meet <Pet size={60} /> Blot</h1>
       <p>AI teammates you can give real work to. Bots can sign in to your tools, use them just like you do, and come back with finished work.</p>
-      <div className="blot-actions"><Link className="blot-button" href="/beta?platform=macos"><AppleMark />Download for macOS</Link><Link className="blot-button blot-button-soft" href="/contact">Contact sales</Link></div>
+      <div className="blot-actions"><a className="blot-button" href={releaseDownload("macos")}><AppleMark />Download for macOS</a><Link className="blot-button blot-button-soft" href="/contact">Contact sales</Link></div>
     </Reveal>
     <Reveal className="blot-hero-demo" ><div id="demo"><ChatDemo /></div></Reveal>
   </section>;
@@ -78,7 +79,7 @@ export function Downloads() {
     document.addEventListener("keydown", close);
     return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", close); };
   }, []);
-  return <section id="download" className="blot-section blot-download"><Reveal className="blot-download-card"><div><h2>Download Blot</h2><p>One team, wherever you are — on your desk and in your pocket.</p></div><div className="blot-download-actions" ref={ref}><Link className="blot-button" href="/beta?platform=macos"><AppleMark />Download for macOS</Link><button className="blot-button blot-button-paper" aria-expanded={open} aria-controls="blot-platforms" onClick={() => setOpen(!open)}>More downloads<ChevronDown size={15} /></button><AnimatePresence>{open && <motion.div className="blot-platform-menu" id="blot-platforms" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.16 }}>{[["macOS", "macos", Laptop], ["iOS", "ios", Smartphone], ["Android", "android", Smartphone], ["Windows", "windows", Laptop]].map(([name, id, Icon]) => <Link key={id} href={`/beta?platform=${id}`}><Icon size={16} /><span>{name}</span><Download size={14} /></Link>)}</motion.div>}</AnimatePresence></div></Reveal></section>;
+  return <section id="download" className="blot-section blot-download"><Reveal className="blot-download-card"><div><h2>Download Blot</h2><p>{betaRelease.version} · macOS 26+ on Apple Silicon and iOS 26+. iPhone IPA requires your own signing.</p><Link className="site-text-link" href="/beta">Installation guide and model setup<ArrowUpRight size={14} /></Link></div><div className="blot-download-actions" ref={ref}><a className="blot-button" href={releaseDownload("macos")}><AppleMark />Download for macOS</a><button className="blot-button blot-button-paper" aria-expanded={open} aria-controls="blot-platforms" onClick={() => setOpen(!open)}>More downloads<ChevronDown size={15} /></button><AnimatePresence>{open && <motion.div className="blot-platform-menu" id="blot-platforms" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.16 }}>{releasePlatforms.map(({ name, id, file }) => { const Icon = ["macos", "windows"].includes(id) ? Laptop : Smartphone; return file ? <a key={id} href={releaseDownload(id)}><Icon size={16} /><span>{name}</span><Download size={14} /></a> : <span className="blot-platform-soon" key={id} aria-disabled="true"><Icon size={16} /><span>{name}</span><small>Soon</small></span>; })}</motion.div>}</AnimatePresence></div></Reveal></section>;
 }
 
 export function Guides() {

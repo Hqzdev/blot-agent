@@ -7,7 +7,9 @@ import { AccountEmailChallenges } from "./challenges.mjs";
 import { AccountSessions } from "./sessions.mjs";
 import { Accounts } from "./accounts.mjs";
 import { BrowserAuthorizationCodes } from "./browser-codes.mjs";
-import { GoogleAccountIdentity, GoogleAccounts } from "./google.mjs";
+import { GoogleAccountIdentity } from "./google.mjs";
+import { YandexAccountIdentity } from "./yandex.mjs";
+import { ProviderAccounts } from "./provider-accounts.mjs";
 
 export class AccountService {
   #database;
@@ -16,14 +18,16 @@ export class AccountService {
   #sessions;
   #browser;
   #google;
-  constructor({ database, email, challengeSecret, googleIdentity }) {
+  #yandex;
+  constructor({ database, email, challengeSecret, googleIdentity, yandexIdentity }) {
     this.#database = database;
     this.#rates = new AccountRateLimiter(database);
     this.#sessions = new AccountSessions(database);
     const challenges = new AccountEmailChallenges({ database, security: new EmailCodeSecurity(challengeSecret), email, rates: this.#rates });
     this.#accounts = new Accounts({ database, passwords: new PasswordHasher(), challenges, sessions: this.#sessions });
     this.#browser = new BrowserAuthorizationCodes(database, this.#sessions);
-    this.#google = new GoogleAccounts(database, googleIdentity, this.#sessions);
+    this.#google = new ProviderAccounts(database, googleIdentity, this.#sessions, "google");
+    this.#yandex = new ProviderAccounts(database, yandexIdentity, this.#sessions, "yandex");
   }
   async request(path, { body = {}, accessToken, method = "POST", clientIP } = {}) {
     await this.#database.initialize();
@@ -45,7 +49,8 @@ export class AccountService {
       case "refresh": return this.#sessions.refresh(body.refreshToken);
       case "browser/code": return this.#browser.issue(body, accessToken);
       case "browser/token": return this.#browser.exchange(body);
-      case "google/login": return this.#google.login(body);
+      case "google/login": return this.#google.login(body.idToken, body.nonce);
+      case "yandex/login": return this.#yandex.login(body.accessToken);
       case "logout": case "revoke-sessions":
         await this.#sessions.logout(await this.#sessions.require(accessToken), path === "revoke-sessions");
         return null;
@@ -61,11 +66,12 @@ export class AccountService {
 let service;
 export function localAccountService() {
   if (!service) {
-    const secret = process.env.BLOT_AUTH_CHALLENGE_SECRET || process.env.BLOT_WEB_SESSION_SECRET || process.env.BLOT_GOOGLE_WEB_CLIENT_SECRET;
+    const secret = process.env.BLOT_AUTH_CHALLENGE_SECRET || process.env.BLOT_WEB_SESSION_SECRET || process.env.BLOT_GOOGLE_WEB_CLIENT_SECRET || process.env.BLOT_YANDEX_WEB_CLIENT_SECRET;
     if (!secret || secret.length < 24) throw new AuthError("web_session_unconfigured", 503);
     service = new AccountService({ database: accountDatabase(), email: new AccountEmailSender(),
       challengeSecret: createHmac("sha256", secret).update("BLOT-EMAIL-CODE-1").digest("hex"),
-      googleIdentity: new GoogleAccountIdentity(process.env.BLOT_GOOGLE_WEB_CLIENT_ID) });
+      googleIdentity: new GoogleAccountIdentity(process.env.BLOT_GOOGLE_WEB_CLIENT_ID),
+      yandexIdentity: new YandexAccountIdentity(process.env.BLOT_YANDEX_WEB_CLIENT_ID) });
   }
   return service;
 }

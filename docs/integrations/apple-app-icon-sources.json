@@ -1,0 +1,51 @@
+[
+  {
+    "asset": "PluginAppleFiles",
+    "application": "Files",
+    "appStoreURL": "https://apps.apple.com/us/app/files/id1232058109?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/35/df/6a/35df6a7a-b5e0-9221-4a90-1dee835fe6ca/filesCalistoga-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleMail",
+    "application": "Mail",
+    "appStoreURL": "https://apps.apple.com/us/app/mail/id1108187098?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/6e/20/b2/6e20b217-8f80-9b20-136f-50ee09e2937c/mailCalistoga-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleCalendar",
+    "application": "Calendar",
+    "appStoreURL": "https://apps.apple.com/us/app/calendar/id1108185179?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/ca/5a/cd/ca5acd85-c64d-f468-00f9-50fdc4819e59/calendarCalistoga-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleContacts",
+    "application": "Contacts",
+    "appStoreURL": "https://apps.apple.com/us/app/contacts/id1069512615?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/db/00/f5/db00f5fc-c446-f84c-29b9-1a46bb028ca6/contactsCalistoga-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleNotes",
+    "application": "Notes",
+    "appStoreURL": "https://apps.apple.com/us/app/notes/id1110145109?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/e8/53/65/e853659a-0888-7264-743e-0e3875d1505f/notesCalistoga-0-0-1x_U007epad-0-1-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleReminders",
+    "application": "Reminders",
+    "appStoreURL": "https://apps.apple.com/us/app/reminders/id1108187841?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/4b/b4/39/4bb43986-4714-adc7-459a-1b7c7aafff1d/remindersCalistoga-0-0-1x_U007epad-0-1-0-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  },
+  {
+    "asset": "PluginAppleShortcuts",
+    "application": "Shortcuts",
+    "appStoreURL": "https://apps.apple.com/us/app/shortcuts/id1462947752?uo=4",
+    "source": "https://is1-ssl.mzstatic.com/image/thumb/Purple211/v4/f6/5b/c6/f65bc62e-7203-4812-a481-3d6204e10896/shortcutsCalistoga-0-0-1x_U007epad-0-1-0-85-220.png/512x512bb.jpg",
+    "owner": "Apple Inc."
+  }
+]
