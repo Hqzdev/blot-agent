@@ -37,8 +37,10 @@ struct MacLiveTeamConversation: View {
                         VStack(spacing: 16) {
                             if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
                             else { WorkspaceAnimatedAvatar(size: 68) }
-                            Text(store.snapshot.agents.isEmpty ? "Создайте своего первого агента" : "Что сделаем вместе?")
-                                .font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
+                            Group {
+                                if store.snapshot.agents.isEmpty { Text("Создайте своего первого агента") }
+                                else { WorkspaceWelcomeGreeting() }
+                            }.font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
                             if store.snapshot.agents.isEmpty {
                                 Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
                             }
