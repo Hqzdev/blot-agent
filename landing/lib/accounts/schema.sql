@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS blot_accounts (
   verified boolean NOT NULL DEFAULT false,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE blot_accounts ADD COLUMN IF NOT EXISTS yandex_subject text;
+CREATE UNIQUE INDEX IF NOT EXISTS blot_accounts_yandex_subject ON blot_accounts(yandex_subject);
 CREATE TABLE IF NOT EXISTS blot_sessions (
   id uuid PRIMARY KEY,
   owner_id uuid NOT NULL REFERENCES blot_accounts(id) ON DELETE CASCADE,
