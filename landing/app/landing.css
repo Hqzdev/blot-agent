@@ -257,6 +257,8 @@ html[data-theme="dark"] .blot-logo .blot-logo-paper { display: block; }
 .blot-platform-menu a { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px; font-size: 14px; }
 .blot-platform-menu a:hover { background: var(--blot-cream); }
 .blot-platform-menu a > svg:last-child { margin-left: auto; }
+.blot-platform-soon { display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 14px; color: var(--blot-muted); }
+.blot-platform-soon small { margin-left: auto; font-size: 12px; }
 .blot-guide-card { text-align: left; background: var(--blot-cream); padding: 48px; border-radius: 24px; }
 .blot-guide-card h2 { margin-bottom: 16px; }
 .blot-guide-card > .blot-button { margin-top: 28px; }

@@ -53,7 +53,7 @@ export const menuGroups = {
 
 export const footerGroups = [
   ["Blot", [["Overview", "/"], ["Features", "/features"], ["Agent roles", "/#use-cases"], ["Pricing", "/#pricing"]]],
-  ["Download", [["macOS", "/beta?platform=macos"], ["iOS", "/beta?platform=ios"], ["Android", "/beta?platform=android"], ["Windows", "/beta?platform=windows"]]],
+  ["Download", [["macOS", "/beta?platform=macos"], ["iOS", "/beta?platform=ios"], ["Android · Soon", "/beta?platform=android"], ["Windows · Soon", "/beta?platform=windows"]]],
   ["Resources", [["Documentation", "/docs"], ["MCP guide", "/workspace/documents/mcp-developer-guide"], ["Workspace", "/workspace"], ["GitHub", "/github"]]],
   ["Company", [["Changelog", "/changelog"], ["Contact", "/contact"]]],
   ["Privacy", [["Website privacy", "/privacy"], ["Data lifecycle", "/workspace/documents/P0.9"]]],
