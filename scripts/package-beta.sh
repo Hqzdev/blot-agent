@@ -39,12 +39,8 @@ scripts/sign-native.sh --entitlements apps/macos/BlotMac/BlotMac.entitlements "$
 codesign --verify --deep --strict "$mac"
 stage="$(mktemp -d "$PWD/.build/beta-package.XXXXXX")"
 trap 'rm -rf "$stage"' EXIT
-mkdir -p "$stage/dmg" "$stage/ipa/Payload"
-ditto "$mac" "$stage/dmg/Blot.app"
-ln -s /Applications "$stage/dmg/Applications"
-hdiutil create -ov -volname 'Blot 1.0 Beta' -srcfolder "$stage/dmg" -format UDZO \
-    "$output/Blot-1.0-Beta-macOS-arm64.dmg"
-hdiutil verify "$output/Blot-1.0-Beta-macOS-arm64.dmg"
+mkdir -p "$stage/ipa/Payload"
+bash scripts/package-dmg.sh "$mac" "$output/Blot-1.0-Beta-macOS-arm64.dmg"
 ditto "$ios" "$stage/ipa/Payload/BlotIOS.app"
 (cd "$stage/ipa" && ditto -c -k --keepParent Payload "$output/Blot-1.0-Beta-iOS.ipa")
 unzip -tq "$output/Blot-1.0-Beta-iOS.ipa"
