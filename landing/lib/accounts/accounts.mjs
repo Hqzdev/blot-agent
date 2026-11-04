@@ -16,9 +16,9 @@ export class Accounts {
     passwordValue(password);
     if (typeof name !== "string" || !name.trim() || name.length > 200) throw new AuthError("invalid_name");
     const hash = await this.#passwords.hash(password);
-    const { rows } = await this.#database.query(`INSERT INTO blot_accounts(id, workspace_id, email, name)
-      VALUES ($1, $2, $3, $4) ON CONFLICT(email) DO UPDATE SET email = EXCLUDED.email RETURNING *`,
-    [randomUUID(), randomUUID(), email, name.trim()]);
+    const { rows } = await this.#database.query(`INSERT INTO blot_accounts(id, workspace_id, email, name, password_hash)
+      VALUES ($1, $2, $3, $4, $5) ON CONFLICT(email) DO UPDATE SET email = EXCLUDED.email RETURNING *`,
+    [randomUUID(), randomUUID(), email, name.trim(), hash]);
     await this.#challenges.send(rows[0], "verify", { hash, name: name.trim() });
     return null;
   }

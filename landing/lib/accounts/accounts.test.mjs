@@ -85,12 +85,14 @@ test("re-registration cannot replace an existing verified password", async () =>
 test("password reset revokes all sessions and never reveals an unknown email", async () => {
   const { email, tokens } = await registered();
   await service.request("password/request", { body: { email } });
+  await assert.rejects(service.request("password/request", { body: { email } }), rejectCode("challenge_cooldown"));
   const code = messages.findLast(m => m.email === email && m.purpose === "reset").code;
   await service.request("password/reset", { body: { email, code, password: "new private password" } });
   await assert.rejects(service.request("refresh", { body: { refreshToken: tokens.refreshToken } }), rejectCode("session_expired"));
   await assert.rejects(service.request("login", { body: { email, password } }), rejectCode("wrong_credentials"));
   await service.request("login", { body: { email, password: "new private password" } });
   assert.equal(await service.request("password/request", { body: { email: "unknown@example.org" } }), null);
+  await assert.rejects(service.request("password/request", { body: { email: "unknown@example.org" } }), rejectCode("challenge_cooldown"));
 });
 
 test("native handoff rejects wrong PKCE, wrong client and concurrent code replay", async () => {

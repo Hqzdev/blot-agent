@@ -34,6 +34,7 @@ export class AccountService {
     if (["register", "login", "verify", "password/request", "password/reset"].includes(path)) {
       const email = emailAddress(body.email);
       await this.#rates.check(`address:${path}:${email}`, path === "password/request" ? 10 : 30, 900);
+      if (path === "password/request") await this.#rates.check(`reset-email:${email}`, 1, 60);
     }
     switch (path) {
       case "register": return this.#accounts.register(body);
