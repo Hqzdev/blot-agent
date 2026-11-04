@@ -37,9 +37,9 @@ The app opens `/login` with `response_type=code`, `client_id`, `redirect_uri`, r
 | `blot-ios` | `blot-agent-ios:/oauth/account` |
 | `blot-macos` | `blot-agent-macos:/oauth/account` |
 
-After sign-in, the user selects **Continue in Blot**, then **Open Blot**. The callback carries only a one-time code and the original state. The app exchanges the code and its private PKCE verifier at `/v1/auth/browser/token`. This endpoint is also proxied through the website origin. Session tokens never appear in a callback URL or browser JavaScript.
+After successful sign-in or email verification, the page automatically issues the native authorization code and redirects to Blot. The same return happens when an authenticated browser session is restored. A retry control is available only as a fallback if the browser blocks automatic app opening. The callback carries only a one-time code and the original state. The app exchanges the code and its private PKCE verifier at `/v1/auth/browser/token`. This endpoint is also proxied through the website origin. Session tokens never appear in a callback URL or browser JavaScript.
 
-When opened directly, the signed-in page links to `blot-agent-ios:/oauth/start` or `blot-agent-macos:/oauth/start`. The app starts its own PKCE attempt, then returns through the flow above. Both app URL schemes and the native browser authorization handler must be included in the installed app.
+When opened directly, the signed-in page automatically opens `blot-agent-ios:/oauth/start` or `blot-agent-macos:/oauth/start`. The app starts its own PKCE attempt, then returns through the flow above. Both app URL schemes and the native browser authorization handler must be included in the installed app.
 
 ## Validation
 
