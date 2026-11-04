@@ -59,6 +59,30 @@ class AppleConfigurationTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'both'):
             config.configuration(env, 'Debug')
 
+    def test_packaged_app_allows_manual_ca_validation_only_for_provider_hosts(self):
+        env = self.environment()
+        env['BLOT_GIGACHAT_API_URL'] = 'https://api.example.com/v1/'
+        env['BLOT_GIGACHAT_OAUTH_URL'] = 'https://oauth.example.com:9443/api/v2/oauth'
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / 'input.env'
+            info = Path(directory) / 'Info.plist'
+            source.write_text('\n'.join(key + '=' + value for key, value in env.items()))
+            info.write_bytes(plistlib.dumps({'CFBundleIdentifier': 'dev.blot.test'}))
+            result = subprocess.run([sys.executable, str(config.ROOT / 'scripts/apple_build_configuration.py'),
+                                     '--info-plist', str(info)],
+                                    env={'BLOT_ENV_FILE': str(source)}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            value = plistlib.loads(info.read_bytes())
+            self.assertEqual(value['CFBundleIdentifier'], 'dev.blot.test')
+            ats = value['NSAppTransportSecurity']
+            self.assertEqual(set(ats), {'NSExceptionDomains'})
+            self.assertEqual(set(ats['NSExceptionDomains']), {'api.example.com', 'oauth.example.com'})
+            for domain in ats['NSExceptionDomains'].values():
+                self.assertTrue(domain['NSExceptionAllowsInsecureHTTPLoads'])
+                self.assertEqual(domain['NSExceptionMinimumTLSVersion'], 'TLSv1.2')
+                self.assertNotIn('NSIncludesSubdomains', domain)
+                self.assertNotIn('NSExceptionRequiresForwardSecrecy', domain)
+
 
 if __name__ == '__main__':
     unittest.main()

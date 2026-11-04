@@ -134,6 +134,16 @@ def atomic_write(path, data):
     os.replace(temporary, path)
 
 
+def provider_transport_security(configuration):
+    # ATS otherwise rejects this private CA before URLSession's trust delegate runs.
+    # Only these exact hosts use manual CA validation; HTTPS, TLS 1.2 and PFS remain required by the client.
+    hosts = {urlsplit(configuration['GigaChat'][name]).hostname for name in ['APIURL', 'OAuthURL']}
+    return {'NSExceptionDomains': {
+        host: {'NSExceptionAllowsInsecureHTTPLoads': True, 'NSExceptionMinimumTLSVersion': 'TLSv1.2'}
+        for host in sorted(hosts)
+    }}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path)
@@ -150,6 +160,7 @@ def main():
             atomic_write(args.output, plistlib.dumps(result, sort_keys=True))
         if args.info_plist:
             info = plistlib.loads(args.info_plist.read_bytes())
+            info['NSAppTransportSecurity'] = provider_transport_security(result)
             types = [v for v in info.get('CFBundleURLTypes', []) if v.get('CFBundleURLName') not in ['dev.blot.account', 'dev.blot.google-oauth']]
             types.append({'CFBundleURLName': 'dev.blot.account', 'CFBundleURLSchemes': ['blot-agent-macos', 'blot-agent-ios']})
             clients = result['GoogleClientIDs']
