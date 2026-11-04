@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="280" viewBox="0 0 1200 280" role="img" aria-labelledby="title description">
+  <title id="title">Blot — ИИ-помощник с командой агентов</title>
+  <desc id="description">Фирменный персонаж Blot, название проекта и платформы Mac и iPhone на светлом фоне.</desc>
+  <rect width="1200" height="280" rx="28" fill="#f5f5f7"/>
+  <g id="blot-character" transform="translate(38 28) scale(.22)">
+    <path d="M512 135 C737 135 914 305 914 520 C914 746 746 872 514 872 C284 872 110 754 110 528 C110 314 288 135 512 135 Z M309.589 509.888 C300.544 482.049 315.779 452.149 343.618 443.104 C371.456 434.059 401.356 449.294 410.401 477.132 L448.411 594.112 C457.456 621.951 442.221 651.851 414.382 660.896 C386.544 669.941 356.644 654.706 347.599 626.868 Z M545.353 439.084 C536.308 411.245 551.543 381.345 579.381 372.300 C607.220 363.255 637.120 378.489 646.165 406.328 L686.647 530.916 C695.692 558.755 680.457 588.655 652.619 597.700 C624.780 606.745 594.880 591.511 585.835 563.672 Z" fill="#b294e8" fill-rule="evenodd"/>
+  </g>
+  <g id="wordmark" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif">
+    <text x="300" y="137" fill="#111111" font-size="104" font-weight="700" letter-spacing="-5">Blot</text>
+    <text x="302" y="190" fill="#57575f" font-size="30">ИИ-помощник с командой агентов</text>
+    <text x="302" y="232" fill="#57575f" font-size="22">SwiftUI · macOS · iOS</text>
+  </g>
+</svg>
