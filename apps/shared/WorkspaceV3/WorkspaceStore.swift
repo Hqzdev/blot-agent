@@ -20,6 +20,7 @@ final class WorkspaceStore {
         didSet { if mode == .live { refreshLocalChatState() } }
     }
     private(set) var busy = false
+    private(set) var isRestoringSession: Bool
     private(set) var history: [WorkspaceRoute] = []
     var route: WorkspaceRoute
     var rootRoute: WorkspaceRoute
@@ -129,6 +130,7 @@ final class WorkspaceStore {
 
     init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil) {
         self.mode = mode
+        self.isRestoringSession = mode == .live
         self.inspectorVisible = mode == .preview
         self.route = route ?? .welcome
         self.rootRoute = route ?? .welcome
@@ -182,6 +184,7 @@ final class WorkspaceStore {
     func loadWorkspace() async {
         if let loadingWorkspace { await loadingWorkspace.value; return }
         guard mode == .live, !loadedWorkspace else { return }
+        isRestoringSession = true
         let worker = _Concurrency.Task { [weak self] in
             guard let self else { return }
             await self.restoreInitialWorkspace()
@@ -193,6 +196,7 @@ final class WorkspaceStore {
 
     private func restoreInitialWorkspace() async {
         guard mode == .live, !loadedWorkspace else { return }
+        defer { isRestoringSession = false }
         loadedWorkspace = true
         do {
             if let saved = try await service.load() {

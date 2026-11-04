@@ -8,6 +8,11 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if CommandLine.arguments.contains("--startup-only") {
+            try await verifyStartupRestoration()
+            print("PASS: startup waits for session restoration, coalesces loads, and settles saved, absent and failed sessions")
+            return
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--live-model-check"), index + 1 < CommandLine.arguments.count {
             try await verifyLiveModel(configurationURL: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
             return
@@ -80,11 +85,42 @@ struct WorkspaceVerification {
         gate.finish(); await first.value
         precondition(!gated.busy)
         try await verifyLocalWorkspace()
+        try await verifyStartupRestoration()
         print("PASS: 53 references, live isolation, authentication required, form validation, preview mutations, navigation, duplicate prevention")
         print("PASS: live UI adapter writes SQLite, streams through recorder, retries without resending user message, and restores after reopening (injected model)")
         if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
             try render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1], isDirectory: true))
         }
+    }
+    static func verifyStartupRestoration() async throws {
+        precondition(!WorkspaceStore(mode: .preview, route: .welcome).isRestoringSession)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let local = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let saved = try await local.currentSnapshot()
+        for outcome in [Result<WorkspaceSnapshot?, Error>.success(saved),
+                        .success(nil), .failure(WorkspaceServiceError.unavailable)] {
+            let service = StartupGateService(commands: local)
+            let store = WorkspaceStore(mode: .live, service: service)
+            precondition(store.isRestoringSession)
+            let first = _Concurrency.Task { await store.loadWorkspace() }
+            try await waitUntil { service.loads == 1 }
+            let second = _Concurrency.Task { await store.loadWorkspace() }
+            await _Concurrency.Task.yield()
+            precondition(store.isRestoringSession && service.loads == 1)
+            service.finish(outcome)
+            await first.value; await second.value
+            precondition(!store.isRestoringSession)
+            switch outcome {
+            case .success(.some(let saved)):
+                precondition(store.snapshot.ownerID == saved.ownerID && !store.route.isAuthentication && store.error == nil)
+            case .success(.none):
+                precondition(store.route == .welcome && store.error == nil)
+            case .failure:
+                precondition(store.route == .welcome && store.error != nil)
+            }
+        }
+        try await local.close()
     }
     static func verifyBrowserLaunch() async throws {
         let service = BrowserLaunchGateService()
@@ -328,6 +364,24 @@ private struct ContractChatModel: ChatModel {
 private struct SuspendedChatModel: ChatModel {
     func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
         AsyncThrowingStream { continuation in continuation.yield(.text("Partial")) }
+    }
+}
+
+@MainActor
+private final class StartupGateService: WorkspaceService, WorkspaceCommandProviding {
+    let workspaceCommands: (any WorkspaceCommandService)?
+    private(set) var loads = 0
+    private var continuation: CheckedContinuation<WorkspaceSnapshot?, Error>?
+    init(commands: any WorkspaceCommandService) { workspaceCommands = commands }
+    func load() async throws -> WorkspaceSnapshot? {
+        loads += 1
+        return try await withCheckedThrowingContinuation { continuation = $0 }
+    }
+    func execute(_ request: WorkspaceRequest, snapshot: WorkspaceSnapshot) async throws -> WorkspaceSnapshot {
+        throw WorkspaceServiceError.unavailable
+    }
+    func finish(_ result: Result<WorkspaceSnapshot?, Error>) {
+        continuation?.resume(with: result); continuation = nil
     }
 }
 
