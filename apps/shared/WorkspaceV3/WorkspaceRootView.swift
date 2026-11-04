@@ -118,7 +118,10 @@ struct WorkspaceRootView: View {
         .tint(WorkspaceStyle.ink)
         .kMotionRoot(reduceMotion: reduceMotion)
         .sheet(isPresented: $store.catalogVisible) { WorkspaceCatalogView().environment(store) }
-        .sheet(isPresented: $store.groupCreationVisible) { WorkspaceGroupEditor().environment(store) }
+        .sheet(isPresented: $store.groupCreationVisible, onDismiss: { store.groupEditingID = nil }) {
+            WorkspaceGroupEditor(conversation: store.snapshot.conversations.first { $0.metadata.id == store.groupEditingID },
+                participants: store.snapshot.participants ?? []).environment(store)
+        }
         .sheet(isPresented: $store.conflictsVisible) { WorkspaceConflictsView().environment(store) }
         .task { await store.loadWorkspace() }
         .task(id: scenePhase) {

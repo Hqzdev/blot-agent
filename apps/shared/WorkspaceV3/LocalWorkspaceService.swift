@@ -259,9 +259,16 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         return try await snapshot(identity)
     }
 
-    func createGroup(title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
+    func createGroup(commandID: UUID, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
         let identity = try await context()
-        _ = try await WorkspaceGroupService(repository: repository, identity: identity).create(commandID: UUID(), title: title, agentIDs: agentIDs)
+        _ = try await WorkspaceGroupService(repository: repository, identity: identity).create(commandID: commandID, title: title, agentIDs: agentIDs)
+        return try await snapshot(identity)
+    }
+
+    func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot {
+        let identity = try await context()
+        try await WorkspaceGroupService(repository: repository, identity: identity).update(commandID: UUID(),
+            conversationID: id, expectedVersion: expectedVersion, title: title, agentIDs: agentIDs)
         return try await snapshot(identity)
     }
 

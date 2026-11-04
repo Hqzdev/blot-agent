@@ -71,6 +71,7 @@ final class WorkspaceStore {
     var sidebarVisible = true
     var catalogVisible = false
     var groupCreationVisible = false
+    var groupEditingID: UUID?
     var conflictsVisible = false
     var messageNavigationTarget: UUID?
     var taskPaused = false
@@ -796,15 +797,36 @@ final class WorkspaceStore {
         return try await service.fileURL(id)
     }
 
-    func createGroup(title: String, agentIDs: [UUID]) async -> Bool {
+    func createGroup(title: String, agentIDs: [UUID], commandID: UUID = UUID()) async -> Bool {
         guard !busy, let service = commands else { return false }
         busy = true
         defer { busy = false }
+        error = nil
         do {
-            applyMutationSnapshot(try await service.createGroup(title: title, agentIDs: agentIDs))
-            if let group = snapshot.conversations.last { openConversation(group.metadata.id) }
+            applyMutationSnapshot(try await service.createGroup(commandID: commandID, title: title.trimmingCharacters(in: .whitespacesAndNewlines), agentIDs: agentIDs))
+            if snapshot.conversations.contains(where: { $0.metadata.id == commandID && $0.kind == .group }) {
+                openConversation(commandID)
+            }
             return true
-        } catch { self.error = "Не удалось создать группу."; return false }
+        } catch { self.error = t("Couldn't save the group."); return false }
+    }
+
+    func editGroup(_ id: UUID) {
+        guard snapshot.conversations.contains(where: { $0.metadata.id == id && $0.kind == .group }) else { return }
+        groupEditingID = id
+        groupCreationVisible = true
+    }
+
+    func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async -> Bool {
+        guard !busy, let service = commands else { return false }
+        busy = true; error = nil
+        defer { busy = false }
+        do {
+            applyMutationSnapshot(try await service.updateGroup(id, expectedVersion: expectedVersion,
+                title: title.trimmingCharacters(in: .whitespacesAndNewlines), agentIDs: agentIDs))
+            if selectedConversationID == id { selectedAgentID = currentConversation?.agentId }
+            return true
+        } catch { self.error = t("Couldn't save the group. Reopen it and try again."); return false }
     }
 
     func searchLocalMessages(_ query: String) async throws -> [BlotV3.Message] {
@@ -941,6 +963,7 @@ final class WorkspaceStore {
         conversationDrafts = [:]; failedSends = [:]; pendingSendCommands = [:]
         pendingChatDeletionID = nil; pendingChatRenameID = nil
         chatInteractions = WorkspaceChatInteractions(); settingsRoute = nil
+        groupCreationVisible = false; groupEditingID = nil
         form = WorkspaceForm()
         #if os(iOS)
         notifications.clear(); authenticationRoute = nil; navigation.reset()
