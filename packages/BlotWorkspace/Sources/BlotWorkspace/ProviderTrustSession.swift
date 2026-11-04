@@ -38,6 +38,7 @@ enum ProviderTrustSession {
         }
         let config = URLSessionConfiguration.ephemeral
         config.httpCookieStorage = nil; config.urlCache = nil
+        config.tlsMinimumSupportedProtocolVersion = .TLSv12
         config.timeoutIntervalForRequest = 120; config.timeoutIntervalForResource = 600
         return URLSession(configuration: config, delegate: ProviderTrustPolicy(certificates: certificates, hosts: hosts), delegateQueue: nil)
     }

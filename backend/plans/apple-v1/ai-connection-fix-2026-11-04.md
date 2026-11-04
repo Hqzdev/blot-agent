@@ -14,3 +14,18 @@
 Логи: .build/ai-live-application-verification.log, .build/ai-tool-loop-verification.log, .build/ai-fixed-mac-launch.log, .build/ai-fixed-ios-install.log, .build/ai-fixed-ios-launch.log.
 
 Это проверка подключения и исполнения модели; она не подтверждает готовность всех функций MVP.
+
+## Исправление установленного приложения: App Transport Security
+
+Повторная проверка на Mac воспроизвела ошибку в чате, хотя `DirectModelVerification` получал ответ. Системный лог показал `ATS failed system trust`, `AnchorTrusted`, `-9802` при OAuth-запросе к `ngw.devices.sberbank.ru`; до пользовательского URLSession trust delegate выполнение не доходило. Одной замены API URL оказалось недостаточно.
+
+`apple_build_configuration.py` теперь добавляет в собранный Info.plist исключения ATS только для двух точных hosts из настроек GigaChat API/OAuth. `NSExceptionAllowsInsecureHTTPLoads` здесь позволяет использовать встроенный CA через существующую ручную проверку доверия. Клиент по-прежнему принимает только HTTPS, запрещает редиректы, проверяет имя сервера и цепочку через `SecTrustEvaluateWithError`. Минимум TLS 1.2 задан и в Info.plist, и в URLSession; требования PFS не изменяются. Глобальных исключений, доверия ко всем сертификатам и изменений системного Keychain нет.
+
+Проверено после исправления:
+
+- 7 Python-тестов, включая генерацию ограниченных ATS-настроек в Info.plist и отсутствие исключения для сервиса аккаунтов.
+- 47 тестов `BlotWorkspace`.
+- Пересборка и запуск Mac через штатный скрипт; настоящий ответ «Работает» получен в интерфейсе приложения.
+- Подписанная сборка iOS установлена поверх существующего приложения на физический iPhone; пользователь подтвердил, что ответ ИИ приходит.
+
+Логи этой проверки: `.build/ai-app-trust-workspace-tests.log`, `.build/ai-app-trust-mac-build.log`, `.build/ai-app-trust-ios-build.log`, `.build/ai-app-trust-ios-install.log`, `.build/ai-app-trust-ios-launch.log`. Секреты и содержимое пользовательских запросов в эти логи не добавлялись.
