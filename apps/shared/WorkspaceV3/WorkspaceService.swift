@@ -85,6 +85,7 @@ struct PreviewWorkspaceService: WorkspaceService {
                     missedRunPolicy: a.missedRunPolicy, enabled: !a.enabled)
             }
         case .createConversation:
+            if result.conversations.contains(where: { $0.kind != .group && $0.agentId == request.selectedAgentID }) { return result }
             let title = result.agents.first(where: { $0.metadata.id == request.selectedAgentID })?.name ?? "Chat with AI"
             result.conversations.append(try BlotV3.Conversation(metadata: metadata, agentId: request.selectedAgentID, title: title, mobileOwned: request.selectedAgentID == nil, pinned: false, archived: false))
         case .send:
@@ -92,7 +93,7 @@ struct PreviewWorkspaceService: WorkspaceService {
             let content = ([request.form.composer.draft] + request.form.composer.attachments.map { "[\($0.lastPathComponent)]" })
                 .filter { !$0.isEmpty }.joined(separator: "\n")
             result.messages.append(try BlotV3.Message(metadata: metadata, conversationId: conversationID,
-                role: .user, content: content, delivery: .saved, commandId: UUID(), artifactIds: []))
+                role: .user, content: content, delivery: .saved, commandId: request.commandID, artifactIds: []))
         case .addMcp:
             result.mcpConnections.append(try BlotV3.McpConnection(metadata: metadata, name: request.form.mcp.name, transport: request.form.mcp.transport, endpoint: request.form.mcp.endpoint, toolIds: [], state: .disconnected))
         case .saveMemory:

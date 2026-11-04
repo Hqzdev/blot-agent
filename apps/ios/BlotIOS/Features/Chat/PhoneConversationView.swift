@@ -139,9 +139,6 @@ struct PhoneConversationView: View {
                 }
             }.buttonStyle(.plain).accessibilityLabel(store.t("Choose an agent"))
             Spacer(minLength: 0)
-            PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("New chat")) {
-                _Concurrency.Task { await store.startNewChat() }
-            }.disabled(store.busy)
             Menu {
                 BlotIconButton(store.t("Schedule this task"), symbol: "calendar.badge.plus") { store.navigate(.createSchedule) }
                 BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }

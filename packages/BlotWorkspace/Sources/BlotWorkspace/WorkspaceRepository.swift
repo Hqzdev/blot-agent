@@ -139,7 +139,7 @@ public actor WorkspaceRepository {
             result.invocations = try store.records(BlotV3.ToolInvocation.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.budgets = try store.records(BlotV3.BudgetLedger.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.conflicts = try store.records(BlotV3.ConflictingRevision.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
-            return result
+            return try WorkspaceDirectConversations(result.conversations).project(result)
         }
     }
 

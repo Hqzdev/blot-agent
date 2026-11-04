@@ -130,7 +130,7 @@ private struct MacLiveTeamSidebar: View {
                             }
                         }.contextMenu {
                             Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }
-                            Button("Новый чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
+                            Button("Открыть чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
                             if let chat = store.currentConversation, chat.agentId == agent.metadata.id {
                                 Divider()
                                 WorkspaceChatActionsMenu(chat: chat).environment(store)

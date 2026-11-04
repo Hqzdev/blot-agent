@@ -8,6 +8,50 @@ import XCTest
 /// preview store. Never opens or changes the signed-in user's workspace.
 @MainActor
 final class PhoneChatLifecycleTests: XCTestCase {
+    func testEachAgentKeepsOneChatAcrossRepeatedOpenAndPickerChanges() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+        let store = WorkspaceStore(mode: .live, service: service)
+        await store.loadWorkspace()
+        var agents: [UUID] = []
+        for name in ["First agent", "Second agent"] {
+            store.form.agent = WorkspaceAgentForm(name: name, instructions: "Help")
+            await store.perform(.createAgent)
+            agents.append(try XCTUnwrap(store.selectedAgentID))
+        }
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
+        var chats: [UUID: UUID] = [:]
+        for _ in 0..<5 {
+            for agent in agents {
+                await store.startNewChat(with: agent)
+                await settle(window)
+                let id = try XCTUnwrap(store.selectedConversationID)
+                if let existing = chats[agent] { XCTAssertEqual(existing, id) }
+                chats[agent] = id
+                XCTAssertEqual(store.currentConversation?.agentId, agent)
+                XCTAssertNil(store.error)
+            }
+        }
+        await store.chooseChatAgent(agents[0])
+        XCTAssertEqual(store.selectedConversationID, chats[agents[0]])
+        XCTAssertEqual(store.snapshot.conversations.count, 2)
+        store.selectTab(.chats)
+        store.restoreNavigation([])
+        await settle(window)
+        let deadline = Date().addingTimeInterval(2)
+        while collections(in: window).isEmpty && Date() < deadline { await settle(window) }
+        XCTAssertEqual(store.route, .chats)
+        await assertRowCount(2, in: window)
+        window.isHidden = true; window.rootViewController = nil
+        try await service.close()
+        try FileManager.default.removeItem(at: directory)
+    }
+
     func testThinkingDotsActuallyAnimate() async throws {
         let store = WorkspaceStore(mode: .preview, route: .chats)
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
@@ -18,7 +62,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
             .frame(width: 120, height: 70))
         window.rootViewController = host
         window.makeKeyAndVisible()
-        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         await settle(window)
         func capture() -> Data? {
             UIGraphicsImageRenderer(bounds: host.view.bounds).image { _ in
@@ -44,7 +88,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
         window.makeKeyAndVisible()
-        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         store.form.composer.draft = "Synthetic reply presentation check"
         await store.perform(.send)
         channel.continuation.yield(.text("A complete "))
@@ -67,6 +111,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         XCTAssertEqual(replies.first?.message.delivery, .completed)
         XCTAssertNil(store.error)
         attach(window, name: "Whole reply received")
+        window.isHidden = true; window.rootViewController = nil
         try await service.close()
         try FileManager.default.removeItem(at: directory)
     }
@@ -81,7 +126,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
         window.makeKeyAndVisible()
-        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         await settle(window)
 
         for cycle in 0..<5 {
@@ -96,6 +141,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         }
         store.persistChatState(immediately: true)
         try await _Concurrency.Task.sleep(for: .milliseconds(300))
+        window.isHidden = true; window.rootViewController = nil
         try await service.close()
         try FileManager.default.removeItem(at: directory)
     }
@@ -114,7 +160,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let window = UIWindow(windowScene: scene)
         window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
         window.makeKeyAndVisible()
-        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
 
         await settle(window)
         XCTAssertFalse(collections(in: window).isEmpty, "The production List must be mounted")
@@ -138,25 +184,25 @@ final class PhoneChatLifecycleTests: XCTestCase {
             await settle(window)
         }
         XCTAssertTrue(store.snapshot.conversations.isEmpty)
-        assertRowCount(1, in: window)
+        await assertRowCount(1, in: window)
 
         store.error = "Test error"; store.notice = "Test notice"
         await settle(window)
-        assertRowCount(2, in: window) // empty state + one feedback row
+        await assertRowCount(2, in: window) // empty state + one feedback row
         store.error = nil; store.notice = nil
         await settle(window)
-        assertRowCount(1, in: window)
+        await assertRowCount(1, in: window)
 
         store.back()
         await settle(window)
-        assertRowCount(1, in: window)
+        await assertRowCount(1, in: window)
         for _ in 0..<8 {
             store.selectTab(.agents)
             await settle(window)
-            assertRowCount(store.snapshot.agents.count, in: window)
+            await assertRowCount(store.snapshot.agents.count, in: window)
             store.selectTab(.chats)
             await settle(window)
-            assertRowCount(1, in: window)
+            await assertRowCount(1, in: window)
         }
     }
 
@@ -176,12 +222,18 @@ final class PhoneChatLifecycleTests: XCTestCase {
         add(attachment)
     }
 
-    private func assertRowCount(_ expected: Int, in window: UIWindow, file: StaticString = #filePath, line: UInt = #line) {
-        let lists = collections(in: window).filter { !$0.isHidden && $0.window != nil }
-        let counts = lists.map { list in
-            (0..<list.numberOfSections).reduce(0) { $0 + list.numberOfItems(inSection: $1) }
-        }
-        XCTAssertTrue(counts.contains(expected), "Expected \(expected) rows, mounted lists: \(counts)", file: file, line: line)
+    private func assertRowCount(_ expected: Int, in window: UIWindow, file: StaticString = #filePath, line: UInt = #line) async {
+        let deadline = Date().addingTimeInterval(2)
+        var counts: [Int] = []
+        repeat {
+            window.layoutIfNeeded()
+            counts = collections(in: window).filter { !$0.isHidden && $0.window != nil }.map { list in
+                (0..<list.numberOfSections).reduce(0) { $0 + list.numberOfItems(inSection: $1) }
+            }
+            if counts.contains(expected) { return }
+            await settle(window)
+        } while Date() < deadline
+        XCTFail("Expected \(expected) rows, mounted lists: \(counts)", file: file, line: line)
     }
 
     private func collections(in view: UIView) -> [UICollectionView] {
