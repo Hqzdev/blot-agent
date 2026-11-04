@@ -1,16 +1,16 @@
 const completedIds = new Set(["P0.1", "P0.2", "P0.3", "P0.4", "P0.5", "P0.6", "P0.7", "P0.8", "P0.9", "P0.10", "A2.1", "A2.2"]);
 
 const definitions = [
-  ["P0.1", "product-scope.md", "Границы продукта", "Сопоставлены платформы, локальное исполнение и 18 требований."],
-  ["P0.2", "domain-glossary.md", "Терминология и инварианты", "Разделены профиль/сессия, задача/попытка и receipt/completion."],
-  ["P0.3", "chat-to-run.md", "Чат и рабочий запуск", "Разобраны разговор, явная работа, уточнение, повтор и остановка."],
-  ["P0.4", "roles-and-gates.md", "Роли и принятие результата", "Определены автор, независимый reviewer, QA и пользовательские gates."],
-  ["P0.5", "permission-policy.md", "Политика разрешений", "Проверены protected refs, scope, инвалидация и отдельные commit/push grants."],
-  ["P0.6", "supported-projects.md", "Поддерживаемые проекты", "Выбраны Java/Swift control projects и проверяемые дефекты с до/после."],
-  ["P0.7", "platform-matrix.md", "Матрица платформ", "Пользователь утвердил минимальные версии: macOS 26 и iOS 26. Проверки приложения на устройствах предстоят."],
-  ["P0.8", "tool-boundaries.md", "Границы инструментов", "Определены read, patch, process, Git, сеть и допуск native runner."],
-  ["P0.9", "data-lifecycle.md", "Жизненный цикл данных", "Прослежены storage, archive, export, restore и удаление данных Blot."],
-  ["P0.10", "acceptance-matrix.md", "Матрица приёмки", "18 требований и 24 блока связаны с экранами, API, задачами и evidence."],
+  ["P0.1", "archive/product-scope.md", "Границы продукта", "Сопоставлены платформы, локальное исполнение и 18 требований."],
+  ["P0.2", "rules/domain-glossary.md", "Терминология и инварианты", "Разделены профиль/сессия, задача/попытка и receipt/completion."],
+  ["P0.3", "rules/chat-to-run.md", "Чат и рабочий запуск", "Разобраны разговор, явная работа, уточнение, повтор и остановка."],
+  ["P0.4", "rules/roles-and-gates.md", "Роли и принятие результата", "Определены автор, независимый reviewer, QA и пользовательские gates."],
+  ["P0.5", "rules/permission-policy.md", "Политика разрешений", "Проверены protected refs, scope, инвалидация и отдельные commit/push grants."],
+  ["P0.6", "rules/supported-projects.md", "Поддерживаемые проекты", "Выбраны Java/Swift control projects и проверяемые дефекты с до/после."],
+  ["P0.7", "rules/platform-matrix.md", "Матрица платформ", "Пользователь утвердил минимальные версии: macOS 26 и iOS 26. Проверки приложения на устройствах предстоят."],
+  ["P0.8", "rules/tool-boundaries.md", "Границы инструментов", "Определены read, patch, process, Git, сеть и допуск native runner."],
+  ["P0.9", "rules/data-lifecycle.md", "Жизненный цикл данных", "Прослежены storage, archive, export, restore и удаление данных Blot."],
+  ["P0.10", "archive/acceptance-matrix.md", "Матрица приёмки", "18 требований и 24 блока связаны с экранами, API, задачами и evidence."],
   ["A2.1", "architecture/repo-policy.md", "Репозиторий и Git", "Git, .gitignore и .gitattributes проверены. Main защищена на GitHub: обязательный PR, запрет force push и удаления."],
   ["A2.2", "architecture/apple-targets.md", "Targets macOS и iOS", "Созданы BlotMac и BlotIOS, общие схемы, минимум ОС 26. Проверены сборки приложений; пользовательский экран сохранён."],
   ["A2.3", "architecture/swift-packages.md", "Общие Swift packages", "Подготовлены Package.swift и папки четырёх пакетов. Исходники и тесты пишет пользователь."],
@@ -30,9 +30,9 @@ function document(id, relativePath, title, summary, taskId = id) {
 }
 
 export const architectureDocuments = Object.freeze(definitions.map((entry) => document(...entry)));
-export const documentationReview = document("documentation-review", "documentation-review.md", "Протокол проверки документов", "Сценарная и структурная проверка документальных результатов.", null);
+export const documentationReview = document("documentation-review", "status/documentation-review.md", "Протокол проверки документов", "Сценарная и структурная проверка документальных результатов.", null);
 export const documentationIndex = document("architecture-overview", "README.md", "Архитектура Blot", "Общий индекс решений, границ и открытых работ.", null);
-export const implementationPlan = document("implementation-plan", "implementation-plan.md", "Порядок реализации", "Все задачи в порядке зависимостей и список доступных работ.", null);
+export const implementationPlan = document("implementation-plan", "archive/implementation-plan.md", "Порядок реализации", "Все задачи в порядке зависимостей и список доступных работ.", null);
 export const agentDocuments = Object.freeze([
   ["orchestrator", "Оркестратор"],
   ["orchestrator-commands", "Команды оркестратора"],
@@ -42,13 +42,15 @@ export const agentDocuments = Object.freeze([
   ["motes", "Motes: малые специализированные агенты"],
 ].map(([id, title]) => document(id, `agents/${id}.md`, title, "Документация агентов Blot.", null)));
 export const futureDocuments = Object.freeze([
-  document("optimization", "optimization.md", "Оптимизация работы Blot", "Целевые правила расходов, скорости и качества.", null),
+  document("optimization", "rules/optimization.md", "Оптимизация работы Blot", "Целевые правила расходов, скорости и качества.", null),
   document("google-workspace", "integrations/google-workspace.md", "Будущая интеграция Google Workspace", "План Gmail, Calendar и Drive; статус за пределами первой поставки.", null),
 ]);
 export const currentProductDocuments = Object.freeze([
+  document("module-map", "architecture/module-map.md", "Карта модулей Blot", "Кто за что отвечает: 16 блоков ядра, клиенты, облако и приёмка.", null),
+  document("domain-model", "architecture/domain-model.md", "Сущности и состояния", "25 сущностей ТЗ, состояния задачи и расхождения с кодом.", null),
   document("grok-bot-character-catalog", "design/grok-bot-character-catalog.md", "Персонажи роли и движения", "Сохранённые варианты Grok Bot, наблюдаемая анимация и требования к компоненту Blot.", null),
-  document("blot-product-plan", "blot-product-plan.md", "План Blot для четырёх платформ", "Требования от 1 ноября: блоки, архитектура, инфраструктура, сроки и оценка кода.", null),
-  document("blot-technical-specification", "blot-technical-specification.md", "Техническое задание Blot", "Четыре платформы, CEO и агенты, локальные данные, инструменты, интеграции и приёмка.", null),
+  document("blot-product-plan", "product/blot-product-plan.md", "План Blot для четырёх платформ", "Требования от 1 ноября: блоки, архитектура, инфраструктура, сроки и оценка кода.", null),
+  document("blot-technical-specification", "product/blot-technical-specification.md", "Техническое задание Blot", "Четыре платформы, CEO и агенты, локальные данные, инструменты, интеграции и приёмка.", null),
   document("mcp-developer-guide", "integrations/mcp-developer-guide.md", "Подключение MCP серверов", "Целевой контракт внешних инструментов: transports, авторизация, разрешения и проверка совместимости.", null),
 ]);
 export const documents = Object.freeze([...currentProductDocuments, ...architectureDocuments, documentationIndex, documentationReview, implementationPlan, ...agentDocuments, ...futureDocuments]);

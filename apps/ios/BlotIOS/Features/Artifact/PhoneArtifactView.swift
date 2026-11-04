@@ -15,12 +15,12 @@ struct PhoneArtifactView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: BlotSpace.s12) {
                 HStack(spacing: BlotSpace.s8) {
-                    Button { offset = max(0, offset - pageSize) } label: { Label("Previous", systemImage: "chevron.left") }
+                    Button { offset = max(0, offset - pageSize) } label: { BlotLabel("Previous", symbol: "chevron.left") }
                         .buttonStyle(PhoneButtonStyle()).disabled(offset == 0)
                     Spacer()
                     Text("Page \(offset / pageSize + 1)").blotFont(.caption).foregroundStyle(BlotColor.textSecondary)
                     Spacer()
-                    Button { offset += pageSize } label: { Label("Next", systemImage: "chevron.right") }
+                    Button { offset += pageSize } label: { BlotLabel("Next", symbol: "chevron.right") }
                         .buttonStyle(PhoneButtonStyle()).disabled(!hasMore)
                 }
                 if let error { PhoneErrorText(error) }

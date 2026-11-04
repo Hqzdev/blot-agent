@@ -1,0 +1,22 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000019",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "execution": {
+    "executorDeviceId": "00000000-0000-4000-8000-000000000004",
+    "originDeviceId": "00000000-0000-4000-8000-000000000004",
+    "taskId": "00000000-0000-4000-8000-000000000012",
+    "revision": 1,
+    "leaseGeneration": null
+  },
+  "preparedActionId": "00000000-0000-4000-8000-000000000001",
+  "state": "WAITING_APPROVAL",
+  "externalId": null,
+  "result": null,
+  "exitCode": null
+}

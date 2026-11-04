@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000011",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "conversationId": "00000000-0000-4000-8000-000000000010",
+  "role": "ASSISTANT",
+  "content": "@Agent Review",
+  "delivery": "SAVED",
+  "commandId": "00000000-0000-4000-8000-000000000001",
+  "artifactIds": [],
+  "authorAgentId": "00000000-0000-4000-8000-000000000007",
+  "replyToMessageId": "00000000-0000-4000-8000-000000000009",
+  "mentions": [
+    {
+      "agentId": "00000000-0000-4000-8000-000000000007",
+      "startUTF16": 0,
+      "lengthUTF16": 6
+    }
+  ],
+  "position": 1,
+  "executorDeviceId": null
+}

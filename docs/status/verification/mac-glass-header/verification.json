@@ -1,0 +1,26 @@
+{
+  "date": "2026-11-03",
+  "macBuild": "passed",
+  "timelineChecks": 25,
+  "surfaces": [
+    "agent profile capsule",
+    "attachments circle",
+    "actions circle",
+    "inspector circle"
+  ],
+  "glass": "native regular interactive",
+  "avatarPicker": "shape and color grids separated vertically",
+  "uiChecks": [
+    "shape and color selection with preview",
+    "profile sheet",
+    "attachments sheet",
+    "actions menu",
+    "memory action",
+    "inspector visibility",
+    "send and receive with bottom scroll"
+  ],
+  "screenshots": [
+    "header.jpg",
+    "avatar-picker.jpg"
+  ]
+}

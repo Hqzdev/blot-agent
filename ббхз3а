@@ -1,0 +1,22 @@
+
+DATABASE_URL=postgresql://kodshag:kodshag-local-only@localhost:5432/kodshag
+BETTER_AUTH_SECRET=679c95bcacd593b371fc7fb2fb8989ae98a7b38613e12936d42dd15a8de865e3
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_FROM="КодШаг <wkeyqwert@gmail.com>"
+SMTP_USER=wkeyqwert@gmail.com
+SMTP_PASSWORD=bkxqobpocpnmjrgt
+# GigaChat parameters are prepared; an OAuth adapter is still required before use.
+AI_BASE_URL=https://api.giga.chat/v1/
+AI_MODEL=GigaChat-2-Pro
+AI_PROMPT_VERSION=1
+AI_API_KEY=
+GIGACHAT_AUTH_KEY=MDFhMGY3YzAtM2EwMC03NGQwLTg1MDQtYjlmMWViYTBjOGM2OjQxYWI3YTFkLTU1OGUtNGQyZS1hMTM5LTM3M2MyYjA5Y2EwYg==
+GIGACHAT_SCOPE=GIGACHAT_API_PERS
+GIGACHAT_OAUTH_URL=https://ngw.devices.sberbank.ru:9443/api/v2/oauth
+
+
+AI_PROVIDER=gigachat
+

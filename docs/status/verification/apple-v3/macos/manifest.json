@@ -1,0 +1,562 @@
+[
+  {
+    "capture" : "01-sign-in-1440x900-light.png",
+    "reference" : "screens\/desktop\/01-sign-in.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "01-sign-in-1100x740-light.png",
+    "reference" : "screens\/desktop\/01-sign-in.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "01-sign-in-1440x900-dark.png",
+    "reference" : "screens\/desktop\/01-sign-in.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "01-sign-in-1100x740-dark.png",
+    "reference" : "screens\/desktop\/01-sign-in.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "02-create-account-1440x900-light.png",
+    "reference" : "screens\/desktop\/02-create-account.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "02-create-account-1100x740-light.png",
+    "reference" : "screens\/desktop\/02-create-account.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "02-create-account-1440x900-dark.png",
+    "reference" : "screens\/desktop\/02-create-account.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "02-create-account-1100x740-dark.png",
+    "reference" : "screens\/desktop\/02-create-account.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "03-verify-email-1440x900-light.png",
+    "reference" : "screens\/desktop\/03-verify-email.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "03-verify-email-1100x740-light.png",
+    "reference" : "screens\/desktop\/03-verify-email.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "03-verify-email-1440x900-dark.png",
+    "reference" : "screens\/desktop\/03-verify-email.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "03-verify-email-1100x740-dark.png",
+    "reference" : "screens\/desktop\/03-verify-email.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "04-first-run-1440x900-light.png",
+    "reference" : "screens\/desktop\/04-first-run.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "04-first-run-1100x740-light.png",
+    "reference" : "screens\/desktop\/04-first-run.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "04-first-run-1440x900-dark.png",
+    "reference" : "screens\/desktop\/04-first-run.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "04-first-run-1100x740-dark.png",
+    "reference" : "screens\/desktop\/04-first-run.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "05-new-task-1440x900-light.png",
+    "reference" : "screens\/desktop\/05-new-task.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "05-new-task-1100x740-light.png",
+    "reference" : "screens\/desktop\/05-new-task.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "05-new-task-1440x900-dark.png",
+    "reference" : "screens\/desktop\/05-new-task.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "05-new-task-1100x740-dark.png",
+    "reference" : "screens\/desktop\/05-new-task.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "06-chat-plan-1440x900-light.png",
+    "reference" : "screens\/desktop\/06-chat-plan.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "06-chat-plan-1100x740-light.png",
+    "reference" : "screens\/desktop\/06-chat-plan.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "06-chat-plan-1440x900-dark.png",
+    "reference" : "screens\/desktop\/06-chat-plan.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "06-chat-plan-1100x740-dark.png",
+    "reference" : "screens\/desktop\/06-chat-plan.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "07-task-running-1440x900-light.png",
+    "reference" : "screens\/desktop\/07-task-running.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "07-task-running-1100x740-light.png",
+    "reference" : "screens\/desktop\/07-task-running.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "07-task-running-1440x900-dark.png",
+    "reference" : "screens\/desktop\/07-task-running.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "07-task-running-1100x740-dark.png",
+    "reference" : "screens\/desktop\/07-task-running.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "08-approval-1440x900-light.png",
+    "reference" : "screens\/desktop\/08-approval.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "08-approval-1100x740-light.png",
+    "reference" : "screens\/desktop\/08-approval.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "08-approval-1440x900-dark.png",
+    "reference" : "screens\/desktop\/08-approval.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "08-approval-1100x740-dark.png",
+    "reference" : "screens\/desktop\/08-approval.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "09-result-and-file-1440x900-light.png",
+    "reference" : "screens\/desktop\/09-result-and-file.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "09-result-and-file-1100x740-light.png",
+    "reference" : "screens\/desktop\/09-result-and-file.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "09-result-and-file-1440x900-dark.png",
+    "reference" : "screens\/desktop\/09-result-and-file.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "09-result-and-file-1100x740-dark.png",
+    "reference" : "screens\/desktop\/09-result-and-file.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "10-code-changes-review-1440x900-light.png",
+    "reference" : "screens\/desktop\/10-code-changes-review.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "10-code-changes-review-1100x740-light.png",
+    "reference" : "screens\/desktop\/10-code-changes-review.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "10-code-changes-review-1440x900-dark.png",
+    "reference" : "screens\/desktop\/10-code-changes-review.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "10-code-changes-review-1100x740-dark.png",
+    "reference" : "screens\/desktop\/10-code-changes-review.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "11-my-team-1440x900-light.png",
+    "reference" : "screens\/desktop\/11-my-team.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "11-my-team-1100x740-light.png",
+    "reference" : "screens\/desktop\/11-my-team.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "11-my-team-1440x900-dark.png",
+    "reference" : "screens\/desktop\/11-my-team.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "11-my-team-1100x740-dark.png",
+    "reference" : "screens\/desktop\/11-my-team.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "12-agent-profile-1440x900-light.png",
+    "reference" : "screens\/desktop\/12-agent-profile.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "12-agent-profile-1100x740-light.png",
+    "reference" : "screens\/desktop\/12-agent-profile.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "12-agent-profile-1440x900-dark.png",
+    "reference" : "screens\/desktop\/12-agent-profile.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "12-agent-profile-1100x740-dark.png",
+    "reference" : "screens\/desktop\/12-agent-profile.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "13-create-agent-1440x900-light.png",
+    "reference" : "screens\/desktop\/13-create-agent.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "13-create-agent-1100x740-light.png",
+    "reference" : "screens\/desktop\/13-create-agent.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "13-create-agent-1440x900-dark.png",
+    "reference" : "screens\/desktop\/13-create-agent.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "13-create-agent-1100x740-dark.png",
+    "reference" : "screens\/desktop\/13-create-agent.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "14-files-1440x900-light.png",
+    "reference" : "screens\/desktop\/14-files.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "14-files-1100x740-light.png",
+    "reference" : "screens\/desktop\/14-files.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "14-files-1440x900-dark.png",
+    "reference" : "screens\/desktop\/14-files.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "14-files-1100x740-dark.png",
+    "reference" : "screens\/desktop\/14-files.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "15-schedules-1440x900-light.png",
+    "reference" : "screens\/desktop\/15-schedules.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "15-schedules-1100x740-light.png",
+    "reference" : "screens\/desktop\/15-schedules.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "15-schedules-1440x900-dark.png",
+    "reference" : "screens\/desktop\/15-schedules.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "15-schedules-1100x740-dark.png",
+    "reference" : "screens\/desktop\/15-schedules.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "16-create-schedule-1440x900-light.png",
+    "reference" : "screens\/desktop\/16-create-schedule.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "16-create-schedule-1100x740-light.png",
+    "reference" : "screens\/desktop\/16-create-schedule.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "16-create-schedule-1440x900-dark.png",
+    "reference" : "screens\/desktop\/16-create-schedule.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "16-create-schedule-1100x740-dark.png",
+    "reference" : "screens\/desktop\/16-create-schedule.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "17-settings-window-1440x900-light.png",
+    "reference" : "screens\/desktop\/17-settings-window.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "17-settings-window-1100x740-light.png",
+    "reference" : "screens\/desktop\/17-settings-window.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "17-settings-window-1440x900-dark.png",
+    "reference" : "screens\/desktop\/17-settings-window.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "17-settings-window-1100x740-dark.png",
+    "reference" : "screens\/desktop\/17-settings-window.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "18-settings-account-1440x900-light.png",
+    "reference" : "screens\/desktop\/18-settings-account.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "18-settings-account-1100x740-light.png",
+    "reference" : "screens\/desktop\/18-settings-account.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "18-settings-account-1440x900-dark.png",
+    "reference" : "screens\/desktop\/18-settings-account.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "18-settings-account-1100x740-dark.png",
+    "reference" : "screens\/desktop\/18-settings-account.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "19-settings-ai-models-1440x900-light.png",
+    "reference" : "screens\/desktop\/19-settings-ai-models.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "19-settings-ai-models-1100x740-light.png",
+    "reference" : "screens\/desktop\/19-settings-ai-models.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "19-settings-ai-models-1440x900-dark.png",
+    "reference" : "screens\/desktop\/19-settings-ai-models.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "19-settings-ai-models-1100x740-dark.png",
+    "reference" : "screens\/desktop\/19-settings-ai-models.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "20-settings-permissions-1440x900-light.png",
+    "reference" : "screens\/desktop\/20-settings-permissions.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "20-settings-permissions-1100x740-light.png",
+    "reference" : "screens\/desktop\/20-settings-permissions.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "20-settings-permissions-1440x900-dark.png",
+    "reference" : "screens\/desktop\/20-settings-permissions.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "20-settings-permissions-1100x740-dark.png",
+    "reference" : "screens\/desktop\/20-settings-permissions.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "21-settings-connections-1440x900-light.png",
+    "reference" : "screens\/desktop\/21-settings-connections.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "21-settings-connections-1100x740-light.png",
+    "reference" : "screens\/desktop\/21-settings-connections.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "21-settings-connections-1440x900-dark.png",
+    "reference" : "screens\/desktop\/21-settings-connections.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "21-settings-connections-1100x740-dark.png",
+    "reference" : "screens\/desktop\/21-settings-connections.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "22-settings-devices-1440x900-light.png",
+    "reference" : "screens\/desktop\/22-settings-devices.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "22-settings-devices-1100x740-light.png",
+    "reference" : "screens\/desktop\/22-settings-devices.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "22-settings-devices-1440x900-dark.png",
+    "reference" : "screens\/desktop\/22-settings-devices.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "22-settings-devices-1100x740-dark.png",
+    "reference" : "screens\/desktop\/22-settings-devices.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "23-settings-memory-1440x900-light.png",
+    "reference" : "screens\/desktop\/23-settings-memory.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "23-settings-memory-1100x740-light.png",
+    "reference" : "screens\/desktop\/23-settings-memory.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "23-settings-memory-1440x900-dark.png",
+    "reference" : "screens\/desktop\/23-settings-memory.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "23-settings-memory-1100x740-dark.png",
+    "reference" : "screens\/desktop\/23-settings-memory.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "24-settings-mcp-servers-1440x900-light.png",
+    "reference" : "screens\/desktop\/24-settings-mcp-servers.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "24-settings-mcp-servers-1100x740-light.png",
+    "reference" : "screens\/desktop\/24-settings-mcp-servers.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "24-settings-mcp-servers-1440x900-dark.png",
+    "reference" : "screens\/desktop\/24-settings-mcp-servers.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "24-settings-mcp-servers-1100x740-dark.png",
+    "reference" : "screens\/desktop\/24-settings-mcp-servers.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "25-settings-browser-1440x900-light.png",
+    "reference" : "screens\/desktop\/25-settings-browser.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "25-settings-browser-1100x740-light.png",
+    "reference" : "screens\/desktop\/25-settings-browser.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "25-settings-browser-1440x900-dark.png",
+    "reference" : "screens\/desktop\/25-settings-browser.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "25-settings-browser-1100x740-dark.png",
+    "reference" : "screens\/desktop\/25-settings-browser.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "26-task-browser-1440x900-light.png",
+    "reference" : "screens\/desktop\/26-task-browser.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "26-task-browser-1100x740-light.png",
+    "reference" : "screens\/desktop\/26-task-browser.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "26-task-browser-1440x900-dark.png",
+    "reference" : "screens\/desktop\/26-task-browser.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "26-task-browser-1100x740-dark.png",
+    "reference" : "screens\/desktop\/26-task-browser.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "27-settings-permission-rules-1440x900-light.png",
+    "reference" : "screens\/desktop\/27-settings-permission-rules.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "27-settings-permission-rules-1100x740-light.png",
+    "reference" : "screens\/desktop\/27-settings-permission-rules.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "27-settings-permission-rules-1440x900-dark.png",
+    "reference" : "screens\/desktop\/27-settings-permission-rules.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "27-settings-permission-rules-1100x740-dark.png",
+    "reference" : "screens\/desktop\/27-settings-permission-rules.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "28-task-blocked-1440x900-light.png",
+    "reference" : "screens\/desktop\/28-task-blocked.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "28-task-blocked-1100x740-light.png",
+    "reference" : "screens\/desktop\/28-task-blocked.png",
+    "theme" : "light"
+  },
+  {
+    "capture" : "28-task-blocked-1440x900-dark.png",
+    "reference" : "screens\/desktop\/28-task-blocked.png",
+    "theme" : "dark"
+  },
+  {
+    "capture" : "28-task-blocked-1100x740-dark.png",
+    "reference" : "screens\/desktop\/28-task-blocked.png",
+    "theme" : "dark"
+  }
+]

@@ -11,7 +11,6 @@ struct BlotWindowContent: View {
 
     var body: some View {
         RootView()
-            .background(DockIconSync())
             .environment(state)
             .blotTheme(state.theme)
             .tint(K.inverse)

@@ -1,3 +1,3 @@
 pluginManagement { repositories { gradlePluginPortal(); mavenCentral() } }
 rootProject.name = "blot-backend"
-include("core", "application", "infrastructure", "api")
+include("core", "application", "infrastructure", "api", "cloud")

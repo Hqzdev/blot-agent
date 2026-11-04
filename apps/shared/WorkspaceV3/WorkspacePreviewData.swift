@@ -1,0 +1,590 @@
+import Foundation
+
+/// Embedded copy of fixtures/v3/presentation.json; loaded only by preview injection.
+enum WorkspacePreviewData {
+    static let data = Data(#"""
+{
+  "agents": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000001",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Blot CEO",
+      "roleId": "ceo",
+      "avatarShape": "round",
+      "avatarColor": "ink",
+      "instructions": "Coordinates the team and delivers the result.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000002",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Designer",
+      "roleId": "designer",
+      "avatarShape": "triangle",
+      "avatarColor": "orange",
+      "instructions": "Interfaces and ideas. Research references, propose options and check usability.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000003",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Researcher",
+      "roleId": "researcher",
+      "avatarShape": "round",
+      "avatarColor": "purple",
+      "instructions": "Search and comparison. Find and verify sources.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000004",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Meal planner",
+      "roleId": "assistant",
+      "avatarShape": "round",
+      "avatarColor": "teal",
+      "instructions": "Plan menus and shopping lists.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000005",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Developer",
+      "roleId": "developer",
+      "avatarShape": "tall",
+      "avatarColor": "ink",
+      "instructions": "Changes the project and runs available checks.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000006",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Editor",
+      "roleId": "editor",
+      "avatarShape": "round",
+      "avatarColor": "purple",
+      "instructions": "Help with structure, accuracy and tone.",
+      "modelId": "gigachat",
+      "accessMode": "OBSERVE"
+    }
+  ],
+  "conversations": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000014",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "agentId": "10000000-0000-4000-8000-000000000001",
+      "title": "Blot CEO",
+      "mobileOwned": true,
+      "pinned": true,
+      "archived": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000015",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "agentId": "10000000-0000-4000-8000-000000000002",
+      "title": "Designer",
+      "mobileOwned": true,
+      "pinned": true,
+      "archived": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000016",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "agentId": "10000000-0000-4000-8000-000000000003",
+      "title": "Researcher",
+      "mobileOwned": true,
+      "pinned": true,
+      "archived": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000017",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "agentId": "10000000-0000-4000-8000-000000000004",
+      "title": "Meal planner",
+      "mobileOwned": true,
+      "pinned": true,
+      "archived": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000018",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "agentId": "10000000-0000-4000-8000-000000000001",
+      "title": "Blot landing",
+      "mobileOwned": true,
+      "pinned": true,
+      "archived": true
+    }
+  ],
+  "messages": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000028",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "conversationId": "10000000-0000-4000-8000-000000000014",
+      "role": "USER",
+      "content": "Compare 8 email marketing services and draft a recommendation email to the team.",
+      "delivery": "COMPLETED",
+      "commandId": "00000000-0000-4000-8000-000000000001",
+      "artifactIds": []
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000029",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "conversationId": "10000000-0000-4000-8000-000000000014",
+      "role": "ASSISTANT",
+      "content": "I\u2019ll compare pricing, automations and integrations, then prepare a short report and an email draft.",
+      "delivery": "COMPLETED",
+      "commandId": "00000000-0000-4000-8000-000000000001",
+      "artifactIds": []
+    }
+  ],
+  "schedules": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000032",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "kind": "REMINDER",
+      "executorDeviceId": null,
+      "agentId": null,
+      "name": "Morning digest",
+      "goal": "Calendar, tasks and key emails",
+      "timezone": "Asia/Yekaterinburg",
+      "localTime": "08:30",
+      "weekdays": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "missedRunPolicy": "COALESCE",
+      "enabled": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000033",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "kind": "REMINDER",
+      "executorDeviceId": null,
+      "agentId": null,
+      "name": "Weekly menu",
+      "goal": "Meal plan and shopping list",
+      "timezone": "Asia/Yekaterinburg",
+      "localTime": "18:00",
+      "weekdays": [
+        7
+      ],
+      "missedRunPolicy": "COALESCE",
+      "enabled": true
+    }
+  ],
+  "devices": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000003c",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "MacBook Pro",
+      "kind": "DESKTOP",
+      "platform": "macOS",
+      "publicKey": "test-public-key",
+      "lastSeenAt": null,
+      "revoked": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000003d",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Home PC",
+      "kind": "DESKTOP",
+      "platform": "Windows",
+      "publicKey": "test-public-key",
+      "lastSeenAt": null,
+      "revoked": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000200",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Yaroslav\u2019s iPhone",
+      "kind": "PHONE",
+      "platform": "iOS",
+      "publicKey": "test-public-key",
+      "lastSeenAt": null,
+      "revoked": true
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000201",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "iPad",
+      "kind": "PHONE",
+      "platform": "iOS",
+      "publicKey": "test-public-key",
+      "lastSeenAt": null,
+      "revoked": true
+    }
+  ],
+  "memories": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000046",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "scope": "PERSONAL",
+      "scopeId": null,
+      "content": "Prefers concise answers",
+      "sourceId": "00000000-0000-4000-8000-000000000001",
+      "state": "CANDIDATE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000047",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "scope": "PERSONAL",
+      "scopeId": null,
+      "content": "Main project is Blot",
+      "sourceId": "00000000-0000-4000-8000-000000000001",
+      "state": "CANDIDATE"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000048",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "scope": "PERSONAL",
+      "scopeId": null,
+      "content": "Works in Asia/Yekaterinburg",
+      "sourceId": "00000000-0000-4000-8000-000000000001",
+      "state": "CANDIDATE"
+    }
+  ],
+  "connections": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000050",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "service": "Gmail",
+      "accountName": "preview@blot.local",
+      "scopes": [],
+      "state": "CONNECTED"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000051",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "service": "Google Calendar",
+      "accountName": "Personal calendar",
+      "scopes": [],
+      "state": "CONNECTED"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000052",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "service": "Google Drive",
+      "accountName": "Selected folders",
+      "scopes": [],
+      "state": "CONNECTED"
+    }
+  ],
+  "artifacts": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000005a",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "execution": {
+        "executorDeviceId": "00000000-0000-4000-8000-000000000001",
+        "originDeviceId": "00000000-0000-4000-8000-000000000001",
+        "taskId": "00000000-0000-4000-8000-000000000012",
+        "revision": 1
+      },
+      "name": "week-meal-prep.md",
+      "mediaType": "text/markdown",
+      "byteCount": 4800,
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relativePath": "relativePath"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000005b",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "execution": {
+        "executorDeviceId": "00000000-0000-4000-8000-000000000001",
+        "originDeviceId": "00000000-0000-4000-8000-000000000001",
+        "taskId": "00000000-0000-4000-8000-000000000012",
+        "revision": 1
+      },
+      "name": "email-platforms.md",
+      "mediaType": "text/markdown",
+      "byteCount": 4800,
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relativePath": "relativePath"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000005c",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "execution": {
+        "executorDeviceId": "00000000-0000-4000-8000-000000000001",
+        "originDeviceId": "00000000-0000-4000-8000-000000000001",
+        "taskId": "00000000-0000-4000-8000-000000000012",
+        "revision": 1
+      },
+      "name": "design-notes.md",
+      "mediaType": "text/markdown",
+      "byteCount": 4800,
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relativePath": "relativePath"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000005d",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "execution": {
+        "executorDeviceId": "00000000-0000-4000-8000-000000000001",
+        "originDeviceId": "00000000-0000-4000-8000-000000000001",
+        "taskId": "00000000-0000-4000-8000-000000000012",
+        "revision": 1
+      },
+      "name": "landing-variants.png",
+      "mediaType": "text/markdown",
+      "byteCount": 4800,
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relativePath": "relativePath"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-00000000005e",
+        "ownerId": "00000000-0000-4000-8000-000000000001",
+        "workspaceId": null,
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "execution": {
+        "executorDeviceId": "00000000-0000-4000-8000-000000000001",
+        "originDeviceId": "00000000-0000-4000-8000-000000000001",
+        "taskId": "00000000-0000-4000-8000-000000000012",
+        "revision": 1
+      },
+      "name": "research-sources.csv",
+      "mediaType": "text/markdown",
+      "byteCount": 4800,
+      "hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "relativePath": "relativePath"
+    }
+  ],
+  "mcpConnections": [
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000100",
+        "ownerId": "00000000-0000-4000-8000-000000000003",
+        "workspaceId": "00000000-0000-4000-8000-000000000006",
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Team knowledge base",
+      "transport": "STREAMABLE_HTTP",
+      "endpoint": "https://example.org/mcp",
+      "toolIds": [
+        "search_docs",
+        "create_page"
+      ],
+      "state": "CONNECTED"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000101",
+        "ownerId": "00000000-0000-4000-8000-000000000003",
+        "workspaceId": "00000000-0000-4000-8000-000000000006",
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Local files",
+      "transport": "STREAMABLE_HTTP",
+      "endpoint": "https://example.org/mcp",
+      "toolIds": [
+        "read_file"
+      ],
+      "state": "CONNECTED"
+    },
+    {
+      "metadata": {
+        "id": "10000000-0000-4000-8000-000000000102",
+        "ownerId": "00000000-0000-4000-8000-000000000003",
+        "workspaceId": "00000000-0000-4000-8000-000000000006",
+        "version": 1,
+        "createdAt": "2026-11-02T09:00:00Z",
+        "updatedAt": "2026-11-02T09:00:00Z"
+      },
+      "name": "Design assets",
+      "transport": "STREAMABLE_HTTP",
+      "endpoint": "https://example.org/mcp",
+      "toolIds": [],
+      "state": "ERROR"
+    }
+  ]
+}
+"""#.utf8)
+}

@@ -19,7 +19,7 @@ Java HTTP-проверка сохраняет настоящий ответ v2 �
 
 SMTP и общий доступ GigaChat можно задать через `.env` в корне репозитория. Начните с `.env.example`, заполните значения и выполните `scripts/run-backend.sh`. Backend сам выбирает модель, а приложение скрывает соответствующие формы настройки. Файл с секретами не включается в сборку.
 
-[Переменные, приоритеты и граница общего сервиса](../docs/installation-environment.md).
+[Переменные, приоритеты и граница общего сервиса](../docs/status/installation-environment.md).
 
 Для разработки:
 
@@ -40,7 +40,7 @@ backend/gradlew -p backend :api:bootRun
 ## Контракт и состояние реализации
 
 - [Контракт v2](../contracts/backend-api.md), [OpenAPI](../contracts/openapi.yaml).
-- [Фактическая готовность и оставшиеся работы](../docs/backend-implementation-progress.md).
-- [Требования продукта](../docs/product-scope.md).
+- [Фактическая готовность и оставшиеся работы](../docs/status/backend-implementation-progress.md).
+- [Требования продукта](../docs/archive/product-scope.md).
 
 Наличие собирающегося адаптера не означает прохождения приёмки на реальном провайдере, подготовленной VM и физическом iPhone. Эти результаты фиксируются отдельно.

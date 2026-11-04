@@ -9,7 +9,8 @@ let package = Package(
     products: [.library(name: "BlotDesign", targets: ["BlotDesign"])],
     dependencies: [],
     targets: [
-        .target(name: "BlotDesign", swiftSettings: [.defaultIsolation(MainActor.self)]),
+        .target(name: "BlotDesign", resources: [.process("Resources")],
+                swiftSettings: [.defaultIsolation(MainActor.self)]),
         .testTarget(name: "BlotDesignTests", dependencies: ["BlotDesign"],
                     swiftSettings: [.defaultIsolation(MainActor.self)]),
     ]

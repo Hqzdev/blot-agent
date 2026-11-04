@@ -139,7 +139,7 @@ private struct BlotIconButtonBody<Label: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: BlotRadius.control, style: .continuous)
         label
-            .foregroundStyle(enabled ? (selected ? BlotColor.text : BlotColor.textSecondary) : BlotColor.textTertiary)
+            .foregroundStyle(enabled ? BlotColor.text : BlotColor.textTertiary)
             .frame(width: size, height: size)
             .background(shape.fill(fill))
             .contentShape(shape)
@@ -173,8 +173,8 @@ public struct BlotSendButton: View {
             Group {
                 switch phase {
                 case .sending: ProgressView().controlSize(.small).tint(BlotColor.onInverse)
-                case .retry: Image(systemName: "arrow.clockwise").font(.system(size: size * 0.46, weight: .semibold))
-                case .ready: Image(systemName: "arrow.up").font(.system(size: size * 0.5, weight: .semibold))
+                case .retry: BlotIcon(symbol: "arrow.clockwise", size: size * 0.46).font(.system(size: size * 0.46, weight: .semibold))
+                case .ready: BlotIcon(symbol: "arrow.up", size: size * 0.5).font(.system(size: size * 0.5, weight: .semibold))
                 }
             }
             .frame(width: size, height: size)

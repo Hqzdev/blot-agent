@@ -16,18 +16,19 @@ build_package() {
 }
 build_package BlotDomain
 build_package BlotAPI
+build_package BlotWorkspace -I packages/BlotWorkspace/Sources/CSQLite
 build_package BlotDesign -default-isolation MainActor
 sources=()
 while IFS= read -r -d '' source; do sources+=("$source"); done < <(find apps/macos/BlotMac apps/shared -name '*.swift' ! -name 'BlotMacApp.swift' ! -name 'ContentView.swift' -print0)
 swiftc -module-cache-path "$check_dir/modules" -default-isolation MainActor -parse-as-library \
-    -I "$packages" -L "$packages" -lBlotDomain -lBlotAPI -lBlotDesign \
+    -I "$packages" -L "$packages" -lBlotDomain -lBlotAPI -lBlotDesign -lBlotWorkspace -lsqlite3 -I packages/BlotWorkspace/Sources/CSQLite \
     "${sources[@]}" scripts/macos-render-scenarios.swift scripts/verify-macos-shell.swift -o "$check_dir/verify"
 if [[ "${1:-}" == "--render" || "${1:-}" == "--render-only" ]]; then
     xcodebuild -quiet -project apps/Blot.xcodeproj -scheme BlotMac -destination "platform=macOS,arch=$(uname -m)" -configuration Debug -derivedDataPath "$check_dir/build" CODE_SIGNING_ALLOWED=NO build
     cp -R "$check_dir/build/Build/Products/Debug/Blot.app" "$check_dir/Preview.app"
     cp "$check_dir/verify" "$check_dir/Preview.app/Contents/MacOS/verify"
     /usr/libexec/PlistBuddy -c 'Set :CFBundleExecutable verify' "$check_dir/Preview.app/Contents/Info.plist"
-    "$check_dir/Preview.app/Contents/MacOS/verify" "$1" "$PWD/docs/verification/blot-shell"
+    "$check_dir/Preview.app/Contents/MacOS/verify" "$1" "$PWD/docs/status/verification/blot-shell"
 else
     "$check_dir/verify"
 fi

@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000004",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": null,
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "name": "Blot CEO",
+  "kind": "DESKTOP",
+  "platform": "macOS",
+  "publicKey": "test-public-key",
+  "lastSeenAt": null,
+  "revoked": true
+}

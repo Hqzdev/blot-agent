@@ -17,18 +17,18 @@ struct PhoneWorkspaceView: View {
 
     var body: some View {
         TabView {
-            Tab("Chats", systemImage: "bubble.left.and.bubble.right") {
+            Tab {
                 NavigationStack { chats }
-            }
-            Tab("Code", systemImage: "terminal") {
+            } label: { BlotLabel("Chats", symbol: "bubble.left.and.bubble.right") }
+            Tab {
                 NavigationStack { code }
-            }
-            Tab("Decisions", systemImage: "checkmark.shield") {
+            } label: { BlotLabel("Code", symbol: "terminal") }
+            Tab {
                 NavigationStack { PhoneApprovalsView(client: client) }
-            }
-            Tab("Connection", systemImage: "network") {
+            } label: { BlotLabel("Decisions", symbol: "checkmark.shield") }
+            Tab {
                 NavigationStack { connection }
-            }
+            } label: { BlotLabel("Connection", symbol: "network") }
         }
         .toolbarBackground(BlotColor.canvas, for: .tabBar)
         .toolbarBackgroundVisibility(.visible, for: .tabBar)
@@ -47,8 +47,8 @@ struct PhoneWorkspaceView: View {
                 Button {
                     Task { await model.createChat() }
                 } label: {
-                    Label(model.chatPending ? "Retry creating chat" : "Create chat",
-                          systemImage: model.chatPending ? "arrow.clockwise" : "square.and.pencil")
+                    BlotLabel(model.chatPending ? "Retry creating chat" : "Create chat",
+                          symbol: model.chatPending ? "arrow.clockwise" : "square.and.pencil")
                 }
                 .buttonStyle(PhoneButtonStyle(kind: .primary, fullWidth: true))
                 .disabled(!model.canCreateChat)
@@ -100,8 +100,8 @@ struct PhoneWorkspaceView: View {
                 Button {
                     Task { await model.createRun() }
                 } label: {
-                    Label(model.runPending ? "Retry creating plan" : "Create plan",
-                          systemImage: model.runPending ? "arrow.clockwise" : "list.bullet.clipboard")
+                    BlotLabel(model.runPending ? "Retry creating plan" : "Create plan",
+                          symbol: model.runPending ? "arrow.clockwise" : "list.bullet.clipboard")
                 }
                 .buttonStyle(PhoneButtonStyle(kind: .primary, fullWidth: true))
                 .disabled(!model.canCreateRun)
@@ -160,7 +160,7 @@ struct PhoneWorkspaceView: View {
             Section {
                 Picker("Theme", selection: $theme) {
                     ForEach(ThemePreference.allCases) { option in
-                        Label(option.title, systemImage: option.symbol).tag(option)
+                        BlotLabel(option.title, symbol: option.symbol).tag(option)
                     }
                 }
                 .pickerStyle(.segmented)
@@ -173,7 +173,7 @@ struct PhoneWorkspaceView: View {
             .phoneRow()
             Section {
                 Button(role: .destructive) { confirmingDisconnect = true } label: {
-                    Label("Disconnect…", systemImage: "xmark.circle")
+                    BlotLabel("Disconnect…", symbol: "xmark.circle")
                 }
                 .buttonStyle(PhoneButtonStyle(kind: .destructive, fullWidth: true))
             }

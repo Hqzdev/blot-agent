@@ -1,0 +1,521 @@
+{
+  "version": 3,
+  "enums": {
+    "DeviceKind": [
+      "DESKTOP",
+      "PHONE"
+    ],
+    "TrustState": [
+      "PENDING",
+      "TRUSTED",
+      "REVOKED",
+      "EXPIRED"
+    ],
+    "TaskState": [
+      "DRAFT",
+      "PLANNING",
+      "WAITING_APPROVAL",
+      "QUEUED",
+      "RUNNING",
+      "WAITING_USER",
+      "PAUSED",
+      "COMPLETED",
+      "FAILED",
+      "CANCELED",
+      "INTERRUPTED"
+    ],
+    "DeliveryState": [
+      "SAVED",
+      "DELIVERED",
+      "ACCEPTED",
+      "RUNNING",
+      "COMPLETED",
+      "FAILED",
+      "CANCELED",
+      "WAITING_CONNECTION",
+      "INTERRUPTED"
+    ],
+    "ActionState": [
+      "PREPARED",
+      "WAITING_APPROVAL",
+      "APPROVED",
+      "RUNNING",
+      "SUCCEEDED",
+      "FAILED",
+      "DENIED",
+      "EXPIRED",
+      "UNKNOWN"
+    ],
+    "AttemptState": [
+      "RUNNING",
+      "SUBMITTED",
+      "IN_REVIEW",
+      "CHANGES_REQUESTED",
+      "ACCEPTED",
+      "FAILED",
+      "CANCELED"
+    ],
+    "AssignmentState": [
+      "ASSIGNED",
+      "ACTIVE",
+      "COMPLETED",
+      "REPLACED",
+      "CANCELED"
+    ],
+    "SessionState": [
+      "CREATED",
+      "RUNNING",
+      "WAITING_USER",
+      "PAUSED",
+      "COMPLETED",
+      "FAILED",
+      "CANCELED"
+    ],
+    "AccessMode": [
+      "OBSERVE",
+      "ASK_FIRST",
+      "TRUSTED_SCOPE"
+    ],
+    "GrantKind": [
+      "ONCE",
+      "RULE"
+    ],
+    "ConnectionState": [
+      "DISCONNECTED",
+      "CONNECTING",
+      "CONNECTED",
+      "EXPIRED",
+      "ERROR"
+    ],
+    "AutomationKind": [
+      "REMINDER",
+      "TASK"
+    ],
+    "MissedRunPolicy": [
+      "COALESCE",
+      "SKIP",
+      "CATCH_UP"
+    ],
+    "MemoryScope": [
+      "PERSONAL",
+      "PROJECT",
+      "AGENT"
+    ],
+    "MemoryState": [
+      "CANDIDATE",
+      "ACTIVE",
+      "DELETED"
+    ],
+    "BudgetState": [
+      "RESERVED",
+      "SETTLED",
+      "UNKNOWN"
+    ],
+    "MessageRole": [
+      "USER",
+      "ASSISTANT",
+      "TOOL",
+      "SYSTEM"
+    ],
+    "PetState": [
+      "IDLE",
+      "THINKING",
+      "WORKING",
+      "WAITING_USER",
+      "PAUSED",
+      "SUCCESS",
+      "ERROR",
+      "DISCONNECTED"
+    ],
+    "ConversationKind": [
+      "DIRECT",
+      "GROUP"
+    ],
+    "ParticipantKind": [
+      "USER",
+      "AGENT"
+    ],
+    "ChangeOperation": [
+      "UPSERT",
+      "DELETE"
+    ],
+    "ReplicationState": [
+      "PENDING",
+      "ACKNOWLEDGED",
+      "CONFLICT"
+    ],
+    "LeaseState": [
+      "ACTIVE",
+      "RELEASED",
+      "EXPIRED"
+    ],
+    "AutomationTrigger": [
+      "SCHEDULED",
+      "MANUAL"
+    ],
+    "ExecutionMode": [
+      "LOCAL_OWNED",
+      "DELEGATED"
+    ],
+    "ModelStepState": [
+      "PREPARED",
+      "RUNNING",
+      "WAITING_TOOLS",
+      "COMPLETED",
+      "INTERRUPTED",
+      "CANCELED",
+      "FAILED"
+    ]
+  },
+  "models": {
+    "RecordMetadata": {
+      "id": "uuid",
+      "ownerId": "uuid",
+      "workspaceId": "uuid?",
+      "version": "int",
+      "createdAt": "time",
+      "updatedAt": "time"
+    },
+    "ExecutionContext": {
+      "executorDeviceId": "uuid",
+      "originDeviceId": "uuid",
+      "taskId": "uuid",
+      "revision": "int",
+      "leaseGeneration": "int?"
+    },
+    "Account": {
+      "metadata": "RecordMetadata",
+      "email": "text",
+      "name": "text",
+      "emailVerified": "bool"
+    },
+    "Device": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "kind": "DeviceKind",
+      "platform": "text",
+      "publicKey": "text",
+      "lastSeenAt": "time?",
+      "revoked": "bool"
+    },
+    "TrustedPair": {
+      "metadata": "RecordMetadata",
+      "desktopDeviceId": "uuid",
+      "phoneDeviceId": "uuid",
+      "verificationCode": "text",
+      "expiresAt": "time",
+      "state": "TrustState"
+    },
+    "Workspace": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "executorDeviceId": "uuid?",
+      "accessMode": "AccessMode",
+      "folderIds": "[uuid]"
+    },
+    "Project": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "repositoryPath": "text"
+    },
+    "AgentProfile": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "roleId": "text",
+      "avatarShape": "text",
+      "avatarColor": "text",
+      "instructions": "text",
+      "modelId": "text",
+      "accessMode": "AccessMode",
+      "configurationId": "uuid?"
+    },
+    "AgentConfigurationRevision": {
+      "metadata": "RecordMetadata",
+      "agentId": "uuid",
+      "revision": "int",
+      "instructions": "text",
+      "toolIds": "[text]",
+      "modelId": "text"
+    },
+    "Conversation": {
+      "metadata": "RecordMetadata",
+      "agentId": "uuid?",
+      "title": "text",
+      "mobileOwned": "bool",
+      "pinned": "bool",
+      "archived": "bool",
+      "kind": "ConversationKind?"
+    },
+    "Message": {
+      "metadata": "RecordMetadata",
+      "conversationId": "uuid",
+      "role": "MessageRole",
+      "content": "text",
+      "delivery": "DeliveryState",
+      "commandId": "uuid",
+      "artifactIds": "[uuid]",
+      "authorAgentId": "uuid?",
+      "replyToMessageId": "uuid?",
+      "mentions": "[MessageMention]?",
+      "position": "int?",
+      "executorDeviceId": "uuid?"
+    },
+    "Task": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "projectId": "uuid?",
+      "conversationId": "uuid",
+      "goal": "text",
+      "state": "TaskState",
+      "plan": "[text]",
+      "configurationId": "uuid?",
+      "parentTaskId": "uuid?",
+      "skillRevisionId": "uuid?",
+      "budgetTokenLimit": "int?",
+      "executionMode": "ExecutionMode?"
+    },
+    "TaskAttempt": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "stepId": "uuid",
+      "agentId": "uuid",
+      "state": "AttemptState",
+      "criteria": "[text]"
+    },
+    "Assignment": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "stepId": "uuid",
+      "agentId": "uuid",
+      "state": "AssignmentState",
+      "dependencyIds": "[uuid]"
+    },
+    "AgentSession": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "agentId": "uuid",
+      "configurationId": "uuid",
+      "parentSessionId": "uuid?",
+      "state": "SessionState"
+    },
+    "AgentMessage": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "senderSessionId": "uuid",
+      "recipientSessionId": "uuid",
+      "content": "text"
+    },
+    "PreparedAction": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "toolId": "text",
+      "resource": "text",
+      "parameters": "text",
+      "digest": "text",
+      "consequences": "text",
+      "expiresAt": "time",
+      "state": "ActionState",
+      "preparationId": "uuid?"
+    },
+    "ApprovalGrant": {
+      "metadata": "RecordMetadata",
+      "kind": "GrantKind",
+      "actionId": "uuid?",
+      "operationClass": "text",
+      "scope": "text",
+      "resource": "text",
+      "digest": "text?",
+      "expiresAt": "time?",
+      "revoked": "bool"
+    },
+    "ToolInvocation": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "preparedActionId": "uuid",
+      "state": "ActionState",
+      "externalId": "text?",
+      "result": "text?",
+      "exitCode": "signed?"
+    },
+    "Artifact": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext?",
+      "name": "text",
+      "mediaType": "text",
+      "byteCount": "int",
+      "hash": "text",
+      "relativePath": "text",
+      "encryptionEpoch": "int?"
+    },
+    "MemoryEntry": {
+      "metadata": "RecordMetadata",
+      "scope": "MemoryScope",
+      "scopeId": "uuid?",
+      "content": "text",
+      "sourceId": "uuid",
+      "state": "MemoryState"
+    },
+    "ContextSummary": {
+      "metadata": "RecordMetadata",
+      "conversationId": "uuid",
+      "content": "text",
+      "sourceIds": "[uuid]",
+      "valid": "bool"
+    },
+    "Connection": {
+      "metadata": "RecordMetadata",
+      "service": "text",
+      "accountName": "text",
+      "scopes": "[text]",
+      "state": "ConnectionState",
+      "deviceId": "uuid?"
+    },
+    "McpConnection": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "transport": "text",
+      "endpoint": "text",
+      "toolIds": "[text]",
+      "state": "ConnectionState"
+    },
+    "Automation": {
+      "metadata": "RecordMetadata",
+      "kind": "AutomationKind",
+      "executorDeviceId": "uuid?",
+      "agentId": "uuid?",
+      "name": "text",
+      "goal": "text",
+      "timezone": "text",
+      "localTime": "text",
+      "weekdays": "[int]",
+      "missedRunPolicy": "MissedRunPolicy",
+      "enabled": "bool",
+      "skillRevisionId": "uuid?",
+      "scheduledAt": "time?",
+      "maxCatchUpRuns": "int?"
+    },
+    "AutomationRun": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "automationId": "uuid",
+      "scheduledAt": "time",
+      "state": "TaskState",
+      "trigger": "AutomationTrigger?"
+    },
+    "BudgetLedger": {
+      "metadata": "RecordMetadata",
+      "execution": "ExecutionContext",
+      "requestId": "uuid",
+      "reservedTokens": "int",
+      "actualTokens": "int?",
+      "state": "BudgetState"
+    },
+    "SyncCursor": {
+      "metadata": "RecordMetadata",
+      "deviceId": "uuid",
+      "sequence": "int"
+    },
+    "MessageMention": {
+      "agentId": "uuid",
+      "startUTF16": "int",
+      "lengthUTF16": "int"
+    },
+    "ConversationParticipant": {
+      "metadata": "RecordMetadata",
+      "conversationId": "uuid",
+      "participantId": "uuid",
+      "kind": "ParticipantKind",
+      "removed": "bool"
+    },
+    "MessageReaction": {
+      "metadata": "RecordMetadata",
+      "messageId": "uuid",
+      "participantId": "uuid",
+      "emoji": "text",
+      "removed": "bool"
+    },
+    "ConversationReadPosition": {
+      "metadata": "RecordMetadata",
+      "conversationId": "uuid",
+      "participantId": "uuid",
+      "messageId": "uuid",
+      "position": "int"
+    },
+    "Skill": {
+      "metadata": "RecordMetadata",
+      "name": "text",
+      "activeRevisionId": "uuid",
+      "archived": "bool"
+    },
+    "SkillRevision": {
+      "metadata": "RecordMetadata",
+      "skillId": "uuid",
+      "instructions": "text",
+      "parametersJSON": "text",
+      "toolIds": "[text]"
+    },
+    "RecordChange": {
+      "metadata": "RecordMetadata",
+      "originDeviceId": "uuid",
+      "sequence": "int",
+      "recordKind": "text",
+      "recordId": "uuid",
+      "baseVersion": "int",
+      "recordVersion": "int",
+      "operation": "ChangeOperation",
+      "payloadJSON": "text?"
+    },
+    "RecordTombstone": {
+      "metadata": "RecordMetadata",
+      "recordKind": "text",
+      "recordId": "uuid",
+      "deletedByDeviceId": "uuid",
+      "deletedAt": "time"
+    },
+    "ReplicationCheckpoint": {
+      "metadata": "RecordMetadata",
+      "deviceId": "uuid",
+      "streamId": "uuid",
+      "sequence": "int",
+      "state": "ReplicationState"
+    },
+    "ConflictingRevision": {
+      "metadata": "RecordMetadata",
+      "recordKind": "text",
+      "recordId": "uuid",
+      "baseVersion": "int",
+      "originDeviceId": "uuid",
+      "payloadJSON": "text",
+      "resolved": "bool"
+    },
+    "ExecutionLease": {
+      "metadata": "RecordMetadata",
+      "taskId": "uuid",
+      "executorDeviceId": "uuid",
+      "generation": "int",
+      "expiresAt": "time",
+      "state": "LeaseState"
+    },
+    "ModelStep": {
+      "metadata": "RecordMetadata",
+      "conversationId": "uuid",
+      "sourceMessageId": "uuid",
+      "responseMessageId": "uuid",
+      "taskId": "uuid?",
+      "executorDeviceId": "uuid",
+      "originDeviceId": "uuid",
+      "executionMode": "ExecutionMode",
+      "stepIndex": "int",
+      "modelId": "text",
+      "configurationId": "uuid?",
+      "skillRevisionId": "uuid?",
+      "budgetTokenLimit": "int",
+      "requestJSON": "text",
+      "toolCallsJSON": "text?",
+      "toolResultsJSON": "text?",
+      "inputTokens": "int?",
+      "outputTokens": "int?",
+      "state": "ModelStepState"
+    }
+  }
+}

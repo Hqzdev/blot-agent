@@ -1,0 +1,405 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Blot v3 target local API",
+    "version": "3.0.0",
+    "description": "Contract for November clients. Runtime implementation is pending; v2 is not v3 compatible."
+  },
+  "x-runtime-implemented": false,
+  "paths": {
+    "/v3/commands": {
+      "post": {
+        "summary": "Submit an idempotent command",
+        "responses": {
+          "202": {
+            "description": "Accepted, not completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict or command ID reused with different content"
+          },
+          "501": {
+            "description": "v3 runtime is not installed"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "./command.schema.json"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v3/snapshot": {
+      "get": {
+        "summary": "Read workspace snapshot",
+        "responses": {
+          "200": {
+            "description": "Confirmed records",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "schemaVersion",
+                    "sequence",
+                    "records",
+                    "nextCursor"
+                  ],
+                  "properties": {
+                    "schemaVersion": {
+                      "const": 3
+                    },
+                    "sequence": {
+                      "type": "integer",
+                      "minimum": 0
+                    },
+                    "records": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "properties": {
+                        "Account": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Account"
+                          }
+                        },
+                        "Device": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Device"
+                          }
+                        },
+                        "TrustedPair": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/TrustedPair"
+                          }
+                        },
+                        "Workspace": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Workspace"
+                          }
+                        },
+                        "Project": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Project"
+                          }
+                        },
+                        "AgentProfile": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/AgentProfile"
+                          }
+                        },
+                        "AgentConfigurationRevision": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/AgentConfigurationRevision"
+                          }
+                        },
+                        "Conversation": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Conversation"
+                          }
+                        },
+                        "Message": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Message"
+                          }
+                        },
+                        "Task": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Task"
+                          }
+                        },
+                        "TaskAttempt": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/TaskAttempt"
+                          }
+                        },
+                        "Assignment": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Assignment"
+                          }
+                        },
+                        "AgentSession": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/AgentSession"
+                          }
+                        },
+                        "AgentMessage": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/AgentMessage"
+                          }
+                        },
+                        "PreparedAction": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/PreparedAction"
+                          }
+                        },
+                        "ApprovalGrant": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ApprovalGrant"
+                          }
+                        },
+                        "ToolInvocation": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ToolInvocation"
+                          }
+                        },
+                        "Artifact": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Artifact"
+                          }
+                        },
+                        "MemoryEntry": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/MemoryEntry"
+                          }
+                        },
+                        "ContextSummary": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ContextSummary"
+                          }
+                        },
+                        "Connection": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Connection"
+                          }
+                        },
+                        "McpConnection": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/McpConnection"
+                          }
+                        },
+                        "Automation": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Automation"
+                          }
+                        },
+                        "AutomationRun": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/AutomationRun"
+                          }
+                        },
+                        "BudgetLedger": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/BudgetLedger"
+                          }
+                        },
+                        "SyncCursor": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/SyncCursor"
+                          }
+                        },
+                        "ConversationParticipant": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ConversationParticipant"
+                          }
+                        },
+                        "MessageReaction": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/MessageReaction"
+                          }
+                        },
+                        "ConversationReadPosition": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ConversationReadPosition"
+                          }
+                        },
+                        "Skill": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/Skill"
+                          }
+                        },
+                        "SkillRevision": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/SkillRevision"
+                          }
+                        },
+                        "RecordChange": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/RecordChange"
+                          }
+                        },
+                        "RecordTombstone": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/RecordTombstone"
+                          }
+                        },
+                        "ReplicationCheckpoint": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ReplicationCheckpoint"
+                          }
+                        },
+                        "ConflictingRevision": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ConflictingRevision"
+                          }
+                        },
+                        "ExecutionLease": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ExecutionLease"
+                          }
+                        },
+                        "ModelStep": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ModelStep"
+                          }
+                        }
+                      }
+                    },
+                    "nextCursor": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict or command ID reused with different content"
+          },
+          "501": {
+            "description": "v3 runtime is not installed"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/v3/events": {
+      "get": {
+        "summary": "Read events after cursor",
+        "responses": {
+          "200": {
+            "description": "Confirmed records",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                },
+                "x-event-schema": {
+                  "$ref": "./event.schema.json"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Version conflict or command ID reused with different content"
+          },
+          "501": {
+            "description": "v3 runtime is not installed"
+          }
+        },
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Receipt": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "schemaVersion",
+          "commandId",
+          "operationId",
+          "state"
+        ],
+        "properties": {
+          "schemaVersion": {
+            "const": 3
+          },
+          "commandId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "operationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "enum": [
+              "ACCEPTED",
+              "REJECTED"
+            ]
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "deviceSession": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  },
+  "security": [
+    {
+      "deviceSession": []
+    }
+  ]
+}

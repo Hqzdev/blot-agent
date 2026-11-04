@@ -13,3 +13,5 @@ BlotAPI: UTC ISO-8601 с опциональной дробной частью п
 совпадают с Java enum, неизвестные статусы отклоняются. UUID регистронезависимы.
 
 Проверка: `swift test --package-path packages/BlotDomain`.
+
+Контракты v3 изолированы в `BlotV3`. Они генерируются из `contracts/v3/model.json` для Java и Swift; публичные workspace-записи соответствуют `BlotWorkspaceRecord`. Группы, навыки и репликация описаны в [Apple v1](../../backend/plans/apple-v1/contracts.md). Это модели данных, не реализация соответствующих сервисов.

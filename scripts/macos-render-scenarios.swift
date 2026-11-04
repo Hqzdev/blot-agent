@@ -30,7 +30,7 @@ struct MacRenderScenario {
             Self("chat", configure: completedTask),
             Self("project-card-sources", configure: { state in
                 completedTask(state)
-                let path = FileManager.default.currentDirectoryPath + "/apps/shared/Assets.xcassets/AppIcon.appiconset/ios-1024.png"
+                let path = FileManager.default.currentDirectoryPath + "/apps/shared/AppIcon.icon/Assets/Blot.svg"
                 let url = URL(fileURLWithPath: path)
                 state.shell.addSources([url], projectID: state.shellProjectID)
             }),

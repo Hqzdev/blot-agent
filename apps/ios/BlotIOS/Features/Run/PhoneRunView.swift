@@ -23,14 +23,14 @@ struct PhoneRunView: View {
                 } else if status == "READY_FOR_ACCEPTANCE" {
                     Button("Accept result") { action("run.accept") }.buttonStyle(PhoneButtonStyle(kind: .primary, fullWidth: true))
                 } else if ["PAUSED", "INTERRUPTED", "WAITING"].contains(status) {
-                    Button { action("run.resume") } label: { Label("Resume", systemImage: "play") }
+                    Button { action("run.resume") } label: { BlotLabel("Resume", symbol: "play") }
                         .buttonStyle(PhoneButtonStyle(fullWidth: true))
                 } else if status == "RUNNING" {
-                    Button { action("run.pause") } label: { Label("Pause", systemImage: "pause") }
+                    Button { action("run.pause") } label: { BlotLabel("Pause", symbol: "pause") }
                         .buttonStyle(PhoneButtonStyle(fullWidth: true))
                 }
                 if !["COMPLETED", "CANCELLED", "FAILED"].contains(status) {
-                    Button(role: .destructive) { confirmingStop = true } label: { Label("Stop run…", systemImage: "stop") }
+                    Button(role: .destructive) { confirmingStop = true } label: { BlotLabel("Stop run…", symbol: "stop") }
                         .buttonStyle(PhoneButtonStyle(kind: .destructive, fullWidth: true))
                 }
             } header: { PhoneSectionHeader("Run") }

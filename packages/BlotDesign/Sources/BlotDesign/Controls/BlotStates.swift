@@ -73,7 +73,7 @@ public struct BlotStatusLabel: View {
 
     public var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: BlotSpace.element) {
-            Image(systemName: status.symbol)
+            BlotIcon(symbol: status.symbol, size: role.size)
                 .font(BlotFont.role(role, weight: .semibold))
                 .accessibilityHidden(true)
             Text(text)
@@ -98,7 +98,7 @@ public struct BlotStatusPill: View {
 
     public var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: status.symbol).font(.system(size: 11, weight: .semibold)).accessibilityHidden(true)
+            BlotIcon(symbol: status.symbol, size: 11).font(.system(size: 11, weight: .semibold)).accessibilityHidden(true)
             Text(text).font(BlotFont.role(.meta, weight: status.weight == .regular ? .medium : .semibold)).lineLimit(1)
         }
         .foregroundStyle(status == .neutral ? BlotColor.textSecondary : BlotColor.text)
@@ -129,7 +129,7 @@ public struct BlotEmptyState: View {
 
     public var body: some View {
         VStack(spacing: BlotSpace.s10) {
-            Image(systemName: symbol)
+            BlotIcon(symbol: symbol)
                 .font(.system(size: 20, weight: .regular))
                 .foregroundStyle(BlotColor.textSecondary)
                 .frame(width: 44, height: 44)

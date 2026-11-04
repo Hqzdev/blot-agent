@@ -24,7 +24,7 @@ struct PhoneApprovalsView: View {
             if let commandError { PhoneErrorText(commandError).phoneRow() }
             ForEach(actions.filter { $0.data.text("status") == "PREPARED" }, id: \.id) { row in
                 VStack(alignment: .leading, spacing: BlotSpace.s8) {
-                    Label(row.data.text("capability"), systemImage: "exclamationmark.triangle")
+                    BlotLabel(row.data.text("capability"), symbol: "exclamationmark.triangle")
                         .blotFont(.body, weight: .semibold).foregroundStyle(BlotColor.text)
                     if case .object(let value) = row.data, case .object(let arguments) = value["arguments"] {
                         if case .string(let path) = arguments["path"] { Text(path).font(.body.monospaced()).textSelection(.enabled) }
@@ -46,9 +46,9 @@ struct PhoneApprovalsView: View {
                         if case .string(let message) = arguments["message"] { Text(message) }
                     }
                     HStack(spacing: BlotSpace.s8) {
-                        Button { grant(row) } label: { Label("Allow once", systemImage: "checkmark") }
+                        Button { grant(row) } label: { BlotLabel("Allow once", symbol: "checkmark") }
                             .buttonStyle(PhoneButtonStyle(kind: .primary, fullWidth: true))
-                        Button(role: .destructive) { deny(row) } label: { Label("Deny", systemImage: "xmark") }
+                        Button(role: .destructive) { deny(row) } label: { BlotLabel("Deny", symbol: "xmark") }
                             .buttonStyle(PhoneButtonStyle(kind: .destructive, fullWidth: true))
                     }
                     .padding(.top, BlotSpace.element)
@@ -64,7 +64,7 @@ struct PhoneApprovalsView: View {
             }
             ForEach(questions.filter { $0.data.flag("open") }, id: \.id) { row in
                 VStack(alignment: .leading, spacing: BlotSpace.s8) {
-                    Label(row.data.text("question"), systemImage: "questionmark.circle")
+                    BlotLabel(row.data.text("question"), symbol: "questionmark.circle")
                         .blotFont(.body, weight: .semibold).foregroundStyle(BlotColor.text)
                     ForEach(row.data.strings("options"), id: \.self) { option in
                         Button(option) { answer(row, option) }.buttonStyle(PhoneButtonStyle(fullWidth: true))

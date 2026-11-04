@@ -1,0 +1,302 @@
+[
+  {
+    "reference": "screens/ios/01-welcome.png",
+    "capture": "01-welcome-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/02-sign-in.png",
+    "capture": "02-sign-in-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/03-create-account.png",
+    "capture": "03-create-account-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/04-verify-email.png",
+    "capture": "04-verify-email-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/05-first-agent.png",
+    "capture": "05-first-agent-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/06-create-agent.png",
+    "capture": "06-create-agent-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/07-all-chats.png",
+    "capture": "07-all-chats-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/08-search.png",
+    "capture": "08-search-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/09-new-chat.png",
+    "capture": "09-new-chat-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/10-chat-with-ceo.png",
+    "capture": "10-chat-with-ceo-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/11-task-running.png",
+    "capture": "11-task-running-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/12-approval.png",
+    "capture": "12-approval-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/13-result.png",
+    "capture": "13-result-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/14-file-preview.png",
+    "capture": "14-file-preview-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/15-my-agents.png",
+    "capture": "15-my-agents-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/16-agent-profile.png",
+    "capture": "16-agent-profile-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/17-schedules.png",
+    "capture": "17-schedules-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/18-new-schedule.png",
+    "capture": "18-new-schedule-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/19-computers.png",
+    "capture": "19-computers-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/20-connect-computer.png",
+    "capture": "20-connect-computer-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/21-computer-offline.png",
+    "capture": "21-computer-offline-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/22-connections.png",
+    "capture": "22-connections-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/23-settings.png",
+    "capture": "23-settings-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/24-ai-models.png",
+    "capture": "24-ai-models-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/25-browser-view.png",
+    "capture": "25-browser-view-light.png",
+    "theme": "light",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/01-welcome.png",
+    "capture": "01-welcome-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/02-sign-in.png",
+    "capture": "02-sign-in-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/03-create-account.png",
+    "capture": "03-create-account-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/04-verify-email.png",
+    "capture": "04-verify-email-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/05-first-agent.png",
+    "capture": "05-first-agent-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/06-create-agent.png",
+    "capture": "06-create-agent-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/07-all-chats.png",
+    "capture": "07-all-chats-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/08-search.png",
+    "capture": "08-search-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/09-new-chat.png",
+    "capture": "09-new-chat-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/10-chat-with-ceo.png",
+    "capture": "10-chat-with-ceo-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/11-task-running.png",
+    "capture": "11-task-running-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/12-approval.png",
+    "capture": "12-approval-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/13-result.png",
+    "capture": "13-result-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/14-file-preview.png",
+    "capture": "14-file-preview-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/15-my-agents.png",
+    "capture": "15-my-agents-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/16-agent-profile.png",
+    "capture": "16-agent-profile-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/17-schedules.png",
+    "capture": "17-schedules-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/18-new-schedule.png",
+    "capture": "18-new-schedule-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/19-computers.png",
+    "capture": "19-computers-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/20-connect-computer.png",
+    "capture": "20-connect-computer-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/21-computer-offline.png",
+    "capture": "21-computer-offline-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/22-connections.png",
+    "capture": "22-connections-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/23-settings.png",
+    "capture": "23-settings-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/24-ai-models.png",
+    "capture": "24-ai-models-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  },
+  {
+    "reference": "screens/ios/25-browser-view.png",
+    "capture": "25-browser-view-dark.png",
+    "theme": "dark",
+    "simulator": "84D932CC-84DD-4091-8D1A-6BF470FB7CC7"
+  }
+]

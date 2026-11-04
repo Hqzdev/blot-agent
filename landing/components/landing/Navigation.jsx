@@ -54,7 +54,7 @@ export function Navigation() {
           </div>)}
           <Link href="/#pricing">Pricing</Link><Link href="/changelog">News</Link>
         </nav>
-        <div className="blot-header-actions"><Link className="blot-button blot-button-small blot-button-soft" href="/contact">Contact Sales</Link><Link className="blot-button blot-button-small" href="/#download">Download<ArrowDown size={14} /></Link></div>
+        <div className="blot-header-actions"><Link className="blot-button blot-button-small blot-button-soft" href="/login">Sign in</Link><Link className="blot-button blot-button-small" href="/#download">Download<ArrowDown size={14} /></Link></div>
         <button className="blot-mobile-toggle" aria-label="Open menu" aria-expanded={mobile} aria-controls="blot-mobile-menu" onClick={() => setMobile(true)}><Menu size={22} /></button>
       </div>
       <AnimatePresence>{mobile && <motion.div className="blot-mobile-menu" id="blot-mobile-menu" role="dialog" aria-modal="true" aria-label="Navigation menu" ref={menuRef} initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.24 }}>
@@ -63,7 +63,7 @@ export function Navigation() {
           {Object.entries(menuGroups).map(([name, links]) => <div key={name} className="blot-mobile-group"><button onClick={() => setOpen(open === name ? null : name)} aria-expanded={open === name}>{name}<ChevronDown size={18} /></button>
             {open === name && <div className="blot-mobile-submenu">{links.map(([label, href]) => <Link key={label} href={href} onClick={closeMenus}>{label}</Link>)}</div>}
           </div>)}
-          <Link href="/#pricing" onClick={closeMenus}>Pricing</Link><Link href="/changelog" onClick={closeMenus}>News</Link>
+          <Link href="/#pricing" onClick={closeMenus}>Pricing</Link><Link href="/changelog" onClick={closeMenus}>News</Link><Link href="/login" onClick={closeMenus}>Sign in</Link>
         </nav>
         <div className="blot-mobile-bottom"><Link className="blot-button" href="/#download" onClick={closeMenus}>Download</Link><div><Link href="/contact">Contact</Link><Link href="/privacy">Privacy</Link><Link href="/changelog">News</Link></div></div>
       </motion.div>}</AnimatePresence>

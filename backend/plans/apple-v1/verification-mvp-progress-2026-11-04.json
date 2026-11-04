@@ -1,0 +1,98 @@
+{
+  "date": "2026-11-04",
+  "timezone": "Asia/Yekaterinburg",
+  "fullMVPComplete": false,
+  "scenarioRegistry": 98,
+  "fullyAcceptedScenarios": 0,
+  "tests": {
+    "swiftWorkspace": {
+      "passed": 45
+    },
+    "swiftDomain": {
+      "passed": 5
+    },
+    "pythonBuildConfiguration": {
+      "passed": 6
+    },
+    "schemaFixtures": {
+      "passed": 167
+    },
+    "javaV3Contract": {
+      "passed": 3
+    },
+    "javaAccountServices": {
+      "passed": 13
+    },
+    "uiStore": {
+      "passed": true,
+      "model": "injected; no provider/network"
+    }
+  },
+  "realProvider": {
+    "name": "GigaChat",
+    "directOAuthTLSStream": {
+      "passed": true,
+      "usage": 28
+    },
+    "durableToolLoop": {
+      "passed": true,
+      "modelSteps": 2,
+      "markdownDocuments": 1,
+      "usage": 391
+    }
+  },
+  "nativeBuilds": {
+    "macOS": "Apple Development signed; codesign verify passed",
+    "iOS": "Apple Development signed; codesign verify passed",
+    "macOSProcessLaunch": "passed without forwarding dotenv",
+    "visualUIAcceptance": "not performed; CUA access was not granted",
+    "physicalIPhoneAcceptance": "not performed"
+  },
+  "website": {
+    "loginURL": "https://blot-agent.vercel.app/login",
+    "loginStatus": 200,
+    "nativeContract": "PKCE and callbacks match",
+    "accountAPIStatus": 503,
+    "accountAPICode": "auth_service_unconfigured"
+  },
+  "peerSync": {
+    "serverRelayRequired": false,
+    "twoSQLiteEncryptedSnapshotTest": "passed",
+    "nativeWiFiBluetoothAndQR": "not integrated"
+  },
+  "remaining": [
+    "website account handler deployment and real registration/email/callback acceptance",
+    "native peer discovery, QR, incremental queue, rotation, revocation, attachments",
+    "UI group coordination, children and parent cancellation",
+    "Google system OAuth and Gmail/Calendar REST tools, exact approvals, UNKNOWN reconciliation",
+    "memory compaction and skill UI flows",
+    "schedule execution, notifications and recovery",
+    "backup/restore/delete and migration acceptance",
+    "physical Mac+iPhone product acceptance and MacTeam live design parity"
+  ],
+  "artifacts": [
+    {
+      "file": "/Users/yaroslavfairfieldd/Documents/klin-agent/.build/artifacts/Blot-Mac-personal-dev.zip",
+      "bytes": 83026560,
+      "sha256": "c6473961216ec2d726d9af652803681d9ba977d3ac50031bd693cd9ff0a03a20",
+      "profile": "personal-dev Debug",
+      "published": false,
+      "buildVersion": "2"
+    },
+    {
+      "file": "/Users/yaroslavfairfieldd/Documents/klin-agent/.build/artifacts/Blot-iPhone-personal-dev.ipa",
+      "bytes": 12320173,
+      "sha256": "b9028eb3fd25bd810031e9229518caa8a123b8da7e378da9edbf07e9ae7c1389",
+      "profile": "personal-dev Debug",
+      "published": false
+    }
+  ],
+  "macBrowserHandoffFix": {
+    "date": "2026-11-04",
+    "buildVersion": "2",
+    "singleURLHandler": true,
+    "launchServicesHandler": "current .build/xcode app",
+    "nativeURLDelivery": "verified in unified log",
+    "tests": "browser-handoff-tests.log passed"
+  }
+}

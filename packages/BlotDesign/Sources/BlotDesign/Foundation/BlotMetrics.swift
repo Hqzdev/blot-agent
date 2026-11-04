@@ -2,8 +2,7 @@
 //  BlotMetrics.swift
 //  BlotDesign
 //
-//  Spacing rhythm 6 / 10 / 16 / 24, one 10 pt radius for controls and panels, square tags,
-//  and the layout sizes both apps share.
+//  Shared spacing, rounded controls and panels, and layout sizes for both apps.
 //
 
 import CoreGraphics
@@ -23,11 +22,11 @@ nonisolated public enum BlotSpace {
 }
 
 nonisolated public enum BlotRadius {
-    /// Buttons, navigation rows, text fields, the composer, panels and menus.
-    public static let control: CGFloat = 10
-    public static let panel: CGFloat = 10
-    /// Tags and badges keep square corners.
-    public static let tag: CGFloat = 0
+    /// Compact buttons, navigation rows and fields.
+    public static let control: CGFloat = 14
+    /// Cards, menus and larger content surfaces.
+    public static let panel: CGFloat = 22
+    public static let tag: CGFloat = 6
 }
 
 nonisolated public enum BlotLayout {

@@ -29,10 +29,10 @@ struct PhoneRootView: View {
                             Toggle("Use Bluetooth", isOn: $bluetooth)
                                 .blotFont(.body)
                                 .frame(minHeight: BlotLayout.minimumTapTarget)
-                            Button { scanner = true } label: { Label("Scan QR code", systemImage: "qrcode.viewfinder") }
+                            Button { scanner = true } label: { BlotLabel("Scan QR code", symbol: "qrcode.viewfinder") }
                                 .buttonStyle(PhoneButtonStyle(kind: .primary, fullWidth: true))
                             Button { Task { await connection.restore(bluetooth: bluetooth) } } label: {
-                                Label("Reconnect saved Mac", systemImage: "arrow.clockwise")
+                                BlotLabel("Reconnect saved Mac", symbol: "arrow.clockwise")
                             }
                             .buttonStyle(PhoneButtonStyle(fullWidth: true))
                         } header: { PhoneSectionHeader("Connection") }

@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "eventId",
+    "sequence",
+    "kind",
+    "recordId",
+    "recordVersion",
+    "deleted"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 3
+    },
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "kind": {
+      "enum": [
+        "Account",
+        "Device",
+        "TrustedPair",
+        "Workspace",
+        "Project",
+        "AgentProfile",
+        "AgentConfigurationRevision",
+        "Conversation",
+        "Message",
+        "Task",
+        "TaskAttempt",
+        "Assignment",
+        "AgentSession",
+        "AgentMessage",
+        "PreparedAction",
+        "ApprovalGrant",
+        "ToolInvocation",
+        "Artifact",
+        "MemoryEntry",
+        "ContextSummary",
+        "Connection",
+        "McpConnection",
+        "Automation",
+        "AutomationRun",
+        "BudgetLedger",
+        "SyncCursor",
+        "ConversationParticipant",
+        "MessageReaction",
+        "ConversationReadPosition",
+        "Skill",
+        "SkillRevision",
+        "RecordChange",
+        "RecordTombstone",
+        "ReplicationCheckpoint",
+        "ConflictingRevision",
+        "ExecutionLease",
+        "ModelStep"
+      ]
+    },
+    "recordId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "recordVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "deleted": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,4821 @@
+{
+  "method": "Physical source lines including comments and blank lines. Includes current untracked sources. Excludes dependencies, build outputs, documentation, copied resources, package manifests and build configuration. Tests includes unit tests, integration verification targets, verification host and scripts named check-/verify-.",
+  "stats": {
+    "tests": {
+      "files": 60,
+      "lines": 8291,
+      "nonempty": 7848
+    },
+    "total": {
+      "files": 799,
+      "lines": 72482,
+      "nonempty": 67833
+    },
+    "application": {
+      "files": 724,
+      "lines": 63201,
+      "nonempty": 59049
+    },
+    "scripts": {
+      "files": 15,
+      "lines": 990,
+      "nonempty": 936
+    }
+  },
+  "files": [
+    {
+      "path": "apps/verification/WorkspaceDeviceTests/DeviceKeychainTests.swift",
+      "category": "tests",
+      "lines": 18,
+      "nonempty": 17
+    },
+    {
+      "path": "apps/verification/WorkspaceHost/WorkspaceVerificationApp.swift",
+      "category": "tests",
+      "lines": 9,
+      "nonempty": 8
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneKeyboard.swift",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 7
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneNotifications.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 43
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneBluetoothTunnel.swift",
+      "category": "application",
+      "lines": 122,
+      "nonempty": 120
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/MacDiscovery.swift",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 49
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneAttachmentStorage.swift",
+      "category": "application",
+      "lines": 34,
+      "nonempty": 28
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneWorkspaceFiles.swift",
+      "category": "application",
+      "lines": 35,
+      "nonempty": 32
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneQRScanner.swift",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 42
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneConnection.swift",
+      "category": "application",
+      "lines": 122,
+      "nonempty": 119
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneAvatarImage.swift",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift",
+      "category": "application",
+      "lines": 43,
+      "nonempty": 35
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneTokenUsage.swift",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneWorkspacePersistence.swift",
+      "category": "application",
+      "lines": 55,
+      "nonempty": 49
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneNotificationPreferences.swift",
+      "category": "application",
+      "lines": 10,
+      "nonempty": 9
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneAttachmentThumbnails.swift",
+      "category": "application",
+      "lines": 29,
+      "nonempty": 26
+    },
+    {
+      "path": "apps/ios/BlotIOS/Services/PhoneProfileRecord.swift",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Onboarding/PhoneAgentAppearance.swift",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 27
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Onboarding/PhoneAgentCreationView.swift",
+      "category": "application",
+      "lines": 121,
+      "nonempty": 115
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Onboarding/PhoneFirstAgentView.swift",
+      "category": "application",
+      "lines": 100,
+      "nonempty": 92
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Login/PhoneAuthenticationSession.swift",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Login/PhoneAuthenticationView.swift",
+      "category": "application",
+      "lines": 180,
+      "nonempty": 169
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Run/PhoneRunView.swift",
+      "category": "application",
+      "lines": 124,
+      "nonempty": 123
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Artifact/PhoneArtifactView.swift",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 43
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Files/PhoneFilesContent.swift",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 57
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Files/PhoneFileRow.swift",
+      "category": "application",
+      "lines": 32,
+      "nonempty": 29
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Files/PhoneFileKind.swift",
+      "category": "application",
+      "lines": 58,
+      "nonempty": 54
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Files/PhoneWorkspaceFileView.swift",
+      "category": "application",
+      "lines": 85,
+      "nonempty": 80
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Root/PhoneWorkspaceScreen.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 47
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 56
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Root/PhoneRootView.swift",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 72
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Decisions/PhoneApprovalsView.swift",
+      "category": "application",
+      "lines": 128,
+      "nonempty": 127
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Welcome/PhoneWelcomeOrbit.swift",
+      "category": "application",
+      "lines": 80,
+      "nonempty": 73
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Welcome/PhoneWelcomeView.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 47
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Schedules/PhoneScheduleEditor.swift",
+      "category": "application",
+      "lines": 78,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Shared/PhoneGlassControls.swift",
+      "category": "application",
+      "lines": 31,
+      "nonempty": 26
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Shared/PhoneDesign.swift",
+      "category": "application",
+      "lines": 105,
+      "nonempty": 93
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Shared/PhoneProfileAvatar.swift",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 22
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Shared/PhoneAgentRow.swift",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "apps/ios/BlotIOS/BlotIOSApp.swift",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneNotificationSettingsView.swift",
+      "category": "application",
+      "lines": 72,
+      "nonempty": 68
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhonePersonalizationView.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 42
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneEmailEditor.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 42
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneSettingsGroup.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 44
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneAccountSettingsView.swift",
+      "category": "application",
+      "lines": 40,
+      "nonempty": 38
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneUsageView.swift",
+      "category": "application",
+      "lines": 87,
+      "nonempty": 83
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneSettingsMenuView.swift",
+      "category": "application",
+      "lines": 137,
+      "nonempty": 129
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Settings/PhoneProfileEditor.swift",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 79
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Workspace/PhoneWorkspaceModel.swift",
+      "category": "application",
+      "lines": 89,
+      "nonempty": 83
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Workspace/PhoneWorkspaceView.swift",
+      "category": "application",
+      "lines": 191,
+      "nonempty": 184
+    },
+    {
+      "path": "apps/shared/Motion.swift",
+      "category": "application",
+      "lines": 78,
+      "nonempty": 66
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Plugins/PhonePluginConnectionView.swift",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 42
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Plugins/PhonePluginsView.swift",
+      "category": "application",
+      "lines": 122,
+      "nonempty": 116
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Plugins/PhonePlugin.swift",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "native/ProjectAccess/ProjectAccess.m",
+      "category": "application",
+      "lines": 54,
+      "nonempty": 51
+    },
+    {
+      "path": "native/GuestRunner/main.swift",
+      "category": "application",
+      "lines": 89,
+      "nonempty": 87
+    },
+    {
+      "path": "native/GuestRunner/install-guest.sh",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 23
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneChatView.swift",
+      "category": "application",
+      "lines": 197,
+      "nonempty": 187
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneMessageTimeline.swift",
+      "category": "application",
+      "lines": 41,
+      "nonempty": 37
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneComposerAttachments.swift",
+      "category": "application",
+      "lines": 94,
+      "nonempty": 86
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneNewChatView.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 43
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneChatAgentPicker.swift",
+      "category": "application",
+      "lines": 32,
+      "nonempty": 30
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneCameraCapture.swift",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 34
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneComposerBar.swift",
+      "category": "application",
+      "lines": 86,
+      "nonempty": 80
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneChatsView.swift",
+      "category": "application",
+      "lines": 238,
+      "nonempty": 228
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneAttachmentMenu.swift",
+      "category": "application",
+      "lines": 78,
+      "nonempty": 68
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneComposerMenuOverlay.swift",
+      "category": "application",
+      "lines": 113,
+      "nonempty": 104
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift",
+      "category": "application",
+      "lines": 267,
+      "nonempty": 254
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneSearchView.swift",
+      "category": "application",
+      "lines": 116,
+      "nonempty": 111
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneConversationComposer.swift",
+      "category": "application",
+      "lines": 159,
+      "nonempty": 150
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneInlinePhotoGallery.swift",
+      "category": "application",
+      "lines": 86,
+      "nonempty": 80
+    },
+    {
+      "path": "apps/ios/BlotIOS/Features/Chat/PhoneMessageMotion.swift",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "script/build_and_run.sh",
+      "category": "scripts",
+      "lines": 104,
+      "nonempty": 104
+    },
+    {
+      "path": "script/debug_env.py",
+      "category": "scripts",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/MacWorkspacePersistence.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 34
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 46
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspacePreviewData.swift",
+      "category": "application",
+      "lines": 590,
+      "nonempty": 589
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift",
+      "category": "application",
+      "lines": 41,
+      "nonempty": 38
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspacePersonalization.swift",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 39
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceChatInteractions.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 46
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceTaskViews.swift",
+      "category": "application",
+      "lines": 330,
+      "nonempty": 329
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceForms.swift",
+      "category": "application",
+      "lines": 105,
+      "nonempty": 102
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceLocalSearchView.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 37
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceChatIndicators.swift",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 56
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceQuotedMessage.swift",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 17
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceSettingsPanel.swift",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 79
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceChatActivity.swift",
+      "category": "application",
+      "lines": 101,
+      "nonempty": 90
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceMessageContext.swift",
+      "category": "application",
+      "lines": 32,
+      "nonempty": 30
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspacePersonalizedReply.swift",
+      "category": "application",
+      "lines": 52,
+      "nonempty": 51
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceAuthViews.swift",
+      "category": "application",
+      "lines": 151,
+      "nonempty": 150
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceComponents.swift",
+      "category": "application",
+      "lines": 178,
+      "nonempty": 169
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceMessageActionsMenu.swift",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 29
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceReplyBubble.swift",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceClipboard.swift",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 16
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceCopy.swift",
+      "category": "application",
+      "lines": 721,
+      "nonempty": 720
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceMessageText.swift",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceChatOperations.swift",
+      "category": "application",
+      "lines": 26,
+      "nonempty": 24
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift",
+      "category": "application",
+      "lines": 323,
+      "nonempty": 322
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceTaskPlan.swift",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 29
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceRootView.swift",
+      "category": "application",
+      "lines": 338,
+      "nonempty": 334
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceDemoReply.swift",
+      "category": "application",
+      "lines": 83,
+      "nonempty": 79
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/LocalWorkspaceService.swift",
+      "category": "application",
+      "lines": 282,
+      "nonempty": 262
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/VirtualMachine/VirtualMachinePreparation.swift",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 69
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/VirtualMachine/VirtualMachineExecution.swift",
+      "category": "application",
+      "lines": 99,
+      "nonempty": 92
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/VirtualMachine/VirtualMachineConfiguration.swift",
+      "category": "application",
+      "lines": 52,
+      "nonempty": 51
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceDemoData.swift",
+      "category": "application",
+      "lines": 84,
+      "nonempty": 82
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceModelCredentials.swift",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 39
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceConflictsView.swift",
+      "category": "application",
+      "lines": 57,
+      "nonempty": 56
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceChatActionsMenu.swift",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 40
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceRoute.swift",
+      "category": "application",
+      "lines": 126,
+      "nonempty": 124
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceService.swift",
+      "category": "application",
+      "lines": 115,
+      "nonempty": 108
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceTeamViews.swift",
+      "category": "application",
+      "lines": 265,
+      "nonempty": 264
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceSnapshot.swift",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 23
+    },
+    {
+      "path": "apps/shared/WorkspaceV3/WorkspaceStore.swift",
+      "category": "application",
+      "lines": 1124,
+      "nonempty": 1065
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/InstallationLock.java",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 33
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/Runtime/BackendRuntime.swift",
+      "category": "application",
+      "lines": 126,
+      "nonempty": 122
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/Runtime/OperatorEnvironmentInput.swift",
+      "category": "application",
+      "lines": 33,
+      "nonempty": 30
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/git/GitCommandRunner.java",
+      "category": "application",
+      "lines": 112,
+      "nonempty": 108
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/git/LocalWorkspaceCleaner.java",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 54
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/git/LocalGitGateway.java",
+      "category": "application",
+      "lines": 175,
+      "nonempty": 162
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/Platform/MacPlatformBroker.swift",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 55
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/Projects/ProjectBookmarks.swift",
+      "category": "application",
+      "lines": 38,
+      "nonempty": 34
+    },
+    {
+      "path": "apps/macos/BlotMac/Services/Connectivity/MacBluetoothTunnel.swift",
+      "category": "application",
+      "lines": 114,
+      "nonempty": 111
+    },
+    {
+      "path": "landing/app/globals.css",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 12
+    },
+    {
+      "path": "landing/app/landing.css",
+      "category": "application",
+      "lines": 384,
+      "nonempty": 371
+    },
+    {
+      "path": "landing/app/site.css",
+      "category": "application",
+      "lines": 74,
+      "nonempty": 72
+    },
+    {
+      "path": "apps/macos/BlotMac/Models/PresentationModels.swift",
+      "category": "application",
+      "lines": 185,
+      "nonempty": 155
+    },
+    {
+      "path": "landing/app/github/page.jsx",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "landing/app/docs/page.jsx",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 6
+    },
+    {
+      "path": "landing/app/page.jsx",
+      "category": "application",
+      "lines": 10,
+      "nonempty": 8
+    },
+    {
+      "path": "landing/app/features/page.jsx",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 6
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Login/MacWelcomeView.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 47
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Login/SMTPSetupView.swift",
+      "category": "application",
+      "lines": 46,
+      "nonempty": 45
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Login/AuthService.swift",
+      "category": "application",
+      "lines": 95,
+      "nonempty": 88
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Login/LoginView.swift",
+      "category": "application",
+      "lines": 402,
+      "nonempty": 359
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Login/LoginViewModel.swift",
+      "category": "application",
+      "lines": 210,
+      "nonempty": 184
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Icons/BlotIconAppearance.swift",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 12
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Icons/BlotGlyph.swift",
+      "category": "application",
+      "lines": 143,
+      "nonempty": 138
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Icons/BlotIcon.swift",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 49
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/execution/VmWorkspaceTransfer.java",
+      "category": "application",
+      "lines": 150,
+      "nonempty": 140
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/execution/MacPlatformBridge.java",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 35
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/execution/VirtualMachineProcessGateway.java",
+      "category": "application",
+      "lines": 110,
+      "nonempty": 106
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Controls/BlotButtonStyle.swift",
+      "category": "application",
+      "lines": 207,
+      "nonempty": 180
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Controls/BlotStates.swift",
+      "category": "application",
+      "lines": 194,
+      "nonempty": 172
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Controls/BlotSurfaces.swift",
+      "category": "application",
+      "lines": 125,
+      "nonempty": 108
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Controls/BlotPressFeedback.swift",
+      "category": "application",
+      "lines": 25,
+      "nonempty": 22
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/provider/GigaChatTls.java",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 61
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/provider/GigaChatGateway.java",
+      "category": "application",
+      "lines": 286,
+      "nonempty": 270
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/provider/SmtpEmailSender.java",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 65
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/provider/PemCertificates.java",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 53
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/provider/StreamCancellation.java",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 41
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Foundation/BlotMetrics.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 44
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Foundation/ThemePreference.swift",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 51
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Foundation/BlotFont.swift",
+      "category": "application",
+      "lines": 107,
+      "nonempty": 93
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Foundation/BlotInterfaceMotion.swift",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 27
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Foundation/BlotColor.swift",
+      "category": "application",
+      "lines": 173,
+      "nonempty": 158
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/projects/LocalProjectAccess.java",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 11
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/projects/MacProjectAccess.java",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 62
+    },
+    {
+      "path": "landing/app/workspace/workspace.css",
+      "category": "application",
+      "lines": 355,
+      "nonempty": 355
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Workspace/WorkspaceStyle.swift",
+      "category": "application",
+      "lines": 104,
+      "nonempty": 98
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Workspace/WorkspaceAvatar.swift",
+      "category": "application",
+      "lines": 109,
+      "nonempty": 106
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/CommandPalette/CommandPaletteView.swift",
+      "category": "application",
+      "lines": 145,
+      "nonempty": 143
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/CommandPalette/CommandPaletteIndex.swift",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 53
+    },
+    {
+      "path": "landing/lib/workspace/task-blueprints.mjs",
+      "category": "application",
+      "lines": 414,
+      "nonempty": 413
+    },
+    {
+      "path": "landing/lib/workspace/documentation.mjs",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 65
+    },
+    {
+      "path": "landing/lib/workspace/task-execution-plan.test.mjs",
+      "category": "tests",
+      "lines": 43,
+      "nonempty": 37
+    },
+    {
+      "path": "landing/lib/workspace/task-execution-plan.mjs",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 39
+    },
+    {
+      "path": "landing/lib/workspace/data.mjs",
+      "category": "application",
+      "lines": 569,
+      "nonempty": 564
+    },
+    {
+      "path": "landing/lib/workspace/specification.mjs",
+      "category": "application",
+      "lines": 559,
+      "nonempty": 554
+    },
+    {
+      "path": "landing/lib/workspace/task-catalog-builder.mjs",
+      "category": "application",
+      "lines": 154,
+      "nonempty": 147
+    },
+    {
+      "path": "landing/lib/workspace/project-plan.mjs",
+      "category": "application",
+      "lines": 68,
+      "nonempty": 63
+    },
+    {
+      "path": "landing/app/workspace/documents/[id]/page.jsx",
+      "category": "application",
+      "lines": 31,
+      "nonempty": 28
+    },
+    {
+      "path": "landing/app/workspace/documents/document.css",
+      "category": "application",
+      "lines": 43,
+      "nonempty": 43
+    },
+    {
+      "path": "landing/app/workspace/page.jsx",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Skills/SkillDetailView.swift",
+      "category": "application",
+      "lines": 78,
+      "nonempty": 73
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Skills/SkillsView.swift",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 40
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Skills/SkillsSidebar.swift",
+      "category": "application",
+      "lines": 57,
+      "nonempty": 53
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Skills/SkillEditorView.swift",
+      "category": "application",
+      "lines": 107,
+      "nonempty": 106
+    },
+    {
+      "path": "landing/app/changelog/page.jsx",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "landing/app/beta/page.jsx",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 11
+    },
+    {
+      "path": "landing/app/layout.jsx",
+      "category": "application",
+      "lines": 28,
+      "nonempty": 26
+    },
+    {
+      "path": "landing/lib/landing/content.js",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 53
+    },
+    {
+      "path": "landing/lib/landing/theme.js",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 17
+    },
+    {
+      "path": "landing/app/contact/page.jsx",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "landing/app/privacy/page.jsx",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Automations/AutomationsView.swift",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 61
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Automations/AutomationDetailView.swift",
+      "category": "application",
+      "lines": 122,
+      "nonempty": 114
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Automations/AutomationEditorView.swift",
+      "category": "application",
+      "lines": 124,
+      "nonempty": 123
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Automations/AutomationsSidebar.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 48
+    },
+    {
+      "path": "landing/scripts/generate-workspace-spec.mjs",
+      "category": "scripts",
+      "lines": 115,
+      "nonempty": 109
+    },
+    {
+      "path": "landing/scripts/publish-documentation.mjs",
+      "category": "scripts",
+      "lines": 36,
+      "nonempty": 34
+    },
+    {
+      "path": "landing/components/site/DocumentationIndex.jsx",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 16
+    },
+    {
+      "path": "landing/components/site/SiteFooter.jsx",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "landing/components/site/SiteShell.jsx",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 15
+    },
+    {
+      "path": "landing/components/site/PlatformAvailability.jsx",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 18
+    },
+    {
+      "path": "landing/components/site/useTheme.js",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 36
+    },
+    {
+      "path": "landing/components/site/PageFrame.jsx",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 11
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/WorkSession.swift",
+      "category": "application",
+      "lines": 18,
+      "nonempty": 16
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/WorkChatState.swift",
+      "category": "application",
+      "lines": 283,
+      "nonempty": 250
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunPlanView.swift",
+      "category": "application",
+      "lines": 157,
+      "nonempty": 152
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/CodePresentation.swift",
+      "category": "application",
+      "lines": 101,
+      "nonempty": 98
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunMessagesView.swift",
+      "category": "application",
+      "lines": 182,
+      "nonempty": 171
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunCreationView.swift",
+      "category": "application",
+      "lines": 142,
+      "nonempty": 134
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunWorkspaceView.swift",
+      "category": "application",
+      "lines": 146,
+      "nonempty": 140
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/NewRunView.swift",
+      "category": "application",
+      "lines": 3,
+      "nonempty": 3
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/WorkspaceEvidenceView.swift",
+      "category": "application",
+      "lines": 97,
+      "nonempty": 91
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunResultsView.swift",
+      "category": "application",
+      "lines": 254,
+      "nonempty": 241
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/RunDecisionsView.swift",
+      "category": "application",
+      "lines": 180,
+      "nonempty": 170
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/WorkspaceControls.swift",
+      "category": "application",
+      "lines": 106,
+      "nonempty": 98
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/TeamChatView.swift",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 15
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Work/WorkChatView.swift",
+      "category": "application",
+      "lines": 77,
+      "nonempty": 75
+    },
+    {
+      "path": "landing/components/workspace/CatalogSelect.jsx",
+      "category": "application",
+      "lines": 88,
+      "nonempty": 79
+    },
+    {
+      "path": "landing/components/workspace/TaskDetail.jsx",
+      "category": "application",
+      "lines": 67,
+      "nonempty": 60
+    },
+    {
+      "path": "landing/components/workspace/TaskCatalog.jsx",
+      "category": "application",
+      "lines": 87,
+      "nonempty": 82
+    },
+    {
+      "path": "landing/components/workspace/Roadmap.jsx",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 56
+    },
+    {
+      "path": "landing/components/workspace/SpecificationView.jsx",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 20
+    },
+    {
+      "path": "landing/components/workspace/Workspace.jsx",
+      "category": "application",
+      "lines": 151,
+      "nonempty": 140
+    },
+    {
+      "path": "landing/components/workspace/MarkdownDocument.jsx",
+      "category": "application",
+      "lines": 80,
+      "nonempty": 76
+    },
+    {
+      "path": "landing/components/landing/ChatDemo.jsx",
+      "category": "application",
+      "lines": 117,
+      "nonempty": 106
+    },
+    {
+      "path": "landing/components/landing/LandingPage.jsx",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 14
+    },
+    {
+      "path": "landing/components/landing/Sections.jsx",
+      "category": "application",
+      "lines": 95,
+      "nonempty": 81
+    },
+    {
+      "path": "landing/components/landing/Navigation.jsx",
+      "category": "application",
+      "lines": 72,
+      "nonempty": 65
+    },
+    {
+      "path": "landing/components/landing/Pet.jsx",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 31
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Review/DiffLine.swift",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Review/DiffView.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 44
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Review/UnifiedDiffParser.swift",
+      "category": "application",
+      "lines": 31,
+      "nonempty": 30
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Review/ReviewFile.swift",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WorkspaceLibrary.swift",
+      "category": "application",
+      "lines": 124,
+      "nonempty": 111
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ConversationToolbarMenu.swift",
+      "category": "application",
+      "lines": 86,
+      "nonempty": 82
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ConversationWindowView.swift",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 76
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ImageLibraryView.swift",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 79
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WorkspaceToolsView.swift",
+      "category": "application",
+      "lines": 93,
+      "nonempty": 89
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ShellToolbar.swift",
+      "category": "application",
+      "lines": 35,
+      "nonempty": 33
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ProjectCard.swift",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 81
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WorkspaceTool.swift",
+      "category": "application",
+      "lines": 32,
+      "nonempty": 29
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/SidebarResizeHandle.swift",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 26
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ConversationRow.swift",
+      "category": "application",
+      "lines": 118,
+      "nonempty": 110
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ShellRightPane.swift",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 14
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ConversationFork.swift",
+      "category": "application",
+      "lines": 31,
+      "nonempty": 28
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/Sidebar.swift",
+      "category": "application",
+      "lines": 122,
+      "nonempty": 117
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/SitesLibraryView.swift",
+      "category": "application",
+      "lines": 67,
+      "nonempty": 65
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WorkspaceMapsView.swift",
+      "category": "application",
+      "lines": 112,
+      "nonempty": 109
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/LocalPreviewReader.swift",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 22
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ShellSection.swift",
+      "category": "application",
+      "lines": 69,
+      "nonempty": 63
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/BlotWindowContent.swift",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 18
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/SidebarConversation.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 41
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/RootView.swift",
+      "category": "application",
+      "lines": 125,
+      "nonempty": 123
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ShellState.swift",
+      "category": "application",
+      "lines": 88,
+      "nonempty": 84
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/RailIcon.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 36
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ProductModePicker.swift",
+      "category": "application",
+      "lines": 64,
+      "nonempty": 60
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/NavigationRail.swift",
+      "category": "application",
+      "lines": 75,
+      "nonempty": 69
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/AssistantsLibraryView.swift",
+      "category": "application",
+      "lines": 77,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ConversationTranscript.swift",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 34
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/SourcePreview.swift",
+      "category": "application",
+      "lines": 76,
+      "nonempty": 74
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WorkspaceMoreMenu.swift",
+      "category": "application",
+      "lines": 80,
+      "nonempty": 73
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/AccountPlugins.swift",
+      "category": "application",
+      "lines": 41,
+      "nonempty": 34
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/WindowChrome.swift",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 35
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ProjectSourceRow.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 36
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Shell/ShellNavigation.swift",
+      "category": "application",
+      "lines": 162,
+      "nonempty": 160
+    },
+    {
+      "path": "apps/macos/BlotMac/app/BlotMacApp.swift",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 41
+    },
+    {
+      "path": "apps/macos/BlotMac/app/AppState.swift",
+      "category": "application",
+      "lines": 288,
+      "nonempty": 275
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileStatisticsView.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 43
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileMenu.swift",
+      "category": "application",
+      "lines": 133,
+      "nonempty": 122
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileDetails.swift",
+      "category": "application",
+      "lines": 64,
+      "nonempty": 55
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileShowcaseView.swift",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 63
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfilePageView.swift",
+      "category": "application",
+      "lines": 67,
+      "nonempty": 63
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileSheetView.swift",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 59
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileActions.swift",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 19
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Profile/ProfileEditorView.swift",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 74
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Components.swift",
+      "category": "application",
+      "lines": 570,
+      "nonempty": 508
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Theme.swift",
+      "category": "application",
+      "lines": 203,
+      "nonempty": 182
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/MacWorkspaceStyle.swift",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 12
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/States.swift",
+      "category": "application",
+      "lines": 256,
+      "nonempty": 225
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Interaction.swift",
+      "category": "application",
+      "lines": 132,
+      "nonempty": 115
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Skeleton.swift",
+      "category": "application",
+      "lines": 90,
+      "nonempty": 81
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/KMenu.swift",
+      "category": "application",
+      "lines": 305,
+      "nonempty": 269
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/ContentLayout.swift",
+      "category": "application",
+      "lines": 46,
+      "nonempty": 39
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Forms.swift",
+      "category": "application",
+      "lines": 326,
+      "nonempty": 293
+    },
+    {
+      "path": "apps/macos/BlotMac/Design/Surfaces.swift",
+      "category": "application",
+      "lines": 502,
+      "nonempty": 447
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacMessageBubble.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 46
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/ThreadBlocks.swift",
+      "category": "application",
+      "lines": 353,
+      "nonempty": 314
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/Composer.swift",
+      "category": "application",
+      "lines": 158,
+      "nonempty": 147
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacWorkspaceChatPage.swift",
+      "category": "application",
+      "lines": 141,
+      "nonempty": 135
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/TaskChatView.swift",
+      "category": "application",
+      "lines": 9,
+      "nonempty": 9
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacRecipePreview.swift",
+      "category": "application",
+      "lines": 75,
+      "nonempty": 71
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacConversationBlockView.swift",
+      "category": "application",
+      "lines": 77,
+      "nonempty": 71
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacWorkspaceComposer.swift",
+      "category": "application",
+      "lines": 98,
+      "nonempty": 92
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Chat/MacConversationPresentation.swift",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 95
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/security/MacKeychainSecretStore.java",
+      "category": "application",
+      "lines": 26,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/security/TlsIdentity.java",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 97
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/security/ArgonPasswordHasher.java",
+      "category": "application",
+      "lines": 57,
+      "nonempty": 52
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/security/ConfiguredSecretStore.java",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 39
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/JacksonCodec.java",
+      "category": "application",
+      "lines": 53,
+      "nonempty": 47
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift",
+      "category": "application",
+      "lines": 115,
+      "nonempty": 110
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Agents/MacAgentTemplate.swift",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/CSQLite/shim.h",
+      "category": "application",
+      "lines": 1,
+      "nonempty": 1
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Home/NewTaskState.swift",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 7
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Home/StartConversationView.swift",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 35
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Home/HomeView.swift",
+      "category": "application",
+      "lines": 3,
+      "nonempty": 3
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Blot/AnimatedRoleAvatar.swift",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 22
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Blot/BlotContext.swift",
+      "category": "application",
+      "lines": 96,
+      "nonempty": 91
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Blot/BlotMotionPreview.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 38
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Blot/BlotView.swift",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 72
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Blot/PrimaryBlot.swift",
+      "category": "application",
+      "lines": 18,
+      "nonempty": 17
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/artifacts/LocalArtifactStore.java",
+      "category": "application",
+      "lines": 105,
+      "nonempty": 96
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/IntegrationSettingsView.swift",
+      "category": "application",
+      "lines": 76,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/ModelsSettingsView.swift",
+      "category": "application",
+      "lines": 143,
+      "nonempty": 142
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/GeneralSettingsView.swift",
+      "category": "application",
+      "lines": 80,
+      "nonempty": 78
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/ProjectAccessSettingsView.swift",
+      "category": "application",
+      "lines": 76,
+      "nonempty": 71
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/MacSettingsCatalog.swift",
+      "category": "application",
+      "lines": 59,
+      "nonempty": 54
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/PermissionsSettingsView.swift",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 26
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/ProviderCertificateSettingsView.swift",
+      "category": "application",
+      "lines": 91,
+      "nonempty": 87
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/DevicePairingView.swift",
+      "category": "application",
+      "lines": 91,
+      "nonempty": 90
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/SettingsState.swift",
+      "category": "application",
+      "lines": 72,
+      "nonempty": 70
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/AgentSettingsView.swift",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 26
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/SettingsView.swift",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 79
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/PersonalSettingsView.swift",
+      "category": "application",
+      "lines": 102,
+      "nonempty": 100
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Settings/VirtualMachineSettingsView.swift",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 63
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/configuration/DotenvFile.java",
+      "category": "application",
+      "lines": 67,
+      "nonempty": 62
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Graph/TeamGraphView.swift",
+      "category": "application",
+      "lines": 164,
+      "nonempty": 160
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Graph/GraphInspector.swift",
+      "category": "application",
+      "lines": 127,
+      "nonempty": 124
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceTransaction.swift",
+      "category": "application",
+      "lines": 100,
+      "nonempty": 86
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceInteractionService.swift",
+      "category": "application",
+      "lines": 59,
+      "nonempty": 55
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceDocumentWriter.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 46
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceMessageOrder.swift",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 15
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceCredentialPersistence.swift",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 19
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/GoogleOAuthAuthorization.swift",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 57
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSyncTypes.swift",
+      "category": "application",
+      "lines": 96,
+      "nonempty": 87
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceTaskService.swift",
+      "category": "application",
+      "lines": 94,
+      "nonempty": 89
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceRecordMutation.swift",
+      "category": "application",
+      "lines": 76,
+      "nonempty": 68
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceRecordIndex.swift",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 13
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceScheduleCalculator.swift",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 40
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSyncEngine.swift",
+      "category": "application",
+      "lines": 97,
+      "nonempty": 89
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/GoogleOAuthTokenClient.swift",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 63
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSkillService.swift",
+      "category": "application",
+      "lines": 76,
+      "nonempty": 70
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceCloudHTTP.swift",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 94
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceAttachmentCryptography.swift",
+      "category": "application",
+      "lines": 53,
+      "nonempty": 51
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceRecordCodec.swift",
+      "category": "application",
+      "lines": 64,
+      "nonempty": 61
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceCloudSession.swift",
+      "category": "application",
+      "lines": 139,
+      "nonempty": 136
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceReplicaStore.swift",
+      "category": "application",
+      "lines": 255,
+      "nonempty": 242
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceScheduleRunner.swift",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceResponseRecorder.swift",
+      "category": "application",
+      "lines": 84,
+      "nonempty": 77
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceScheduleService.swift",
+      "category": "application",
+      "lines": 111,
+      "nonempty": 104
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceContextBuilder.swift",
+      "category": "application",
+      "lines": 46,
+      "nonempty": 44
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSyncCryptography.swift",
+      "category": "application",
+      "lines": 132,
+      "nonempty": 119
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceKeychain.swift",
+      "category": "application",
+      "lines": 46,
+      "nonempty": 43
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceProjection.swift",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 29
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceCloudLeases.swift",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 69
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspacePermissionService.swift",
+      "category": "application",
+      "lines": 184,
+      "nonempty": 172
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceRecordStore.swift",
+      "category": "application",
+      "lines": 68,
+      "nonempty": 62
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBudgetService.swift",
+      "category": "application",
+      "lines": 65,
+      "nonempty": 62
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceGroupService.swift",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 45
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceFileService.swift",
+      "category": "application",
+      "lines": 167,
+      "nonempty": 152
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/ChatModel.swift",
+      "category": "application",
+      "lines": 124,
+      "nonempty": 115
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceAgentService.swift",
+      "category": "application",
+      "lines": 58,
+      "nonempty": 53
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/SQLiteDatabase.swift",
+      "category": "application",
+      "lines": 138,
+      "nonempty": 127
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceCloudDevices.swift",
+      "category": "application",
+      "lines": 344,
+      "nonempty": 336
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceDeviceKeys.swift",
+      "category": "application",
+      "lines": 182,
+      "nonempty": 179
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceReplicationSchema.swift",
+      "category": "application",
+      "lines": 40,
+      "nonempty": 39
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceConflictService.swift",
+      "category": "application",
+      "lines": 57,
+      "nonempty": 54
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/GoogleOAuthConfiguration.swift",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 44
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceMemoryService.swift",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 67
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceChatService.swift",
+      "category": "application",
+      "lines": 63,
+      "nonempty": 60
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceRepository.swift",
+      "category": "application",
+      "lines": 247,
+      "nonempty": 223
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceConversationService.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 45
+    },
+    {
+      "path": "packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceAttachmentSync.swift",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 100
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacWorkspaceShell.swift",
+      "category": "application",
+      "lines": 90,
+      "nonempty": 86
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacDemoWorkspace.swift",
+      "category": "application",
+      "lines": 55,
+      "nonempty": 54
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacWorkspaceSidebar.swift",
+      "category": "application",
+      "lines": 208,
+      "nonempty": 197
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacDemoCollaborations.swift",
+      "category": "application",
+      "lines": 47,
+      "nonempty": 45
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacWorkspaceInspector.swift",
+      "category": "application",
+      "lines": 90,
+      "nonempty": 86
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Workspace/MacAgentCalendarPreview.swift",
+      "category": "application",
+      "lines": 58,
+      "nonempty": 55
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/database/SqliteWorkspaceStore.java",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 55
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/database/WorkspaceMigrations.java",
+      "category": "application",
+      "lines": 90,
+      "nonempty": 86
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/workspace/database/WorkspaceTransaction.java",
+      "category": "application",
+      "lines": 463,
+      "nonempty": 427
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Catalog/LibrarySelection.swift",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 13
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamControlStyles.swift",
+      "category": "application",
+      "lines": 126,
+      "nonempty": 117
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamGroupAvatar.swift",
+      "category": "application",
+      "lines": 34,
+      "nonempty": 30
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPluginConnection.swift",
+      "category": "application",
+      "lines": 118,
+      "nonempty": 117
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSamples.swift",
+      "category": "application",
+      "lines": 55,
+      "nonempty": 55
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamWorkspace.swift",
+      "category": "application",
+      "lines": 148,
+      "nonempty": 142
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSidebar.swift",
+      "category": "application",
+      "lines": 86,
+      "nonempty": 84
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamWorkspaceSettingsContent.swift",
+      "category": "application",
+      "lines": 117,
+      "nonempty": 111
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/database/SqliteTransaction.java",
+      "category": "application",
+      "lines": 153,
+      "nonempty": 137
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/database/SqliteUnitOfWork.java",
+      "category": "application",
+      "lines": 88,
+      "nonempty": 82
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/database/StorageCodec.java",
+      "category": "application",
+      "lines": 139,
+      "nonempty": 126
+    },
+    {
+      "path": "backend/infrastructure/src/main/java/dev/blot/infrastructure/database/StorageException.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 16
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceSyncTests.swift",
+      "category": "tests",
+      "lines": 232,
+      "nonempty": 222
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceDeviceKeyTests.swift",
+      "category": "tests",
+      "lines": 51,
+      "nonempty": 49
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceRepositoryTests.swift",
+      "category": "tests",
+      "lines": 144,
+      "nonempty": 136
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceExecutionTests.swift",
+      "category": "tests",
+      "lines": 98,
+      "nonempty": 92
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceAttachmentTests.swift",
+      "category": "tests",
+      "lines": 70,
+      "nonempty": 68
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspacePermissionTests.swift",
+      "category": "tests",
+      "lines": 75,
+      "nonempty": 73
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceTestStorage.swift",
+      "category": "tests",
+      "lines": 31,
+      "nonempty": 28
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/ChatCompletionStreamTests.swift",
+      "category": "tests",
+      "lines": 37,
+      "nonempty": 34
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceFeatureTests.swift",
+      "category": "tests",
+      "lines": 110,
+      "nonempty": 104
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/GoogleOAuthTests.swift",
+      "category": "tests",
+      "lines": 49,
+      "nonempty": 47
+    },
+    {
+      "path": "packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceFileTests.swift",
+      "category": "tests",
+      "lines": 52,
+      "nonempty": 49
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Projects/ProjectOverview.swift",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 58
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Projects/ProjectCreationView.swift",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 68
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/Projects/ProjectMaterialEditor.swift",
+      "category": "application",
+      "lines": 106,
+      "nonempty": 101
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamReviewPanels.swift",
+      "category": "application",
+      "lines": 171,
+      "nonempty": 168
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPressMenu.swift",
+      "category": "application",
+      "lines": 64,
+      "nonempty": 59
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamParticipants.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 37
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMessageActions.swift",
+      "category": "application",
+      "lines": 83,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamConversation.swift",
+      "category": "application",
+      "lines": 97,
+      "nonempty": 92
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamToolbarExpansion.swift",
+      "category": "application",
+      "lines": 98,
+      "nonempty": 88
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamConversationActions.swift",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 29
+    },
+    {
+      "path": "packages/BlotWorkspace/Integration/Sources/CloudWireVerification/main.swift",
+      "category": "tests",
+      "lines": 236,
+      "nonempty": 233
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoScenarioEngine.swift",
+      "category": "application",
+      "lines": 330,
+      "nonempty": 326
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoScheduler.swift",
+      "category": "application",
+      "lines": 51,
+      "nonempty": 45
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoSeed.swift",
+      "category": "application",
+      "lines": 184,
+      "nonempty": 183
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoModels.swift",
+      "category": "application",
+      "lines": 191,
+      "nonempty": 176
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoTemplates.swift",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 71
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoSession.swift",
+      "category": "application",
+      "lines": 294,
+      "nonempty": 277
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoMessageText.swift",
+      "category": "application",
+      "lines": 43,
+      "nonempty": 38
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoRepository.swift",
+      "category": "application",
+      "lines": 32,
+      "nonempty": 27
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/Domain/MacDemoConversationActions.swift",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 65
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamAgentEditor.swift",
+      "category": "application",
+      "lines": 190,
+      "nonempty": 185
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamIntegrationSettingsContent.swift",
+      "category": "application",
+      "lines": 98,
+      "nonempty": 93
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamComponents.swift",
+      "category": "application",
+      "lines": 87,
+      "nonempty": 80
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSwipeToReply.swift",
+      "category": "application",
+      "lines": 72,
+      "nonempty": 67
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamNativeWindowButtons.swift",
+      "category": "application",
+      "lines": 91,
+      "nonempty": 81
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamLibrary.swift",
+      "category": "application",
+      "lines": 249,
+      "nonempty": 247
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMarketplace.swift",
+      "category": "application",
+      "lines": 192,
+      "nonempty": 190
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSelect.swift",
+      "category": "application",
+      "lines": 69,
+      "nonempty": 65
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamHeader.swift",
+      "category": "application",
+      "lines": 79,
+      "nonempty": 73
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMessageMotion.swift",
+      "category": "application",
+      "lines": 46,
+      "nonempty": 42
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPluginPicker.swift",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 56
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamModels.swift",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPresentation.swift",
+      "category": "application",
+      "lines": 166,
+      "nonempty": 160
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamFileIcon.swift",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 13
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamChatMenu.swift",
+      "category": "application",
+      "lines": 99,
+      "nonempty": 90
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamWindowControls.swift",
+      "category": "application",
+      "lines": 87,
+      "nonempty": 81
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMessageView.swift",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 75
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPersonalSettingsContent.swift",
+      "category": "application",
+      "lines": 213,
+      "nonempty": 202
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMentionText.swift",
+      "category": "application",
+      "lines": 47,
+      "nonempty": 41
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPointerInput.swift",
+      "category": "application",
+      "lines": 145,
+      "nonempty": 131
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamDocumentEditor.swift",
+      "category": "application",
+      "lines": 108,
+      "nonempty": 105
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsComponents.swift",
+      "category": "application",
+      "lines": 90,
+      "nonempty": 84
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamRoutineEditor.swift",
+      "category": "application",
+      "lines": 114,
+      "nonempty": 113
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSegmentedControl.swift",
+      "category": "application",
+      "lines": 48,
+      "nonempty": 46
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamReplySwipeState.swift",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 32
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamMessageTimeline.swift",
+      "category": "application",
+      "lines": 59,
+      "nonempty": 53
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamInspector.swift",
+      "category": "application",
+      "lines": 142,
+      "nonempty": 141
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSettings.swift",
+      "category": "application",
+      "lines": 126,
+      "nonempty": 122
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsCatalog.swift",
+      "category": "application",
+      "lines": 88,
+      "nonempty": 86
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamSceneActions.swift",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 17
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamPressState.swift",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 15
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamComposer.swift",
+      "category": "application",
+      "lines": 135,
+      "nonempty": 132
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamActionCards.swift",
+      "category": "application",
+      "lines": 298,
+      "nonempty": 294
+    },
+    {
+      "path": "apps/macos/BlotMac/Features/TeamDesign/MacTeamFileKind.swift",
+      "category": "application",
+      "lines": 40,
+      "nonempty": 36
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/SqliteUnitOfWorkTest.java",
+      "category": "tests",
+      "lines": 116,
+      "nonempty": 108
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/GigaChatProtocolTest.java",
+      "category": "tests",
+      "lines": 176,
+      "nonempty": 163
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/GigaChatTlsTest.java",
+      "category": "tests",
+      "lines": 145,
+      "nonempty": 138
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/StatisticsServiceTest.java",
+      "category": "tests",
+      "lines": 140,
+      "nonempty": 135
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/ToolHistoryTest.java",
+      "category": "tests",
+      "lines": 233,
+      "nonempty": 227
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/WorkspaceCleanupTest.java",
+      "category": "tests",
+      "lines": 211,
+      "nonempty": 201
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/ArtifactAndLegacyTest.java",
+      "category": "tests",
+      "lines": 183,
+      "nonempty": 175
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/AutomationScenarioTest.java",
+      "category": "tests",
+      "lines": 152,
+      "nonempty": 142
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/ModelQueueTest.java",
+      "category": "tests",
+      "lines": 160,
+      "nonempty": 152
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/ContextAndProfilesTest.java",
+      "category": "tests",
+      "lines": 346,
+      "nonempty": 332
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/VmWorkspaceTransferTest.java",
+      "category": "tests",
+      "lines": 87,
+      "nonempty": 78
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/LocalGitGatewayTest.java",
+      "category": "tests",
+      "lines": 76,
+      "nonempty": 70
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/AgentWorkflowTest.java",
+      "category": "tests",
+      "lines": 359,
+      "nonempty": 341
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/DelegationAndBudgetTest.java",
+      "category": "tests",
+      "lines": 238,
+      "nonempty": 233
+    },
+    {
+      "path": "backend/infrastructure/src/test/java/dev/blot/infrastructure/workspace/WorkspaceScenariosTest.java",
+      "category": "tests",
+      "lines": 442,
+      "nonempty": 427
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/TaskUseCases.java",
+      "category": "application",
+      "lines": 101,
+      "nonempty": 96
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/BlotController.java",
+      "category": "application",
+      "lines": 25,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/ApiErrorHandler.java",
+      "category": "application",
+      "lines": 85,
+      "nonempty": 75
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/EntityResponse.java",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 68
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/ApplicationFailure.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 11
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/CreateTask.swift",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 16
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/ChangeRunStatus.swift",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 12
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BluetoothFrame.swift",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 34
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/WorkspaceJSON.swift",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 36
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/CreateRun.swift",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/WireJSON.swift",
+      "category": "application",
+      "lines": 29,
+      "nonempty": 28
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/CreateProject.swift",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/LiveWorkspace.swift",
+      "category": "application",
+      "lines": 156,
+      "nonempty": 147
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/ServerSentEventParser.swift",
+      "category": "application",
+      "lines": 39,
+      "nonempty": 36
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/WorkspaceGraph.swift",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 98
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/AddSpecificationRevision.swift",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/WorkspaceCommands.swift",
+      "category": "application",
+      "lines": 75,
+      "nonempty": 69
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/InstallationSetup.swift",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 13
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/Command.swift",
+      "category": "application",
+      "lines": 58,
+      "nonempty": 57
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/WorkspaceRecords.swift",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 42
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BackendSynchronization.swift",
+      "category": "application",
+      "lines": 59,
+      "nonempty": 56
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BackendJSON.swift",
+      "category": "application",
+      "lines": 83,
+      "nonempty": 76
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/PinnedBackendSession.swift",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 20
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BackendKeychain.swift",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 35
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/APIError.swift",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 11
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BackendClient.swift",
+      "category": "application",
+      "lines": 176,
+      "nonempty": 158
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/ProjectEvent.swift",
+      "category": "application",
+      "lines": 45,
+      "nonempty": 44
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/BackendEvents.swift",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 47
+    },
+    {
+      "path": "packages/BlotAPI/Sources/BlotAPI/PairingDescriptor.swift",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 15
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/relay/CloudRelay.java",
+      "category": "application",
+      "lines": 193,
+      "nonempty": 181
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/relay/CloudEncryptedBlobs.java",
+      "category": "application",
+      "lines": 117,
+      "nonempty": 109
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/relay/CloudPacket.java",
+      "category": "application",
+      "lines": 60,
+      "nonempty": 55
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/PasswordHasher.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/ProviderGateway.java",
+      "category": "application",
+      "lines": 67,
+      "nonempty": 56
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/CertificateInspector.java",
+      "category": "application",
+      "lines": 9,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/GitGateway.java",
+      "category": "application",
+      "lines": 31,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/ProjectAccess.java",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/SecretStore.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 8
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/JsonCodec.java",
+      "category": "application",
+      "lines": 10,
+      "nonempty": 7
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/WorkspaceStore.java",
+      "category": "application",
+      "lines": 112,
+      "nonempty": 80
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/ArtifactStore.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 7
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/ProcessGateway.java",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/EmailSender.java",
+      "category": "application",
+      "lines": 5,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ports/WorkspaceCleaner.java",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ApplicationEvent.java",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 39
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/BlotUnitOfWork.java",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 44
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/RunTransitions.java",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 51
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ApplicationError.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 16
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/UseCaseSupport.java",
+      "category": "application",
+      "lines": 40,
+      "nonempty": 34
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/WorkspaceConfiguration.java",
+      "category": "application",
+      "lines": 681,
+      "nonempty": 616
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/model/CloudModelQuota.java",
+      "category": "application",
+      "lines": 136,
+      "nonempty": 126
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/model/CloudModelGateway.java",
+      "category": "application",
+      "lines": 110,
+      "nonempty": 102
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/agent/AgentSessionFactory.java",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 64
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/agent/AgentAssignmentFactory.java",
+      "category": "application",
+      "lines": 70,
+      "nonempty": 62
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/agent/TaskAttemptFactory.java",
+      "category": "application",
+      "lines": 66,
+      "nonempty": 61
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/execution/CloudLeases.java",
+      "category": "application",
+      "lines": 246,
+      "nonempty": 226
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ApplicationResult.java",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/CloudSecrets.java",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 36
+    },
+    {
+      "path": "packages/BlotAPI/Tests/BlotAPITests/PendingCommandTests.swift",
+      "category": "tests",
+      "lines": 134,
+      "nonempty": 127
+    },
+    {
+      "path": "packages/BlotAPI/Tests/BlotAPITests/ServerSentEventTests.swift",
+      "category": "tests",
+      "lines": 32,
+      "nonempty": 28
+    },
+    {
+      "path": "packages/BlotAPI/Tests/BlotAPITests/WorkspaceTests.swift",
+      "category": "tests",
+      "lines": 212,
+      "nonempty": 204
+    },
+    {
+      "path": "packages/BlotAPI/Tests/BlotAPITests/BackendV2Tests.swift",
+      "category": "tests",
+      "lines": 30,
+      "nonempty": 27
+    },
+    {
+      "path": "packages/BlotAPI/Tests/BlotAPITests/ContractTests.swift",
+      "category": "tests",
+      "lines": 86,
+      "nonempty": 80
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/StatisticsController.java",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/DataLifecycleController.java",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 75
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/ProjectArchiveController.java",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 67
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/EventController.java",
+      "category": "application",
+      "lines": 74,
+      "nonempty": 70
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/LegacyImportController.java",
+      "category": "application",
+      "lines": 28,
+      "nonempty": 24
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/controllers/WorkspaceController.java",
+      "category": "application",
+      "lines": 170,
+      "nonempty": 155
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/storage/CloudSchema.java",
+      "category": "application",
+      "lines": 35,
+      "nonempty": 33
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/storage/CloudDatabase.java",
+      "category": "application",
+      "lines": 52,
+      "nonempty": 47
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/storage/CloudTransaction.java",
+      "category": "application",
+      "lines": 52,
+      "nonempty": 44
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/CloudServer.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/commands/LibraryCommands.java",
+      "category": "application",
+      "lines": 59,
+      "nonempty": 54
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/commands/WorkflowCommands.java",
+      "category": "application",
+      "lines": 246,
+      "nonempty": 238
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/commands/GitCommands.java",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 45
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/commands/BasicCommands.java",
+      "category": "application",
+      "lines": 85,
+      "nonempty": 78
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudAuthController.java",
+      "category": "application",
+      "lines": 115,
+      "nonempty": 93
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudExecutionController.java",
+      "category": "application",
+      "lines": 105,
+      "nonempty": 89
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudErrors.java",
+      "category": "application",
+      "lines": 37,
+      "nonempty": 31
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudRelayController.java",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 61
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudMaintenance.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudHealthController.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudDevicesController.java",
+      "category": "application",
+      "lines": 89,
+      "nonempty": 76
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudModelController.java",
+      "category": "application",
+      "lines": 86,
+      "nonempty": 80
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/web/CloudRequestBoundary.java",
+      "category": "application",
+      "lines": 80,
+      "nonempty": 70
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/CloudFailure.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 16
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/installation/ReadyFileWriter.java",
+      "category": "application",
+      "lines": 56,
+      "nonempty": 52
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/installation/InstallationConfiguration.java",
+      "category": "application",
+      "lines": 116,
+      "nonempty": 103
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/installation/SetupController.java",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 19
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/ContextCompactor.java",
+      "category": "application",
+      "lines": 109,
+      "nonempty": 102
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/ConversationService.java",
+      "category": "application",
+      "lines": 181,
+      "nonempty": 174
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/ContextBuilder.java",
+      "category": "application",
+      "lines": 216,
+      "nonempty": 209
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/MemoryService.java",
+      "category": "application",
+      "lines": 131,
+      "nonempty": 123
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/SessionService.java",
+      "category": "application",
+      "lines": 83,
+      "nonempty": 75
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/conversation/ConversationLifecycle.java",
+      "category": "application",
+      "lines": 93,
+      "nonempty": 88
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudSessions.java",
+      "category": "application",
+      "lines": 179,
+      "nonempty": 167
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudDeviceRevocations.java",
+      "category": "application",
+      "lines": 179,
+      "nonempty": 168
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudEmailChallenges.java",
+      "category": "application",
+      "lines": 99,
+      "nonempty": 90
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudTokens.java",
+      "category": "application",
+      "lines": 68,
+      "nonempty": 57
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudPairings.java",
+      "category": "application",
+      "lines": 325,
+      "nonempty": 307
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudActor.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudDevices.java",
+      "category": "application",
+      "lines": 147,
+      "nonempty": 137
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudDeviceProof.java",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 68
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudRateLimiter.java",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 38
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/identity/CloudAccounts.java",
+      "category": "application",
+      "lines": 183,
+      "nonempty": 172
+    },
+    {
+      "path": "backend/cloud/src/main/java/dev/blot/cloud/CloudConfiguration.java",
+      "category": "application",
+      "lines": 158,
+      "nonempty": 137
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/Run.swift",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 23
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/Task.swift",
+      "category": "application",
+      "lines": 26,
+      "nonempty": 25
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/RunStatus.swift",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/git/GitPreparationService.java",
+      "category": "application",
+      "lines": 145,
+      "nonempty": 137
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/git/GitOperationService.java",
+      "category": "application",
+      "lines": 350,
+      "nonempty": 337
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/V3/Models.swift",
+      "category": "application",
+      "lines": 1936,
+      "nonempty": 1809
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/Project.swift",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 19
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/DomainValidation.swift",
+      "category": "application",
+      "lines": 1,
+      "nonempty": 1
+    },
+    {
+      "path": "packages/BlotDomain/Sources/BlotDomain/SpecificationRevision.swift",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/billing/BudgetedProvider.java",
+      "category": "application",
+      "lines": 63,
+      "nonempty": 56
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/billing/BudgetService.java",
+      "category": "application",
+      "lines": 137,
+      "nonempty": 129
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/WorkspacePaths.java",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/data/DataLifecycleService.java",
+      "category": "application",
+      "lines": 112,
+      "nonempty": 106
+    },
+    {
+      "path": "packages/BlotDomain/Tests/BlotDomainTests/DomainTests.swift",
+      "category": "tests",
+      "lines": 36,
+      "nonempty": 34
+    },
+    {
+      "path": "packages/BlotDomain/Tests/BlotDomainTests/V3ContractTests.swift",
+      "category": "tests",
+      "lines": 88,
+      "nonempty": 86
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/Project.java",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/Task.java",
+      "category": "application",
+      "lines": 47,
+      "nonempty": 39
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/automation/AutomationService.java",
+      "category": "application",
+      "lines": 273,
+      "nonempty": 264
+    },
+    {
+      "path": "backend/cloud/src/test/java/dev/blot/cloud/CloudServiceTest.java",
+      "category": "tests",
+      "lines": 584,
+      "nonempty": 547
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/commands/CommandDispatcher.java",
+      "category": "application",
+      "lines": 94,
+      "nonempty": 83
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/commands/ToolDefinitions.java",
+      "category": "application",
+      "lines": 121,
+      "nonempty": 117
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/artifact/ArtifactMaintenance.java",
+      "category": "application",
+      "lines": 41,
+      "nonempty": 35
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/review/ReviewService.java",
+      "category": "application",
+      "lines": 104,
+      "nonempty": 99
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/GenerationWorker.java",
+      "category": "application",
+      "lines": 229,
+      "nonempty": 219
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/SerializedProvider.java",
+      "category": "application",
+      "lines": 154,
+      "nonempty": 144
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/TrustedPair.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/ToolHistory.java",
+      "category": "application",
+      "lines": 102,
+      "nonempty": 95
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AgentConfigurationRevision.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/RetryService.java",
+      "category": "application",
+      "lines": 112,
+      "nonempty": 107
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ConversationReadPosition.java",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 17
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/RunService.java",
+      "category": "application",
+      "lines": 471,
+      "nonempty": 459
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Workspace.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/PreparedActionExecutor.java",
+      "category": "application",
+      "lines": 305,
+      "nonempty": 297
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MissedRunPolicy.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/RetryingProvider.java",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 65
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/McpConnection.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/ToolService.java",
+      "category": "application",
+      "lines": 178,
+      "nonempty": 166
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AutomationTrigger.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/WorkflowScheduler.java",
+      "category": "application",
+      "lines": 408,
+      "nonempty": 400
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ApprovalGrant.java",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 22
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/ToolRecoveryService.java",
+      "category": "application",
+      "lines": 217,
+      "nonempty": 209
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MessageReaction.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/execution/GenerationStateService.java",
+      "category": "application",
+      "lines": 325,
+      "nonempty": 318
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/PreparedAction.java",
+      "category": "application",
+      "lines": 29,
+      "nonempty": 27
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ToolInvocation.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Project.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AgentSession.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ReplicationCheckpoint.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 13
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ConnectionState.java",
+      "category": "application",
+      "lines": 9,
+      "nonempty": 8
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Task.java",
+      "category": "application",
+      "lines": 30,
+      "nonempty": 28
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Connection.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Assignment.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Device.java",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Conversation.java",
+      "category": "application",
+      "lines": 18,
+      "nonempty": 16
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MessageMention.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ContextSummary.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/TrustState.java",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 7
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AttemptState.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ConflictingRevision.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ActionState.java",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AssignmentState.java",
+      "category": "application",
+      "lines": 9,
+      "nonempty": 8
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/RecordChange.java",
+      "category": "application",
+      "lines": 26,
+      "nonempty": 24
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/PetState.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 11
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ChangeOperation.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/DeliveryState.java",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/BudgetState.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Account.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/SkillRevision.java",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MemoryScope.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/DeviceKind.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ExecutionContext.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AgentProfile.java",
+      "category": "application",
+      "lines": 26,
+      "nonempty": 24
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AutomationKind.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/SyncCursor.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AgentMessage.java",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 17
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ConversationParticipant.java",
+      "category": "application",
+      "lines": 18,
+      "nonempty": 16
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/TaskState.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ConversationKind.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ParticipantKind.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ReplicationState.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/GrantKind.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Automation.java",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 34
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/TaskAttempt.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/RecordTombstone.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MessageRole.java",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 7
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MemoryEntry.java",
+      "category": "application",
+      "lines": 20,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AutomationRun.java",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/RecordMetadata.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/MemoryState.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/SessionState.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/BudgetLedger.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/AccessMode.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/ExecutionLease.java",
+      "category": "application",
+      "lines": 22,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Skill.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Message.java",
+      "category": "application",
+      "lines": 33,
+      "nonempty": 31
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/LeaseState.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/v3/Artifact.java",
+      "category": "application",
+      "lines": 24,
+      "nonempty": 22
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/profile/ProfileService.java",
+      "category": "application",
+      "lines": 157,
+      "nonempty": 147
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/integrations/IntegrationService.java",
+      "category": "application",
+      "lines": 294,
+      "nonempty": 289
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AssignmentStatus.java",
+      "category": "application",
+      "lines": 9,
+      "nonempty": 8
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentSession.java",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 44
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentSessionStatus.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentInstructionRevision.java",
+      "category": "application",
+      "lines": 28,
+      "nonempty": 23
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentAssignment.java",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 32
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentProfile.java",
+      "category": "application",
+      "lines": 44,
+      "nonempty": 39
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentCapability.java",
+      "category": "application",
+      "lines": 18,
+      "nonempty": 17
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/TaskAttemptStatus.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/TaskAttempt.java",
+      "category": "application",
+      "lines": 62,
+      "nonempty": 55
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentRole.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/agent/AgentCapabilityPolicy.java",
+      "category": "application",
+      "lines": 63,
+      "nonempty": 58
+    },
+    {
+      "path": "scripts/verify-mac-reply-swipe.swift",
+      "category": "tests",
+      "lines": 57,
+      "nonempty": 50
+    },
+    {
+      "path": "scripts/check-v3-schemas.py",
+      "category": "tests",
+      "lines": 25,
+      "nonempty": 24
+    },
+    {
+      "path": "scripts/capture-ios-v3.py",
+      "category": "scripts",
+      "lines": 29,
+      "nonempty": 29
+    },
+    {
+      "path": "scripts/verify-macos-shell.swift",
+      "category": "tests",
+      "lines": 472,
+      "nonempty": 458
+    },
+    {
+      "path": "scripts/macos-render-scenarios.swift",
+      "category": "scripts",
+      "lines": 242,
+      "nonempty": 232
+    },
+    {
+      "path": "scripts/check-apple-iphone.py",
+      "category": "tests",
+      "lines": 66,
+      "nonempty": 61
+    },
+    {
+      "path": "scripts/run-backend.sh",
+      "category": "scripts",
+      "lines": 17,
+      "nonempty": 14
+    },
+    {
+      "path": "scripts/configure-google-oauth.py",
+      "category": "scripts",
+      "lines": 99,
+      "nonempty": 88
+    },
+    {
+      "path": "scripts/check-apple-cloud-wire.py",
+      "category": "tests",
+      "lines": 130,
+      "nonempty": 121
+    },
+    {
+      "path": "scripts/verify-mac-message-timeline.swift",
+      "category": "tests",
+      "lines": 66,
+      "nonempty": 60
+    },
+    {
+      "path": "scripts/format-v3-java.py",
+      "category": "scripts",
+      "lines": 17,
+      "nonempty": 17
+    },
+    {
+      "path": "scripts/sign-native.sh",
+      "category": "scripts",
+      "lines": 10,
+      "nonempty": 9
+    },
+    {
+      "path": "scripts/preview-workspace.swift",
+      "category": "scripts",
+      "lines": 38,
+      "nonempty": 35
+    },
+    {
+      "path": "scripts/build-native-helpers.sh",
+      "category": "scripts",
+      "lines": 15,
+      "nonempty": 14
+    },
+    {
+      "path": "scripts/check-macos-shell.sh",
+      "category": "tests",
+      "lines": 34,
+      "nonempty": 34
+    },
+    {
+      "path": "scripts/verify-workspace-v3.swift",
+      "category": "tests",
+      "lines": 195,
+      "nonempty": 189
+    },
+    {
+      "path": "scripts/package-backend.sh",
+      "category": "scripts",
+      "lines": 68,
+      "nonempty": 65
+    },
+    {
+      "path": "scripts/verify-mac-team-demo.swift",
+      "category": "tests",
+      "lines": 235,
+      "nonempty": 222
+    },
+    {
+      "path": "scripts/verify-mac-press-activation.swift",
+      "category": "tests",
+      "lines": 24,
+      "nonempty": 23
+    },
+    {
+      "path": "scripts/copy-provider-ca.py",
+      "category": "scripts",
+      "lines": 57,
+      "nonempty": 51
+    },
+    {
+      "path": "scripts/generate-v3-contracts.py",
+      "category": "scripts",
+      "lines": 132,
+      "nonempty": 126
+    },
+    {
+      "path": "scripts/check-mac-team-demo.sh",
+      "category": "tests",
+      "lines": 8,
+      "nonempty": 8
+    },
+    {
+      "path": "scripts/check-workspace-v3.sh",
+      "category": "tests",
+      "lines": 15,
+      "nonempty": 15
+    },
+    {
+      "path": "scripts/check-backend.sh",
+      "category": "tests",
+      "lines": 10,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/api/src/test/java/dev/blot/api/HttpApiTest.java",
+      "category": "tests",
+      "lines": 505,
+      "nonempty": 488
+    },
+    {
+      "path": "backend/api/src/test/java/dev/blot/api/SharedContractTest.java",
+      "category": "tests",
+      "lines": 127,
+      "nonempty": 116
+    },
+    {
+      "path": "backend/api/src/test/java/dev/blot/api/V3ContractTest.java",
+      "category": "tests",
+      "lines": 113,
+      "nonempty": 107
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/permissions/PermissionService.java",
+      "category": "application",
+      "lines": 149,
+      "nonempty": 141
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/transport/RecordCursor.java",
+      "category": "application",
+      "lines": 29,
+      "nonempty": 26
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/transport/RequestActor.java",
+      "category": "application",
+      "lines": 49,
+      "nonempty": 42
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/BlotServer.java",
+      "category": "application",
+      "lines": 21,
+      "nonempty": 19
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/requirements/RequirementCoverage.java",
+      "category": "application",
+      "lines": 41,
+      "nonempty": 39
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/EntityKind.java",
+      "category": "application",
+      "lines": 38,
+      "nonempty": 37
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/ReviewData.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/Run.java",
+      "category": "application",
+      "lines": 27,
+      "nonempty": 21
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/SpecificationRevision.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 20
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/RunStatus.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 13
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/security/TlsConfiguration.java",
+      "category": "application",
+      "lines": 62,
+      "nonempty": 57
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/security/ProviderCertificateController.java",
+      "category": "application",
+      "lines": 35,
+      "nonempty": 28
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/security/SecretController.java",
+      "category": "application",
+      "lines": 85,
+      "nonempty": 77
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/security/TransportSecurityFilter.java",
+      "category": "application",
+      "lines": 50,
+      "nonempty": 47
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/RoleCatalog.java",
+      "category": "application",
+      "lines": 35,
+      "nonempty": 31
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/AgentFiles.java",
+      "category": "application",
+      "lines": 179,
+      "nonempty": 168
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/DelegationService.java",
+      "category": "application",
+      "lines": 128,
+      "nonempty": 123
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/AgentResultService.java",
+      "category": "application",
+      "lines": 200,
+      "nonempty": 195
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/AgentCommunicationTools.java",
+      "category": "application",
+      "lines": 111,
+      "nonempty": 104
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/agent/AgentExecutionService.java",
+      "category": "application",
+      "lines": 153,
+      "nonempty": 149
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/conversation/SummaryData.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/conversation/MessageData.java",
+      "category": "application",
+      "lines": 17,
+      "nonempty": 15
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/conversation/MemoryData.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/conversation/ConversationData.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 11
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/conversation/InboxData.java",
+      "category": "application",
+      "lines": 19,
+      "nonempty": 16
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/statistics/StatisticsService.java",
+      "category": "application",
+      "lines": 93,
+      "nonempty": 88
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/BlotApplicationService.java",
+      "category": "application",
+      "lines": 82,
+      "nonempty": 65
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/RunUseCases.java",
+      "category": "application",
+      "lines": 125,
+      "nonempty": 114
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/ProjectUseCases.java",
+      "category": "application",
+      "lines": 73,
+      "nonempty": 66
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/SpecificationUseCases.java",
+      "category": "application",
+      "lines": 71,
+      "nonempty": 66
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/library/LibraryService.java",
+      "category": "application",
+      "lines": 55,
+      "nonempty": 50
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/library/LegacyImportService.java",
+      "category": "application",
+      "lines": 61,
+      "nonempty": 57
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/billing/BudgetData.java",
+      "category": "application",
+      "lines": 3,
+      "nonempty": 2
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/Entity.java",
+      "category": "application",
+      "lines": 29,
+      "nonempty": 26
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/automation/AutomationData.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 15
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/providers/ProviderCertificateService.java",
+      "category": "application",
+      "lines": 42,
+      "nonempty": 35
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/providers/ProviderSettingsService.java",
+      "category": "application",
+      "lines": 109,
+      "nonempty": 99
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/providers/ModelStreamingService.java",
+      "category": "application",
+      "lines": 144,
+      "nonempty": 139
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/skills/SkillData.java",
+      "category": "application",
+      "lines": 8,
+      "nonempty": 7
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/projects/ProjectService.java",
+      "category": "application",
+      "lines": 81,
+      "nonempty": 73
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/WorkspaceMaintenance.java",
+      "category": "application",
+      "lines": 103,
+      "nonempty": 97
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/Records.java",
+      "category": "application",
+      "lines": 63,
+      "nonempty": 55
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/artifact/ArtifactData.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/provider/ProviderSettingsData.java",
+      "category": "application",
+      "lines": 4,
+      "nonempty": 3
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/identity/EmailChallengeService.java",
+      "category": "application",
+      "lines": 108,
+      "nonempty": 103
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/identity/TokenGenerator.java",
+      "category": "application",
+      "lines": 36,
+      "nonempty": 30
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/identity/AccountService.java",
+      "category": "application",
+      "lines": 172,
+      "nonempty": 156
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/identity/DeviceService.java",
+      "category": "application",
+      "lines": 188,
+      "nonempty": 176
+    },
+    {
+      "path": "backend/application/src/main/java/dev/blot/application/workspace/WorkspaceFailure.java",
+      "category": "application",
+      "lines": 47,
+      "nonempty": 37
+    },
+    {
+      "path": "backend/application/src/test/java/dev/blot/application/BlotApplicationServiceTest.java",
+      "category": "tests",
+      "lines": 353,
+      "nonempty": 311
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/execution/ToolOperationData.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/execution/ModelRequestData.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 12
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/execution/PreparedActionData.java",
+      "category": "application",
+      "lines": 12,
+      "nonempty": 10
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/execution/GenerationData.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/planning/CoverageData.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 6
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/planning/PlanStepData.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/planning/RequirementData.java",
+      "category": "application",
+      "lines": 3,
+      "nonempty": 2
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/planning/PlanData.java",
+      "category": "application",
+      "lines": 14,
+      "nonempty": 13
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/AccountData.java",
+      "category": "application",
+      "lines": 4,
+      "nonempty": 3
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/ChallengeData.java",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 11
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/Actor.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/AuthSessionData.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/GrantData.java",
+      "category": "application",
+      "lines": 11,
+      "nonempty": 9
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/DeviceData.java",
+      "category": "application",
+      "lines": 3,
+      "nonempty": 2
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/identity/PairingData.java",
+      "category": "application",
+      "lines": 13,
+      "nonempty": 11
+    },
+    {
+      "path": "backend/application/src/test/java/dev/blot/application/workspace/WorkspacePathsTest.java",
+      "category": "tests",
+      "lines": 22,
+      "nonempty": 18
+    },
+    {
+      "path": "backend/application/src/test/java/dev/blot/application/workspace/RequirementCoverageTest.java",
+      "category": "tests",
+      "lines": 66,
+      "nonempty": 61
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/profile/ProfileData.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/projects/RunData.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/projects/ProjectData.java",
+      "category": "application",
+      "lines": 4,
+      "nonempty": 3
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/projects/WorkspaceCleanupData.java",
+      "category": "application",
+      "lines": 7,
+      "nonempty": 5
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/projects/TaskData.java",
+      "category": "application",
+      "lines": 64,
+      "nonempty": 58
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/agent/AgentConfigurationData.java",
+      "category": "application",
+      "lines": 16,
+      "nonempty": 14
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/agent/AgentSessionData.java",
+      "category": "application",
+      "lines": 15,
+      "nonempty": 13
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/agent/AssignmentData.java",
+      "category": "application",
+      "lines": 5,
+      "nonempty": 3
+    },
+    {
+      "path": "backend/core/src/main/java/dev/blot/core/workspace/agent/AttemptData.java",
+      "category": "application",
+      "lines": 6,
+      "nonempty": 4
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/auth/AuthController.java",
+      "category": "application",
+      "lines": 89,
+      "nonempty": 75
+    },
+    {
+      "path": "backend/api/src/main/java/dev/blot/api/workspace/auth/LoginThrottle.java",
+      "category": "application",
+      "lines": 23,
+      "nonempty": 20
+    },
+    {
+      "path": "packages/BlotDesign/Tests/BlotDesignTests/BlotGlyphTests.swift",
+      "category": "tests",
+      "lines": 34,
+      "nonempty": 31
+    },
+    {
+      "path": "packages/BlotDesign/Tests/BlotDesignTests/ThemePreferenceTests.swift",
+      "category": "tests",
+      "lines": 75,
+      "nonempty": 65
+    },
+    {
+      "path": "packages/BlotDesign/Tests/BlotDesignTests/BlotReactionTests.swift",
+      "category": "tests",
+      "lines": 138,
+      "nonempty": 124
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotChoreography.swift",
+      "category": "application",
+      "lines": 33,
+      "nonempty": 29
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotReactions.swift",
+      "category": "application",
+      "lines": 102,
+      "nonempty": 89
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotDirector.swift",
+      "category": "application",
+      "lines": 249,
+      "nonempty": 220
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotState.swift",
+      "category": "application",
+      "lines": 261,
+      "nonempty": 247
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotCharacterView.swift",
+      "category": "application",
+      "lines": 157,
+      "nonempty": 147
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotDrawing.swift",
+      "category": "application",
+      "lines": 186,
+      "nonempty": 173
+    },
+    {
+      "path": "packages/BlotDesign/Sources/BlotDesign/Character/BlotGeometry.swift",
+      "category": "application",
+      "lines": 224,
+      "nonempty": 208
+    }
+  ]
+}

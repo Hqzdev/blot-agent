@@ -48,7 +48,7 @@ struct BlotView: View {
         BlotCharacterView(
             role: role.blotRole, state: state, size: size, replay: replay, framing: framing,
             behavior: resolvedBehavior, reduceMotion: reduced, intro: intro, tappable: tappable,
-            stimulus: stimulus, followsPointer: followsPointer, pointer: MacPointer.location,
+            stimulus: stimulus, followsPointer: followsPointer, pointer: { @MainActor in MacPointer.location() },
             accessibilityLabel: role == .blot ? "Blot · \(state.title)" : "\(role.title) · \(state.title)")
     }
 }
