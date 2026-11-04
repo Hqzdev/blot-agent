@@ -54,10 +54,6 @@ struct MacLiveTeamConversation: View {
                         WorkspaceReplyBubble(draft: draft, compact: true)
                             .transition(reduced ? .opacity : .scale(scale: 0.82, anchor: .bottomLeading).combined(with: .opacity))
                     }
-                    if !store.isReplying, let failed = store.currentMessages.last(where: { $0.role == .assistant && [.failed, .interrupted].contains($0.delivery) }),
-                       let source = failed.replyToMessageId {
-                        Button("Повторить ответ") { store.retryResponse(to: source) }.buttonStyle(.plain)
-                    }
                     Color.clear.frame(height: 1).id("team-live-bottom")
                 }.frame(maxWidth: 680, alignment: .leading).padding(.horizontal, 28).padding(.vertical, 24)
                     .frame(maxWidth: .infinity)
