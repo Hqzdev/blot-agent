@@ -1,3 +1,5 @@
+import BlotDomain
+import BlotWorkspace
 import SwiftUI
 import UIKit
 import XCTest
@@ -6,6 +8,69 @@ import XCTest
 /// preview store. Never opens or changes the signed-in user's workspace.
 @MainActor
 final class PhoneChatLifecycleTests: XCTestCase {
+    func testThinkingDotsActuallyAnimate() async throws {
+        let store = WorkspaceStore(mode: .preview, route: .chats)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        let host = UIHostingController(rootView: WorkspaceReplyBubble(draft: .init(messageID: UUID()))
+            .environment(store).environment(\.scenePhase, .active)
+            .frame(width: 120, height: 70))
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        await settle(window)
+        func capture() -> Data? {
+            UIGraphicsImageRenderer(bounds: host.view.bounds).image { _ in
+                host.view.drawHierarchy(in: host.view.bounds, afterScreenUpdates: true)
+            }.pngData()
+        }
+        let first = try XCTUnwrap(capture())
+        try await _Concurrency.Task.sleep(for: .milliseconds(220))
+        let second = try XCTUnwrap(capture())
+        XCTAssertNotEqual(first, second, "Thinking dots must change size and brightness over time")
+    }
+
+    func testReplyStaysBehindThinkingIndicatorUntilFinished() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let channel = AsyncThrowingStream<ChatModelEvent, Error>.makeStream()
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"),
+            makeModel: { _ in ControlledPhoneReply(events: channel.stream) })
+        let store = WorkspaceStore(mode: .live, service: service)
+        await store.loadWorkspace()
+        await store.perform(.createConversation, next: .chat)
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
+        store.form.composer.draft = "Synthetic reply presentation check"
+        await store.perform(.send)
+        channel.continuation.yield(.text("A complete "))
+        await settle(window)
+        XCTAssertNotNil(store.currentReplyDraft)
+        XCTAssertTrue(store.isReplying)
+        XCTAssertEqual(PhoneMessageTimeline.rows(in: store.currentMessages).filter { $0.message.role == .assistant }.count, 0)
+        attach(window, name: "Waiting for a whole reply")
+        channel.continuation.yield(.text("reply.\n\nWith a second paragraph."))
+        channel.continuation.yield(.finished(.stop))
+        channel.continuation.finish()
+        let deadline = Date().addingTimeInterval(5)
+        while store.isReplying && Date() < deadline { await settle(window) }
+        await settle(window)
+        XCTAssertFalse(store.isReplying)
+        XCTAssertNil(store.currentReplyDraft)
+        let replies = PhoneMessageTimeline.rows(in: store.currentMessages).filter { $0.message.role == .assistant }
+        XCTAssertEqual(replies.count, 1)
+        XCTAssertEqual(replies.first?.message.content, "A complete reply.\n\nWith a second paragraph.")
+        XCTAssertEqual(replies.first?.message.delivery, .completed)
+        XCTAssertNil(store.error)
+        attach(window, name: "Whole reply received")
+        try await service.close()
+        try FileManager.default.removeItem(at: directory)
+    }
+
     func testRapidTabChangesAndDraftEdits() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
@@ -14,7 +79,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
         await settle(window)
@@ -30,7 +95,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
             }
         }
         store.persistChatState(immediately: true)
-        try await Task.sleep(for: .milliseconds(300))
+        try await _Concurrency.Task.sleep(for: .milliseconds(300))
         try await service.close()
         try FileManager.default.removeItem(at: directory)
     }
@@ -47,7 +112,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; previousWindow?.makeKeyAndVisible() }
 
@@ -101,14 +166,30 @@ final class PhoneChatLifecycleTests: XCTestCase {
         window.layoutIfNeeded()
     }
 
+    private func attach(_ window: UIWindow, name: String) {
+        let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
+        }
+        let attachment = XCTAttachment(image: image)
+        attachment.name = name
+        attachment.lifetime = .keepAlways
+        add(attachment)
+    }
+
     private func assertRowCount(_ expected: Int, in window: UIWindow, file: StaticString = #filePath, line: UInt = #line) {
         let lists = collections(in: window).filter { !$0.isHidden && $0.window != nil }
-        XCTAssertTrue(lists.contains { list in
-            (0..<list.numberOfSections).reduce(0) { $0 + list.numberOfItems(inSection: $1) } == expected
-        }, "Expected a mounted list with \(expected) rows", file: file, line: line)
+        let counts = lists.map { list in
+            (0..<list.numberOfSections).reduce(0) { $0 + list.numberOfItems(inSection: $1) }
+        }
+        XCTAssertTrue(counts.contains(expected), "Expected \(expected) rows, mounted lists: \(counts)", file: file, line: line)
     }
 
     private func collections(in view: UIView) -> [UICollectionView] {
         (view as? UICollectionView).map { [$0] } ?? view.subviews.flatMap { collections(in: $0) }
     }
+}
+
+private struct ControlledPhoneReply: ChatModel {
+    let events: AsyncThrowingStream<ChatModelEvent, Error>
+    nonisolated func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> { events }
 }

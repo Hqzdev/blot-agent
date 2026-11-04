@@ -626,6 +626,14 @@ final class WorkspaceStore {
         selectedConversationID.map { liveResponses[$0] != nil || chatActivity.isResponding(in: $0) } ?? false
     }
 
+    var currentReplyDraft: WorkspaceChatActivity.Draft? {
+        guard let id = selectedConversationID else { return nil }
+        if let draft = chatActivity.drafts[id] { return draft }
+        guard mode == .live, isReplying,
+              let source = currentMessages.last(where: { $0.role == .user }) else { return nil }
+        return .init(messageID: source.metadata.id)
+    }
+
     func stopReply(in id: UUID? = nil) {
         guard let conversationID = id ?? selectedConversationID else { return }
         if liveResponses[conversationID] != nil, let service = commands {

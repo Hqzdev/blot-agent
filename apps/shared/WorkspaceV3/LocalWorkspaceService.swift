@@ -206,8 +206,6 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
                         emit: { continuation.yield($0) })
                     continuation.finish()
                 } catch {
-                    let state: BlotV3.DeliveryState = _Concurrency.Task.isCancelled ? .canceled : .interrupted
-                    if let saved = try? await recorder.finish(responseID, delivery: state) { continuation.yield(saved) }
                     continuation.finish(throwing: error)
                 }
             }

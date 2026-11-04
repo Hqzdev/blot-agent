@@ -14,7 +14,7 @@ struct MacLiveTeamConversation: View {
     @State private var sendInputFrame: CGRect?
 
     init(messages: [BlotV3.Message]) {
-        _timeline = State(initialValue: MacTeamMessageTimeline(items: messages.map {
+        _timeline = State(initialValue: MacTeamMessageTimeline(items: messages.filter(WorkspaceMessagePresentation.isVisible).map {
             .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user)
         }))
     }
@@ -23,6 +23,7 @@ struct MacLiveTeamConversation: View {
         let ids: [UUID]
         let reduced: Bool
     }
+    private var messages: [BlotV3.Message] { store.currentMessages.filter(WorkspaceMessagePresentation.isVisible) }
     private var reduced: Bool { reduceMotion || systemReduceMotion }
     private var agent: BlotV3.AgentProfile? {
         store.snapshot.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
@@ -32,7 +33,7 @@ struct MacLiveTeamConversation: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: compactMessages ? 16 : 24) {
-                    if store.currentMessages.isEmpty {
+                    if messages.isEmpty, store.currentReplyDraft == nil {
                         VStack(spacing: 16) {
                             if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
                             else { WorkspaceAnimatedAvatar(size: 68) }
@@ -43,13 +44,17 @@ struct MacLiveTeamConversation: View {
                             }
                         }.frame(maxWidth: .infinity).padding(.vertical, 100)
                     }
-                    ForEach(store.currentMessages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
+                    ForEach(messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
                         MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
                             inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
                             .id(message.metadata.id).transition(.identity)
                             .onAppear { timeline.didAppear(message.metadata.id.uuidString) }
                     }
-                    if let failed = store.currentMessages.last(where: { $0.role == .assistant && [.failed, .interrupted].contains($0.delivery) }),
+                    if let draft = store.currentReplyDraft {
+                        WorkspaceReplyBubble(draft: draft, compact: true)
+                            .transition(reduced ? .opacity : .scale(scale: 0.82, anchor: .bottomLeading).combined(with: .opacity))
+                    }
+                    if !store.isReplying, let failed = store.currentMessages.last(where: { $0.role == .assistant && [.failed, .interrupted].contains($0.delivery) }),
                        let source = failed.replyToMessageId {
                         Button("Повторить ответ") { store.retryResponse(to: source) }.buttonStyle(.plain)
                     }
@@ -71,8 +76,12 @@ struct MacLiveTeamConversation: View {
                     proxy.scrollTo("team-live-bottom", anchor: .bottom)
                 }
             }
-            .onChange(of: store.currentMessages.last) { _, message in
+            .onChange(of: messages.last) { _, message in
                 if followsLatest || message?.role == .user { proxy.scrollTo("team-live-bottom", anchor: .bottom) }
+            }
+            .onChange(of: store.currentReplyDraft) { _, _ in
+                guard followsLatest else { return }
+                withKAnimation(reduced, MacTeamMessageMotion.receive) { proxy.scrollTo("team-live-bottom", anchor: .bottom) }
             }
             .task(id: store.selectedConversationID) {
                 followsLatest = true
@@ -80,8 +89,8 @@ struct MacLiveTeamConversation: View {
                 store.updateChatVisibility(store.selectedConversationID, atLatest: true)
             }
             .onDisappear { store.clearChatVisibility(store.selectedConversationID) }
-            .task(id: MessageUpdate(ids: store.currentMessages.map(\.metadata.id), reduced: reduced)) {
-                let sent = timeline.synchronize(items: store.currentMessages.map {
+            .task(id: MessageUpdate(ids: messages.map(\.metadata.id), reduced: reduced)) {
+                let sent = timeline.synchronize(items: messages.map {
                     .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user)
                 }, immediate: reduced, followingLatest: followsLatest)
                 if sent { followsLatest = true }
@@ -108,6 +117,7 @@ struct MacLiveTeamConversation: View {
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
         .kAnimation(MacTeamMessageMotion.receive, value: timeline.visibleIDs)
+        .kAnimation(MacTeamMessageMotion.receive, value: store.currentReplyDraft)
     }
 }
 

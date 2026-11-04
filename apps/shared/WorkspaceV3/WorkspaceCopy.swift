@@ -28,6 +28,7 @@ enum WorkspaceCopy {
         "Interrupted": "Прервано",
         "Retry response": "Повторить ответ",
         "Typing": "Печатает",
+        "Agent is thinking": "Агент думает",
         "Not online": "Не в сети",
         "Unread messages": "Непрочитанные сообщения",
         "You": "Вы",
