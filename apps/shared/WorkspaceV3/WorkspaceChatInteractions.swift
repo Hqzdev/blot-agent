@@ -1,12 +1,12 @@
 import Foundation
 
-struct WorkspaceMessageMetadata: Codable, Equatable {
+nonisolated struct WorkspaceMessageMetadata: Codable, Equatable, Sendable {
     var replyToMessageID: UUID?
     var reaction: String?
     var reactedAt: Date?
 }
 
-struct WorkspaceChatInteractions: Codable, Equatable {
+nonisolated struct WorkspaceChatInteractions: Codable, Equatable, Sendable {
     static let reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"]
     var pinnedOrder: [UUID] = []
     var messages: [UUID: WorkspaceMessageMetadata] = [:]

@@ -8,6 +8,11 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if CommandLine.arguments.contains("--responsiveness-only") {
+            try await verifyPresentationWrites()
+            try verifyMessageIndex()
+            return
+        }
         if CommandLine.arguments.contains("--startup-only") {
             try await verifyStartupRestoration()
             print("PASS: startup waits for session restoration, coalesces loads, and settles saved, absent and failed sessions")
@@ -91,6 +96,61 @@ struct WorkspaceVerification {
         if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
             try render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1], isDirectory: true))
         }
+    }
+    static func verifyPresentationWrites() async throws {
+        let writer = WorkspacePresentationWriter()
+        var writes: [Data] = []
+        var state = WorkspacePresentationState(drafts: [:], interactions: .init(), personalization: .init(),
+            firstName: "", lastName: "", email: "")
+        let id = UUID()
+        for index in 0..<200 {
+            state.drafts[id] = WorkspaceComposerForm(draft: "Edit \(index)")
+            writer.schedule(state, immediately: false) { writes.append($0) }
+        }
+        await writer.flush()
+        precondition(writes.count == 1)
+        let initial = try JSONDecoder().decode(WorkspacePresentationState.self, from: writes[0])
+        precondition(initial.drafts[id]?.draft == "Edit 199")
+        writer.schedule(state, immediately: true) { writes.append($0) }
+        await writer.flush()
+        precondition(writes.count == 1)
+        state.drafts[id]?.draft = "Latest before backgrounding"
+        writer.schedule(state, immediately: false) { writes.append($0) }
+        writer.schedule(state, immediately: true) { writes.append($0) }
+        await writer.flush()
+        precondition(writes.count == 2)
+        let latest = try JSONDecoder().decode(WorkspacePresentationState.self, from: writes[1])
+        precondition(latest.drafts[id]?.draft == state.drafts[id]?.draft)
+        writer.reset()
+        print("PASS: 200 rapid edits produce one write; duplicate data is skipped and lifecycle flush preserves the latest draft")
+    }
+
+    static func verifyMessageIndex() throws {
+        let ids = (0..<100).map { _ in UUID() }
+        let owner = UUID(), workspace = UUID(), now = Date()
+        let messages = try ids.flatMap { conversation in
+            try (0..<100).reversed().map { position in
+                try BlotV3.Message(metadata: .init(id: UUID(), ownerId: owner, workspaceId: workspace, version: 1,
+                    createdAt: now, updatedAt: now), conversationId: conversation, role: .assistant,
+                    content: "Test", delivery: .completed, commandId: UUID(), artifactIds: [], position: position)
+            }
+        }
+        var expected: [UUID] = [], actual: [UUID] = []
+        let clock = ContinuousClock()
+        let baseline = clock.measure {
+            for _ in 0..<10 {
+                for id in ids { expected.append(WorkspaceMessageOrder.ordered(messages.filter { $0.conversationId == id }).last!.metadata.id) }
+            }
+        }
+        let indexed = clock.measure {
+            let index = WorkspaceMessageIndex(messages)
+            precondition(index.messages(in: nil).isEmpty && index.messages(in: UUID()).isEmpty)
+            for _ in 0..<10 {
+                for id in ids { actual.append(index.messages(in: id).last!.metadata.id) }
+            }
+        }
+        precondition(expected == actual)
+        print("PASS: 10,000 messages / 1,000 conversation reads preserve ordering; repeated filter/sort=\(baseline), indexed=\(indexed)")
     }
     static func verifyStartupRestoration() async throws {
         precondition(!WorkspaceStore(mode: .preview, route: .welcome).isRestoringSession)

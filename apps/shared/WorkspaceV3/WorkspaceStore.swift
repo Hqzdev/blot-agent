@@ -14,11 +14,18 @@ final class WorkspaceStore {
     private var commands: (any WorkspaceCommandService)? { (service as? any WorkspaceCommandProviding)?.workspaceCommands }
     @ObservationIgnored private var observation: _Concurrency.Task<Void, Never>?
     @ObservationIgnored private var restoringPresentation = false
+    @ObservationIgnored private let presentationWriter = WorkspacePresentationWriter()
     private var sessionGeneration = UUID()
     @ObservationIgnored private let authenticationLog = Logger(subsystem: "dev.blot.authentication", category: "BrowserHandoff")
     private(set) var snapshot = WorkspaceSnapshot() {
-        didSet { if mode == .live { refreshLocalChatState() } }
+        didSet {
+            if mode == .live {
+                if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
+                refreshLocalChatState()
+            }
+        }
     }
+    private var messageIndex = WorkspaceMessageIndex()
     private(set) var busy = false
     private(set) var isRestoringSession: Bool
     private(set) var history: [WorkspaceRoute] = []
@@ -177,8 +184,8 @@ final class WorkspaceStore {
     }
     var currentConversation: BlotV3.Conversation? { snapshot.conversations.first { $0.metadata.id == selectedConversationID } }
     var currentMessages: [BlotV3.Message] {
-        let messages = snapshot.messages.filter { $0.conversationId == selectedConversationID }
-        return mode == .live ? WorkspaceMessageOrder.ordered(messages) : messages
+        mode == .live ? messageIndex.messages(in: selectedConversationID)
+            : snapshot.messages.filter { $0.conversationId == selectedConversationID }
     }
 
     func loadWorkspace() async {
@@ -718,7 +725,7 @@ final class WorkspaceStore {
     }
     func markChatRead(_ id: UUID) {
         if mode == .live, let service = commands {
-            let messages = WorkspaceMessageOrder.ordered(snapshot.messages.filter { $0.conversationId == id })
+            let messages = messageIndex.messages(in: id)
             let read = (snapshot.readPositions ?? []).first { $0.conversationId == id && $0.participantId == snapshot.ownerID }
             guard let latest = messages.last, !pendingReadConversations.contains(id),
                   WorkspaceMessageOrder.isAfter(latest, legacyPosition: messages.count, read: read) else { return }
@@ -750,9 +757,13 @@ final class WorkspaceStore {
             interactions.messages[reaction.messageId, default: .init()].reactedAt = reaction.metadata.updatedAt
         }
         interactions.unreadMessageIDs = [:]
+        var readPositions: [UUID: BlotV3.ConversationReadPosition] = [:]
+        for read in snapshot.readPositions ?? [] where read.participantId == ownerID && readPositions[read.conversationId] == nil {
+            readPositions[read.conversationId] = read
+        }
         for conversation in snapshot.conversations {
-            let read = (snapshot.readPositions ?? []).first { $0.conversationId == conversation.metadata.id && $0.participantId == ownerID }
-            let messages = WorkspaceMessageOrder.ordered(snapshot.messages.filter { $0.conversationId == conversation.metadata.id })
+            let read = readPositions[conversation.metadata.id]
+            let messages = messageIndex.messages(in: conversation.metadata.id)
             let unread = Set(messages.enumerated().filter { WorkspaceMessageOrder.isAfter($0.element, legacyPosition: $0.offset + 1, read: read) && $0.element.role == .assistant && $0.element.delivery != .running }.map { $0.element.metadata.id })
             if !unread.isEmpty { interactions.unreadMessageIDs?[conversation.metadata.id] = unread }
         }
@@ -905,6 +916,7 @@ final class WorkspaceStore {
 
     func signOut() {
         guard !busy else { return }
+        persistChatState(immediately: true)
         busy = true
         sessionGeneration = UUID()
         observation?.cancel(); observation = nil
@@ -926,6 +938,8 @@ final class WorkspaceStore {
         selectTab(.welcome)
         _Concurrency.Task {
             defer { busy = false }
+            await presentationWriter.flush()
+            presentationWriter.reset()
             for worker in workers { await worker.value }
             do { try await (service as? any WorkspaceAccountService)?.signOut() }
             catch { self.error = WorkspaceFailureCopy.message(error) }
@@ -939,8 +953,9 @@ final class WorkspaceStore {
         if let id = selectedConversationID { drafts[id] = form.composer }
         let state = WorkspacePresentationState(drafts: drafts, interactions: chatInteractions, personalization: form.personalization,
             firstName: form.account.name, lastName: form.account.lastName, email: form.account.email)
-        guard let data = try? JSONEncoder().encode(state) else { return }
-        _Concurrency.Task { try? await commands.savePresentationState(data) }
+        presentationWriter.schedule(state, immediately: immediately) { data in
+            try await commands.savePresentationState(data)
+        }
     }
 
     private func touchConversation(_ id: UUID) {

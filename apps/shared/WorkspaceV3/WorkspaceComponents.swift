@@ -98,8 +98,13 @@ struct WorkspaceField: View {
 struct WorkspaceAvatarView: View {
     let agent: BlotV3.AgentProfile
     var size: CGFloat = 48
+    var animated = false
     var body: some View {
-        WorkspaceAvatar(shape: .init(rawValue: agent.avatarShape) ?? .round, color: Self.color(agent.avatarColor), size: size)
+        if animated {
+            WorkspaceAnimatedAvatar(shape: .init(rawValue: agent.avatarShape) ?? .round, color: Self.color(agent.avatarColor), size: size)
+        } else {
+            WorkspaceAvatar(shape: .init(rawValue: agent.avatarShape) ?? .round, color: Self.color(agent.avatarColor), size: size)
+        }
     }
     static func color(_ key: String) -> Color {
         switch key {

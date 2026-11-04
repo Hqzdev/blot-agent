@@ -11,6 +11,7 @@ struct PhoneGlassCircleButton: View {
             BlotIcon(symbol: symbol, size: 22).font(.system(size: 21, weight: .regular))
                 .frame(width: 44, height: 44)
                 .glassEffect(.regular.interactive(), in: .circle)
+                .contentShape(Rectangle())
         }.buttonStyle(.plain).accessibilityLabel(title)
     }
 }

@@ -30,7 +30,7 @@ struct PhoneTabBar: View {
             HStack(spacing: 0) {
                 ForEach(Self.items) { item in
                     Button {
-                        withAnimation(.smooth(duration: 0.22)) { store.selectTab(item.route) }
+                        store.selectTab(item.route)
                     } label: {
                         VStack(spacing: 5) {
                             BlotIcon(symbol: item.symbol, size: 23).font(.system(size: 20))
@@ -44,7 +44,8 @@ struct PhoneTabBar: View {
                                     .matchedGeometryEffect(id: "selected-tab", in: selection)
                             }
                         }
-                        .contentShape(Capsule())
+                        .animation(.smooth(duration: 0.22), value: store.tab)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(store.tab == item.route ? .isSelected : [])

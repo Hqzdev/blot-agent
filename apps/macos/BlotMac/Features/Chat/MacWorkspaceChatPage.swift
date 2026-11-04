@@ -33,7 +33,9 @@ struct MacWorkspaceChatPage: View {
     private var welcome: some View {
         GeometryReader { geometry in
             VStack(spacing: 22) {
-                WorkspaceAvatar(size: 44).opacity(0.38)
+                if let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
+                    WorkspaceAvatarView(agent: agent, size: 68, animated: true)
+                } else { WorkspaceAnimatedAvatar(size: 68) }
                 Text(store.t("What are we doing today?"))
                     .font(.system(size: 26, weight: .regular))
                     .multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)

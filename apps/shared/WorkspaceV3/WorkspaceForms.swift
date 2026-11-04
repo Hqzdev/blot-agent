@@ -52,7 +52,7 @@ struct WorkspaceMemoryForm {
     var candidate = false
 }
 struct WorkspacePairForm { var code = "" }
-struct WorkspaceComposerForm: Codable {
+nonisolated struct WorkspaceComposerForm: Codable, Sendable {
     var draft = ""
     var attachments: [URL] = []
     var replyToMessageID: UUID?

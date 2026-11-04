@@ -24,6 +24,9 @@ struct MacLiveTeamConversation: View {
         let reduced: Bool
     }
     private var reduced: Bool { reduceMotion || systemReduceMotion }
+    private var agent: BlotV3.AgentProfile? {
+        store.snapshot.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
+    }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -31,7 +34,8 @@ struct MacLiveTeamConversation: View {
                 LazyVStack(alignment: .leading, spacing: compactMessages ? 16 : 24) {
                     if store.currentMessages.isEmpty {
                         VStack(spacing: 16) {
-                            WorkspaceAvatar(size: 68)
+                            if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
+                            else { WorkspaceAnimatedAvatar(size: 68) }
                             Text(store.snapshot.agents.isEmpty ? "Создайте своего первого агента" : "Что сделаем вместе?")
                                 .font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
                             if store.snapshot.agents.isEmpty {

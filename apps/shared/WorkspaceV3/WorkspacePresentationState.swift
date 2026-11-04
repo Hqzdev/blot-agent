@@ -1,6 +1,6 @@
 import Foundation
 
-struct WorkspacePresentationState: Codable {
+nonisolated struct WorkspacePresentationState: Codable, Sendable {
     var drafts: [UUID: WorkspaceComposerForm]
     var interactions: WorkspaceChatInteractions
     var personalization: WorkspacePersonalization
