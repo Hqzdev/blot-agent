@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.ProcessGateway;
 import dev.blot.application.ports.WorkspaceStore;
@@ -35,11 +37,6 @@ import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ToolHistoryTest {
   @TempDir Path directory;

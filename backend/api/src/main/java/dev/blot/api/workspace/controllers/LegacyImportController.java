@@ -3,7 +3,6 @@ package dev.blot.api.workspace.controllers;
 import dev.blot.api.workspace.transport.RequestActor;
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.WorkspaceStore;
-import dev.blot.application.workspace.WorkspaceFailure;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.web.bind.annotation.*;
 

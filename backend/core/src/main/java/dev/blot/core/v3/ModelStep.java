@@ -1,7 +1,5 @@
 package dev.blot.core.v3;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -35,10 +33,13 @@ public record ModelStep(
     Objects.requireNonNull(executionMode, "executionMode");
     if (stepIndex < 0) throw new IllegalArgumentException("stepIndex must be nonnegative");
     Objects.requireNonNull(modelId, "modelId");
-    if (budgetTokenLimit < 0) throw new IllegalArgumentException("budgetTokenLimit must be nonnegative");
+    if (budgetTokenLimit < 0)
+      throw new IllegalArgumentException("budgetTokenLimit must be nonnegative");
     Objects.requireNonNull(requestJSON, "requestJSON");
-    if (inputTokens != null && inputTokens < 0) throw new IllegalArgumentException("inputTokens must be nonnegative");
-    if (outputTokens != null && outputTokens < 0) throw new IllegalArgumentException("outputTokens must be nonnegative");
+    if (inputTokens != null && inputTokens < 0)
+      throw new IllegalArgumentException("inputTokens must be nonnegative");
+    if (outputTokens != null && outputTokens < 0)
+      throw new IllegalArgumentException("outputTokens must be nonnegative");
     Objects.requireNonNull(state, "state");
   }
 }

@@ -1,6 +1,5 @@
 package dev.blot.core.v3;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -28,6 +27,7 @@ public record Message(
     Objects.requireNonNull(artifactIds, "artifactIds");
     artifactIds = List.copyOf(artifactIds);
     mentions = mentions == null ? null : List.copyOf(mentions);
-    if (position != null && position < 0) throw new IllegalArgumentException("position must be nonnegative");
+    if (position != null && position < 0)
+      throw new IllegalArgumentException("position must be nonnegative");
   }
 }

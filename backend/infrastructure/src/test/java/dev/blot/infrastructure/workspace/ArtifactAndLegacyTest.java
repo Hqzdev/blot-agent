@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.*;
 import dev.blot.application.ApplicationResult;
 import dev.blot.application.BlotApplicationService;
@@ -27,11 +29,6 @@ import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ArtifactAndLegacyTest {
   @TempDir Path directory;

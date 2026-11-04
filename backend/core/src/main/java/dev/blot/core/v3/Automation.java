@@ -30,6 +30,7 @@ public record Automation(
     Objects.requireNonNull(weekdays, "weekdays");
     weekdays = List.copyOf(weekdays);
     Objects.requireNonNull(missedRunPolicy, "missedRunPolicy");
-    if (maxCatchUpRuns != null && maxCatchUpRuns < 0) throw new IllegalArgumentException("maxCatchUpRuns must be nonnegative");
+    if (maxCatchUpRuns != null && maxCatchUpRuns < 0)
+      throw new IllegalArgumentException("maxCatchUpRuns must be nonnegative");
   }
 }

@@ -4,7 +4,6 @@ import dev.blot.api.workspace.transport.RequestActor;
 import dev.blot.application.workspace.*;
 import dev.blot.application.workspace.conversation.SessionService;
 import dev.blot.application.workspace.identity.AccountService;
-import dev.blot.core.workspace.identity.Actor;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.*;
 import org.springframework.web.bind.annotation.*;

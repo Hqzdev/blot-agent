@@ -1,6 +1,5 @@
 package dev.blot.core.v3;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -26,6 +25,7 @@ public record Task(
     Objects.requireNonNull(state, "state");
     Objects.requireNonNull(plan, "plan");
     plan = List.copyOf(plan);
-    if (budgetTokenLimit != null && budgetTokenLimit < 0) throw new IllegalArgumentException("budgetTokenLimit must be nonnegative");
+    if (budgetTokenLimit != null && budgetTokenLimit < 0)
+      throw new IllegalArgumentException("budgetTokenLimit must be nonnegative");
   }
 }

@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.ProviderGateway;
 import dev.blot.application.workspace.*;
@@ -8,7 +10,6 @@ import dev.blot.application.workspace.WorkspaceFailure;
 import dev.blot.application.workspace.agent.DelegationService;
 import dev.blot.application.workspace.billing.BudgetService;
 import dev.blot.application.workspace.execution.GenerationStateService;
-import dev.blot.core.Project;
 import dev.blot.core.workspace.*;
 import dev.blot.core.workspace.Entity;
 import dev.blot.core.workspace.EntityKind;
@@ -26,11 +27,6 @@ import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class DelegationAndBudgetTest {
   @TempDir Path directory;

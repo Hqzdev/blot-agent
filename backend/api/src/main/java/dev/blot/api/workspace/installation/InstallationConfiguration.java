@@ -1,6 +1,5 @@
 package dev.blot.api.workspace.installation;
 
-import dev.blot.application.workspace.WorkspaceFailure;
 import dev.blot.application.workspace.providers.ProviderSettingsService;
 import dev.blot.core.workspace.provider.ProviderSettingsData;
 import dev.blot.infrastructure.workspace.provider.PemCertificates;

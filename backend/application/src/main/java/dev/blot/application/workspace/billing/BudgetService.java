@@ -1,7 +1,6 @@
 package dev.blot.application.workspace.billing;
 
 import dev.blot.application.ports.*;
-import dev.blot.application.ports.ProviderGateway;
 import dev.blot.application.ports.WorkspaceStore;
 import dev.blot.application.workspace.Records;
 import dev.blot.application.workspace.WorkspaceFailure;

@@ -1,9 +1,6 @@
 package dev.blot.core.v3;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 public record Artifact(
     RecordMetadata metadata,
@@ -21,6 +18,7 @@ public record Artifact(
     if (byteCount < 0) throw new IllegalArgumentException("byteCount must be nonnegative");
     Objects.requireNonNull(hash, "hash");
     Objects.requireNonNull(relativePath, "relativePath");
-    if (encryptionEpoch != null && encryptionEpoch < 0) throw new IllegalArgumentException("encryptionEpoch must be nonnegative");
+    if (encryptionEpoch != null && encryptionEpoch < 0)
+      throw new IllegalArgumentException("encryptionEpoch must be nonnegative");
   }
 }

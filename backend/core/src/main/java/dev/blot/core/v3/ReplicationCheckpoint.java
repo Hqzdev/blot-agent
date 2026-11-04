@@ -1,16 +1,10 @@
 package dev.blot.core.v3;
 
-import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 public record ReplicationCheckpoint(
-    RecordMetadata metadata,
-    UUID deviceId,
-    UUID streamId,
-    long sequence,
-    ReplicationState state) {
+    RecordMetadata metadata, UUID deviceId, UUID streamId, long sequence, ReplicationState state) {
   public ReplicationCheckpoint {
     Objects.requireNonNull(metadata, "metadata");
     Objects.requireNonNull(deviceId, "deviceId");

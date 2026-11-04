@@ -1,10 +1,11 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.sun.net.httpserver.*;
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.ProviderGateway;
 import dev.blot.application.ports.SecretStore;
-import dev.blot.application.workspace.WorkspaceFailure;
 import dev.blot.infrastructure.workspace.provider.GigaChatGateway;
 import dev.blot.infrastructure.workspace.security.TlsIdentity;
 import java.net.*;
@@ -19,11 +20,6 @@ import java.util.concurrent.atomic.*;
 import javax.net.ssl.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class GigaChatProtocolTest {
   @TempDir Path directory;

@@ -58,7 +58,8 @@ public final class RunService {
     var p = Records.require(tx, EntityKind.PROJECT, actor.accountId(), project, ProjectData.class);
     if (p.data().archived()) throw WorkspaceFailure.invalid("Проект в архиве");
     if (p.data().repositoryPath().isBlank())
-      throw WorkspaceFailure.invalid("Для работы с кодом подключите Git-репозиторий. Чат доступен без него.");
+      throw WorkspaceFailure.invalid(
+          "Для работы с кодом подключите Git-репозиторий. Чат доступен без него.");
     var run =
         records.create(
             tx,

@@ -4,6 +4,15 @@
   "completedTasks": 12,
   "documents": [
     {
+      "id": "apple-v3-implementation",
+      "taskId": null,
+      "source": "docs/status/apple-v3-implementation.md",
+      "downloadUrl": "/project-docs/status/apple-v3-implementation.md",
+      "sha256": "57792b0daf08e516fd3bb1f33b1064bd9d44a6f333668a231d2f75ab88e12c28",
+      "bytes": 4121,
+      "taskCompleted": false
+    },
+    {
       "id": "module-map",
       "taskId": null,
       "source": "docs/architecture/module-map.md",
@@ -260,8 +269,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "47043a161cf5f56a8cb93f8e60be3707ba6256dddf8310d25f48ebe6d61e6e8a",
-      "bytes": 8290,
+      "sha256": "5911c8c7466ba550773044d21be3d270742b838edc5681f97bbedb8b4b2709c3",
+      "bytes": 8327,
       "taskCompleted": false
     },
     {
@@ -278,8 +287,8 @@
       "taskId": null,
       "source": "docs/archive/implementation-plan.md",
       "downloadUrl": "/project-docs/archive/implementation-plan.md",
-      "sha256": "5dff15f9e6f205428471984907d37519d37fed464415032007b664c548646e9d",
-      "bytes": 270836,
+      "sha256": "2b684ac6537a7b7cde33a401d22a4fd8ef8e1a2cc9dd76847a637bedc80ad38a",
+      "bytes": 270730,
       "taskCompleted": false
     },
     {
