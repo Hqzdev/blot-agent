@@ -6,6 +6,10 @@ export const PRIVATE_HEADERS = { "Cache-Control": "no-store, private", "Referrer
 export function json(value, status = 200) { return NextResponse.json(value, { status, headers: PRIVATE_HEADERS }); }
 export function failure(error) { return json({ code: error instanceof AuthError ? error.code : "auth_service_unavailable" }, error instanceof AuthError ? error.status : 503); }
 
+export function clientIP(request) {
+  return request.headers.get(process.env.VERCEL ? "x-vercel-forwarded-for" : "x-real-ip")?.split(",")[0].trim() || "unknown";
+}
+
 export async function input(request) {
   const target = new URL(request.url);
   let source;

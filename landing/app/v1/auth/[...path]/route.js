@@ -1,5 +1,5 @@
 import { accountRequest, AuthError } from "@/lib/auth/config.mjs";
-import { json, failure } from "@/lib/auth/route-support.mjs";
+import { json, failure, clientIP } from "@/lib/auth/route-support.mjs";
 
 export const runtime = "nodejs";
 const POSTS = new Set(["register", "verify", "login", "refresh", "password/request", "password/reset", "logout", "revoke-sessions", "device-challenge", "device-bind", "browser/token"]);
@@ -20,7 +20,7 @@ async function forward(request, context) {
     }
     const auth = request.headers.get("authorization");
     if (auth && !/^Bearer [A-Za-z0-9_-]{43}$/.test(auth)) throw new AuthError("session_required", 401);
-    const result = await accountRequest(path, { body, method: request.method, accessToken: auth?.slice(7) });
+    const result = await accountRequest(path, { body, method: request.method, accessToken: auth?.slice(7), clientIP: clientIP(request) });
     return json(result);
   } catch (error) { return failure(error); }
 }
