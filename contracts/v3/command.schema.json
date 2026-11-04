@@ -1,0 +1,438 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blot.app/contracts/v3/command.schema.json",
+  "title": "Blot v3 command",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "commandId",
+    "workspaceId",
+    "type",
+    "expectedVersion",
+    "expiresAt",
+    "payload"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 3
+    },
+    "commandId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "workspaceId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "type": {
+      "type": "string"
+    },
+    "expectedVersion": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "expiresAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "payload": {
+      "type": "object"
+    }
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "type": {
+          "const": "conversation.create"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "title",
+            "agentId"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "agentId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid"
+            },
+            "kind": {
+              "$ref": "./entities.schema.json#/$defs/ConversationKind"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "conversation.send_message"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conversationId",
+            "content",
+            "artifactIds"
+          ],
+          "properties": {
+            "conversationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "content": {
+              "type": "string",
+              "minLength": 1
+            },
+            "artifactIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "replyToMessageId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid"
+            },
+            "mentions": {
+              "type": "array",
+              "items": {
+                "$ref": "./entities.schema.json#/$defs/MessageMention"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "agent.save"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile"
+          ],
+          "properties": {
+            "profile": {
+              "$ref": "./entities.schema.json#/$defs/AgentProfile"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "task.create"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conversationId",
+            "goal",
+            "executorDeviceId"
+          ],
+          "properties": {
+            "conversationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "goal": {
+              "type": "string",
+              "minLength": 1
+            },
+            "executorDeviceId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "approval.decide"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "actionId",
+            "decision",
+            "digest"
+          ],
+          "properties": {
+            "actionId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "decision": {
+              "enum": [
+                "APPROVE",
+                "DENY",
+                "SAVE_RULE"
+              ]
+            },
+            "digest": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "automation.save"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "automation"
+          ],
+          "properties": {
+            "automation": {
+              "$ref": "./entities.schema.json#/$defs/Automation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "device.revoke"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "deviceId"
+          ],
+          "properties": {
+            "deviceId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "mcp.save"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "connection"
+          ],
+          "properties": {
+            "connection": {
+              "$ref": "./entities.schema.json#/$defs/McpConnection"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "connection.disconnect"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "connectionId"
+          ],
+          "properties": {
+            "connectionId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "task.approve_plan"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "taskId",
+            "revision"
+          ],
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "task.pause"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "taskId",
+            "revision"
+          ],
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "task.resume"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "taskId",
+            "revision"
+          ],
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "task.stop"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "taskId",
+            "revision"
+          ],
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "revision": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "conversation.update"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conversationId"
+          ],
+          "properties": {
+            "conversationId": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "pinned": {
+              "type": "boolean"
+            },
+            "archived": {
+              "type": "boolean"
+            }
+          }
+        }
+      }
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "conversation.delete"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "conversationId"
+          ],
+          "properties": {
+            "conversationId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,8 +1,6 @@
 import { createHmac } from "node:crypto";
-
-export class AuthError extends Error {
-  constructor(code, status = 400) { super(code); this.code = code; this.status = status; }
-}
+import { AuthError } from "./errors.mjs";
+export { AuthError } from "./errors.mjs";
 
 export function accountOrigin() {
   const value = process.env.BLOT_CLOUD_ORIGIN || process.env.BLOT_ACCOUNT_SERVICE_URL;
@@ -33,7 +31,11 @@ export function cookieKey() {
   return createHmac("sha256", secret).update("BLOT-WEB-COOKIE-1").digest();
 }
 
-export async function accountRequest(path, { body, accessToken, method = "POST" } = {}) {
+export async function accountRequest(path, { body, accessToken, method = "POST", clientIP } = {}) {
+  if (process.env.DATABASE_URL) {
+    const { localAccountService } = await import("../accounts/service.mjs");
+    return localAccountService().request(path, { body, accessToken, method, clientIP });
+  }
   let response;
   try {
     response = await fetch(new URL("/v1/auth/" + path, accountOrigin()), {

@@ -1,99 +1,52 @@
-//
-//  BlotMacApp.swift
-//  blot-agent
-//
-//  Created by Yaroslav Fairfieldd on 10/11/26.
-//
-
 import BlotDesign
 import SwiftUI
 
 @main
 struct BlotMacApp: App {
-    @NSApplicationDelegateAdaptor(BlotBackendLifecycle.self) private var lifecycle
-    @State private var state = AppState()
-
+    @State private var workspace = WorkspaceBootstrap.makeStore()
+    @FocusedValue(\.teamSceneActions) private var teamActions
+    init() {
+        #if DEBUG
+        if MacKeychainVerification.requested { _Concurrency.Task { await MacKeychainVerification.run() } }
+        #endif
+    }
     var body: some Scene {
         WindowGroup {
-            BlotWindowContent(state: state)
-                .task { await state.restoreBackendSession() }
-                .sheet(isPresented: $state.showDevicePairing) { DevicePairingView() }
+            #if DEBUG
+            if MacKeychainVerification.requested { ProgressView() }
+            else { WorkspaceRootView(store: workspace) }
+            #else
+            WorkspaceRootView(store: workspace)
+            #endif
         }
-        .windowStyle(.automatic)
-        .windowBackgroundDragBehavior(.enabled)
-        .defaultSize(width: K.windowWidth, height: K.windowHeight)
+        .defaultSize(width: 1280, height: 820)
+        .windowStyle(.hiddenTitleBar)
+        .windowToolbarStyle(.unifiedCompact)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Новый чат") { state.openQuickChat() }
-                    .keyboardShortcut("n")
-                    .disabled(!state.isSignedIn)
+                Button(workspace.t(teamActions == nil ? "New chat" : "Create agent")) {
+                    if let teamActions { teamActions.createAgent() }
+                    else { workspace.navigate(.home) }
+                }.keyboardShortcut("n")
             }
             CommandGroup(replacing: .appSettings) {
-                Button("Settings…") { state.showingSettings = true }
-                    .keyboardShortcut(",")
-                    .disabled(!state.isSignedIn)
+                Button(workspace.t("Settings")) {
+                    if let teamActions { teamActions.settings() }
+                    else { workspace.navigate(.settings) }
+                }.keyboardShortcut(",")
             }
-            CommandMenu("Go") {
-                Button("Search tasks, files and actions…") {
-                    if state.paletteVisible { state.paletteVisible = false }
-                    else { state.openCommandPalette() }
-                }
-                .keyboardShortcut("k")
-                .disabled(!state.isSignedIn)
-                Divider()
-                Button("Blot Code · New task") { state.openHome() }
-                    .keyboardShortcut("1")
-                Button("Motes · Team chat") {
-                    state.openWorkRun(state.selectedRunID)
-                }
-                .keyboardShortcut("2")
-                Button("Motes · Team graph") { state.openGraph() }
-                    .keyboardShortcut("3")
-                Divider()
-                Button("Back") { state.navigateHistory(-1) }
-                    .keyboardShortcut("[")
-                    .disabled(!state.isSignedIn || !state.shell.history.canGoBack)
-                Button("Forward") { state.navigateHistory(1) }
-                    .keyboardShortcut("]")
-                    .disabled(!state.isSignedIn || !state.shell.history.canGoForward)
-                Divider()
-                Button("Show Pet") { state.openPet() }
-                    .keyboardShortcut(" ", modifiers: .option)
-                    .disabled(!state.isSignedIn)
-            }
-            CommandGroup(before: .sidebar) {
-                Button(state.sidebarVisible ? "Hide Sidebar" : "Show Sidebar") {
-                    state.sidebarVisible.toggle()
-                }
-                .keyboardShortcut("s", modifiers: [.command, .control])
-                .disabled(!state.isSignedIn)
-                Button(state.shellPanelVisible ? "Hide Project Panel" : "Show Project Panel") {
-                    state.toggleShellPanel()
-                }
-                .keyboardShortcut("0", modifiers: [.command, .option])
-                .disabled(!state.isSignedIn || !state.shellSupportsProjectPanel)
-                Divider()
-            }
-            CommandMenu("Run") {
-                Button(state.currentRunPaused ? "Resume Run" : "Pause Run") { state.pauseOrResumeRun() }
-                    .disabled(!state.canPauseOrResumeRun)
-                Button("Stop Run…") { state.confirmingStopRun = true }
-                    .disabled(!state.canStopRun)
-            }
-            CommandMenu("Devices") {
-                Button("Connect iPhone…") { state.showDevicePairing = true }.disabled(!state.isSignedIn)
+            CommandMenu(workspace.t("Go")) {
+                Button(workspace.t("Search")) {
+                    if let teamActions { teamActions.search() }
+                    else { workspace.navigate(.search) }
+                }.keyboardShortcut("k").disabled(teamActions?.canSearch == false)
+                Button(workspace.t("Back")) {
+                    if let teamActions { teamActions.back() } else { workspace.back() }
+                }.keyboardShortcut("[")
+                #if DEBUG
+                Button(workspace.t("Screen catalog")) { workspace.catalogVisible = true }
+                #endif
             }
         }
-        WindowGroup("Conversation", for: ConversationWindowRequest.self) { request in
-            if let value = request.wrappedValue {
-                ConversationWindowView(request: value).environment(state)
-            }
-        }
-        .defaultSize(width: 760, height: 700)
     }
-}
-
-@MainActor
-final class BlotBackendLifecycle: NSObject, NSApplicationDelegate {
-    func applicationWillTerminate(_ notification: Notification) { BackendRuntime.shared.stop() }
 }

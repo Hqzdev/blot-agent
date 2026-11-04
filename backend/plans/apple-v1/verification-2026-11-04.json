@@ -1,0 +1,190 @@
+{
+  "checkedAt": "2026-11-04T05:49:57.722612+00:00",
+  "timezone": "Asia/Yekaterinburg",
+  "revision": "baab140b6c0b51c89f4a13a4805a3df4a7ef1536",
+  "workingTree": "uncommitted; pre-existing changes preserved",
+  "sourceManifestSHA256": "d3f5414c944ed2a89ed2f22bbb08d5651f088a6bcd96b18f65b605c27f954928",
+  "sourceFiles": 389,
+  "scopes": {
+    "packages/BlotWorkspace": {
+      "files": 64,
+      "sha256": "335f8df0799c069d107ba36aa316bc5ec4d1befb0c3db4749a44d79674bb497e"
+    },
+    "packages/BlotDomain/Sources/BlotDomain/V3": {
+      "files": 1,
+      "sha256": "84213ed44c4790926cc01755e521086c1d4aa1629840f40c7f326a613a772966"
+    },
+    "packages/BlotDomain/Tests/BlotDomainTests/V3ContractTests.swift": {
+      "files": 1,
+      "sha256": "c3e7508df11b296e9a3da9f1ecbf5b5255c4616ded9a9814e04a4528737fdcc8"
+    },
+    "backend/cloud": {
+      "files": 42,
+      "sha256": "710d3e5f3f310b22b896bf194593fb8d0b0220886c0ef7826627ca511d1c56a5"
+    },
+    "backend/core/src/main/java/dev/blot/core/v3": {
+      "files": 63,
+      "sha256": "1dbde1d76f5f6280dfbf75857aaac20e94c0f194b151146da6b130234eec0bb7"
+    },
+    "backend/api/src/test/java/dev/blot/api/V3ContractTest.java": {
+      "files": 1,
+      "sha256": "ddb162950cdfd35802a6a4655e5f39dc1d0d779cb447bb9efac339b58b5c6e10"
+    },
+    "contracts/v3": {
+      "files": 6,
+      "sha256": "b1df3f98e6c166b7a7ae61c3c3454432a9ea4e505b65a66f49bb23fcb50e5dbe"
+    },
+    "fixtures/v3": {
+      "files": 159,
+      "sha256": "60955e5f981d7887640105a27e49070f48bbd105f9222619624379d715988f4a"
+    },
+    "apps/shared/WorkspaceV3": {
+      "files": 36,
+      "sha256": "846cc8a6fe543e82b212aa0b7ce9502fa5add38b95445501f22e3f7d83ff4cca"
+    },
+    "apps/shared/Resources/GoogleOAuth.plist": {
+      "files": 1,
+      "sha256": "9ea0071e6aeb6eb4a1da19e1093ec8cfbd1cca6cfb8736ca0afa979cfe44289e"
+    },
+    "apps/verification": {
+      "files": 4,
+      "sha256": "65ba5df6863f4aa69de7093ddf425b5fdc64ef0ea2d5bc58c8552a7df66b0d4b"
+    },
+    "apps/Blot.xcodeproj/project.pbxproj": {
+      "files": 1,
+      "sha256": "8a4fe61f509ea4e08fe411a00224dc8f71f7b823334344e51eec8cd3e9df0f38"
+    },
+    "apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift": {
+      "files": 1,
+      "sha256": "1532cd64707a5a872eda8a637352c82b9f219ce702c6cb86de80947e9451b0ed"
+    },
+    "apps/macos/BlotMac/Features/Chat/MacWorkspaceChatPage.swift": {
+      "files": 1,
+      "sha256": "445953d305a6c935e431d7129d76799e362ffa00359312ba5a66067d09624885"
+    },
+    "scripts/generate-v3-contracts.py": {
+      "files": 1,
+      "sha256": "2aa6b7e8ae4a4219a16c13cc49f9431e2c75b7f7383416cea90f30b42763e2cb"
+    },
+    "scripts/format-v3-java.py": {
+      "files": 1,
+      "sha256": "033ab7ee4759b1c06b4b3ab9f3b45d456c0ad9bcf1b28b4023cc3a0443e7d09d"
+    },
+    "scripts/check-v3-schemas.py": {
+      "files": 1,
+      "sha256": "7819310a650ff0a8a9b1e0cbfa167f9b206c5f27604589cc830197cb0a756203"
+    },
+    "scripts/check-workspace-v3.sh": {
+      "files": 1,
+      "sha256": "7188ae58a801dfac6f03098b0b015f38c7e54f2452aa33a4de3b9b743b90bced"
+    },
+    "scripts/verify-workspace-v3.swift": {
+      "files": 1,
+      "sha256": "67c76119e82b6cce5a25bc4d56e0ce63a082311b5a6aea32ad2ccd16573a5fd2"
+    },
+    "scripts/check-apple-cloud-wire.py": {
+      "files": 1,
+      "sha256": "15c6bda89215362bf8d5d8c470e8d9dd7112b4ec16dcdb3493c733e57515d9f4"
+    },
+    "scripts/check-apple-iphone.py": {
+      "files": 1,
+      "sha256": "a0d66533d9e27410be4e4f6408633297fa4818018e91d3b3fbe78f90e379a3c3"
+    },
+    "scripts/configure-google-oauth.py": {
+      "files": 1,
+      "sha256": "f03717c17b5c5945cb4e95c6efefb234552297ec045d01452196cb0a0ed9a58b"
+    }
+  },
+  "checks": {
+    "workspaceMac": {
+      "passed": 34
+    },
+    "workspacePhysicalIPhone": {
+      "checkedAt": "2026-11-04T05:45:36.247214+00:00",
+      "result": "PASS",
+      "physicalDevice": true,
+      "osVersion": "27.2",
+      "passedTests": 35,
+      "failedTests": 0,
+      "hostBundleID": "yaroslavstrelkov.blot-agent.workspace-verification",
+      "resultBundle": ".build/apple-v1-iphone-20261104T054242Z.xcresult",
+      "productUIAcceptance": false,
+      "externalModel": false,
+      "google": false,
+      "log": ".build/apple-v1-iphone-20261104T054242Z.log"
+    },
+    "cloudJava": {
+      "passed": 10
+    },
+    "v3Java": {
+      "passed": 3
+    },
+    "domainSwift": {
+      "passed": 5
+    },
+    "schemaFixtures": {
+      "passed": 157
+    },
+    "nativeHTTPWire": {
+      "checkedAt": "2026-11-04T05:43:00.972048+00:00",
+      "result": "PASS",
+      "replicas": 3,
+      "transport": "real loopback HTTP",
+      "encryption": "Swift CryptoKit AES-GCM + P256 verified by Java JCE",
+      "scenarios": [
+        "offline convergence",
+        "durable relay",
+        "idempotent delivery",
+        "native bootstrap and signed pairing",
+        "ECDH wrapped key transfer",
+        "signed snapshot donor request and multi-chunk resume",
+        "snapshot rejects tampered manifest and preserves local changes",
+        "snapshot watermark followed by tail replay",
+        "native key rotation and revoked-device fencing",
+        "process lease fencing",
+        "encrypted multi-chunk file transfer",
+        "rotating session",
+        "logout fences suspended credential write",
+        "no plaintext in relay/log"
+      ],
+      "physicalDevices": false,
+      "google": false,
+      "smtp": false,
+      "externalModel": false
+    },
+    "macUIAdapter": {
+      "result": "PASS",
+      "model": "injected",
+      "network": false,
+      "keychain": false
+    },
+    "macBuild": "PASS",
+    "iosSimulatorBuild": "PASS; product app not launched",
+    "composeConfig": "PASS; container not started"
+  },
+  "commands": [
+    "swift test --disable-sandbox --package-path packages/BlotWorkspace --scratch-path .build/apple-v1-workspace",
+    "swift test --disable-sandbox --package-path packages/BlotDomain --scratch-path .build/apple-v1-domain",
+    "backend/gradlew --offline --no-daemon -p backend :cloud:test :cloud:spotlessCheck :cloud:bootJar :api:test --tests dev.blot.api.V3ContractTest",
+    ".build/checks-venv/bin/python scripts/check-v3-schemas.py",
+    "./scripts/check-workspace-v3.sh --local-only",
+    "python3 scripts/check-apple-cloud-wire.py",
+    "python3 scripts/check-apple-iphone.py",
+    "xcodebuild -project apps/Blot.xcodeproj -scheme BlotIOS -destination 'generic/platform=iOS Simulator' -derivedDataPath .build/apple-v1-ios CODE_SIGNING_ALLOWED=NO build"
+  ],
+  "productAcceptance": {
+    "accepted": 0,
+    "total": 98,
+    "firstStage": 76,
+    "deferred": 22,
+    "minimumFor70Percent": 69
+  },
+  "notVerified": [
+    "product Mac+iPhone sync/UI acceptance",
+    "real external model",
+    "Google OAuth/Gmail/Calendar",
+    "SMTP delivery",
+    "container runtime/public deployment",
+    "OS background execution"
+  ]
+}

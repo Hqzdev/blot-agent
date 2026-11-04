@@ -1,0 +1,159 @@
+{
+  "captured_at": "2026-11-03T09:38:59.502373+00:00",
+  "source_video": "https://www.youtube.com/watch?v=q1IwR88mhaA",
+  "test_checks": 64,
+  "build": "passed",
+  "mode": "offline local demo",
+  "screenshots_count": 27,
+  "comparisons": [
+    {
+      "title": "Профиль агента",
+      "reference": "0155-bot-profile.jpg",
+      "screenshot": "agent-profile.jpg",
+      "behavior": "Имя, роль, инструкции, уведомления и аватар."
+    },
+    {
+      "title": "Первый разговор",
+      "reference": "0215-assistant-onboarding.jpg",
+      "screenshot": "agent-onboarding.jpg",
+      "behavior": "Выбор обязанностей и настройка специалиста."
+    },
+    {
+      "title": "Использование и подписка",
+      "reference": "0245-usage-billing.jpg",
+      "screenshot": "usage-billing.jpg",
+      "behavior": "Счётчик действий, дата сброса, месячный демо-предел и выбор плана."
+    },
+    {
+      "title": "Обновления",
+      "reference": "0255-updates.jpg",
+      "screenshot": "updates.jpg",
+      "behavior": "Канал обновлений, автоматическое обновление и ручная демо-проверка."
+    },
+    {
+      "title": "Несколько Gmail",
+      "reference": "0335-gmail-authorization.jpg",
+      "screenshot": "gmail-account-setup.jpg",
+      "behavior": "Метка, демо-аккаунт, отдельные разрешения. Переименование сохраняет связь с письмами."
+    },
+    {
+      "title": "Расписание из переписки",
+      "reference": "0755-morning-report-routine.jpg",
+      "screenshot": "routine-chat.jpg",
+      "behavior": "Запрос создаёт или обновляет задачу; утренние обзоры одного агента объединяются."
+    },
+    {
+      "title": "Редактор расписания",
+      "reference": "0725-routines-list.jpg",
+      "screenshot": "routine-editor.jpg",
+      "behavior": "Время, дни недели, пауза, тихий режим, согласование и ручной запуск. Автозапуск работает при открытом приложении."
+    },
+    {
+      "title": "Сравнение товаров",
+      "reference": "0910-product-recommendations.jpg",
+      "screenshot": "research-results.jpg",
+      "behavior": "Сохранённые варианты, бюджет, сортировка, цены, отзывы, характеристики и текстовые ссылки."
+    },
+    {
+      "title": "Marketplace",
+      "reference": "0945-marketplace.jpg",
+      "screenshot": "marketplace.jpg",
+      "behavior": "Поиск, категории, фильтр подключений. 8 шаблонов и 17 сервисов."
+    },
+    {
+      "title": "Состав шаблона",
+      "reference": "1000-dr-eggbot.jpg",
+      "screenshot": "template-skills.jpg",
+      "behavior": "Импорт инструкций, памяти, навыков и приостановленных расписаний."
+    },
+    {
+      "title": "Менеджер паролей",
+      "reference": "1025-password-manager.jpg",
+      "screenshot": "password-plugins.jpg",
+      "behavior": "Карточка 1Password и локальная настройка демо-хранилища."
+    },
+    {
+      "title": "Участники группы",
+      "reference": "1050-group-members.jpg",
+      "screenshot": "group-members.jpg",
+      "behavior": "Несколько групп, названия, состав и отдельная история каждого чата."
+    },
+    {
+      "title": "Делегирование и счета",
+      "reference": "1120-group-invoices.jpg",
+      "screenshot": "group-delegation.jpg",
+      "behavior": "Поручения, ответы специалистов, реестр счетов и черновик напоминания."
+    },
+    {
+      "title": "Ответ на письмо",
+      "reference": "1215-email-sent.jpg",
+      "screenshot": "email-sent.jpg",
+      "behavior": "Редактирование, черновик, демо-отправка и подтверждение. Повторная отправка блокируется."
+    }
+  ],
+  "coverage": [
+    {
+      "items": "1–7",
+      "area": "Агенты и переписки",
+      "behavior": "Создание, профиль, обязанности, уведомления, инструкции и история."
+    },
+    {
+      "items": "8–12",
+      "area": "Использование и обновления",
+      "behavior": "Локальные лимиты, срок сброса, демо-план и настройки обновлений."
+    },
+    {
+      "items": "13–14, 21–26",
+      "area": "Компьютер и запись экрана",
+      "behavior": "Исключены: ПК, браузер, вход на сайты, обновление и сброс ПК, запись действий."
+    },
+    {
+      "items": "15–20",
+      "area": "Подключения",
+      "behavior": "Демо-аккаунты Gmail, метки, разрешения и MCP/Composio/Zapier."
+    },
+    {
+      "items": "27–28, 30, 32",
+      "area": "Товары",
+      "behavior": "Офлайн-подборка, бюджет, сортировка, ссылки, корзина и документ демо-заказа."
+    },
+    {
+      "items": "29, 31",
+      "area": "Веб-страницы и новые скриншоты",
+      "behavior": "Исключены обращения к сайтам и свежие веб-скриншоты. Исходные кадры сохранены в исследовании."
+    },
+    {
+      "items": "33–38",
+      "area": "Регулярные задачи",
+      "behavior": "Запрос в чате, объединение обзоров, несколько расписаний; Slack и почта на демо-данных."
+    },
+    {
+      "items": "39–45",
+      "area": "Marketplace",
+      "behavior": "Поиск, состав и импорт шаблона, конструктор агентов, сервисы и 1Password."
+    },
+    {
+      "items": "46–50",
+      "area": "Группы",
+      "behavior": "Участники, несколько чатов, распределение задач и общая сохранённая история."
+    },
+    {
+      "items": "51–54",
+      "area": "Почта",
+      "behavior": "Обзор входящих, подготовка и редактирование ответа, локальная отправка с подтверждением."
+    }
+  ],
+  "ui_verified": [
+    "template import and onboarding",
+    "multiple groups and delegation",
+    "Gmail account labels",
+    "email review and demo send",
+    "transaction approval",
+    "routine creation and manual run",
+    "document save and demo newsletter",
+    "demo plan selection",
+    "local MCP settings",
+    "budget filter and demo checkout",
+    "persistence after restart"
+  ]
+}

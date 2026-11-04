@@ -1,0 +1,18 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000018",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "kind": "RULE",
+  "actionId": null,
+  "operationClass": "operationClass",
+  "scope": "workspace",
+  "resource": "resource",
+  "digest": null,
+  "expiresAt": null,
+  "revoked": true
+}

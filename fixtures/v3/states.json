@@ -1,0 +1,167 @@
+{
+  "DeviceKind": [
+    "DESKTOP",
+    "PHONE"
+  ],
+  "TrustState": [
+    "PENDING",
+    "TRUSTED",
+    "REVOKED",
+    "EXPIRED"
+  ],
+  "TaskState": [
+    "DRAFT",
+    "PLANNING",
+    "WAITING_APPROVAL",
+    "QUEUED",
+    "RUNNING",
+    "WAITING_USER",
+    "PAUSED",
+    "COMPLETED",
+    "FAILED",
+    "CANCELED",
+    "INTERRUPTED"
+  ],
+  "DeliveryState": [
+    "SAVED",
+    "DELIVERED",
+    "ACCEPTED",
+    "RUNNING",
+    "COMPLETED",
+    "FAILED",
+    "CANCELED",
+    "WAITING_CONNECTION",
+    "INTERRUPTED"
+  ],
+  "ActionState": [
+    "PREPARED",
+    "WAITING_APPROVAL",
+    "APPROVED",
+    "RUNNING",
+    "SUCCEEDED",
+    "FAILED",
+    "DENIED",
+    "EXPIRED",
+    "UNKNOWN"
+  ],
+  "AttemptState": [
+    "RUNNING",
+    "SUBMITTED",
+    "IN_REVIEW",
+    "CHANGES_REQUESTED",
+    "ACCEPTED",
+    "FAILED",
+    "CANCELED"
+  ],
+  "AssignmentState": [
+    "ASSIGNED",
+    "ACTIVE",
+    "COMPLETED",
+    "REPLACED",
+    "CANCELED"
+  ],
+  "SessionState": [
+    "CREATED",
+    "RUNNING",
+    "WAITING_USER",
+    "PAUSED",
+    "COMPLETED",
+    "FAILED",
+    "CANCELED"
+  ],
+  "AccessMode": [
+    "OBSERVE",
+    "ASK_FIRST",
+    "TRUSTED_SCOPE"
+  ],
+  "GrantKind": [
+    "ONCE",
+    "RULE"
+  ],
+  "ConnectionState": [
+    "DISCONNECTED",
+    "CONNECTING",
+    "CONNECTED",
+    "EXPIRED",
+    "ERROR"
+  ],
+  "AutomationKind": [
+    "REMINDER",
+    "TASK"
+  ],
+  "MissedRunPolicy": [
+    "COALESCE",
+    "SKIP",
+    "CATCH_UP"
+  ],
+  "MemoryScope": [
+    "PERSONAL",
+    "PROJECT",
+    "AGENT"
+  ],
+  "MemoryState": [
+    "CANDIDATE",
+    "ACTIVE",
+    "DELETED"
+  ],
+  "BudgetState": [
+    "RESERVED",
+    "SETTLED",
+    "UNKNOWN"
+  ],
+  "MessageRole": [
+    "USER",
+    "ASSISTANT",
+    "TOOL",
+    "SYSTEM"
+  ],
+  "PetState": [
+    "IDLE",
+    "THINKING",
+    "WORKING",
+    "WAITING_USER",
+    "PAUSED",
+    "SUCCESS",
+    "ERROR",
+    "DISCONNECTED"
+  ],
+  "ConversationKind": [
+    "DIRECT",
+    "GROUP"
+  ],
+  "ParticipantKind": [
+    "USER",
+    "AGENT"
+  ],
+  "ChangeOperation": [
+    "UPSERT",
+    "DELETE"
+  ],
+  "ReplicationState": [
+    "PENDING",
+    "ACKNOWLEDGED",
+    "CONFLICT"
+  ],
+  "LeaseState": [
+    "ACTIVE",
+    "RELEASED",
+    "EXPIRED"
+  ],
+  "AutomationTrigger": [
+    "SCHEDULED",
+    "MANUAL"
+  ],
+  "ExecutionMode": [
+    "LOCAL_OWNED",
+    "DELEGATED"
+  ],
+  "ModelStepState": [
+    "PREPARED",
+    "RUNNING",
+    "WAITING_TOOLS",
+    "COMPLETED",
+    "INTERRUPTED",
+    "CANCELED",
+    "FAILED"
+  ]
+}

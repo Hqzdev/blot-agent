@@ -1,0 +1,40 @@
+services:
+  cloud:
+    build:
+      context: ../../..
+      dockerfile: backend/cloud/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8081:8081"
+    environment:
+      BLOT_CLOUD_CHALLENGE_KEY_FILE: /run/secrets/challenge-key
+      BLOT_GIGACHAT_CREDENTIALS_FILE: /run/secrets/gigachat-credentials
+      BLOT_SMTP_HOST: ${BLOT_SMTP_HOST:?Set the SMTP host}
+      BLOT_SMTP_PORT: ${BLOT_SMTP_PORT:-587}
+      BLOT_SMTP_USERNAME: ${BLOT_SMTP_USERNAME:?Set the SMTP username}
+      BLOT_SMTP_FROM: ${BLOT_SMTP_FROM:?Set the verified sender}
+      BLOT_SMTP_PASSWORD_FILE: /run/secrets/smtp-password
+      BLOT_CLOUD_DAILY_TOKENS: ${BLOT_CLOUD_DAILY_TOKENS:-20000}
+    secrets:
+      - challenge-key
+      - gigachat-credentials
+      - smtp-password
+    volumes:
+      - cloud-data:/app/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 30s
+secrets:
+  challenge-key:
+    file: ${BLOT_CLOUD_SECRETS_DIR:?Set the directory containing deployment secrets}/challenge-key
+  gigachat-credentials:
+    file: ${BLOT_CLOUD_SECRETS_DIR:?Set the directory containing deployment secrets}/gigachat-credentials
+  smtp-password:
+    file: ${BLOT_CLOUD_SECRETS_DIR:?Set the directory containing deployment secrets}/smtp-password
+volumes:
+  cloud-data:

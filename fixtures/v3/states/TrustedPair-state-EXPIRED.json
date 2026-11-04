@@ -1,0 +1,15 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000005",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": null,
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "desktopDeviceId": "00000000-0000-4000-8000-000000000001",
+  "phoneDeviceId": "00000000-0000-4000-8000-000000000001",
+  "verificationCode": "verificationCode",
+  "expiresAt": "2026-11-02T09:00:00Z",
+  "state": "EXPIRED"
+}

@@ -14,7 +14,7 @@ subprojects {
     }
     tasks.withType<Test>().configureEach {
         useJUnitPlatform()
-        if (project.name in listOf("infrastructure", "api")) {
+        if (project.name in listOf("infrastructure", "api", "cloud")) {
             jvmArgs("--enable-native-access=ALL-UNNAMED")
         }
         systemProperty("blot.httpFixtures", rootProject.file("../.build/http-fixtures").absolutePath)

@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.ProviderGateway;
 import dev.blot.application.workspace.*;
@@ -18,11 +20,6 @@ import java.util.concurrent.*;
 import java.util.function.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class ModelQueueTest {
   @TempDir Path directory;

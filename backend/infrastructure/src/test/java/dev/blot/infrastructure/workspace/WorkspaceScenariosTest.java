@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.WorkspaceStore;
 import dev.blot.application.workspace.*;
@@ -17,7 +19,6 @@ import dev.blot.application.workspace.identity.AccountService;
 import dev.blot.application.workspace.identity.EmailChallengeService;
 import dev.blot.application.workspace.identity.TokenGenerator;
 import dev.blot.application.workspace.permissions.PermissionService;
-import dev.blot.core.Project;
 import dev.blot.core.workspace.*;
 import dev.blot.core.workspace.EntityKind;
 import dev.blot.core.workspace.conversation.ConversationData;
@@ -35,11 +36,6 @@ import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class WorkspaceScenariosTest {
   @TempDir Path directory;

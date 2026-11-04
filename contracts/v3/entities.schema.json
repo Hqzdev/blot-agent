@@ -1,0 +1,2222 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://blot.app/contracts/v3/entities.schema.json",
+  "title": "Blot v3 public records",
+  "$defs": {
+    "DeviceKind": {
+      "type": "string",
+      "enum": [
+        "DESKTOP",
+        "PHONE"
+      ]
+    },
+    "TrustState": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "TRUSTED",
+        "REVOKED",
+        "EXPIRED"
+      ]
+    },
+    "TaskState": {
+      "type": "string",
+      "enum": [
+        "DRAFT",
+        "PLANNING",
+        "WAITING_APPROVAL",
+        "QUEUED",
+        "RUNNING",
+        "WAITING_USER",
+        "PAUSED",
+        "COMPLETED",
+        "FAILED",
+        "CANCELED",
+        "INTERRUPTED"
+      ]
+    },
+    "DeliveryState": {
+      "type": "string",
+      "enum": [
+        "SAVED",
+        "DELIVERED",
+        "ACCEPTED",
+        "RUNNING",
+        "COMPLETED",
+        "FAILED",
+        "CANCELED",
+        "WAITING_CONNECTION",
+        "INTERRUPTED"
+      ]
+    },
+    "ActionState": {
+      "type": "string",
+      "enum": [
+        "PREPARED",
+        "WAITING_APPROVAL",
+        "APPROVED",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED",
+        "DENIED",
+        "EXPIRED",
+        "UNKNOWN"
+      ]
+    },
+    "AttemptState": {
+      "type": "string",
+      "enum": [
+        "RUNNING",
+        "SUBMITTED",
+        "IN_REVIEW",
+        "CHANGES_REQUESTED",
+        "ACCEPTED",
+        "FAILED",
+        "CANCELED"
+      ]
+    },
+    "AssignmentState": {
+      "type": "string",
+      "enum": [
+        "ASSIGNED",
+        "ACTIVE",
+        "COMPLETED",
+        "REPLACED",
+        "CANCELED"
+      ]
+    },
+    "SessionState": {
+      "type": "string",
+      "enum": [
+        "CREATED",
+        "RUNNING",
+        "WAITING_USER",
+        "PAUSED",
+        "COMPLETED",
+        "FAILED",
+        "CANCELED"
+      ]
+    },
+    "AccessMode": {
+      "type": "string",
+      "enum": [
+        "OBSERVE",
+        "ASK_FIRST",
+        "TRUSTED_SCOPE"
+      ]
+    },
+    "GrantKind": {
+      "type": "string",
+      "enum": [
+        "ONCE",
+        "RULE"
+      ]
+    },
+    "ConnectionState": {
+      "type": "string",
+      "enum": [
+        "DISCONNECTED",
+        "CONNECTING",
+        "CONNECTED",
+        "EXPIRED",
+        "ERROR"
+      ]
+    },
+    "AutomationKind": {
+      "type": "string",
+      "enum": [
+        "REMINDER",
+        "TASK"
+      ]
+    },
+    "MissedRunPolicy": {
+      "type": "string",
+      "enum": [
+        "COALESCE",
+        "SKIP",
+        "CATCH_UP"
+      ]
+    },
+    "MemoryScope": {
+      "type": "string",
+      "enum": [
+        "PERSONAL",
+        "PROJECT",
+        "AGENT"
+      ]
+    },
+    "MemoryState": {
+      "type": "string",
+      "enum": [
+        "CANDIDATE",
+        "ACTIVE",
+        "DELETED"
+      ]
+    },
+    "BudgetState": {
+      "type": "string",
+      "enum": [
+        "RESERVED",
+        "SETTLED",
+        "UNKNOWN"
+      ]
+    },
+    "MessageRole": {
+      "type": "string",
+      "enum": [
+        "USER",
+        "ASSISTANT",
+        "TOOL",
+        "SYSTEM"
+      ]
+    },
+    "PetState": {
+      "type": "string",
+      "enum": [
+        "IDLE",
+        "THINKING",
+        "WORKING",
+        "WAITING_USER",
+        "PAUSED",
+        "SUCCESS",
+        "ERROR",
+        "DISCONNECTED"
+      ]
+    },
+    "ConversationKind": {
+      "type": "string",
+      "enum": [
+        "DIRECT",
+        "GROUP"
+      ]
+    },
+    "ParticipantKind": {
+      "type": "string",
+      "enum": [
+        "USER",
+        "AGENT"
+      ]
+    },
+    "ChangeOperation": {
+      "type": "string",
+      "enum": [
+        "UPSERT",
+        "DELETE"
+      ]
+    },
+    "ReplicationState": {
+      "type": "string",
+      "enum": [
+        "PENDING",
+        "ACKNOWLEDGED",
+        "CONFLICT"
+      ]
+    },
+    "LeaseState": {
+      "type": "string",
+      "enum": [
+        "ACTIVE",
+        "RELEASED",
+        "EXPIRED"
+      ]
+    },
+    "AutomationTrigger": {
+      "type": "string",
+      "enum": [
+        "SCHEDULED",
+        "MANUAL"
+      ]
+    },
+    "ExecutionMode": {
+      "type": "string",
+      "enum": [
+        "LOCAL_OWNED",
+        "DELEGATED"
+      ]
+    },
+    "ModelStepState": {
+      "type": "string",
+      "enum": [
+        "PREPARED",
+        "RUNNING",
+        "WAITING_TOOLS",
+        "COMPLETED",
+        "INTERRUPTED",
+        "CANCELED",
+        "FAILED"
+      ]
+    },
+    "RecordMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "ownerId",
+        "workspaceId",
+        "version",
+        "createdAt",
+        "updatedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "ownerId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "workspaceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ExecutionContext": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "executorDeviceId",
+        "originDeviceId",
+        "taskId",
+        "revision",
+        "leaseGeneration"
+      ],
+      "properties": {
+        "executorDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "originDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "taskId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "leaseGeneration": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Account": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "email",
+        "name",
+        "emailVerified"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "email": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "emailVerified": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Device": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "kind",
+        "platform",
+        "publicKey",
+        "lastSeenAt",
+        "revoked"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "$ref": "#/$defs/DeviceKind"
+        },
+        "platform": {
+          "type": "string"
+        },
+        "publicKey": {
+          "type": "string"
+        },
+        "lastSeenAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revoked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "TrustedPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "desktopDeviceId",
+        "phoneDeviceId",
+        "verificationCode",
+        "expiresAt",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "desktopDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "phoneDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "verificationCode": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "$ref": "#/$defs/TrustState"
+        }
+      }
+    },
+    "Workspace": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "executorDeviceId",
+        "accessMode",
+        "folderIds"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "executorDeviceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accessMode": {
+          "$ref": "#/$defs/AccessMode"
+        },
+        "folderIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "Project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "repositoryPath"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "repositoryPath": {
+          "type": "string"
+        }
+      }
+    },
+    "AgentProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "roleId",
+        "avatarShape",
+        "avatarColor",
+        "instructions",
+        "modelId",
+        "accessMode",
+        "configurationId"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "roleId": {
+          "type": "string"
+        },
+        "avatarShape": {
+          "type": "string"
+        },
+        "avatarColor": {
+          "type": "string"
+        },
+        "instructions": {
+          "type": "string"
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "accessMode": {
+          "$ref": "#/$defs/AccessMode"
+        },
+        "configurationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AgentConfigurationRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "agentId",
+        "revision",
+        "instructions",
+        "toolIds",
+        "modelId"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "agentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "instructions": {
+          "type": "string"
+        },
+        "toolIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "modelId": {
+          "type": "string"
+        }
+      }
+    },
+    "Conversation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "agentId",
+        "title",
+        "mobileOwned",
+        "pinned",
+        "archived",
+        "kind"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "agentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "mobileOwned": {
+          "type": "boolean"
+        },
+        "pinned": {
+          "type": "boolean"
+        },
+        "archived": {
+          "type": "boolean"
+        },
+        "kind": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConversationKind"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Message": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "conversationId",
+        "role",
+        "content",
+        "delivery",
+        "commandId",
+        "artifactIds",
+        "authorAgentId",
+        "replyToMessageId",
+        "mentions",
+        "position",
+        "executorDeviceId"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "role": {
+          "$ref": "#/$defs/MessageRole"
+        },
+        "content": {
+          "type": "string"
+        },
+        "delivery": {
+          "$ref": "#/$defs/DeliveryState"
+        },
+        "commandId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "artifactIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "authorAgentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "replyToMessageId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "mentions": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/MessageMention"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "position": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executorDeviceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Task": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "projectId",
+        "conversationId",
+        "goal",
+        "state",
+        "plan",
+        "configurationId",
+        "parentTaskId",
+        "skillRevisionId",
+        "budgetTokenLimit",
+        "executionMode"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "projectId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "state": {
+          "$ref": "#/$defs/TaskState"
+        },
+        "plan": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "configurationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "parentTaskId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skillRevisionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budgetTokenLimit": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executionMode": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExecutionMode"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "TaskAttempt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "stepId",
+        "agentId",
+        "state",
+        "criteria"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "stepId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "agentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "$ref": "#/$defs/AttemptState"
+        },
+        "criteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Assignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "stepId",
+        "agentId",
+        "state",
+        "dependencyIds"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "stepId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "agentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "$ref": "#/$defs/AssignmentState"
+        },
+        "dependencyIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      }
+    },
+    "AgentSession": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "agentId",
+        "configurationId",
+        "parentSessionId",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "agentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "configurationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "parentSessionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/SessionState"
+        }
+      }
+    },
+    "AgentMessage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "senderSessionId",
+        "recipientSessionId",
+        "content"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "senderSessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "recipientSessionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "content": {
+          "type": "string"
+        }
+      }
+    },
+    "PreparedAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "toolId",
+        "resource",
+        "parameters",
+        "digest",
+        "consequences",
+        "expiresAt",
+        "state",
+        "preparationId"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "toolId": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "string"
+        },
+        "digest": {
+          "type": "string"
+        },
+        "consequences": {
+          "type": "string"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "$ref": "#/$defs/ActionState"
+        },
+        "preparationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ApprovalGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "kind",
+        "actionId",
+        "operationClass",
+        "scope",
+        "resource",
+        "digest",
+        "expiresAt",
+        "revoked"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "kind": {
+          "$ref": "#/$defs/GrantKind"
+        },
+        "actionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operationClass": {
+          "type": "string"
+        },
+        "scope": {
+          "type": "string"
+        },
+        "resource": {
+          "type": "string"
+        },
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revoked": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ToolInvocation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "preparedActionId",
+        "state",
+        "externalId",
+        "result",
+        "exitCode"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "preparedActionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "$ref": "#/$defs/ActionState"
+        },
+        "externalId": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "exitCode": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "name",
+        "mediaType",
+        "byteCount",
+        "hash",
+        "relativePath",
+        "encryptionEpoch"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ExecutionContext"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "mediaType": {
+          "type": "string"
+        },
+        "byteCount": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hash": {
+          "type": "string"
+        },
+        "relativePath": {
+          "type": "string"
+        },
+        "encryptionEpoch": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MemoryEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "scope",
+        "scopeId",
+        "content",
+        "sourceId",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "scope": {
+          "$ref": "#/$defs/MemoryScope"
+        },
+        "scopeId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "content": {
+          "type": "string"
+        },
+        "sourceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "state": {
+          "$ref": "#/$defs/MemoryState"
+        }
+      }
+    },
+    "ContextSummary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "conversationId",
+        "content",
+        "sourceIds",
+        "valid"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "content": {
+          "type": "string"
+        },
+        "sourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "valid": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "service",
+        "accountName",
+        "scopes",
+        "state",
+        "deviceId"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "service": {
+          "type": "string"
+        },
+        "accountName": {
+          "type": "string"
+        },
+        "scopes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "state": {
+          "$ref": "#/$defs/ConnectionState"
+        },
+        "deviceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "McpConnection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "transport",
+        "endpoint",
+        "toolIds",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "transport": {
+          "type": "string"
+        },
+        "endpoint": {
+          "type": "string"
+        },
+        "toolIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "state": {
+          "$ref": "#/$defs/ConnectionState"
+        }
+      }
+    },
+    "Automation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "kind",
+        "executorDeviceId",
+        "agentId",
+        "name",
+        "goal",
+        "timezone",
+        "localTime",
+        "weekdays",
+        "missedRunPolicy",
+        "enabled",
+        "skillRevisionId",
+        "scheduledAt",
+        "maxCatchUpRuns"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "kind": {
+          "$ref": "#/$defs/AutomationKind"
+        },
+        "executorDeviceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "agentId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "name": {
+          "type": "string"
+        },
+        "goal": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "localTime": {
+          "type": "string"
+        },
+        "weekdays": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "missedRunPolicy": {
+          "$ref": "#/$defs/MissedRunPolicy"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "skillRevisionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scheduledAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "maxCatchUpRuns": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "AutomationRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "automationId",
+        "scheduledAt",
+        "state",
+        "trigger"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "automationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "$ref": "#/$defs/TaskState"
+        },
+        "trigger": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/AutomationTrigger"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "BudgetLedger": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "execution",
+        "requestId",
+        "reservedTokens",
+        "actualTokens",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "execution": {
+          "$ref": "#/$defs/ExecutionContext"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "reservedTokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "actualTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/BudgetState"
+        }
+      }
+    },
+    "SyncCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "deviceId",
+        "sequence"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "deviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "MessageMention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "agentId",
+        "startUTF16",
+        "lengthUTF16"
+      ],
+      "properties": {
+        "agentId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "startUTF16": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "lengthUTF16": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ConversationParticipant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "conversationId",
+        "participantId",
+        "kind",
+        "removed"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "participantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "kind": {
+          "$ref": "#/$defs/ParticipantKind"
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "MessageReaction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "messageId",
+        "participantId",
+        "emoji",
+        "removed"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "participantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "emoji": {
+          "type": "string"
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ConversationReadPosition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "conversationId",
+        "participantId",
+        "messageId",
+        "position"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "participantId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "messageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Skill": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "name",
+        "activeRevisionId",
+        "archived"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "name": {
+          "type": "string"
+        },
+        "activeRevisionId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "archived": {
+          "type": "boolean"
+        }
+      }
+    },
+    "SkillRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "skillId",
+        "instructions",
+        "parametersJSON",
+        "toolIds"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "skillId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "instructions": {
+          "type": "string"
+        },
+        "parametersJSON": {
+          "type": "string"
+        },
+        "toolIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "RecordChange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "originDeviceId",
+        "sequence",
+        "recordKind",
+        "recordId",
+        "baseVersion",
+        "recordVersion",
+        "operation",
+        "payloadJSON"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "originDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recordKind": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "baseVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "recordVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "operation": {
+          "$ref": "#/$defs/ChangeOperation"
+        },
+        "payloadJSON": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "RecordTombstone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "recordKind",
+        "recordId",
+        "deletedByDeviceId",
+        "deletedAt"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "recordKind": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deletedByDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "deletedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "ReplicationCheckpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "deviceId",
+        "streamId",
+        "sequence",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "deviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "streamId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "$ref": "#/$defs/ReplicationState"
+        }
+      }
+    },
+    "ConflictingRevision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "recordKind",
+        "recordId",
+        "baseVersion",
+        "originDeviceId",
+        "payloadJSON",
+        "resolved"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "recordKind": {
+          "type": "string"
+        },
+        "recordId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "baseVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "originDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "payloadJSON": {
+          "type": "string"
+        },
+        "resolved": {
+          "type": "boolean"
+        }
+      }
+    },
+    "ExecutionLease": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "taskId",
+        "executorDeviceId",
+        "generation",
+        "expiresAt",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "taskId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "executorDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "generation": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "$ref": "#/$defs/LeaseState"
+        }
+      }
+    },
+    "ModelStep": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "metadata",
+        "conversationId",
+        "sourceMessageId",
+        "responseMessageId",
+        "taskId",
+        "executorDeviceId",
+        "originDeviceId",
+        "executionMode",
+        "stepIndex",
+        "modelId",
+        "configurationId",
+        "skillRevisionId",
+        "budgetTokenLimit",
+        "requestJSON",
+        "toolCallsJSON",
+        "toolResultsJSON",
+        "inputTokens",
+        "outputTokens",
+        "state"
+      ],
+      "properties": {
+        "metadata": {
+          "$ref": "#/$defs/RecordMetadata"
+        },
+        "conversationId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sourceMessageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "responseMessageId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "taskId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executorDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "originDeviceId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "executionMode": {
+          "$ref": "#/$defs/ExecutionMode"
+        },
+        "stepIndex": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "modelId": {
+          "type": "string"
+        },
+        "configurationId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "skillRevisionId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "budgetTokenLimit": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "requestJSON": {
+          "type": "string"
+        },
+        "toolCallsJSON": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "toolResultsJSON": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "inputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "state": {
+          "$ref": "#/$defs/ModelStepState"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Account"
+    },
+    {
+      "$ref": "#/$defs/Device"
+    },
+    {
+      "$ref": "#/$defs/TrustedPair"
+    },
+    {
+      "$ref": "#/$defs/Workspace"
+    },
+    {
+      "$ref": "#/$defs/Project"
+    },
+    {
+      "$ref": "#/$defs/AgentProfile"
+    },
+    {
+      "$ref": "#/$defs/AgentConfigurationRevision"
+    },
+    {
+      "$ref": "#/$defs/Conversation"
+    },
+    {
+      "$ref": "#/$defs/Message"
+    },
+    {
+      "$ref": "#/$defs/Task"
+    },
+    {
+      "$ref": "#/$defs/TaskAttempt"
+    },
+    {
+      "$ref": "#/$defs/Assignment"
+    },
+    {
+      "$ref": "#/$defs/AgentSession"
+    },
+    {
+      "$ref": "#/$defs/AgentMessage"
+    },
+    {
+      "$ref": "#/$defs/PreparedAction"
+    },
+    {
+      "$ref": "#/$defs/ApprovalGrant"
+    },
+    {
+      "$ref": "#/$defs/ToolInvocation"
+    },
+    {
+      "$ref": "#/$defs/Artifact"
+    },
+    {
+      "$ref": "#/$defs/MemoryEntry"
+    },
+    {
+      "$ref": "#/$defs/ContextSummary"
+    },
+    {
+      "$ref": "#/$defs/Connection"
+    },
+    {
+      "$ref": "#/$defs/McpConnection"
+    },
+    {
+      "$ref": "#/$defs/Automation"
+    },
+    {
+      "$ref": "#/$defs/AutomationRun"
+    },
+    {
+      "$ref": "#/$defs/BudgetLedger"
+    },
+    {
+      "$ref": "#/$defs/SyncCursor"
+    },
+    {
+      "$ref": "#/$defs/ConversationParticipant"
+    },
+    {
+      "$ref": "#/$defs/MessageReaction"
+    },
+    {
+      "$ref": "#/$defs/ConversationReadPosition"
+    },
+    {
+      "$ref": "#/$defs/Skill"
+    },
+    {
+      "$ref": "#/$defs/SkillRevision"
+    },
+    {
+      "$ref": "#/$defs/RecordChange"
+    },
+    {
+      "$ref": "#/$defs/RecordTombstone"
+    },
+    {
+      "$ref": "#/$defs/ReplicationCheckpoint"
+    },
+    {
+      "$ref": "#/$defs/ConflictingRevision"
+    },
+    {
+      "$ref": "#/$defs/ExecutionLease"
+    },
+    {
+      "$ref": "#/$defs/ModelStep"
+    }
+  ]
+}

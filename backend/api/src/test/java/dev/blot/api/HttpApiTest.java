@@ -1,14 +1,14 @@
 package dev.blot.api;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import com.fasterxml.jackson.databind.*;
 import dev.blot.api.workspace.security.TlsConfiguration;
 import dev.blot.application.ports.*;
 import dev.blot.application.ports.EmailSender;
 import dev.blot.application.ports.SecretStore;
 import dev.blot.application.ports.WorkspaceStore;
-import dev.blot.application.workspace.Records;
 import dev.blot.application.workspace.execution.RunService;
-import dev.blot.core.workspace.EntityKind;
 import dev.blot.core.workspace.planning.CoverageData;
 import dev.blot.core.workspace.planning.PlanStepData;
 import dev.blot.core.workspace.planning.RequirementData;
@@ -24,11 +24,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.web.server.context.WebServerApplicationContext;
 import org.springframework.context.annotation.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class HttpApiTest {
   @TempDir Path directory;
@@ -121,20 +116,59 @@ class HttpApiTest {
           json.readTree(retry.body()).path("operationId"));
       var read = send(http, base, "/v2/records/CONVERSATION/" + id, "GET", null, token);
       assertEquals(200, read.statusCode());
-      var project = desktopCommand(http, base, token, "project.create", null, null,
-          Map.of("name", "Research"), UUID.randomUUID()).path("result");
+      var project =
+          desktopCommand(
+                  http,
+                  base,
+                  token,
+                  "project.create",
+                  null,
+                  null,
+                  Map.of("name", "Research"),
+                  UUID.randomUUID())
+              .path("result");
       UUID projectId = UUID.fromString(project.path("id").asText());
       assertEquals("", project.path("data").path("repositoryPath").asText());
-      desktopCommand(http, base, token, "memory.save", projectId, null,
-          Map.of("data", Map.of("scope", "project", "status", "active", "content", "Project brief")),
+      desktopCommand(
+          http,
+          base,
+          token,
+          "memory.save",
+          projectId,
+          null,
+          Map.of(
+              "data", Map.of("scope", "project", "status", "active", "content", "Project brief")),
           UUID.randomUUID());
-      var projectChat = desktopCommand(http, base, token, "conversation.create", projectId, null,
-          Map.of("title", "First question"), UUID.randomUUID()).path("result");
-      desktopCommand(http, base, token, "conversation.send_message", null, null,
-          Map.of("conversationId", projectChat.path("id").asText(), "content", "Hello"), UUID.randomUUID());
+      var projectChat =
+          desktopCommand(
+                  http,
+                  base,
+                  token,
+                  "conversation.create",
+                  projectId,
+                  null,
+                  Map.of("title", "First question"),
+                  UUID.randomUUID())
+              .path("result");
+      desktopCommand(
+          http,
+          base,
+          token,
+          "conversation.send_message",
+          null,
+          null,
+          Map.of("conversationId", projectChat.path("id").asText(), "content", "Hello"),
+          UUID.randomUUID());
       assertEquals(projectId.toString(), projectChat.path("projectId").asText());
-      desktopCommand(http, base, token, "conversation.send_message", null, null,
-          Map.of("conversationId", id, "content", "Hello without a project"), UUID.randomUUID());
+      desktopCommand(
+          http,
+          base,
+          token,
+          "conversation.send_message",
+          null,
+          null,
+          Map.of("conversationId", id, "content", "Hello without a project"),
+          UUID.randomUUID());
       String second = register(http, base, "second@example.com");
       assertEquals(
           404,
@@ -212,11 +246,7 @@ class HttpApiTest {
               runs.propose(
                   tx,
                   dev.blot.application.workspace.Records.require(
-                      tx,
-                      dev.blot.core.workspace.EntityKind.RUN,
-                      owner,
-                      runId,
-                      RunData.class),
+                      tx, dev.blot.core.workspace.EntityKind.RUN, owner, runId, RunData.class),
                   List.of(
                       new PlanStepData(
                           "build",
@@ -225,8 +255,7 @@ class HttpApiTest {
                           List.of(),
                           "BACKEND",
                           List.of("."))),
-                  List.of(
-                      new RequirementData("r1", "Implement the feature")),
+                  List.of(new RequirementData("r1", "Implement the feature")),
                   List.of(new CoverageData("r1", List.of("build")))));
       for (String type : List.of("run.plan.approve", "run.pause", "run.resume", "run.stop")) {
         var current =

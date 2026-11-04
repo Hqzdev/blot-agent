@@ -1,5 +1,7 @@
 # Доступ к выбранному репозиторию на Mac
 
+> **Статус: октябрьская версия.** Если здесь написано иначе, чем в [ТЗ от 1 ноября 2026](../product/blot-technical-specification.md), верно ТЗ.
+
 1. Settings → Git & GitHub открывает системный выбор папки.
 2. `ProjectBookmarks` сохраняет app-scoped bookmark в контейнере приложения. При запуске работающего backend новый выбор можно подтвердить через `project.access`.
 3. Java получает transferable bookmark только через унаследованные pipes `MacPlatformBroker`. В HTTP JSON и окружение процессов он не попадает.

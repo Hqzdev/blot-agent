@@ -1,0 +1,18 @@
+{
+  "date": "2026-11-03",
+  "build": "macOS passed",
+  "timelineChecks": 22,
+  "result": "passed",
+  "uiChecks": [
+    "short send",
+    "multiline send",
+    "reply entrance and final scroll",
+    "reduce motion send",
+    "reopen existing conversation"
+  ],
+  "motionAfterVerification": "enabled",
+  "screenshots": [
+    "incoming.jpg",
+    "settled.jpg"
+  ]
+}

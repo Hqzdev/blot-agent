@@ -39,7 +39,7 @@ const executionLines = [
   "Сроки в roadmap — исходный календарный план. Они не меняют технические зависимости и уточняются по фактическому прогрессу. Создание окна или макета можно делать параллельно с сервером; подключение реальных функций требует готовности их API и данных.",
 ];
 const executionMarkdown = `${executionLines.join("\n")}\n`;
-await writeFile(new URL("../../docs/implementation-plan.md", import.meta.url), executionMarkdown, "utf8");
+await writeFile(new URL("../../docs/archive/implementation-plan.md", import.meta.url), executionMarkdown, "utf8");
 await writeFile(new URL("../public/implementation-plan.md", import.meta.url), executionMarkdown, "utf8");
 
 await publishDocumentation();

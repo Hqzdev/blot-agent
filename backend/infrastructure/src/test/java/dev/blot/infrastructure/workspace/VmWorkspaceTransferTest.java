@@ -1,16 +1,13 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.workspace.WorkspaceFailure;
 import dev.blot.infrastructure.workspace.execution.VmWorkspaceTransfer;
 import java.nio.file.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class VmWorkspaceTransferTest {
   @TempDir Path directory;

@@ -1,0 +1,281 @@
+{
+  "video": "https://www.youtube.com/watch?v=G6AwOYT-Gbw",
+  "title": "How to Use Grok Bot for Beginners",
+  "channel": "Kevin Stratvert",
+  "host": "David DeWinter",
+  "duration": "8:59",
+  "analysis_date": "2026-11-02",
+  "features_count": 63,
+  "screenshots": [
+    {
+      "file": "screenshots/0100-main-interface.jpg",
+      "seconds": 60,
+      "timecode": "1:00",
+      "title": "Основной интерфейс и постоянная переписка",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=60s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0120-create-bot.jpg",
+      "seconds": 80,
+      "timecode": "1:20",
+      "title": "Создание бота и группового чата",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=80s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0135-bot-name.jpg",
+      "seconds": 95,
+      "timecode": "1:35",
+      "title": "Имя бота и панель профиля",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=95s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0140-avatar-picker.jpg",
+      "seconds": 100,
+      "timecode": "1:40",
+      "title": "Выбор формы и цвета аватара",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=100s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0150-bot-onboarding.jpg",
+      "seconds": 110,
+      "timecode": "1:50",
+      "title": "Выбор роли и собственная задача",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=110s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0210-gmail-connect.jpg",
+      "seconds": 130,
+      "timecode": "2:10",
+      "title": "Выбор Gmail прямо в диалоге",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=130s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0215-gmail-authorize.jpg",
+      "seconds": 135,
+      "timecode": "2:15",
+      "title": "Авторизация подключения Gmail",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=135s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0235-app-catalog.jpg",
+      "seconds": 155,
+      "timecode": "2:35",
+      "title": "Каталог приложений и навыков",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=155s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0240-gmail-added.jpg",
+      "seconds": 160,
+      "timecode": "2:40",
+      "title": "Подключённый Gmail и начало чтения писем",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=160s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0250-inbox-routine.jpg",
+      "seconds": 170,
+      "timecode": "2:50",
+      "title": "Найденный заказ и автоматическое расписание",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=170s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0315-voice-command.jpg",
+      "seconds": 195,
+      "timecode": "3:15",
+      "title": "Голосовая команда и запрос черновика",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=195s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0325-email-review.jpg",
+      "seconds": 205,
+      "timecode": "3:25",
+      "title": "Просмотр черновика и отправка письма",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=205s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0400-email-style.jpg",
+      "seconds": 240,
+      "timecode": "4:00",
+      "title": "Правка стиля письма и подтверждение отправки",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=240s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0410-memory-list.jpg",
+      "seconds": 250,
+      "timecode": "4:10",
+      "title": "Память бота и общие предпочтения",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=250s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0445-computer-preview.jpg",
+      "seconds": 285,
+      "timecode": "4:45",
+      "title": "Предпросмотр облачного компьютера",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=285s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0505-teach-task-mac.jpg",
+      "seconds": 305,
+      "timecode": "5:05",
+      "title": "Кнопка Teach a task на Mac",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=305s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0530-transaction-category.jpg",
+      "seconds": 330,
+      "timecode": "5:30",
+      "title": "Запись обучения на примере QuickBooks",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=330s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0550-learned-workflow.jpg",
+      "seconds": 350,
+      "timecode": "5:50",
+      "title": "Объяснение выученной процедуры",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=350s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0645-transactions-result.jpg",
+      "seconds": 405,
+      "timecode": "6:45",
+      "title": "Завершённая обработка транзакций",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=405s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0650-saved-skill.jpg",
+      "seconds": 410,
+      "timecode": "6:50",
+      "title": "Запуск сохранённого навыка через слеш",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=410s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0700-support-tickets.jpg",
+      "seconds": 420,
+      "timecode": "7:00",
+      "title": "Бот поддержки и очередь Freshdesk",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=420s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0720-support-document.jpg",
+      "seconds": 440,
+      "timecode": "7:20",
+      "title": "Прикрепление документа с правилами",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=440s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0745-routine-prompt.jpg",
+      "seconds": 465,
+      "timecode": "7:45",
+      "title": "Запрос расписания обычным сообщением",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=465s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0755-routine-settings.jpg",
+      "seconds": 475,
+      "timecode": "7:55",
+      "title": "Инструкция расписания и кнопки управления",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=475s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0800-routines-list.jpg",
+      "seconds": 480,
+      "timecode": "8:00",
+      "title": "Список регулярных задач и переключатель",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=480s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0815-group-create.jpg",
+      "seconds": 495,
+      "timecode": "8:15",
+      "title": "Добавление трёх ботов в группу",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=495s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0830-group-collaboration.jpg",
+      "seconds": 510,
+      "timecode": "8:30",
+      "title": "Передача сведений о возврате между ботами",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=510s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0845-group-followup.jpg",
+      "seconds": 525,
+      "timecode": "8:45",
+      "title": "Совместная сверка данных и вопрос пользователю",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=525s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0847-weekly-usage.jpg",
+      "seconds": 527,
+      "timecode": "8:47",
+      "title": "Меню профиля и недельное использование",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=527s",
+      "width": 1710,
+      "height": 962
+    },
+    {
+      "file": "screenshots/0848-weekly-usage-details.jpg",
+      "seconds": 528,
+      "timecode": "8:48",
+      "title": "Расход лимита и срок сброса",
+      "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=528s",
+      "width": 1710,
+      "height": 962
+    }
+  ]
+}

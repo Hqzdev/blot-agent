@@ -11,33 +11,7 @@
 import BlotDesign
 import SwiftUI
 
-enum KMotion {
-    /// Durations in seconds, also used by AppKit animations.
-    enum Duration {
-        static let press: Double = 0.12
-        static let quick: Double = 0.15
-        static let standard: Double = 0.22
-        static let panel: Double = 0.28
-    }
-
-    /// Distance of the shift that accompanies a fade.
-    static let shift: CGFloat = 6
-
-    /// Press feedback.
-    static let press = Animation.smooth(duration: Duration.press)
-    /// Hover, focus, toggles and small content swaps.
-    static let quick = Animation.smooth(duration: Duration.quick)
-    /// State changes inside a view: tabs, disclosure, selection, list edits.
-    static let standard = Animation.smooth(duration: Duration.standard)
-    /// Screens, side panels, modals, banners and toasts.
-    static let panel = Animation.smooth(duration: Duration.panel)
-    /// Banners, toasts and inline notices that enter and leave.
-    static let notice = Animation.smooth(duration: Duration.standard)
-    /// Sidebar and side-panel show / hide.
-    static let sidebar = Animation.smooth(duration: Duration.panel)
-    /// Skeleton → content cross-fade.
-    static let loading = Animation.easeOut(duration: 0.18)
-}
+typealias KMotion = BlotInterfaceMotion
 
 extension AnyTransition {
     /// Fade with a short shift that starts on the side of `edge` and ends in place.
@@ -61,18 +35,6 @@ extension AnyTransition {
 }
 
 // MARK: - Reduce Motion
-
-private struct BlotReduceMotionKey: EnvironmentKey {
-    static let defaultValue = false
-}
-
-extension EnvironmentValues {
-    /// True when the system or the in-app setting asks for reduced motion.
-    var blotReduceMotion: Bool {
-        get { self[BlotReduceMotionKey.self] }
-        set { self[BlotReduceMotionKey.self] = newValue }
-    }
-}
 
 extension View {
     /// Root of a window: publishes `blotReduceMotion` and, when it is on, removes every animation
@@ -110,7 +72,7 @@ private struct KAnimationModifier<V: Equatable>: ViewModifier {
 }
 
 /// Runs `body` inside `withAnimation` unless Reduce Motion is on.
-@MainActor func withKAnimation<Result>(_ reduceMotion: Bool, _ animation: Animation = KMotion.standard,
+@MainActor func withKAnimation<Result>(_ reduceMotion: Bool, _ animation: Animation? = nil,
                                        _ body: () throws -> Result) rethrows -> Result {
-    try withAnimation(reduceMotion ? nil : animation, body)
+    try withAnimation(reduceMotion ? nil : (animation ?? KMotion.standard), body)
 }

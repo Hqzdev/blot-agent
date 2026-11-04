@@ -1,0 +1,23 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000025",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "kind": "TASK",
+  "executorDeviceId": null,
+  "agentId": null,
+  "name": "Blot CEO",
+  "goal": "Compare email services",
+  "timezone": "Asia/Yekaterinburg",
+  "localTime": "localTime",
+  "weekdays": [],
+  "missedRunPolicy": "COALESCE",
+  "enabled": true,
+  "skillRevisionId": null,
+  "scheduledAt": null,
+  "maxCatchUpRuns": null
+}

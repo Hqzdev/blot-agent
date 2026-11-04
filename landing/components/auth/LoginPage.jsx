@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, Check, LoaderCircle, Mail } from "lucide-react";
+import { AppHandoff } from "@/lib/auth/app-handoff.mjs";
 import "./login.css";
 
 const ERRORS = {
@@ -39,13 +40,18 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(initialError);
   const [notice, setNotice] = useState("");
-  const [callback, setCallback] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
   const [platform, setPlatform] = useState("macos");
   const errorRef = useRef(null);
+  const autoHandoff = useRef(null);
+  const handoff = useRef(null);
+  if (!handoff.current) handoff.current = new AppHandoff({
+    prepare: query => request("/api/auth/app", { query }),
+    navigate: url => window.location.assign(url),
+  });
 
   useEffect(() => {
     let active = true;
@@ -55,18 +61,20 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
     return () => { active = false; };
   }, []);
   useEffect(() => { if (error) errorRef.current?.focus(); }, [error]);
-  useEffect(() => {
-    if (!callback) return;
-    const timer = setTimeout(() => setCallback(null), Math.max(0, Date.parse(callback.expiresAt) - Date.now()));
-    return () => clearTimeout(timer);
-  }, [callback]);
 
-  async function prepareApp() {
+  const prepareApp = useCallback(async () => {
     setBusy(true); setError("");
-    try { setCallback(await request("/api/auth/app", { query })); }
+    try { await handoff.current.open({ query, platform }); }
     catch (failure) { setError(failure.message); }
     finally { setBusy(false); }
-  }
+  }, [query, platform]);
+  useEffect(() => {
+    if (!account || checking || error) return;
+    const key = `${account.id}:${query || platform}`;
+    if (autoHandoff.current === key) return;
+    autoHandoff.current = key;
+    void prepareApp();
+  }, [account, checking, error, query, platform, prepareApp]);
   async function submit(event) {
     event.preventDefault(); setBusy(true); setError(""); setNotice("");
     try {
@@ -84,7 +92,7 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
   function changeMode(next) { setMode(next); setError(""); setNotice(""); setCode(""); setPassword(""); }
   async function logout() {
     setBusy(true); setError("");
-    try { await request("/api/auth/session", { action: "logout" }); setAccount(null); setCallback(null); }
+    try { await request("/api/auth/session", { action: "logout" }); setAccount(null); autoHandoff.current = null; }
     catch (failure) { setError(failure.message); }
     finally { setBusy(false); }
   }
@@ -98,20 +106,18 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
     <section className="auth-story" aria-labelledby="auth-title">
       <span className="auth-eyebrow">Ваше рабочее пространство</span>
       <h1 id="auth-title">{title}</h1>
-      <p>{account ? "Вход выполнен. Откройте Blot, чтобы продолжить в приложении." : "Один аккаунт для ваших чатов, агентов и задач на Mac и iPhone."}</p>
+      <p>{account ? "Вход выполнен. Возвращаемся в Blot…" : "Один аккаунт для ваших чатов, агентов и задач на Mac и iPhone."}</p>
       <div className="auth-pet" aria-hidden="true"><img src="/blot/logo-ink.png" alt="" className="auth-pet-light" /><img src="/blot/logo-paper.png" alt="" className="auth-pet-dark" /></div>
       <Link href="/" className="auth-back">Узнать больше о Blot <ArrowUpRight size={15} /></Link>
     </section>
     <section className="auth-panel" aria-label={account ? "Открыть приложение" : "Вход в аккаунт"} aria-busy={busy || checking}>
       {checking ? <div className="auth-checking" role="status"><LoaderCircle size={20} className="auth-spinner" /> Проверяем вход…</div> : account ? <>
         <div className="auth-account"><span className="auth-check"><Check size={20} /></span><div><strong>{account.name}</strong><span>{account.email}</span></div></div>
-        <h2>Открыть приложение</h2>
-        <p className="auth-description">{attempt ? `Вы входите в Blot для ${attempt.clientID === "blot-ios" ? "iPhone" : "Mac"}. Браузер попросит разрешение открыть приложение.` : "Выберите устройство. Если Blot ещё не установлен, сначала скачайте приложение."}</p>
+        <h2>Возвращаемся в Blot…</h2>
+        <p className="auth-description" role="status">{attempt ? `Вход в Blot для ${attempt.clientID === "blot-ios" ? "iPhone" : "Mac"} продолжится автоматически.` : "Открываем приложение на вашем устройстве."}</p>
         {!attempt && <div className="auth-platforms" role="group" aria-label="Устройство"><button type="button" aria-pressed={platform === "macos"} onClick={() => setPlatform("macos")}>Mac</button><button type="button" aria-pressed={platform === "ios"} onClick={() => setPlatform("ios")}>iPhone</button></div>}
-        {attempt ? callback ? <a className="auth-primary" href={callback.callbackURL}>Открыть Blot <ArrowUpRight size={17} /></a>
-          : <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? "Подготавливаем вход…" : "Продолжить в Blot"}<ArrowUpRight size={17} /></button>
-          : <a className="auth-primary" href={`blot-agent-${platform}:/oauth/start`}>Открыть Blot <ArrowUpRight size={17} /></a>}
-        <p className="auth-help">{callback ? "Ссылка действует одну минуту. Если приложение не открылось, нажмите кнопку ещё раз." : attempt ? "После подготовки появится кнопка открытия приложения." : "Приложение подтвердит вход через браузер."}</p>
+        <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? <><LoaderCircle className="auth-spinner" size={18} /> Открываем Blot…</> : <>Открыть ещё раз <ArrowUpRight size={17} /></>}</button>
+        <p className="auth-help">Если браузер запросит разрешение открыть Blot, подтвердите его. Повторное открытие нужно только если автоматический переход заблокирован.</p>
         <Link className="auth-download" href="/beta">Скачать Blot</Link>
         <button type="button" className="auth-text-button" disabled={busy} onClick={logout}>Войти в другой аккаунт</button>
       </> : <>

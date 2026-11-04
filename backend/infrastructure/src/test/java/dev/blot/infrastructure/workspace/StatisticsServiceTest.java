@@ -1,5 +1,7 @@
 package dev.blot.infrastructure.workspace;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.workspace.*;
 import dev.blot.application.workspace.Records;
 import dev.blot.application.workspace.WorkspaceFailure;
@@ -19,11 +21,6 @@ import java.time.Clock;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class StatisticsServiceTest {
   @TempDir Path directory;

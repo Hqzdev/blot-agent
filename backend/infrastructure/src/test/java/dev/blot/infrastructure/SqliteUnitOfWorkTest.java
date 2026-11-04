@@ -1,5 +1,7 @@
 package dev.blot.infrastructure;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 import dev.blot.application.*;
 import dev.blot.application.ApplicationEvent;
 import dev.blot.application.ApplicationResult;
@@ -16,11 +18,6 @@ import java.time.*;
 import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class SqliteUnitOfWorkTest {
   @TempDir Path directory;

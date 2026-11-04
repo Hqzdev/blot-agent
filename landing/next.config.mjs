@@ -9,6 +9,7 @@ nextEnv.updateInitialEnv(combinedEnv);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   devIndicators: false,
+  outputFileTracingIncludes: { "/api/auth/**/*": ["./lib/accounts/schema.sql"], "/auth/**/*": ["./lib/accounts/schema.sql"], "/v1/**/*": ["./lib/accounts/schema.sql"] },
   logging: { incomingRequests: { ignore: [/\/(?:auth|api\/auth|v1\/auth|login|register)(?:\/|\?|$)/] } },
 };
 

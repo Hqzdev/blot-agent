@@ -1,0 +1,12 @@
+**
+!backend/
+!backend/**
+backend/.gradle/
+backend/**/build/
+backend/**/.DS_Store
+backend/**/data/
+backend/**/secrets/
+backend/**/.env
+backend/**/.env.*
+backend/**/*.sqlite*
+backend/**/*.log

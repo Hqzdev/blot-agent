@@ -1,0 +1,35 @@
+{
+  "date": "2026-11-03",
+  "macBuild": "passed; launched --team-design",
+  "iosSimulatorBuild": "passed",
+  "designTests": {
+    "tests": 24,
+    "suites": 6,
+    "result": "passed"
+  },
+  "iconAudit": {
+    "svgAssets": 101,
+    "grid": "24x24",
+    "stroke": 1.6,
+    "linecap": "round",
+    "linejoin": "round",
+    "literalMacSymbols": 53,
+    "unmappedLiteralMacSymbols": 0,
+    "rawSystemImageConstructorsInTeamDesign": 0
+  },
+  "uiChecks": [
+    "inspector tabs",
+    "inspector hide and reveal",
+    "sidebar hide",
+    "catalog navigation",
+    "connected-app filter",
+    "settings panes",
+    "reduce-motion switch on and off"
+  ],
+  "motionPreferenceAfterChecks": "animations enabled",
+  "screenshots": [
+    "workspace.jpg",
+    "catalog.jpg",
+    "settings.jpg"
+  ]
+}

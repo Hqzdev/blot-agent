@@ -1,5 +1,7 @@
 # Правила интерфейса Blot по видео Kole Jain
 
+> **Статус: октябрьская версия.** Если здесь написано иначе, чем в [ТЗ от 1 ноября 2026](../product/blot-technical-specification.md), верно ТЗ.
+
 Дата разбора: 14 октября 2026.
 
 Источник: [Every UI/UX Concept Explained in Under 10 Minutes](https://www.youtube.com/watch?v=EcbgbKtOELY), Kole Jain, 9:23. Разбор опирается на полные английские автосубтитры и визуальные примеры из видеоряда.
@@ -127,7 +129,7 @@
 
 ## Что уже есть в проекте
 
-Сверка проведена с [темой Mac](../../apps/macos/BlotMac/Design/Theme.swift), [общими компонентами](../../apps/macos/BlotMac/Design/Components.swift), [полем ввода](../../apps/macos/BlotMac/Features/Chat/Composer.swift), [оболочкой](../../apps/macos/BlotMac/Features/Shell/RootView.swift), [стилями сайта](../../landing/app/globals.css) и сохранёнными [рендерами оболочки](../verification/blot-shell/README.md).
+Сверка проведена с [темой Mac](../../apps/macos/BlotMac/Design/Theme.swift), [общими компонентами](../../apps/macos/BlotMac/Design/Components.swift), [полем ввода](../../apps/macos/BlotMac/Features/Chat/Composer.swift), [оболочкой](../../apps/macos/BlotMac/Features/Shell/RootView.swift), [стилями сайта](../../landing/app/globals.css) и сохранёнными [рендерами оболочки](../status/verification/blot-shell/README.md).
 
 - Общие цветовые роли, две темы, UI-шрифт и отдельный шрифт для кода уже определены.
 - У навигации есть выбранные состояния и наведение; у общих кнопок — варианты основного, второстепенного и опасного действия.

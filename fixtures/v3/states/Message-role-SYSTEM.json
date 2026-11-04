@@ -1,0 +1,21 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000011",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "conversationId": "00000000-0000-4000-8000-000000000010",
+  "role": "SYSTEM",
+  "content": "Review the confirmed result.",
+  "delivery": "SAVED",
+  "commandId": "00000000-0000-4000-8000-000000000001",
+  "artifactIds": [],
+  "authorAgentId": null,
+  "replyToMessageId": null,
+  "mentions": null,
+  "position": null,
+  "executorDeviceId": null
+}

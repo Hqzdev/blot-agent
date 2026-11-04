@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="760" viewBox="0 0 1200 760">
+  <rect width="1200" height="760" fill="#f3f3f3"/>
+  <g font-family="Helvetica,Arial,sans-serif" fill="#111">
+    <text x="56" y="64" font-size="28">Blot Agent — landing concepts</text>
+    <rect x="56" y="104" width="524" height="592" rx="28" fill="white"/>
+    <rect x="620" y="104" width="524" height="592" rx="28" fill="#111"/>
+    <circle cx="318" cy="276" r="58"/>
+    <circle cx="882" cy="276" r="58" fill="#00c86a"/>
+    <g fill="white"><rect x="312" y="246" width="12" height="28" rx="6" transform="rotate(-25 318 260)"/><rect x="335" y="238" width="10" height="24" rx="5" transform="rotate(-25 340 250)"/><rect x="876" y="246" width="12" height="28" rx="6"/><rect x="899" y="238" width="10" height="24" rx="5"/></g>
+    <text x="318" y="404" text-anchor="middle" font-size="40">Blot Agent</text>
+    <text x="318" y="448" text-anchor="middle" font-size="18" fill="#777">Your team for everyday work.</text>
+    <text x="882" y="404" text-anchor="middle" font-size="40" fill="white">Blot Agent</text>
+    <text x="882" y="448" text-anchor="middle" font-size="18" fill="#aaa">Give your work a team.</text>
+    <rect x="128" y="550" width="380" height="56" rx="28"/>
+    <rect x="692" y="550" width="380" height="56" rx="28" fill="white"/>
+    <text x="318" y="585" text-anchor="middle" font-size="18" fill="white">Get started</text>
+    <text x="882" y="585" text-anchor="middle" font-size="18">Get started</text>
+  </g>
+</svg>

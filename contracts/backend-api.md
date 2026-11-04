@@ -144,4 +144,4 @@ Entity: `id, ownerId, projectId, parentId, version, createdAt, updatedAt, data`.
 
 Старые записи v1 не открываются новому аккаунту автоматически. `legacy.adopt` сохраняет их исходную историю неизменяемым артефактом `application/vnd.blot.legacy+json` и создаёт проект v2; прежние статусы не запускают новых агентов. Один исходный проект нельзя одновременно принять в два аккаунта.
 
-Актуальные результаты проверок и оставшиеся работы: `docs/backend-implementation-progress.md`.
+Актуальные результаты проверок и оставшиеся работы: `docs/status/backend-implementation-progress.md`.
