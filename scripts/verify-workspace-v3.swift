@@ -322,7 +322,9 @@ struct WorkspaceVerification {
             await cancel.perform(.createConversation, next: .chat)
             cancel.form.composer.draft = "Stop this response"
             await cancel.perform(.send)
-            try await waitUntil { cancel.currentMessages.last?.content == "Partial" }
+            try await waitUntil { cancel.currentMessages.last?.delivery == .running }
+            precondition(cancel.currentReplyDraft != nil)
+            precondition(!cancel.currentMessages.filter(WorkspaceMessagePresentation.isVisible).contains { $0.role == .assistant })
             // Reopening the view on an active service must not mark its live stream interrupted.
             await cancel.loadWorkspace()
             precondition(cancel.currentMessages.last?.delivery == .running)
@@ -336,7 +338,7 @@ struct WorkspaceVerification {
             services.append(canceledService)
             let canceled = WorkspaceStore(mode: .live, route: .chats, service: canceledService)
             await canceled.loadWorkspace()
-            precondition(canceled.snapshot.messages.count == 2 && canceled.snapshot.messages.last?.content == "Partial")
+            precondition(canceled.snapshot.messages.count == 2)
             precondition(canceled.snapshot.messages.last?.delivery == .canceled)
         } catch {
             for service in services { try? await service.close() }

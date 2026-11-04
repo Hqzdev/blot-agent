@@ -8,13 +8,13 @@ struct WorkspaceReplyBubble: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            WorkspaceTypingIndicator(size: compact ? 4 : 6)
-            .padding(.horizontal, 14).padding(.vertical, 12)
-            .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 26))
+            WorkspaceTypingIndicator(size: compact ? 6 : 8, highlighted: true)
+                .padding(.horizontal, 18).padding(.vertical, 12)
+                .background(Color(white: 0.15), in: Capsule())
             Spacer(minLength: compact ? 54 : 44)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(store.t("Agent is typing"))
-        .id(draft.messageID)
+        .accessibilityLabel(store.t("Agent is thinking"))
+        .id("thinking-" + draft.messageID.uuidString)
     }
 }

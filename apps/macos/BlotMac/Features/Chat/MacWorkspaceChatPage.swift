@@ -6,11 +6,13 @@ struct MacWorkspaceChatPage: View {
     let route: WorkspaceRoute
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.blotReduceMotion) private var reduceMotion
     @State private var followsLatest = false
     @State private var visibleConversationID: UUID?
     private var activeDraft: WorkspaceChatActivity.Draft? {
-        store.selectedConversationID.flatMap { store.chatActivity.drafts[$0] }
+        store.currentReplyDraft
     }
+    private var messages: [BlotV3.Message] { store.currentMessages.filter(WorkspaceMessagePresentation.isVisible) }
     private var isHome: Bool { route == .home || route == .newChat }
 
     var body: some View {
@@ -57,9 +59,11 @@ struct MacWorkspaceChatPage: View {
                             .font(.system(size: 11)).foregroundStyle(WorkspaceStyle.secondary)
                             .frame(maxWidth: .infinity).padding(.top, 20).padding(.bottom, 12)
                     }
-                    ForEach(store.currentMessages, id: \.metadata.id) { message in
+                    ForEach(messages, id: \.metadata.id) { message in
                         MacMessageBubble(message: message) { id in proxy.scrollTo(id, anchor: .center) }
                             .id(message.metadata.id)
+                            .transition(reduceMotion ? .opacity : .scale(scale: 0.82, anchor: message.role == .user ? .bottomTrailing : .bottomLeading)
+                                .combined(with: .offset(y: 18)).combined(with: .opacity))
                         ForEach(store.snapshot.artifacts.filter { message.artifactIds.contains($0.metadata.id) }, id: \.metadata.id) { file in
                             attachment(file).padding(.trailing, 70)
                         }
@@ -81,11 +85,12 @@ struct MacWorkspaceChatPage: View {
                     Color.clear.frame(height: 1).id("mac-conversation-bottom")
                 }.frame(maxWidth: MacWorkspaceStyle.readingWidth)
                     .padding(.horizontal, 20).padding(.bottom, 12).frame(maxWidth: .infinity)
+                    .kAnimation(MacTeamMessageMotion.receive, value: messages.map(\.metadata.id))
             }
             .onScrollGeometryChange(for: Bool.self) { $0.visibleRect.maxY >= $0.contentSize.height - 50 } action: { _, nearBottom in
                 followsLatest = nearBottom; updateVisibility()
             }
-            .onChange(of: store.currentMessages.count) { _, _ in
+            .onChange(of: messages.count) { _, _ in
                 if followsLatest || store.currentMessages.last?.role == .user { proxy.scrollTo("mac-conversation-bottom", anchor: .bottom) }
             }
             .task(id: store.messageNavigationTarget) {

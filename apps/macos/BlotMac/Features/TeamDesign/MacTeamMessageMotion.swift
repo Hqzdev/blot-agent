@@ -5,7 +5,7 @@ import SwiftUI
 nonisolated enum MacTeamMessageMotion {
     static let coordinateSpace = "team-message-conversation"
     static let send = Animation.spring(response: 0.38, dampingFraction: 0.86)
-    static let receive = Animation.smooth(duration: 0.32)
+    static let receive = Animation.spring(response: 0.44, dampingFraction: 0.76)
     static let sendLead: Duration = .milliseconds(300)
     static let replySpacing: Duration = .milliseconds(180)
 }

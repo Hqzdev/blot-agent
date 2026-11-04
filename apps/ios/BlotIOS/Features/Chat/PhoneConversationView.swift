@@ -10,13 +10,7 @@ struct PhoneConversationView: View {
     @Environment(\.blotReduceMotion) private var reduceMotion
 
     private var activeDraft: WorkspaceChatActivity.Draft? {
-        guard let id = store.selectedConversationID else { return nil }
-        if let draft = store.chatActivity.drafts[id] { return draft }
-        if store.mode == .live, store.isReplying,
-           let message = store.currentMessages.last(where: { $0.role == .user }) {
-            return .init(messageID: message.metadata.id)
-        }
-        return nil
+        store.currentReplyDraft
     }
 
     private var agent: BlotV3.AgentProfile? {
