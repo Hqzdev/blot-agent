@@ -263,24 +263,26 @@ struct WorkspaceVerification {
         do {
             let store = WorkspaceStore(mode: .live, service: service)
             await store.loadWorkspace()
-            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Отвечай кратко, одним словом.")
+            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Отвечай кратко, одним словом.", toolIDs: ["memory_candidate"])
             await store.perform(.createAgent)
             guard store.error == nil, store.selectedAgentID != nil else { throw CheckFailure.timedOut }
             await store.perform(.createConversation, next: .chat)
-            store.form.composer.draft = "Ответь одним словом: работает"
-            await store.perform(.send)
-            let deadline = ContinuousClock.now.advanced(by: .seconds(60))
-            while store.isReplying {
-                guard ContinuousClock.now < deadline else { throw CheckFailure.timedOut }
-                try await _Concurrency.Task.sleep(for: .milliseconds(50))
+            for index in 0..<2 {
+                store.form.composer.draft = "Ответь одним словом: работает"
+                await store.perform(.send)
+                let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+                while store.isReplying {
+                    guard ContinuousClock.now < deadline else { throw CheckFailure.timedOut }
+                    try await _Concurrency.Task.sleep(for: .milliseconds(50))
+                }
+                guard store.error == nil, store.currentMessages.count == (index + 1) * 2,
+                      let response = store.currentMessages.last, response.role == .assistant,
+                      response.delivery == .completed, !response.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    print("Live app model verification failed: \(store.error ?? "missing completed response")")
+                    throw CheckFailure.timedOut
+                }
+                print("PASS: live agent with tools, conversation turn=\(index + 1), completed reply characters=\(response.content.count)")
             }
-            guard store.error == nil, store.currentMessages.count == 2,
-                  let response = store.currentMessages.last, response.role == .assistant,
-                  response.delivery == .completed, !response.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                print("Live app model verification failed: \(store.error ?? "missing completed response")")
-                throw CheckFailure.timedOut
-            }
-            print("PASS: live WorkspaceStore -> LocalWorkspaceService -> GigaChat -> persisted completed response; characters=\(response.content.count)")
             try await service.close()
             try FileManager.default.removeItem(at: directory)
         } catch {
