@@ -1,7 +1,7 @@
 name: Project preparation
 on:
   push:
-    branches: [main, 'codex/**', 'work/**']
+    branches: [main, 'ios/**', 'mac/**', 'windows/**', 'android/**']
   pull_request:
   workflow_dispatch:
 permissions:
