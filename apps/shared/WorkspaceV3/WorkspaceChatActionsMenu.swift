@@ -7,6 +7,9 @@ struct WorkspaceChatActionsMenu: View {
     @Environment(WorkspaceStore.self) private var store
 
     var body: some View {
+        if chat.kind == .group {
+            BlotIconButton(store.t("Group members"), symbol: "person.2") { store.editGroup(chat.metadata.id) }
+        }
         BlotIconButton(store.t("Rename chat"), symbol: "pencil") { store.beginChatRename(chat.metadata.id) }
         Divider()
         BlotIconButton(store.t(chat.pinned ? "Unpin chat" : "Pin chat"), symbol: "pin") {
@@ -26,7 +29,7 @@ struct WorkspaceChatActionsMenu: View {
         if store.chatActivity.isResponding(in: chat.metadata.id) {
             BlotIconButton(store.t("Stop reply"), symbol: "stop") { store.stopReply(in: chat.metadata.id) }
         }
-        if let agentID = chat.agentId {
+        if let agentID = chat.agentId, chat.kind != .group {
             Divider()
             BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agentID) }
             BlotIconButton(store.t("Edit agent"), symbol: "paintbrush") { store.editChatAgent(agentID) }

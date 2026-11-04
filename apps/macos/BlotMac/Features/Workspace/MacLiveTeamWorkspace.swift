@@ -65,7 +65,7 @@ struct MacLiveTeamWorkspace: View {
         GlassEffectContainer(spacing: 8) {
             ZStack {
                 HStack(spacing: 8) {
-                    if members.count > 1 { MacLiveTeamGroupAvatar(agents: members, size: 36) }
+                    if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
                     else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
                     Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
                         .font(.system(size: 17, weight: .semibold)).lineLimit(1)
@@ -109,7 +109,7 @@ private struct MacLiveTeamSidebar: View {
     @Environment(WorkspaceStore.self) private var store
     private var groups: [BlotV3.Conversation] {
         store.snapshot.conversations.filter { chat in
-            !chat.archived && (store.snapshot.participants ?? []).filter { $0.conversationId == chat.metadata.id && !$0.removed && $0.kind == .agent }.count > 1
+            !chat.archived && chat.kind == .group
         }
     }
     var body: some View {
@@ -195,9 +195,15 @@ struct MacLiveTeamGroupAvatar: View {
     var size: CGFloat
     var body: some View {
         ZStack {
-            ForEach(Array(agents.prefix(2).enumerated()), id: \.element.metadata.id) { index, agent in
-                WorkspaceAvatarView(agent: agent, size: size * 0.64)
-                    .offset(x: index == 0 ? -size * 0.16 : size * 0.16, y: index == 0 ? -size * 0.16 : size * 0.16)
+            if agents.isEmpty {
+                Image(systemName: "person.2.fill").font(.system(size: size * 0.4)).foregroundStyle(.secondary)
+            } else if agents.count == 1, let agent = agents.first {
+                WorkspaceAvatarView(agent: agent, size: size)
+            } else {
+                ForEach(Array(agents.prefix(2).enumerated()), id: \.element.metadata.id) { index, agent in
+                    WorkspaceAvatarView(agent: agent, size: size * 0.64)
+                        .offset(x: index == 0 ? -size * 0.16 : size * 0.16, y: index == 0 ? -size * 0.16 : size * 0.16)
+                }
             }
         }.frame(width: size, height: size).accessibilityHidden(true)
     }
