@@ -85,13 +85,16 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
             do {
                 authenticationLog.info("Starting account browser authorization")
                 let callback = try await browser.signIn(authorization)
+                try _Concurrency.Task.checkCancellation()
                 stage = "token-exchange"
                 authenticationLog.info("Browser callback received; exchanging one-time code")
                 let tokens = try await session.exchange(authorization: authorization, callback: callback)
+                try _Concurrency.Task.checkCancellation()
                 stage = "open-workspace"
                 authenticationLog.info("Account session saved; opening local workspace")
                 try await open(tokens)
                 let result = try await requireLocal().load() ?? WorkspaceSnapshot()
+                try _Concurrency.Task.checkCancellation()
                 authenticationLog.info("Account sign-in complete")
                 return result
             } catch {
@@ -149,6 +152,7 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
                 transport: WorkspaceHTTPBackupTransport(http: http, authorization: session))
             // Offline access remains available; the worker retries when connectivity returns.
             try? await backup.synchronize()
+            try _Concurrency.Task.checkCancellation()
             _ = try await WorkspaceDeviceKeys.open(identity: identity, credentials: credentials)
             let model = try installation.makeModel()
             let modelCredentials = WorkspaceModelCredentialStore(accountNamespace: identity.ownerID.uuidString + ":" + identity.deviceID.uuidString)
@@ -160,6 +164,7 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
                     return try CompatibleChatModel(endpoint: config.endpoint, model: config.model, apiKey: config.apiKey)
                 })
             _ = try await service.load()
+            try _Concurrency.Task.checkCancellation()
             local = service; processLock = lock
             cloudBackup = backup
             await backup.start()
