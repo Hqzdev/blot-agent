@@ -240,7 +240,10 @@ final class WorkspaceStore {
         #if os(macOS)
         selectTab(.home)
         #else
-        selectTab(.chats)
+        if snapshot.agents.isEmpty {
+            form.agent = WorkspaceAgentForm(shape: "cloud", color: "orange")
+            selectTab(.firstAgent)
+        } else { selectTab(.chats) }
         #endif
         observeWorkspace()
     }
@@ -337,6 +340,9 @@ final class WorkspaceStore {
     #endif
     func t(_ english: String) -> String { WorkspaceCopy.text(english, language: language) }
     func navigate(_ destination: WorkspaceRoute) {
+        #if os(iOS)
+        if rootRoute == .firstAgent, snapshot.agents.isEmpty, destination != .firstAgent { return }
+        #endif
         if mode == .live, [.signIn, .createAccount].contains(destination) {
             form.account.browserRegistering = destination == .createAccount
             _Concurrency.Task { await perform(.oauth) }
@@ -395,6 +401,9 @@ final class WorkspaceStore {
         history = path; route = path.last ?? rootRoute
     }
     func selectTab(_ destination: WorkspaceRoute) {
+        #if os(iOS)
+        if rootRoute == .firstAgent, snapshot.agents.isEmpty, destination != .firstAgent { return }
+        #endif
         guard mode != .live || commands != nil || destination.isAuthentication else { return }
         if destination != .chat { updateChatVisibility(nil, atLatest: false) }
         #if os(iOS)
