@@ -31,7 +31,7 @@ final class WorkspaceNearbyPairingTransport: NSObject, WorkspacePairingTransport
     func host(_ link: WorkspacePairingLink) {
         configure(link)
         let advertiser = MCNearbyServiceAdvertiser(peer: peer,
-            discoveryInfo: ["pairing": link.id.uuidString], serviceType: Self.service)
+            discoveryInfo: ["pairing": link.id.uuidString, "version": "2"], serviceType: Self.service)
         self.advertiser = advertiser
         advertiser.delegate = self
         advertiser.startAdvertisingPeer()
@@ -77,7 +77,7 @@ extension WorkspaceNearbyPairingTransport: MCNearbyServiceAdvertiserDelegate {
         withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
         _Concurrency.Task { @MainActor [weak self] in
             guard let self, self.advertiser === advertiser, let link = self.link,
-                  self.selectedPeer == nil, context == Data(link.secret.utf8), link.expiresAt > Date() else {
+                  self.selectedPeer == nil, context == link.secret, link.expiresAt > Date() else {
                 invitationHandler(false, nil); return
             }
             self.selectedPeer = peerID
@@ -100,10 +100,10 @@ extension WorkspaceNearbyPairingTransport: MCNearbyServiceBrowserDelegate {
         withDiscoveryInfo info: [String: String]?) {
         _Concurrency.Task { @MainActor [weak self] in
             guard let self, self.browser === browser, self.selectedPeer == nil,
-                  let link = self.link, link.expiresAt > Date(), info?["pairing"] == link.id.uuidString,
+                  let link = self.link, link.expiresAt > Date(), info?["pairing"] == link.id.uuidString, info?["version"] == "2",
                   let session = self.session else { return }
             self.selectedPeer = peerID
-            browser.invitePeer(peerID, to: session, withContext: Data(link.secret.utf8), timeout: 20)
+            browser.invitePeer(peerID, to: session, withContext: link.secret, timeout: 20)
             browser.stopBrowsingForPeers()
         }
     }

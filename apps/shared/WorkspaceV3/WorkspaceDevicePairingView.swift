@@ -117,7 +117,7 @@ struct WorkspaceDevicePairingView: View {
                 .buttonStyle(WorkspaceButtonStyle())
                 .disabled(pairing.code.count != 6 || pairing.phase != .enteringCode)
             if pairing.phase != .enteringCode { ProgressView() }
-        } else if pairing.phase == .connecting {
+        } else if [.connecting, .claiming, .waitingForCode].contains(pairing.phase) {
             ProgressView()
             Text(ru ? "Подключаемся к компьютеру…" : "Connecting to your computer…").font(.headline)
         } else {

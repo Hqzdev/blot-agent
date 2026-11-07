@@ -5,7 +5,7 @@ import Observation
 /// Coordinates the signed trust exchange; views expose only QR scanning and the six-digit code.
 @MainActor @Observable
 final class WorkspaceDevicePairingSession {
-    enum Phase: Equatable { case idle, preparing, waitingForPhone, connecting, inspecting, enteringCode, approving, confirming, finishing, waitingForReceipt, complete, failed }
+    enum Phase: Equatable { case idle, preparing, waitingForPhone, connecting, claiming, waitingForCode, inspecting, enteringCode, approving, confirming, finishing, waitingForReceipt, complete, failed }
     private(set) var phase = Phase.idle
     private(set) var qrCode = ""
     private(set) var displayCode = ""
@@ -15,6 +15,8 @@ final class WorkspaceDevicePairingSession {
     private let transport: any WorkspacePairingTransport
     private var commands: (any WorkspaceDevicePairingCommands)?
     private var claim: WorkspacePairingClaim?
+    private var invitation: String?
+    private var scannedLink: WorkspacePairingLink?
     private var hosting = false
     private var incorrectAttempts = 0
     private var generation = UUID()
@@ -33,7 +35,8 @@ final class WorkspaceDevicePairingSession {
             let invitation = try await commands.createDeviceInvite()
             guard self.generation == generation else { return }
             let link = WorkspacePairingLink(invitation: invitation)
-            qrCode = try link.encoded
+            self.invitation = invitation
+            qrCode = link.encoded
             phase = .waitingForPhone
             transport.host(link)
             scheduleExpiry(link, generation: generation)
@@ -46,9 +49,7 @@ final class WorkspaceDevicePairingSession {
         let generation = generation
         do {
             let link = try WorkspacePairingLink.decode(qrCode)
-            let claim = try await commands.claimDevice(link.invitation)
-            guard self.generation == generation else { return }
-            self.claim = claim; peerName = claim.name
+            scannedLink = link
             transport.join(link)
             scheduleExpiry(link, generation: generation)
             connectionTimeout = _Concurrency.Task { [weak self] in
@@ -76,7 +77,7 @@ final class WorkspaceDevicePairingSession {
         expiry?.cancel(); expiry = nil
         connectionTimeout?.cancel(); connectionTimeout = nil
         transport.onEvent = nil; transport.stop()
-        commands = nil; claim = nil
+        commands = nil; claim = nil; invitation = nil; scannedLink = nil
     }
 
     private func reset(using commands: any WorkspaceDevicePairingCommands, hosting: Bool) {
@@ -95,9 +96,20 @@ final class WorkspaceDevicePairingSession {
             switch event {
             case .failed: fail(.disconnected, generation: generation)
             case .connected:
-                if !hosting, phase == .connecting, let claim { try transport.send(.claim(claim.token)) }
+                if hosting, phase == .waitingForPhone, let invitation {
+                    try transport.send(.invitation(invitation))
+                }
             case .message(let message):
                 switch message {
+                case .invitation(let token):
+                    guard !hosting, phase == .connecting else { return }
+                    guard scannedLink?.verifies(token) == true else { throw WorkspacePairingFailure.invalidQR }
+                    phase = .claiming
+                    let claim = try await commands.claimDevice(token)
+                    guard self.generation == generation else { return }
+                    self.claim = claim; peerName = claim.name
+                    phase = .waitingForCode
+                    try transport.send(.claim(claim.token))
                 case .claim(let token):
                     guard hosting, phase == .waitingForPhone, token.utf8.count <= 16_384 else { return }
                     phase = .inspecting
@@ -107,7 +119,7 @@ final class WorkspaceDevicePairingSession {
                     phase = .enteringCode
                     try transport.send(.ready)
                 case .ready:
-                    guard !hosting, phase == .connecting else { return }
+                    guard !hosting, phase == .waitingForCode else { return }
                     phase = .enteringCode
                     connectionTimeout?.cancel(); connectionTimeout = nil
                 case .confirm(let code):
@@ -134,7 +146,7 @@ final class WorkspaceDevicePairingSession {
                     finish()
                 }
             }
-        } catch { fail(.unavailable, generation: generation) }
+        } catch { fail(error as? WorkspacePairingFailure ?? .unavailable, generation: generation) }
     }
 
     private func finish() {

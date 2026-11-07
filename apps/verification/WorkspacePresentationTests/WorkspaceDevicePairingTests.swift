@@ -42,6 +42,7 @@ final class WorkspaceDevicePairingTests: XCTestCase {
     func testActualQRCodeCanBeDecodedAndExpiredOrForeignCodesAreRejected() async throws {
         let fixture = try await NearbyPairingFixture()
         await fixture.mac.host(using: fixture.macCommands)
+        XCTAssertLessThanOrEqual(fixture.mac.qrCode.utf8.count, 160)
         let bundle = Bundle(for: Self.self)
         XCTAssertNotNil(UIImage(named: "BlotPairingMark", in: bundle, compatibleWith: nil))
         let renderer = ImageRenderer(content: WorkspacePairingQRCode(value: fixture.mac.qrCode, resourceBundle: bundle))
@@ -59,6 +60,35 @@ final class WorkspaceDevicePairingTests: XCTestCase {
         XCTAssertEqual(fixture.phone.phase, .failed)
         XCTAssertEqual(fixture.phone.failure, .invalidQR)
         try await fixture.close()
+    }
+
+    func testInvitationFingerprintRejectsSubstitutionBeforeSendingPhoneClaim() async throws {
+        let fixture = try await NearbyPairingFixture()
+        await fixture.mac.host(using: fixture.macCommands)
+        let otherInvitation = try await fixture.macCommands.createDeviceInvite()
+        fixture.macWire.intercept = { message in
+            if case .invitation = message { return .invitation(otherInvitation) }
+            return message
+        }
+        await fixture.phone.join(fixture.mac.qrCode, using: fixture.phoneCommands)
+        try await wait { fixture.phone.phase == .failed }
+        XCTAssertEqual(fixture.phone.failure, .invalidQR)
+        XCTAssertTrue(fixture.phoneWire.sent.isEmpty)
+        let peers = try await fixture.phoneAuthority.devices()
+        XCTAssertTrue(peers.isEmpty)
+        try await fixture.close()
+    }
+
+    func testCompactLinkRoundTripsAndRejectsTruncatedOrOldFormats() throws {
+        let invitation = "blot-pair:" + String(repeating: "a", count: 900)
+        let link = WorkspacePairingLink(invitation: invitation)
+        XCTAssertLessThanOrEqual(link.encoded.utf8.count, 160)
+        let decoded = try WorkspacePairingLink.decode(link.encoded)
+        XCTAssertEqual(decoded, link)
+        XCTAssertTrue(decoded.verifies(invitation))
+        XCTAssertFalse(decoded.verifies(invitation + "changed"))
+        XCTAssertThrowsError(try WorkspacePairingLink.decode(String(link.encoded.dropLast())))
+        XCTAssertThrowsError(try WorkspacePairingLink.decode("blot-connect:old-format"))
     }
 
     func testFiveWrongRemoteCodesStopAttemptWithoutGrantingTrust() async throws {
@@ -173,6 +203,7 @@ private final class InMemoryPairingTransport: WorkspacePairingTransport {
     private var link: WorkspacePairingLink?
     private var connected = false
     private(set) var sent: [WorkspacePairingMessage] = []
+    var intercept: ((WorkspacePairingMessage) -> WorkspacePairingMessage)?
     func host(_ link: WorkspacePairingLink) { self.link = link }
     func join(_ link: WorkspacePairingLink) {
         guard counterpart?.link == link else { onEvent?(.failed); return }
@@ -181,7 +212,7 @@ private final class InMemoryPairingTransport: WorkspacePairingTransport {
     }
     func send(_ message: WorkspacePairingMessage) throws {
         guard connected else { throw WorkspacePairingFailure.disconnected }
-        sent.append(message); counterpart?.onEvent?(.message(message))
+        sent.append(message); counterpart?.onEvent?(.message(intercept?(message) ?? message))
     }
     func stop() { connected = false; link = nil }
 }
