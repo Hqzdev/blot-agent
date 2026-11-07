@@ -13,7 +13,7 @@ nonisolated struct WorkspaceAccountProfile: Codable, Sendable {
 
 /// Account lifecycle owns the local session. Commands never implicitly create an anonymous workspace.
 @MainActor
-final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccountService, WorkspaceCommandProviding {
+final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding, WorkspaceService, WorkspaceAccountService, WorkspaceCommandProviding {
     private let browser = WorkspaceBrowserAuthenticator()
     private let installation: AppleInstallationConfiguration
     private let http: WorkspaceCloudHTTP
@@ -26,6 +26,7 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
     private var cloudBackup: WorkspaceCloudBackup?
     private(set) var profile: WorkspaceAccountProfile?
     var workspaceCommands: (any WorkspaceCommandService)? { local }
+    var workspacePairing: (any WorkspaceDevicePairingCommands)? { local?.workspacePairing }
     var isAuthenticated: Bool { local != nil }
 
     init(installation: AppleInstallationConfiguration, directory: URL) throws {
@@ -149,11 +150,11 @@ final class WorkspaceAccountApplicationService: WorkspaceService, WorkspaceAccou
                 transport: WorkspaceHTTPBackupTransport(http: http, authorization: session))
             // Offline access remains available; the worker retries when connectivity returns.
             try? await backup.synchronize()
-            _ = try await WorkspaceDeviceKeys.open(identity: identity, credentials: credentials)
+            let deviceAuthority = try await WorkspaceDeviceAuthority.open(identity: identity, credentials: credentials)
             let model = try installation.makeModel()
             let modelCredentials = WorkspaceModelCredentialStore(accountNamespace: identity.ownerID.uuidString + ":" + identity.deviceID.uuidString)
             let service = try LocalWorkspaceService(databaseURL: database, repository: repository, identity: identity,
-                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget,
+                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget, deviceAuthority: deviceAuthority,
                 makeModel: { modelID in
                     if modelID == "gigachat" { return model }
                     let config = try modelCredentials.load()

@@ -3,7 +3,7 @@ import Foundation
 
 enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
     case general, notifications, profile, appearance, account, personalization, shortcuts, usage
-    case memory, storage, privacy, connections, mcp, updates
+    case memory, storage, privacy, devices, connections, mcp, updates
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -18,6 +18,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .memory: "Память агентов"
         case .storage: "Файлы и данные"
         case .privacy: "Данные и приватность"
+        case .devices: "Устройства"
         case .connections: "Приложения"
         case .mcp: "MCP-серверы"
         case .updates: "Обновления"
@@ -25,7 +26,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
     }
     var group: String {
         switch self {
-        case .memory, .storage, .privacy: "Пространство"
+        case .memory, .storage, .privacy, .devices: "Пространство"
         case .connections, .mcp, .updates: "Интеграции"
         default: "Личное"
         }
@@ -43,6 +44,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .memory: .memory
         case .storage: .folder
         case .privacy: .shieldCheck
+        case .devices: .network
         case .connections: .puzzle
         case .mcp: .network
         case .updates: .download
@@ -61,6 +63,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .memory: "Общий контекст и воспоминания отдельных агентов."
         case .storage: "Локальные документы, переписки и экспорт пространства."
         case .privacy: "Хранение данных и разрешения подключённых аккаунтов."
+        case .devices: "Подключение iPhone и Mac по QR-коду."
         case .connections: "Ваши сервисы и аккаунты для работы команды."
         case .mcp: "Подключение инструментов через Composio, Zapier и MCP."
         case .updates: "Версия приложения и предпочтения обновления."
