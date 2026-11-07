@@ -1,5 +1,7 @@
 import BlotWorkspace
 import CoreImage
+import SwiftUI
+import UIKit
 import XCTest
 
 @MainActor
@@ -40,7 +42,11 @@ final class WorkspaceDevicePairingTests: XCTestCase {
     func testActualQRCodeCanBeDecodedAndExpiredOrForeignCodesAreRejected() async throws {
         let fixture = try await NearbyPairingFixture()
         await fixture.mac.host(using: fixture.macCommands)
-        let image = try XCTUnwrap(WorkspacePairingQRCode.image(for: fixture.mac.qrCode))
+        let bundle = Bundle(for: Self.self)
+        XCTAssertNotNil(UIImage(named: "BlotPairingMark", in: bundle, compatibleWith: nil))
+        let renderer = ImageRenderer(content: WorkspacePairingQRCode(value: fixture.mac.qrCode, resourceBundle: bundle))
+        renderer.scale = 2
+        let image = try XCTUnwrap(renderer.cgImage)
         let detector = try XCTUnwrap(CIDetector(ofType: CIDetectorTypeQRCode, context: CIContext(),
             options: [CIDetectorAccuracy: CIDetectorAccuracyHigh]))
         let features = detector.features(in: CIImage(cgImage: image))
