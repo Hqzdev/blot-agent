@@ -72,3 +72,16 @@
   .site-platform-picker button { padding: 24px; }
   .site-release { grid-template-columns: 1fr; gap: 20px; }
 }
+
+.site-language { display: inline-flex; align-items: center; gap: 2px; }
+.site-language button { min-width: 36px; min-height: 36px; padding: 6px; border-radius: 6px; font-size: 12px; color: var(--text-2); }
+.site-language button[aria-pressed="true"] { color: var(--text); background: var(--surface-2); font-weight: 600; }
+.site-language button:focus-visible, .site-appearance select:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; }
+.site-appearance { display: inline-flex; align-items: center; gap: 8px; color: var(--text-2); font-size: 12px; }
+.site-appearance select { border: 0; background: var(--surface); padding: 8px 2px; min-height: 36px; cursor: pointer; max-width: 155px; }
+@media (max-width: 1050px) { .blot-header-inner { gap: 16px; } .blot-desktop-nav { gap: 14px; } .blot-header-actions { gap: 8px; } }
+@media (max-width: 900px) { .blot-header-actions .site-language { display: inline-flex; } }
+
+.blot-header-inner > .site-language { margin-left: auto; }
+.blot-header-actions { margin-left: 0; }
+@media (max-width: 800px) { .blot-mobile-toggle { margin-left: 0; } .blot-header-inner { gap: 8px; } }
