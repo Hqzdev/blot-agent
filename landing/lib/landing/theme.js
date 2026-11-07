@@ -3,9 +3,9 @@ export const THEME_STORAGE_KEY = "blot-theme";
 export function readThemePreference() {
   try {
     const theme = localStorage.getItem(THEME_STORAGE_KEY);
-    return theme === "dark" || theme === "light" ? theme : null;
+    return theme === "dark" || theme === "light" ? theme : "system";
   } catch {
-    return null;
+    return "system";
   }
 }
 
