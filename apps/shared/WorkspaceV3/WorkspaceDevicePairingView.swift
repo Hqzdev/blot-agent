@@ -151,25 +151,18 @@ struct WorkspaceDevicePairingView: View {
 
 struct WorkspacePairedDevicesView: View {
     @Environment(WorkspaceStore.self) private var store
-    @State private var failure: String?
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            ForEach(store.snapshot.pairedDevices ?? []) { device in
-                HStack {
-                    Label(device.name, systemImage: device.kind == .desktop ? "desktopcomputer" : "iphone")
-                    Spacer()
-                    Text(store.language == "ru" ? (device.revoked ? "Доступ отозван" : "Доверенное устройство") : (device.revoked ? "Revoked" : "Trusted"))
-                    if !device.revoked {
-                        Button(store.t("Revoke"), role: .destructive) {
-                            _Concurrency.Task {
-                                do { try await store.pairingCommands?.revokePairedDevice(device.id); try await store.refreshDevices() }
-                                catch { failure = store.language == "ru" ? "Не удалось отозвать доступ." : "Could not revoke access." }
-                            }
-                        }
+            if let devices = store.snapshot.pairedDevices, !devices.isEmpty {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text(store.language == "ru" ? "Ваши устройства" : "Your devices")
+                        .font(.subheadline.weight(.medium)).foregroundStyle(.secondary)
+                        .accessibilityAddTraits(.isHeader)
+                    ForEach(devices) { device in
+                        WorkspacePairedDeviceCard(device: device)
                     }
                 }
             }
-            if let failure { Text(failure).foregroundStyle(.red) }
             WorkspaceDevicePairingView()
         }
     }
