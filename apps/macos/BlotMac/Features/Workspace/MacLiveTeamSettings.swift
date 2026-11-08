@@ -12,6 +12,7 @@ struct MacLiveTeamSettings: View {
     private var initialPane: MacTeamSettingsPane {
         switch route {
         case .account: .account
+        case .devices, .pair: .devices
         case .appearance: .appearance
         case .notifications: .notifications
         case .personalization: .personalization
@@ -82,6 +83,7 @@ private struct MacLiveTeamSettingsContent: View {
             MacTeamSettingsSection(title: "Сессия") {
                 MacTeamSettingsLink(title: "Текущий аккаунт", actionTitle: "Выйти") { store.signOut() }
             }
+        case .devices: WorkspacePairedDevicesView()
         case .storage:
             MacTeamSettingsSection(title: "Файлы и данные") {
                 MacTeamSettingsRow(title: "Переписки") { Text("\(store.snapshot.conversations.count)").foregroundStyle(.secondary) }

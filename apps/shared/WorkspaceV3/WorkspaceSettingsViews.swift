@@ -36,8 +36,10 @@ struct WorkspaceSettingsView: View {
         case .models: models
         case .permissions: permissions
         case .connections: connections
-        case .devices: devices
-        case .pair: pair
+        case .devices:
+            if store.mode == .live { WorkspacePairedDevicesView() } else { devices }
+        case .pair:
+            if store.mode == .live { WorkspaceDevicePairingView() } else { pair }
         case .memory: memory
         case .mcp: mcp
         case .browserSettings: browserSettings

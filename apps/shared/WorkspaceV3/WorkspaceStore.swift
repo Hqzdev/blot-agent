@@ -11,6 +11,16 @@ final class WorkspaceStore {
     enum ScreenState: String, CaseIterable { case normal, empty, loading, error, offline, limit, unavailable, unknown }
     let mode: Mode
     private let service: any WorkspaceService
+    var pairingCommands: (any WorkspaceDevicePairingCommands)? {
+        (service as? any WorkspaceDevicePairingProviding)?.workspacePairing
+    }
+    func refreshDevices() async throws {
+        guard let commands else { throw WorkspaceServiceError.unavailable }
+        let generation = sessionGeneration
+        let fresh = try await commands.currentSnapshot()
+        guard sessionGeneration == generation else { throw CancellationError() }
+        applyMutationSnapshot(fresh)
+    }
     private var commands: (any WorkspaceCommandService)? { (service as? any WorkspaceCommandProviding)?.workspaceCommands }
     @ObservationIgnored private var observation: _Concurrency.Task<Void, Never>?
     @ObservationIgnored private var restoringPresentation = false

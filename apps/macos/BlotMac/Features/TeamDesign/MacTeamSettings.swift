@@ -8,6 +8,7 @@ struct MacTeamSettings: View {
         MacTeamSettingsLayout(close: { presentation.closeSettings() },
             searchFocusRequest: presentation.settingsSearchFocusRequest, footer: "Blot · Демо на этом Mac") { pane in
             switch pane {
+            case .devices: WorkspaceDevicePairingView()
             case .memory, .storage, .privacy: MacTeamWorkspaceSettingsContent(pane: pane)
             case .connections, .mcp, .updates: MacTeamIntegrationSettingsContent(pane: pane)
             default: MacTeamPersonalSettingsContent(pane: pane)

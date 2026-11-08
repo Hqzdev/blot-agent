@@ -4,7 +4,9 @@ import Foundation
 
 /// Owns one authenticated account's local database and its command services.
 @MainActor
-final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, WorkspaceCommandProviding {
+final class LocalWorkspaceService: WorkspaceDevicePairingCommands, WorkspaceDevicePairingProviding, WorkspaceService, WorkspaceCommandService, WorkspaceCommandProviding {
+    var workspacePairing: (any WorkspaceDevicePairingCommands)? { deviceAuthority == nil ? nil : self }
+    private let deviceAuthority: WorkspaceDeviceAuthority?
     var workspaceCommands: (any WorkspaceCommandService)? { self }
     let repository: WorkspaceRepository
     private let executorPool = WorkspaceExecutorPool()
@@ -21,7 +23,8 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
     private var closed = false
 
     init(databaseURL: URL, repository: WorkspaceRepository? = nil, identity: WorkspaceIdentity? = nil,
-         maximumOutputTokens: Int = 2048, runTokenBudget: Int = 20000, makeModel: (@MainActor (String) throws -> any ChatModel)? = nil) throws {
+         maximumOutputTokens: Int = 2048, runTokenBudget: Int = 20000, deviceAuthority: WorkspaceDeviceAuthority? = nil, makeModel: (@MainActor (String) throws -> any ChatModel)? = nil) throws {
+        self.deviceAuthority = deviceAuthority
         self.repository = try repository ?? WorkspaceRepository(url: databaseURL)
         self.identity = identity
         self.maximumOutputTokens = maximumOutputTokens
@@ -287,6 +290,17 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
     func searchMessages(_ query: String) async throws -> [BlotV3.Message] {
         try await repository.searchMessages(query, workspaceID: context().workspaceID)
     }
+    private func requireDeviceAuthority() throws -> WorkspaceDeviceAuthority {
+        guard let deviceAuthority else { throw WorkspaceServiceError.unavailable }
+        return deviceAuthority
+    }
+    func createDeviceInvite() async throws -> String { try await requireDeviceAuthority().invite(name: "Mac") }
+    func claimDevice(_ token: String) async throws -> WorkspacePairingClaim { try await requireDeviceAuthority().claim(token, name: "iPhone") }
+    func inspectDeviceClaim(_ token: String) async throws -> WorkspacePairingClaim { try await requireDeviceAuthority().inspect(token) }
+    func approveDevice(_ token: String, code: String) async throws -> String { try await requireDeviceAuthority().approve(token, confirmedCode: code) }
+    func finishDevicePairing(_ token: String) async throws { try await requireDeviceAuthority().finish(token) }
+    func revokePairedDevice(_ id: UUID) async throws { try await requireDeviceAuthority().revoke(id) }
+
     func fileText(_ id: UUID) async throws -> String { try await fileService().text(for: id) }
 
     func resolveConflict(_ selectedID: UUID, displayedIDs: Set<UUID>) async throws -> WorkspaceSnapshot {
@@ -322,6 +336,7 @@ final class LocalWorkspaceService: WorkspaceService, WorkspaceCommandService, Wo
         result.modelSteps = records.modelSteps
         result.ownerID = identity.ownerID
         result.localDeviceID = identity.deviceID
+        result.pairedDevices = try await deviceAuthority?.devices()
         result.conversations = records.conversations; result.messages = records.messages
         result.agents = records.agents; result.configurations = records.configurations
         result.schedules = records.schedules; result.memories = records.memories.filter { $0.state != .deleted }

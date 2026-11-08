@@ -1,7 +1,9 @@
 import BlotDomain
+import BlotWorkspace
 import Foundation
 
 struct WorkspaceSnapshot: Codable, Equatable {
+    var pairedDevices: [WorkspacePairedDevice]?
     var modelSteps: [BlotV3.ModelStep]?
     var ownerID: UUID?
     var localDeviceID: UUID?
