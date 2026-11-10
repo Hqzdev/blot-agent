@@ -13,12 +13,17 @@ struct WorkspaceAgentForm {
     var name = ""
     var instructions = ""
     var modelID = "gigachat"
+    #if os(iOS)
+    var toolIDs: [String] = PhoneAgentDefaults.tools
+    #else
     var toolIDs: [String] = []
+    #endif
     var remember = true
     var shape = "round"
     var color = "orange"
 }
 struct WorkspaceScheduleForm {
+    var skillRevisionID: UUID?
     var timezone = TimeZone.current.identifier
     var oneTime = false
     var missedRunPolicy: BlotV3.MissedRunPolicy = .coalesce
@@ -56,6 +61,7 @@ nonisolated struct WorkspaceComposerForm: Codable, Sendable {
     var draft = ""
     var attachments: [URL] = []
     var replyToMessageID: UUID?
+    var projectID: UUID? = nil
 }
 struct WorkspaceSearchForm { var query = "" }
 struct WorkspacePreferencesForm {

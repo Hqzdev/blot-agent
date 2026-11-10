@@ -26,6 +26,24 @@ public struct WorkspaceResponseRecorder: Sendable {
         return try await requireResponse(id)
     }
 
+    public func attach(_ artifactID: UUID, to id: UUID) async throws -> BlotV3.Message {
+        struct Input: Encodable { let responseID: UUID; let artifactID: UUID }
+        let command = try WorkspaceCommand(type: "response.attach", workspaceID: identity.workspaceID, payload: Input(responseID: id, artifactID: artifactID)).data()
+        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
+            let message = try tx.require(BlotV3.Message.self, id: id)
+            guard message.executorDeviceId == identity.deviceID, message.role == .assistant, message.delivery == .running else { throw WorkspaceStorageError.permissionDenied }
+            _ = try tx.require(BlotV3.Artifact.self, id: artifactID)
+            guard !message.artifactIds.contains(artifactID) else { return id }
+            let updated = try BlotV3.Message(metadata: tx.metadata(id: id, now: Date(), replacing: message.metadata), conversationId: message.conversationId,
+                role: message.role, content: message.content, delivery: message.delivery, commandId: message.commandId,
+                artifactIds: message.artifactIds + [artifactID], authorAgentId: message.authorAgentId, replyToMessageId: message.replyToMessageId,
+                mentions: message.mentions, position: message.position, executorDeviceId: message.executorDeviceId)
+            try tx.put(updated, expectedVersion: message.metadata.version)
+            return id
+        }
+        return try await requireResponse(id)
+    }
+
     public func append(_ text: String, to id: UUID, now: Date = Date()) async throws -> BlotV3.Message {
         struct Input: Encodable { let responseID: UUID; let text: String }
         let command = try WorkspaceCommand(type: "response.append", workspaceID: identity.workspaceID, payload: Input(responseID: id, text: text)).data()
@@ -50,6 +68,58 @@ public struct WorkspaceResponseRecorder: Sendable {
             if message.delivery == delivery, content == nil || content == message.content { return id }
             guard message.delivery == .running else { throw WorkspaceStorageError.invalidRecord }
             try Self.replace(tx, message, content: content ?? message.content, delivery: delivery, now: now)
+            return id
+        }
+        return try await requireResponse(id)
+    }
+
+    /// Link only to an earlier message in this group and derive mentions from active members.
+    public func relate(_ id: UUID, replyTo targetID: UUID) async throws -> BlotV3.Message {
+        struct Input: Encodable { let id: UUID; let targetID: UUID }
+        let command = try WorkspaceCommand(type: "response.relate", workspaceID: identity.workspaceID,
+            payload: Input(id: id, targetID: targetID)).data()
+        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
+            let message = try tx.require(BlotV3.Message.self, id: id)
+            let target = try tx.require(BlotV3.Message.self, id: targetID)
+            guard message.executorDeviceId == tx.identity.deviceID, message.role == .assistant,
+                  message.delivery == .completed, message.conversationId == target.conversationId,
+                  (target.position ?? 0) < (message.position ?? 0) else { throw WorkspaceStorageError.permissionDenied }
+            let ids = Set(try tx.records(BlotV3.ConversationParticipant.self).filter {
+                $0.conversationId == message.conversationId && $0.kind == .agent && !$0.removed
+            }.map(\.participantId))
+            let agents = try tx.records(BlotV3.AgentProfile.self).filter { ids.contains($0.metadata.id) }
+            let updated = try BlotV3.Message(metadata: tx.metadata(id: id, now: Date(), replacing: message.metadata),
+                conversationId: message.conversationId, role: message.role, content: message.content, delivery: message.delivery,
+                commandId: message.commandId, artifactIds: message.artifactIds, authorAgentId: message.authorAgentId,
+                replyToMessageId: targetID, mentions: WorkspaceGroupMentions.extract(message.content, agents: agents),
+                position: message.position, executorDeviceId: message.executorDeviceId)
+            try tx.put(updated, expectedVersion: message.metadata.version)
+            return id
+        }
+        return try await requireResponse(id)
+    }
+
+    public func updateGroupPlan(_ id: UUID, progress: WorkspaceGroupPlanProgress) async throws -> BlotV3.Message {
+        struct Input: Encodable { let id: UUID; let content: String }
+        let content = progress.markdown
+        let command = try WorkspaceCommand(type: "group.plan.progress", workspaceID: identity.workspaceID,
+            payload: Input(id: id, content: content)).data()
+        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
+            let message = try tx.require(BlotV3.Message.self, id: id)
+            let group = try tx.require(BlotV3.Conversation.self, id: message.conversationId)
+            guard message.executorDeviceId == tx.identity.deviceID, message.role == .assistant, message.delivery == .completed,
+                  group.kind == .group, message.authorAgentId == group.agentId,
+                  let old = WorkspaceGroupPlanProgress.decode(message.content),
+                  let next = WorkspaceGroupPlanProgress.decode(content), old.summary == next.summary,
+                  old.steps.map(\.name) == next.steps.map(\.name), old.steps.map(\.task) == next.steps.map(\.task) else { throw WorkspaceStorageError.permissionDenied }
+            if message.content == content { return id }
+            let agents = try tx.records(BlotV3.AgentProfile.self)
+            let updated = try BlotV3.Message(metadata: tx.metadata(id: id, now: Date(), replacing: message.metadata),
+                conversationId: message.conversationId, role: message.role, content: content, delivery: message.delivery,
+                commandId: message.commandId, artifactIds: message.artifactIds, authorAgentId: message.authorAgentId,
+                replyToMessageId: message.replyToMessageId, mentions: WorkspaceGroupMentions.extract(content, agents: agents),
+                position: message.position, executorDeviceId: message.executorDeviceId)
+            try tx.put(updated, expectedVersion: message.metadata.version)
             return id
         }
         return try await requireResponse(id)

@@ -42,7 +42,6 @@ struct WorkspaceTypingPreview: View {
 
 struct WorkspaceTypingIndicator: View {
     var size: CGFloat = 6
-    var highlighted = false
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.blotReduceMotion) private var reduceMotion
@@ -55,7 +54,7 @@ struct WorkspaceTypingIndicator: View {
                 ForEach(0..<3) { index in
                     let phase = timeline.date.timeIntervalSinceReferenceDate.truncatingRemainder(dividingBy: 1.5) - Double(index) * 0.32
                     let pulse = active && phase >= 0 && phase < 0.64 ? sin(.pi * phase / 0.64) : 0
-                    Circle().fill(highlighted ? Color(white: 0.55 + pulse * 0.45) : WorkspaceStyle.secondary)
+                    Circle().fill(WorkspaceStyle.secondary)
                         .frame(width: size, height: size)
                         .scaleEffect(1 + pulse * 0.45)
                 }

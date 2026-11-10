@@ -64,6 +64,8 @@ public final class CloudGoogleAccounts {
             tx.execute(
                 "INSERT INTO workspaces(id,owner_id) VALUES (?,?)", UUID.randomUUID(), owner);
           }
+          tx.execute(
+              "UPDATE accounts SET avatar_url = ? WHERE id = ?", identity.avatarURL(), owner);
           return sessions.create(tx, owner, bootstrap);
         });
   }

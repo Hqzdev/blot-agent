@@ -1,0 +1,73 @@
+--- a/apps/shared/WorkspaceV3/LocalWorkspaceService.swift
++++ b/apps/shared/WorkspaceV3/LocalWorkspaceService.swift
+@@ -198,6 +198,8 @@
+               startingResponses.insert(message.conversationId).inserted else { throw WorkspaceStorageError.permissionDenied }
+         defer { startingResponses.remove(message.conversationId) }
+         let identity = try await context()
++        let before = try await repository.projection(identity: identity)
++        try await restoreAssignedAppleTools(for: message, projection: before, identity: identity)
+         let projection = try await repository.projection(identity: identity)
+         let conversation = projection.conversations.first { $0.metadata.id == message.conversationId }
+         let agentID = conversation?.agentId
+@@ -255,10 +257,48 @@
+         }
+     }
+
++    /// A connection's explicit agent assignment survives older editors that dropped tool IDs.
++    private func restoreAssignedAppleTools(for source: BlotV3.Message, projection: WorkspaceProjection, identity: WorkspaceIdentity) async throws {
++        let group = projection.conversations.first { $0.metadata.id == source.conversationId }
++        let members = group?.kind == .group
++            ? Set(projection.participants.filter { $0.conversationId == source.conversationId && $0.kind == .agent && !$0.removed }.map(\.participantId))
++            : Set([group?.agentId].compactMap { $0 })
++        var additions: [UUID: Set<String>] = [:]
++        for connection in projection.connections where connection.deviceId == identity.deviceID && connection.state == .connected {
++            guard let plugin = connection.pluginId.flatMap(ApplePluginID.init(rawValue:)), plugin.available,
++                  !(connection.resourceIds ?? []).isEmpty,
++                  !projection.conflicts.contains(where: { !$0.resolved && $0.recordId == connection.metadata.id }),
++                  projection.grants.contains(where: { $0.kind == .rule && !$0.revoked && $0.resource == connection.metadata.id.uuidString && $0.scope == plugin.rawValue && $0.operationClass == "apple.resource.write" }),
++                  await appleIntegrations.accessible(plugin, resources: connection.resourceIds ?? []) else { continue }
++            for id in connection.agentIds ?? [] where members.contains(id) {
++                additions[id, default: []].formUnion(AppleToolCatalog.tools(for: plugin).map { $0.definition.name })
++            }
++        }
++        for (id, granted) in additions {
++            guard let agent = projection.agents.first(where: { $0.metadata.id == id }),
++                  let revision = try WorkspaceAgentConfigurationResolver().resolve(agentID: id, projection: projection),
++                  !granted.isSubset(of: Set(revision.toolIds)) else { continue }
++            _ = try await WorkspaceAgentService(repository: repository, identity: identity).save(commandID: UUID(), agentID: id,
++                expectedVersion: agent.metadata.version, draft: .init(name: agent.name, instructions: revision.instructions,
++                    avatarShape: agent.avatarShape, avatarColor: agent.avatarColor, modelID: revision.modelId,
++                    toolIDs: Array(Set(revision.toolIds).union(granted)).sorted(), accessMode: agent.accessMode))
++        }
++    }
++
+     private func responseContext(for message: BlotV3.Message, projection: WorkspaceProjection,
+                                  configuration: BlotV3.AgentConfigurationRevision?) async throws -> [ChatModelMessage] {
+         var context = try WorkspaceContextBuilder().messages(for: message, projection: projection, configuration: configuration,
+             maximumCharacters: message.artifactIds.isEmpty ? 48_000 : 24_000)
++        if let configuration {
++            var access: [String] = []
++            for connection in projection.connections where (connection.agentIds ?? []).contains(configuration.agentId) {
++                guard let plugin = connection.pluginId.flatMap(ApplePluginID.init(rawValue:)) else { continue }
++                let status = connection.deviceId == identity?.deviceID
++                    ? await appleIntegrations.status(plugin, resources: connection.resourceIds ?? []) : "Connected on another device; unavailable here"
++                access.append(plugin.name + ": " + status)
++            }
++            context.insert(.init(role: "system", content: "App access for this agent: " + (access.isEmpty ? "No Apple apps are assigned to this agent on this device." : access.joined(separator: "; ")) + ". These records do not expand the provided functions or system permissions."), at: 0)
++        }
+         if !message.artifactIds.isEmpty {
+             let files = try await fileService()
+             var attachments = ""
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -959,7 +959,9 @@
+         #if os(iOS)
+         selectedAgentID = agentID
+         if let agent = snapshot.agents.first(where: { $0.metadata.id == agentID }) {
+-            form.agent = WorkspaceAgentForm(name: agent.name, instructions: agent.instructions, shape: agent.avatarShape, color: agent.avatarColor)
++            let tools = snapshot.configurations?.first { $0.metadata.id == agent.configurationId }?.toolIds ?? []
++            form.agent = WorkspaceAgentForm(name: agent.name, instructions: agent.instructions, modelID: agent.modelId,
++                toolIDs: tools, shape: agent.avatarShape, color: agent.avatarColor)
+             agentAppearanceVisible = true
+         }
+         #else

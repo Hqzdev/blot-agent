@@ -40,7 +40,7 @@ public struct BlotLabel: View {
     }
 
     public var body: some View {
-        Label { Text(title) } icon: { BlotIcon(symbol: symbol, size: size) }
+        Label { Text(LocalizedStringKey(title)) } icon: { BlotIcon(symbol: symbol, size: size) }
     }
 }
 

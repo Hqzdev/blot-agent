@@ -33,11 +33,10 @@ struct PhoneWorkspaceFileView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .toolbar {
+        .safeAreaInset(edge: .bottom, spacing: 0) {
             if let url {
-                ToolbarItem(placement: .topBarTrailing) {
-                    ShareLink(item: url) { BlotIcon(.share) }.accessibilityLabel(store.t("Share"))
-                }
+                ShareLink(item: url) { BlotLabel(store.t("Share"), symbol: "square.and.arrow.up") }
+                    .buttonStyle(WorkspaceButtonStyle(.secondary)).padding(PhonePageLayout.inset)
             }
         }
         .task(id: store.selectedFile?.metadata.id) { await load() }

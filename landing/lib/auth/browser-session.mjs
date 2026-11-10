@@ -3,6 +3,7 @@ import { AuthError, cookieKey } from "./config.mjs";
 
 export const SESSION_COOKIE = "blot_web_session";
 export const GOOGLE_COOKIE = "blot_google_attempt";
+export const YANDEX_COOKIE = "blot_yandex_attempt";
 export const COOKIE_OPTIONS = { httpOnly: true, sameSite: "lax", path: "/" };
 const CONTEXT = Buffer.from("BLOT-WEB-SESSION-1");
 

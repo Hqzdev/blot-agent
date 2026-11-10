@@ -7,20 +7,64 @@ final class WorkspaceRecordStore {
     private let database: SQLiteDatabase
     private let replicas: WorkspaceReplicaStore
     private let index: WorkspaceRecordIndex
+    private final class DecodedRecord {
+        let payload: String
+        let value: Any
+        init(payload: String, value: Any) { self.payload = payload; self.value = value }
+    }
+    // Compare the actual payload, not only its version: replica reconciliation and rollback
+    // can replace content without advancing the visible version. Never cache authorization.
+    private let decoded: NSCache<NSString, DecodedRecord> = {
+        let cache = NSCache<NSString, DecodedRecord>()
+        cache.countLimit = 2048; cache.totalCostLimit = 16 * 1024 * 1024
+        return cache
+    }()
     init(database: SQLiteDatabase) { self.database = database; self.replicas = WorkspaceReplicaStore(database: database); self.index = WorkspaceRecordIndex(database: database) }
 
+    func executionAdmitted(_ task: BlotV3.Task, identity: WorkspaceIdentity) throws -> Bool {
+        guard task.execution.executorDeviceId == identity.deviceID else { return false }
+        if try database.query("SELECT value FROM local_settings WHERE key = ?", [.text("task-terminal:" + task.metadata.id.uuidString)], row: { SQLiteDatabase.text($0, 0) }).first != nil { return false }
+        let local = try database.query("SELECT version,payload FROM outbox WHERE kind = 'Task' AND record_id = ? AND origin_device = ? AND deleted = 0",
+            [.text(task.metadata.id.uuidString), .text(identity.deviceID.uuidString)]) { row in
+                (Int(sqlite3_column_int64(row, 0)), SQLiteDatabase.text(row, 1))
+            }
+        var createdHere = false
+        for (version, payload) in local {
+            guard let old = try? WorkspaceCoding.decode(BlotV3.Task.self, from: Data(payload.utf8)) else { continue }
+            if WorkspaceTaskService.terminal(old.state) { return false }
+            if version == 1 {
+                createdHere = old.execution == task.execution && old.metadata.ownerId == task.metadata.ownerId
+                    && old.metadata.workspaceId == task.metadata.workspaceId && old.conversationId == task.conversationId
+                    && old.projectId == task.projectId && old.goal == task.goal && old.configurationId == task.configurationId
+                    && old.parentTaskId == task.parentTaskId && old.skillRevisionId == task.skillRevisionId
+                    && old.budgetTokenLimit == task.budgetTokenLimit && old.executionMode == task.executionMode
+                    && old.authorizationJSON == task.authorizationJSON
+            }
+        }
+        if task.executionMode == .delegated { return task.execution.originDeviceId != identity.deviceID && task.authorizationJSON != nil }
+        return task.executionMode == .local_owned && task.execution.originDeviceId == identity.deviceID && createdHere
+    }
+
     func records<T: BlotWorkspaceRecord>(_ type: T.Type, workspaceID: UUID) throws -> [T] {
-        try database.query("SELECT payload FROM records WHERE kind = ? AND workspace_id = ? AND deleted = 0 ORDER BY rowid",
+        try database.query("SELECT id,payload FROM records WHERE kind = ? AND workspace_id = ? AND deleted = 0 ORDER BY rowid",
             [.text(T.recordKind), .text(workspaceID.uuidString)]) {
-                try WorkspaceCoding.decode(type, from: Data(SQLiteDatabase.text($0, 0).utf8))
+                try decode(type, id: SQLiteDatabase.text($0, 0), workspaceID: workspaceID, payload: SQLiteDatabase.text($0, 1))
             }
     }
 
     func record<T: BlotWorkspaceRecord>(_ type: T.Type, id: UUID, workspaceID: UUID) throws -> T? {
         try database.query("SELECT payload FROM records WHERE kind = ? AND id = ? AND workspace_id = ? AND deleted = 0",
             [.text(T.recordKind), .text(id.uuidString), .text(workspaceID.uuidString)]) {
-                try WorkspaceCoding.decode(type, from: Data(SQLiteDatabase.text($0, 0).utf8))
+                try decode(type, id: id.uuidString, workspaceID: workspaceID, payload: SQLiteDatabase.text($0, 0))
             }.first
+    }
+
+    private func decode<T: BlotWorkspaceRecord>(_ type: T.Type, id: String, workspaceID: UUID, payload: String) throws -> T {
+        let key = (workspaceID.uuidString + ":" + T.recordKind + ":" + id) as NSString
+        if let cached = decoded.object(forKey: key), cached.payload == payload, let value = cached.value as? T { return value }
+        let value = try WorkspaceCoding.decode(type, from: Data(payload.utf8))
+        decoded.setObject(DecodedRecord(payload: payload, value: value), forKey: key, cost: payload.utf8.count * 3 + 256)
+        return value
     }
 
     func write(_ mutation: WorkspaceRecordMutation, commandID: UUID) throws {

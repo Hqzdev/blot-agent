@@ -137,8 +137,8 @@ struct MacTeamMessageCard: View {
                     BlotIcon(symbol: symbol, size: BlotIconSize.navigation).frame(width: 28)
                 }
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(title).font(.system(size: 12, weight: .medium))
-                    Text(detail).font(.system(size: 11)).foregroundStyle(.secondary)
+                    WorkspaceLocalizedText(title).font(.system(size: 12, weight: .medium))
+                    WorkspaceLocalizedText(detail).font(.system(size: 11)).foregroundStyle(.secondary)
                 }
                 Spacer()
                 BlotIcon(symbol: "chevron.right", size: BlotIconSize.inline).foregroundStyle(WorkspaceStyle.ink)

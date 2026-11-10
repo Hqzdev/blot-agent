@@ -1,10 +1,12 @@
 import BlotDesign
+import BlotDomain
 import SwiftUI
 
 struct MacAgentCreationView: View {
     var isEditing = false
     @Environment(WorkspaceStore.self) private var store
     @FocusState private var nameFocused: Bool
+    @State private var nameGenerator = MacAgentNameGenerator()
     private let colors = ["brown", "red", "orange", "amber", "green", "teal", "blue", "purple", "pink", "gray"]
     private let shapes: [WorkspaceAvatar.ShapeKind] = [.round, .oval, .square, .pill, .triangle, .hexagon, .cloud, .drop, .tall, .star]
 
@@ -30,7 +32,14 @@ struct MacAgentCreationView: View {
                     .id(store.form.agent.shape + store.form.agent.color)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             }.frame(height: 96).animation(.easeInOut(duration: 0.18), value: store.form.agent.shape + store.form.agent.color)
-            HStack(spacing: 12) {
+            Button(action: randomizeIdentity) {
+                Label(store.language == "ru" ? "Случайный вариант" : "Randomize", systemImage: "shuffle")
+                    .font(MacWorkspaceStyle.caption)
+            }
+            .buttonStyle(.bordered)
+            .disabled(store.busy)
+            .help(store.language == "ru" ? "Выбрать случайные имя, цвет и форму" : "Choose a random name, color and shape")
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 12)], spacing: 10) {
                 ForEach(colors, id: \.self) { color in
                     Button { store.form.agent.color = color } label: {
                         Circle().fill(WorkspaceAvatarView.color(color)).frame(width: 24, height: 24)
@@ -39,7 +48,7 @@ struct MacAgentCreationView: View {
                         .accessibilityAddTraits(store.form.agent.color == color ? .isSelected : [])
                 }
             }
-            HStack(spacing: 6) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 34), spacing: 6)], spacing: 10) {
                 ForEach(shapes, id: \.self) { shape in
                     Button { store.form.agent.shape = shape.rawValue } label: {
                         WorkspaceAvatar(shape: shape, color: WorkspaceAvatarView.color(store.form.agent.color), size: 28)
@@ -103,6 +112,19 @@ struct MacAgentCreationView: View {
                     }
                 }
             }.scrollIndicators(.hidden)
+        }
+    }
+
+    private func randomizeIdentity() {
+        store.form.agent.name = nameGenerator.next(
+            language: store.language,
+            excluding: store.snapshot.agents.map(\.name) + [store.form.agent.name]
+        )
+        if let color = colors.filter({ $0 != store.form.agent.color }).randomElement() {
+            store.form.agent.color = color
+        }
+        if let shape = shapes.filter({ $0.rawValue != store.form.agent.shape }).randomElement() {
+            store.form.agent.shape = shape.rawValue
         }
     }
 

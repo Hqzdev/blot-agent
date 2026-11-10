@@ -26,12 +26,32 @@ export function googleConfiguration() {
 }
 
 export function cookieKey() {
-  const secret = process.env.BLOT_WEB_SESSION_SECRET || process.env.BLOT_GOOGLE_WEB_CLIENT_SECRET;
+  const secret = process.env.BLOT_WEB_SESSION_SECRET || process.env.BLOT_GOOGLE_WEB_CLIENT_SECRET || process.env.BLOT_YANDEX_WEB_CLIENT_SECRET;
   if (!secret || secret.length < 24) throw new AuthError("web_session_unconfigured", 503);
   return createHmac("sha256", secret).update("BLOT-WEB-COOKIE-1").digest();
 }
 
+export function yandexConfiguration() {
+  const clientID = process.env.BLOT_YANDEX_WEB_CLIENT_ID;
+  const clientSecret = process.env.BLOT_YANDEX_WEB_CLIENT_SECRET;
+  const redirectURI = process.env.BLOT_YANDEX_WEB_REDIRECT_URI;
+  if (!clientID || !clientSecret || !redirectURI) throw new AuthError("yandex_unconfigured", 503);
+  let url;
+  try { url = new URL(redirectURI); } catch { throw new AuthError("yandex_unconfigured", 503); }
+  if (url.username || url.password || url.search || url.hash || url.pathname !== "/auth/yandex/callback"
+      || !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname)))) {
+    throw new AuthError("yandex_unconfigured", 503);
+  }
+  if (!process.env.DATABASE_URL) throw new AuthError("auth_service_unconfigured", 503);
+  return { clientID, clientSecret, redirectURI };
+}
+
 export async function accountRequest(path, { body, accessToken, method = "POST", clientIP } = {}) {
+  if (process.env.NODE_ENV === "development" && process.env.BLOT_LOCAL_ACCOUNTS === "1") {
+    const { developmentDatabase } = await import("../accounts/development-database.mjs");
+    const { localAccountService } = await import("../accounts/service.mjs");
+    return localAccountService(developmentDatabase()).request(path, { body, accessToken, method, clientIP });
+  }
   if (process.env.DATABASE_URL) {
     const { localAccountService } = await import("../accounts/service.mjs");
     return localAccountService().request(path, { body, accessToken, method, clientIP });

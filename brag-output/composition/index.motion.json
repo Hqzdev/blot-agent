@@ -1,0 +1,1 @@
+{"duration":30,"assertions":[{"kind":"appearsBy","selector":"#intro-caption","bySec":1.2},{"kind":"appearsBy","selector":"#request","bySec":3.2},{"kind":"appearsBy","selector":"#agent-w","bySec":8.1},{"kind":"appearsBy","selector":"#final-cta","bySec":28.2}]}

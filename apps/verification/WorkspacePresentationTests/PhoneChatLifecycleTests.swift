@@ -8,6 +8,61 @@ import XCTest
 /// preview store. Never opens or changes the signed-in user's workspace.
 @MainActor
 final class PhoneChatLifecycleTests: XCTestCase {
+    func testPullToRefreshSynchronizesChatsAndPreservesDraftOnFailure() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let local = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+        let service = RefreshablePhoneWorkspace(local: local)
+        let store = WorkspaceStore(mode: .live, service: service)
+        await store.loadWorkspace()
+        store.selectTab(.chats)
+        store.form.composer.draft = "Unsent message"
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = UIHostingController(rootView: PhoneChatsView().environment(store))
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
+        await settle(window)
+        let list = try XCTUnwrap(collections(in: window).first)
+        let refresh = try XCTUnwrap(list.refreshControl, "The chat list must expose native pull-to-refresh")
+        let previousCount = store.snapshot.conversations.count
+        refresh.beginRefreshing()
+        refresh.sendActions(for: .valueChanged)
+        let deadline = Date().addingTimeInterval(5)
+        while (service.refreshCount == 0 || refresh.isRefreshing) && Date() < deadline { await settle(window) }
+        XCTAssertEqual(service.refreshCount, 1)
+        XCTAssertEqual(store.snapshot.conversations.count, previousCount + 1)
+        XCTAssertFalse(refresh.isRefreshing)
+        XCTAssertEqual(store.form.composer.draft, "Unsent message")
+        XCTAssertEqual(store.route, .chats)
+        XCTAssertNil(store.error)
+
+        let saved = store.snapshot
+        service.failure = URLError(.notConnectedToInternet)
+        await store.synchronizeAccount()
+        XCTAssertEqual(store.snapshot, saved)
+        XCTAssertEqual(store.form.composer.draft, "Unsent message")
+        XCTAssertNotNil(store.error)
+        window.isHidden = true; window.rootViewController = nil
+        try await local.close()
+        try FileManager.default.removeItem(at: directory)
+    }
+
+    func testRootProvidesStoreWithoutAnAncestorEnvironment() async throws {
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
+        for route in [WorkspaceRoute.welcome, .chat] {
+            let store = WorkspaceStore(mode: .preview, route: route)
+            let host = UIHostingController(rootView: WorkspaceRootView(store: store))
+            window.rootViewController = host
+            window.makeKeyAndVisible()
+            await settle(window)
+            XCTAssertFalse(host.view.bounds.isEmpty)
+        }
+    }
+
     func testEachAgentKeepsOneChatAcrossRepeatedOpenAndPickerChanges() async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
         let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
@@ -22,7 +77,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         var chats: [UUID: UUID] = [:]
@@ -86,7 +141,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         store.form.composer.draft = "Synthetic reply presentation check"
@@ -124,7 +179,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
         await settle(window)
@@ -146,6 +201,37 @@ final class PhoneChatLifecycleTests: XCTestCase {
         try FileManager.default.removeItem(at: directory)
     }
 
+    func testPinnedChatsOnlyAppearInTheTopStripAndReturnWhenUnpinned() async throws {
+        let store = WorkspaceStore(mode: .preview, route: .chats)
+        let ids = store.snapshot.conversations.map(\.metadata.id)
+        XCTAssertGreaterThan(ids.count, 1)
+        for id in ids { store.setChatArchived(id, archived: false) }
+        store.error = nil; store.notice = nil
+        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previousWindow = scene.windows.first(where: \.isKeyWindow)
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = UIHostingController(rootView: PhoneChatsView().environment(store))
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
+        await assertRowCount(ids.count, in: window)
+        for (index, id) in ids.enumerated() {
+            store.toggleChatPin(id)
+            await settle(window)
+            // One shared strip plus only the remaining unpinned chats.
+            await assertRowCount(1 + ids.count - index - 1, in: window)
+        }
+        XCTAssertEqual(store.pinnedConversations.count, ids.count)
+        attach(window, name: "Pinned chats only in the top strip")
+        for (index, id) in ids.enumerated() {
+            store.toggleChatPin(id)
+            await settle(window)
+            let stripCount = index == ids.count - 1 ? 0 : 1
+            await assertRowCount(stripCount + index + 1, in: window)
+        }
+        XCTAssertTrue(store.pinnedConversations.isEmpty)
+        XCTAssertEqual(store.snapshot.conversations.count, ids.count)
+    }
+
     func testDeletePinnedAndLastChatsThenSwitchTabs() async throws {
         let store = WorkspaceStore(mode: .preview, route: .chats)
         // Presentation fixtures may contain only archived pins. Explicitly seed
@@ -158,7 +244,7 @@ final class PhoneChatLifecycleTests: XCTestCase {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previousWindow = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
-        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store).environment(store))
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
         window.makeKeyAndVisible()
         defer { window.isHidden = true; window.rootViewController = nil; previousWindow?.makeKeyAndVisible() }
 
@@ -244,4 +330,25 @@ final class PhoneChatLifecycleTests: XCTestCase {
 private struct ControlledPhoneReply: ChatModel {
     let events: AsyncThrowingStream<ChatModelEvent, Error>
     nonisolated func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> { events }
+}
+
+@MainActor
+private final class RefreshablePhoneWorkspace: WorkspaceService, WorkspaceCommandProviding, WorkspaceAccountSynchronizing {
+    private let local: LocalWorkspaceService
+    var workspaceCommands: (any WorkspaceCommandService)? { local }
+    private(set) var refreshCount = 0
+    var failure: (any Error)?
+
+    init(local: LocalWorkspaceService) { self.local = local }
+    func load() async throws -> WorkspaceSnapshot? { try await local.load() }
+    func execute(_ request: WorkspaceRequest, snapshot: WorkspaceSnapshot) async throws -> WorkspaceSnapshot {
+        try await local.execute(request, snapshot: snapshot)
+    }
+    func synchronizeAccount() async throws {
+        refreshCount += 1
+        if let failure { throw failure }
+        let request = WorkspaceRequest(action: .createConversation, form: WorkspaceForm(),
+            selectedAgentID: nil, selectedConversationID: nil, selectedRecordID: nil)
+        _ = try await local.execute(request, snapshot: local.currentSnapshot())
+    }
 }

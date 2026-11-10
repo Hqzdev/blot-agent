@@ -33,7 +33,7 @@ struct MacTeamPluginConnection: View {
                         MacTeamPluginIcon(plugin: plugin, size: 54)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(plugin.name).font(.system(size: 23, weight: .medium))
-                            Text(plugin.summary).foregroundStyle(.secondary)
+                            WorkspaceLocalizedText(plugin.summary).foregroundStyle(.secondary)
                         }
                     }
                     Text("Демо-авторизация · настоящий вход в сервис не выполняется").font(.system(size: 11))

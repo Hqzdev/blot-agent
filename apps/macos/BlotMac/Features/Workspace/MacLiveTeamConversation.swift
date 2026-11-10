@@ -12,9 +12,10 @@ struct MacLiveTeamConversation: View {
     @State private var nearBottom = true
     @State private var inputFrame: CGRect?
     @State private var sendInputFrame: CGRect?
+    @State private var history = WorkspaceTranscriptWindow()
 
     init(messages: [BlotV3.Message]) {
-        _timeline = State(initialValue: MacTeamMessageTimeline(items: messages.filter(WorkspaceMessagePresentation.isVisible).map {
+        _timeline = State(initialValue: MacTeamMessageTimeline(items: messages.suffix(WorkspaceTranscriptWindow.pageSize).filter(WorkspaceMessagePresentation.isVisible).map {
             .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user)
         }))
     }
@@ -23,32 +24,56 @@ struct MacLiveTeamConversation: View {
         let ids: [UUID]
         let reduced: Bool
     }
-    private var messages: [BlotV3.Message] { store.currentMessages.filter(WorkspaceMessagePresentation.isVisible) }
+    private var messages: [BlotV3.Message] { Array(history.messages(in: store.currentVisibleMessages)) }
     private var reduced: Bool { reduceMotion || systemReduceMotion }
     private var agent: BlotV3.AgentProfile? {
-        store.snapshot.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
+        store.chatContent.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
+    }
+
+    private var groupMembers: [BlotV3.AgentProfile] {
+        let ids = Set((store.chatContent.participants).filter {
+            $0.conversationId == store.selectedConversationID && $0.kind == .agent && !$0.removed
+        }.map(\.participantId))
+        return store.chatContent.agents.filter { ids.contains($0.metadata.id) }
     }
 
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: compactMessages ? 16 : 24) {
+                    if history.hasEarlier(in: store.currentVisibleMessages) {
+                        Button(store.language == "ru" ? "Загрузить предыдущие сообщения" : "Load earlier messages") {
+                            let anchor = messages.first?.metadata.id
+                            followsLatest = false
+                            history.loadEarlier()
+                            timeline.synchronize(items: messages.map { .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user) }, immediate: true)
+                            _Concurrency.Task { await _Concurrency.Task.yield(); if let anchor { proxy.scrollTo(anchor, anchor: .top) } }
+                        }.font(.callout).frame(maxWidth: .infinity)
+                    }
                     if messages.isEmpty, store.currentReplyDraft == nil {
                         VStack(spacing: 16) {
-                            if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
+                            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 68) }
+                            else if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
                             else { WorkspaceAnimatedAvatar(size: 68) }
                             Group {
-                                if store.snapshot.agents.isEmpty { Text("Создайте своего первого агента") }
+                                if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
+                                else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
                                 else { WorkspaceWelcomeGreeting() }
                             }.font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
-                            if store.snapshot.agents.isEmpty {
+                            if store.chatContent.agents.isEmpty {
                                 Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
                             }
                         }.frame(maxWidth: .infinity).padding(.vertical, 100)
                     }
                     ForEach(messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
-                        MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
-                            inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
+                        Group {
+                            if let plan = store.groupPlan(for: message) {
+                                WorkspaceGroupPlanCard(plan: plan, agents: store.chatContent.agents, skills: store.chatContent.skills, russian: store.language == "ru")
+                            } else {
+                                MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
+                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
+                            }
+                        }
                             .id(message.metadata.id).transition(.identity)
                             .onAppear { timeline.didAppear(message.metadata.id.uuidString) }
                     }
@@ -86,7 +111,17 @@ struct MacLiveTeamConversation: View {
                 proxy.scrollTo("team-live-bottom", anchor: .bottom)
                 store.updateChatVisibility(store.selectedConversationID, atLatest: true)
             }
+            .task(id: store.messageNavigationTarget) {
+                guard let id = store.messageNavigationTarget, store.message(id)?.conversationId == store.selectedConversationID else { return }
+                followsLatest = false
+                history.reveal(id, in: store.currentVisibleMessages)
+                timeline.synchronize(items: messages.map { .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user) }, immediate: true)
+                await _Concurrency.Task.yield()
+                proxy.scrollTo(id, anchor: .center)
+                store.messageNavigationTarget = nil
+            }
             .onDisappear { store.clearChatVisibility(store.selectedConversationID) }
+            .onChange(of: store.currentVisibleMessages.count) { previous, current in history.retainPosition(added: current - previous, followingLatest: followsLatest) }
             .task(id: MessageUpdate(ids: messages.map(\.metadata.id), reduced: reduced)) {
                 let sent = timeline.synchronize(items: messages.map {
                     .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user)
@@ -106,6 +141,7 @@ struct MacLiveTeamConversation: View {
                 }.allowsHitTesting(false)
             }
         }
+        .safeAreaInset(edge: .top, spacing: 0) { WorkspacePinnedGroupPlan().padding(.horizontal, 24).padding(.top, 6) }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
                 WorkspaceFeedback()
@@ -114,7 +150,7 @@ struct MacLiveTeamConversation: View {
                 .frame(maxWidth: .infinity).background(WorkspaceStyle.canvas)
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
-        .kAnimation(MacTeamMessageMotion.receive, value: timeline.visibleIDs)
+        .kAnimation(MacTeamMessageMotion.receive, value: timeline.lastRevealedID)
         .kAnimation(MacTeamMessageMotion.receive, value: store.currentReplyDraft)
     }
 }
@@ -127,10 +163,10 @@ private struct MacLiveTeamMessage: View {
     @Environment(WorkspaceStore.self) private var store
     private var isUser: Bool { message.role == .user }
     private var agent: BlotV3.AgentProfile? {
-        store.snapshot.agents.first { $0.metadata.id == (message.authorAgentId ?? store.currentConversation?.agentId) }
+        store.chatContent.agents.first { $0.metadata.id == (message.authorAgentId ?? store.currentConversation?.agentId) }
     }
     private var reactions: [BlotV3.MessageReaction] {
-        (store.snapshot.reactions ?? []).filter { $0.messageId == message.metadata.id && !$0.removed }
+        store.chatContent.reactions[message.metadata.id] ?? []
     }
     var body: some View {
         HStack(alignment: .top) {
@@ -144,12 +180,13 @@ private struct MacLiveTeamMessage: View {
                     }
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    if let id = message.replyToMessageId, let quoted = store.currentMessages.first(where: { $0.metadata.id == id }) {
+                    if let id = message.replyToMessageId, let quoted = store.message(id), store.groupPlan(for: quoted) == nil {
                         WorkspaceQuotedMessage(message: quoted)
                     }
-                    WorkspaceMessageText(text: message.content, markdown: !isUser).font(.system(size: 13)).lineSpacing(4)
+                    WorkspaceMessageText(text: message.content, markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.system(size: 13)).lineSpacing(4)
+                    WorkspaceMessagePlugins(message: message)
                     ForEach(message.artifactIds, id: \.self) { id in
-                        if let artifact = store.snapshot.artifacts.first(where: { $0.metadata.id == id }) {
+                        if let artifact = store.chatContent.artifacts[id] {
                             Button { store.selectedRecordID = id; store.navigate(.file) } label: {
                                 Label(artifact.name, systemImage: "doc.text").frame(maxWidth: .infinity, alignment: .leading)
                             }.buttonStyle(.plain)

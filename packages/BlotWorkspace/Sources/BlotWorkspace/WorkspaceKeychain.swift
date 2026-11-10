@@ -9,9 +9,13 @@ public protocol WorkspaceCredentialStore: Sendable {
     func remove(_ name: String) async throws
 }
 
+public protocol WorkspaceCredentialPruning: WorkspaceCredentialStore {
+    func removeNames(prefixes: [String]) async throws
+}
+
 /// System Keychain storage, scoped by service and account. Never exported in snapshots.
 /// macOS uses its login Keychain's application ACL; iOS uses device-only Data Protection.
-public actor WorkspaceKeychain: WorkspaceCredentialStore {
+public actor WorkspaceKeychain: WorkspaceCredentialPruning {
     private let service: String
     public init(service: String) { self.service = service }
     public func read(_ name: String) throws -> Data? {
@@ -40,6 +44,18 @@ public actor WorkspaceKeychain: WorkspaceCredentialStore {
     public func remove(_ name: String) throws {
         let status = SecItemDelete(base(name) as CFDictionary)
         guard status == errSecSuccess || status == errSecItemNotFound else { throw WorkspaceCredentialError.unavailable(status) }
+    }
+    public func removeNames(prefixes: [String]) throws {
+        guard !prefixes.isEmpty, prefixes.allSatisfy({ !$0.isEmpty }) else { throw WorkspaceCredentialError.invalidValue }
+        var query = base(""); query[kSecAttrAccount as String] = nil
+        query[kSecReturnAttributes as String] = true; query[kSecMatchLimit as String] = kSecMatchLimitAll
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return }
+        guard status == errSecSuccess, let items = result as? [[String: Any]] else { throw WorkspaceCredentialError.unavailable(status) }
+        for item in items {
+            if let name = item[kSecAttrAccount as String] as? String, prefixes.contains(where: name.hasPrefix) { try remove(name) }
+        }
     }
     private func base(_ name: String) -> [String: Any] {
         var query: [String: Any] = [kSecClass as String: kSecClassGenericPassword,

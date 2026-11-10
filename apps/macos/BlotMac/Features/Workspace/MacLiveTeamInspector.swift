@@ -1,3 +1,4 @@
+import BlotWorkspace
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -15,7 +16,7 @@ struct MacLiveTeamInspector: View {
     }
     var body: some View {
         VStack(spacing: 0) {
-            Text(isGroup ? "О группе" : "Об агенте").font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
+            WorkspaceLocalizedText(isGroup ? "О группе" : "Об агенте").font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 16).frame(height: 52)
             ScrollView {
                 VStack(spacing: 22) {
@@ -37,10 +38,10 @@ struct MacLiveTeamInspector: View {
                                 }
                                 Button("Вся память") { store.navigate(.memory) }.buttonStyle(.plain)
                             case "Навыки":
-                                ForEach((store.snapshot.skills ?? []).filter { !$0.archived }, id: \.metadata.id) { skill in
+                                ForEach((store.snapshot.skills ?? []).filter { skill in !skill.archived && (store.snapshot.skillAssignments ?? []).contains { $0.skillID == skill.metadata.id && $0.agentID == agent?.metadata.id && $0.assigned } }, id: \.metadata.id) { skill in
                                     Label(skill.name, systemImage: "shippingbox")
                                 }
-                                Button("Навыки агента") { if let agent { store.selectAgent(agent.metadata.id) } }
+                                Button("Навыки агента") { store.navigate(.skills) }
                                     .buttonStyle(.plain).disabled(agent == nil)
                             default: overview
                             }
@@ -80,7 +81,7 @@ struct MacLiveTeamInspector: View {
             }
             Button("Все расписания") { store.navigate(.schedules) }.buttonStyle(.plain)
             Text("Подключения").foregroundStyle(.secondary)
-            Button("Все приложения") { store.navigate(.connections) }.buttonStyle(.plain)
+            Button("Все приложения") { store.navigate(.marketplace) }.buttonStyle(.plain)
             Button { store.navigate(.files) } label: { Label("Файлы и документы", systemImage: "folder") }.buttonStyle(.plain)
         }.font(.system(size: 12))
     }

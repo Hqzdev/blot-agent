@@ -7,4 +7,5 @@ nonisolated struct WorkspacePresentationState: Codable, Sendable {
     var firstName: String
     var lastName: String
     var email: String
+    var profile: WorkspaceUserProfile? = nil
 }

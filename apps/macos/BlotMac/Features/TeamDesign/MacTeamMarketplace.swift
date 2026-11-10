@@ -3,18 +3,39 @@ import SwiftUI
 
 struct MacTeamMarketplace: View {
     @Environment(MacTeamPresentation.self) private var presentation
+    var body: some View {
+        MacTeamMarketplaceContent(plugins: presentation.plugins,
+            selectPlugin: { presentation.sheet = .plugin($0) },
+            selectTemplate: { presentation.sheet = .template($0.id) },
+            addPlugin: { presentation.sheet = .addPlugin })
+    }
+}
+
+/// Catalog presentation is shared; account and demo actions remain separate.
+struct MacTeamMarketplaceContent: View {
+    @Environment(\.locale) private var locale
+    let plugins: [MacTeamPlugin]
+    let selectPlugin: (MacTeamPlugin) -> Void
+    let selectTemplate: (MacDemoTemplate) -> Void
+    var addPlugin: (() -> Void)?
+    var topInset: CGFloat = 64
+    var pluginActionTitle = "Подключить"
+    var subtitle = "Подключите ваши приложения или пригласите готового специалиста."
     @State private var search = ""
     @State private var category = "Все"
-    private var plugins: [MacTeamPlugin] {
-        presentation.plugins.filter {
+    private var filteredPlugins: [MacTeamPlugin] {
+        plugins.filter {
             (category == "Все" || $0.category == category)
-                && (search.isEmpty || ($0.name + $0.summary).localizedCaseInsensitiveContains(search))
+                && (search.isEmpty || searchText([$0.name, $0.summary]).localizedCaseInsensitiveContains(search))
         }
     }
     private var templates: [MacDemoTemplate] {
         MacDemoTemplates.all.filter {
-            search.isEmpty || ($0.name + $0.role + $0.summary).localizedCaseInsensitiveContains(search)
+            search.isEmpty || searchText([$0.name, $0.role, $0.summary]).localizedCaseInsensitiveContains(search)
         }
+    }
+    private func searchText(_ parts: [String]) -> String {
+        parts.map { WorkspaceCopy.text($0, language: locale.language.languageCode?.identifier ?? "en") }.joined(separator: " ")
     }
     var body: some View {
         ScrollView {
@@ -22,10 +43,12 @@ struct MacTeamMarketplace: View {
                 HStack(alignment: .top) {
                     MacTeamSectionHeading(
                         title: "Больше возможностей для команды",
-                        subtitle: "Подключите ваши приложения или пригласите готового специалиста.")
-                    Button { presentation.sheet = .addPlugin } label: {
-                        BlotLabel("Добавить плагин", symbol: "plus", size: BlotIconSize.control)
-                    }.buttonStyle(WorkspaceButtonStyle()).fixedSize()
+                        subtitle: subtitle)
+                    if let addPlugin {
+                        Button(action: addPlugin) {
+                            BlotLabel("Добавить плагин", symbol: "plus", size: BlotIconSize.control)
+                        }.buttonStyle(WorkspaceButtonStyle()).fixedSize()
+                    }
                 }
                 HStack(spacing: 9) {
                     BlotIcon(symbol: "magnifyingglass", size: BlotIconSize.control).foregroundStyle(.secondary)
@@ -41,18 +64,18 @@ struct MacTeamMarketplace: View {
                 HStack {
                     Text("Приложения").font(.system(size: 15, weight: .semibold))
                     Spacer()
-                    Text("\(plugins.count)").foregroundStyle(.tertiary)
+                    Text("\(filteredPlugins.count)").foregroundStyle(.tertiary)
                 }
                 ScrollView(.horizontal) {
                     HStack(spacing: 6) {
                         ForEach(
-                            ["Все", "Работа", "Общение", "Финансы", "Пароли", "MCP", "Разработка", "Контент"],
+                            ["Все", "Приложения Apple", "Работа", "Общение", "Финансы", "Пароли", "MCP", "Разработка", "Контент"],
                             id: \.self
                         ) { item in
                             Button {
                                 category = item
                             } label: {
-                                Text(item).font(.system(size: 11, weight: category == item ? .medium : .regular))
+                                WorkspaceLocalizedText(item).font(.system(size: 11, weight: category == item ? .medium : .regular))
                                     .padding(.horizontal, 12).padding(.vertical, 7)
                                     .foregroundStyle(category == item ? BlotColor.onInverse : WorkspaceStyle.ink)
                                     .background(
@@ -62,22 +85,27 @@ struct MacTeamMarketplace: View {
                     }
                 }.scrollIndicators(.hidden)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 270), spacing: 14)], spacing: 14) {
-                    ForEach(plugins) { plugin in
+                    ForEach(filteredPlugins) { plugin in
                         Button {
-                            presentation.sheet = .plugin(plugin)
+                            selectPlugin(plugin)
                         } label: {
                             HStack(alignment: .top, spacing: 13) {
                                 MacTeamPluginIcon(plugin: plugin)
                                 VStack(alignment: .leading, spacing: 7) {
-                                    Text(plugin.name).font(.system(size: 13, weight: .semibold))
-                                    Text(plugin.summary).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(
+                                    WorkspaceLocalizedText(plugin.name).font(.system(size: 13, weight: .semibold))
+                                    WorkspaceLocalizedText(plugin.summary).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(
                                         2
                                     ).frame(height: 30, alignment: .top)
-                                    if !plugin.accounts.isEmpty {
-                                        BlotLabel("Аккаунтов: \(plugin.accounts.count)", symbol: "checkmark", size: BlotIconSize.inline)
-                                            .foregroundStyle(.teal).font(.system(size: 10))
+                                    if let status = plugin.connectionStatus {
+                                        if status == "Подключено" || status == "Доступ ограничен" {
+                                            MacTeamBadge(text: status, color: .green)
+                                        } else {
+                                            WorkspaceLocalizedText(status).font(.system(size: 10, weight: .medium)).foregroundStyle(.secondary)
+                                        }
+                                    } else if !plugin.accounts.isEmpty {
+                                        MacTeamBadge(text: "Подключено", color: .green)
                                     } else {
-                                        Text("Подключить").font(.system(size: 10, weight: .medium)).foregroundStyle(WorkspaceStyle.ink)
+                                        WorkspaceLocalizedText(pluginActionTitle).font(.system(size: 10, weight: .medium)).foregroundStyle(WorkspaceStyle.ink)
                                     }
                                 }.frame(maxWidth: .infinity, alignment: .leading)
                                 BlotIcon(symbol: "chevron.right", size: BlotIconSize.inline).foregroundStyle(WorkspaceStyle.ink)
@@ -86,26 +114,26 @@ struct MacTeamMarketplace: View {
                         }.buttonStyle(BlotPlainButtonStyle())
                     }
                 }
-                if plugins.isEmpty && templates.isEmpty {
+                if filteredPlugins.isEmpty && templates.isEmpty {
                     ContentUnavailableView {
                         BlotLabel("Ничего не найдено", symbol: "magnifyingglass", size: BlotIconSize.illustration)
                     } description: { Text("Попробуйте другое название приложения или шаблона.") }.frame(maxWidth: .infinity)
                 }
             }.kAnimation(KMotion.standard, value: category)
-                .kAnimation(KMotion.standard, value: plugins.map(\.id))
+                .kAnimation(KMotion.standard, value: filteredPlugins.map(\.id))
                 .padding(32).frame(maxWidth: 1040).frame(maxWidth: .infinity)
-        }.contentMargins(.top, 64, for: .scrollContent)
+        }.contentMargins(.top, topInset, for: .scrollContent)
     }
     private func template(_ template: MacDemoTemplate) -> some View {
         Button {
-            presentation.sheet = .template(template.id)
+            selectTemplate(template)
         } label: {
             VStack(alignment: .leading, spacing: 14) {
                 WorkspaceAvatar(
                     shape: WorkspaceAvatar.ShapeKind(rawValue: template.shape) ?? .round,
                     color: WorkspaceAvatarView.color(template.color), size: 46)
-                Text(template.name).font(.system(size: 14, weight: .medium))
-                Text(template.summary).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
+                WorkspaceLocalizedText(template.name).font(.system(size: 14, weight: .medium))
+                WorkspaceLocalizedText(template.summary).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
                 BlotLabel("Посмотреть шаблон", symbol: "arrow.up.right", size: BlotIconSize.inline).font(.system(size: 10)).foregroundStyle(WorkspaceStyle.ink)
             }.frame(maxWidth: .infinity, alignment: .leading).teamCard(padding: 18)
         }.buttonStyle(BlotPlainButtonStyle())
@@ -129,26 +157,26 @@ struct MacTeamTemplateDetail: View {
                         shape: WorkspaceAvatar.ShapeKind(rawValue: template.shape) ?? .round,
                         color: WorkspaceAvatarView.color(template.color), size: 64)
                     VStack(alignment: .leading, spacing: 7) {
-                        Text(template.name).font(.system(size: 23, weight: .medium))
+                        WorkspaceLocalizedText(template.name).font(.system(size: 23, weight: .medium))
                         Text("Коллекция Blot · " + template.role).foregroundStyle(.secondary)
                     }
                     Spacer()
                 }
-                Text(template.summary).lineSpacing(5).foregroundStyle(.secondary)
+                WorkspaceLocalizedText(template.summary).lineSpacing(5).foregroundStyle(.secondary)
                 HStack(alignment: .top, spacing: 22) {
                     VStack(spacing: 4) {
                         ForEach(["Инструкции", "Память", "Навыки", "Расписания", "Интеграции"], id: \.self) { item in
                             MacTeamNavigationButton(selected: tab == item) {
                                 tab = item
                             } label: {
-                                Text(item)
+                                WorkspaceLocalizedText(item)
                             }
                         }
                     }.frame(width: 145)
                     ScrollView {
                         VStack(alignment: .leading, spacing: 14) {
                             Text(tab).fontWeight(.semibold)
-                            Text(description).lineSpacing(5).foregroundStyle(.secondary)
+                            WorkspaceLocalizedText(description).lineSpacing(5).foregroundStyle(.secondary)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                             .id(tab).transition(.opacity)
                     }.kAnimation(KMotion.standard, value: tab)

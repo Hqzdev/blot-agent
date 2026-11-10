@@ -14,6 +14,14 @@ struct WorkspaceMessageActionsMenu: View {
         }.controlGroupStyle(.palette)
         BlotIconButton(store.t("Copy message"), symbol: "doc.on.doc") { WorkspaceClipboard.copy(store.t(message.content)) }
         BlotIconButton(store.t("Reply to message"), symbol: "arrowshape.turn.up.left") { store.beginReply(to: message.metadata.id) }
+        #if os(iOS)
+        if store.mode == .live {
+            BlotIconButton(store.t(store.isMessagePinned(message.metadata.id) ? "Unpin message" : "Pin message"),
+                           symbol: store.isMessagePinned(message.metadata.id) ? "pin.slash" : "pin") {
+                store.toggleMessagePin(message.metadata.id)
+            }.disabled(store.pendingMessagePins.contains(message.metadata.id))
+        }
+        #endif
         if store.mode == .live, message.role == .user {
             BlotIconButton(store.t("Retry response"), symbol: "arrow.clockwise") { store.retryResponse(to: message.metadata.id) }
                 .disabled(store.isReplying)

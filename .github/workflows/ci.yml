@@ -89,4 +89,4 @@ jobs:
           distribution: temurin
           java-version: '25'
       - run: xcodebuild -project apps/Blot.xcodeproj -scheme BlotMac -configuration Debug -destination 'platform=macOS' -derivedDataPath .build/xcode CODE_SIGNING_ALLOWED=NO build
-      - run: xcodebuild -project apps/Blot.xcodeproj -scheme BlotIOS -configuration Debug -destination 'generic/platform=iOS Simulator' -derivedDataPath .build/xcode-ios CODE_SIGNING_ALLOWED=NO build
+      - run: xcodebuild -project apps/Blot.xcodeproj -scheme BlotIOS -configuration Debug -destination 'generic/platform=iOS' -derivedDataPath .build/xcode-ios CODE_SIGNING_ALLOWED=NO build

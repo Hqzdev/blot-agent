@@ -16,23 +16,16 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const value = await input(request);
-    const { action, email, password, name, code } = value;
+    const { action, email, name, code, intent } = value;
     if (typeof action !== "string") throw new AuthError("invalid_request");
     switch (action) {
-      case "register":
-        await accountRequest("register", { body: { email, password, name }, clientIP: clientIP(request) });
+      case "email/request":
+        await accountRequest("email/request", { body: { email, name, intent }, clientIP: clientIP(request) });
         return json({ verificationRequired: true });
-      case "login": case "verify": {
-        const body = action === "login" ? { email, password } : { email, code };
-        const tokens = await accountRequest(action, { body, clientIP: clientIP(request) });
+      case "email/verify": {
+        const tokens = await accountRequest("email/verify", { body: { email, code }, clientIP: clientIP(request) });
         return setSession(json({ authenticated: true }), tokens, request);
       }
-      case "recover":
-        await accountRequest("password/request", { body: { email }, clientIP: clientIP(request) });
-        return json({ resetRequested: true });
-      case "reset":
-        await accountRequest("password/reset", { body: { email, code, password }, clientIP: clientIP(request) });
-        return json({ passwordChanged: true });
       case "logout": {
         let response;
         try {

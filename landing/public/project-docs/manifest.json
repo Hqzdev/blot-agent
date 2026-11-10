@@ -4,6 +4,15 @@
   "completedTasks": 12,
   "documents": [
     {
+      "id": "apple-apps",
+      "taskId": null,
+      "source": "docs/integrations/apple-apps.md",
+      "downloadUrl": "/project-docs/integrations/apple-apps.md",
+      "sha256": "b8cab970084474862eb9faeb3f31845d0847a1b0fd293d62f591c243a4bea3f5",
+      "bytes": 12996,
+      "taskCompleted": false
+    },
+    {
       "id": "apple-v3-implementation",
       "taskId": null,
       "source": "docs/status/apple-v3-implementation.md",
@@ -53,8 +62,8 @@
       "taskId": null,
       "source": "docs/product/blot-technical-specification.md",
       "downloadUrl": "/project-docs/product/blot-technical-specification.md",
-      "sha256": "a1af2eb634ffc89d04cd34c7cada12832cbea3b4aa2db5f5672233e108d9b8cd",
-      "bytes": 90057,
+      "sha256": "7f1c1326d59608b1bf0b6ba008b5dfe31db2398ea0791711ec4a9b8a5b41c4d9",
+      "bytes": 90317,
       "taskCompleted": false
     },
     {
@@ -64,6 +73,15 @@
       "downloadUrl": "/project-docs/integrations/mcp-developer-guide.md",
       "sha256": "c60bc32553674807eacaf5902131fa0056f3b971bfc3f6251d0d8dd5992a0568",
       "bytes": 14230,
+      "taskCompleted": false
+    },
+    {
+      "id": "native-terminal-git",
+      "taskId": null,
+      "source": "docs/status/native-terminal-git.md",
+      "downloadUrl": "/project-docs/status/native-terminal-git.md",
+      "sha256": "759e6a7f0ac4ed909a76b1e3b0609d71b9c02827b5d1f8b3dc07801e6539cab9",
+      "bytes": 17056,
       "taskCompleted": false
     },
     {
@@ -269,8 +287,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "5911c8c7466ba550773044d21be3d270742b838edc5681f97bbedb8b4b2709c3",
-      "bytes": 8327,
+      "sha256": "3ba2c58f74b09bbfaf0a2e1d55405d79c7115e10a4fd4df21c656697f8fdc94c",
+      "bytes": 8488,
       "taskCompleted": false
     },
     {

@@ -40,7 +40,7 @@ struct MacTeamPluginPicker: View {
                                     MacTeamPluginIcon(plugin: plugin, size: 32)
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text(plugin.name).font(.system(size: 13, weight: .medium))
-                                        Text(plugin.summary).font(.system(size: 11)).foregroundStyle(.secondary)
+                                        WorkspaceLocalizedText(plugin.summary).font(.system(size: 11)).foregroundStyle(.secondary)
                                     }
                                     Spacer(minLength: 8)
                                     BlotIcon(.plus, size: BlotIconSize.control)

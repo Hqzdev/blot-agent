@@ -6,6 +6,10 @@ import { AccountDatabase } from "./database.mjs";
 import { AccountService } from "./service.mjs";
 import { WorkspaceBackups } from "./workspace-backups.mjs";
 import { AccountRateLimiter, randomToken, digest } from "./security.mjs";
+import { NextRequest } from "next/server.js";
+import { YandexAccountIdentity } from "./yandex.mjs";
+import { YandexSignIn } from "../auth/yandex-sign-in.mjs";
+import { YANDEX_COOKIE, SESSION_COOKIE, unseal } from "../auth/browser-session.mjs";
 
 // PGlite runs PostgreSQL itself. The adapter only supplies pg's pool/transaction interface.
 class TestPostgresPool {
@@ -140,4 +144,246 @@ test("workspace backup commits complete data atomically and isolates accounts", 
   await backups.commit(account, snapshotID);
   const altered = Buffer.from(bytes); altered[0] ^= 1;
   await assert.rejects(backups.putPart(account, snapshotID, 0, { data: altered.toString("base64") }), rejectCode("invalid_workspace_backup"));
+});
+
+test("Yandex browser login creates a persistent account and completes iPhone/Mac PKCE handoff", async context => {
+  process.env.BLOT_WEB_SESSION_SECRET = randomToken();
+  const config = { clientID: "blot-yandex", clientSecret: randomToken(), redirectURI: "https://blot.example/auth/yandex/callback" };
+  const email = `${randomUUID()}@yandex.ru`, subject = randomUUID();
+  let tokenRequests = 0, profileRequests = 0;
+  const exchangedCodes = new Set();
+  context.mock.method(globalThis, "fetch", async (url, options) => {
+    if (url === "https://oauth.yandex.ru/token") {
+      tokenRequests++;
+      assert.equal(options.body.get("client_secret"), config.clientSecret);
+      assert.ok(options.body.get("code_verifier"));
+      const code = options.body.get("code");
+      if (exchangedCodes.has(code)) return Response.json({ error: "invalid_grant" }, { status: 400 });
+      exchangedCodes.add(code);
+      return Response.json({ access_token: "private-yandex-token", token_type: "bearer", refresh_token: "never-store-this" });
+    }
+    assert.equal(url, "https://login.yandex.ru/info?format=json");
+    assert.equal(options.headers.Authorization, "OAuth private-yandex-token");
+    profileRequests++;
+    return Response.json({ id: subject, client_id: config.clientID, default_email: email, real_name: "Yandex Person" });
+  });
+  const accounts = new AccountService({ database, email: {}, challengeSecret: randomToken(), yandexIdentity: new YandexAccountIdentity(config.clientID) });
+  const signIn = new YandexSignIn({ configuration: () => config, accounts: (path, options) => accounts.request(path, options) });
+  const owners = [];
+  for (const platform of ["ios", "macos"]) {
+    const codeVerifier = randomToken(), state = randomToken();
+    const query = new URLSearchParams({ response_type: "code", client_id: `blot-${platform}`, redirect_uri: `blot-agent-${platform}:/oauth/account`,
+      state, code_challenge: createHash("sha256").update(codeVerifier).digest("base64url"), code_challenge_method: "S256", intent: "login" });
+    const started = signIn.start(new NextRequest("https://blot.example/auth/yandex/start?" + query));
+    const attemptCookie = started.cookies.get(YANDEX_COOKIE).value;
+    const providerState = new URL(started.headers.get("location")).searchParams.get("state");
+    const callbackRequest = new NextRequest(`https://blot.example/auth/yandex/callback?state=${providerState}&code=test-code-${platform}`, {
+      headers: { cookie: `${YANDEX_COOKIE}=${attemptCookie}` },
+    });
+    const callback = await signIn.callback(callbackRequest);
+    assert.equal(callback.status, 307);
+    assert.equal(new URL(callback.headers.get("location")).search, "?" + query.toString());
+    assert.equal(callback.cookies.get(YANDEX_COOKIE).value, "");
+    const replay = await signIn.callback(callbackRequest);
+    assert.equal(new URL(replay.headers.get("location")).searchParams.get("auth_error"), "yandex_failed");
+    assert.equal(replay.cookies.has(SESSION_COOKIE), false);
+    const tokens = unseal(callback.cookies.get(SESSION_COOKIE).value);
+    assert.equal(Object.hasOwn(tokens, "refreshToken"), false);
+    assert.equal(Object.hasOwn(tokens, "access_token"), false);
+    assert.ok(!callback.headers.get("location").includes("private-yandex-token"));
+    const account = await accounts.request("me", { method: "GET", accessToken: tokens.accessToken });
+    assert.equal(account.name, "Yandex Person");
+    assert.equal(account.email, email);
+    owners.push(account.id);
+    const { code } = await accounts.request("browser/code", { accessToken: tokens.accessToken, body: {
+      clientID: `blot-${platform}`, redirectURI: `blot-agent-${platform}:/oauth/account`, codeChallenge: query.get("code_challenge"),
+    } });
+    const native = await accounts.request("browser/token", { body: { code, codeVerifier,
+      clientID: `blot-${platform}`, redirectURI: `blot-agent-${platform}:/oauth/account` } });
+    assert.equal(native.ownerID, account.id);
+    await assert.rejects(accounts.request("browser/token", { body: { code, codeVerifier,
+      clientID: `blot-${platform}`, redirectURI: `blot-agent-${platform}:/oauth/account` } }), rejectCode("browser_authorization_invalid"));
+  }
+  assert.equal(owners[0], owners[1]);
+  assert.equal(tokenRequests, 4);
+  assert.equal(profileRequests, 2);
+  const stored = (await database.query("SELECT * FROM blot_accounts WHERE id = $1", [owners[0]])).rows[0];
+  assert.equal(stored.yandex_subject, subject);
+  assert.equal(stored.google_subject, null);
+  assert.equal(stored.password_hash, null);
+  assert.equal(stored.verified, true);
+});
+
+test("provider sign-in never links matching emails; repeat subjects keep their account", async () => {
+  const { email: existingEmail } = await registered();
+  for (const provider of ["google", "yandex"]) {
+    let identity = { subject: randomUUID(), email: existingEmail, name: "External Person" };
+    const accounts = new AccountService({ database, email: {}, challengeSecret: randomToken(),
+      [`${provider}Identity`]: { async verify() { return identity; } } });
+    const path = `${provider}/login`;
+    await assert.rejects(accounts.request(path), rejectCode(`${provider}_link_required`));
+    identity = { ...identity, email: `${randomUUID()}@example.org` };
+    const tokens = await accounts.request(path);
+    const repeated = await Promise.all([accounts.request(path), accounts.request(path)]);
+    assert.ok(repeated.every(value => value.ownerID === tokens.ownerID));
+    identity = { ...identity, email: `${randomUUID()}@example.org` };
+    assert.equal((await accounts.request(path)).ownerID, tokens.ownerID);
+  }
+});
+
+test("Yandex cancellation and account email collision issue no browser session", async context => {
+  process.env.BLOT_WEB_SESSION_SECRET = randomToken();
+  const { email } = await registered();
+  const config = { clientID: "blot-yandex", clientSecret: randomToken(), redirectURI: "https://blot.example/auth/yandex/callback" };
+  context.mock.method(globalThis, "fetch", async url => url === "https://oauth.yandex.ru/token"
+    ? Response.json({ access_token: "private-yandex-token", token_type: "bearer" })
+    : Response.json({ id: randomUUID(), client_id: config.clientID, default_email: email }));
+  const accounts = new AccountService({ database, email: {}, challengeSecret: randomToken(), yandexIdentity: new YandexAccountIdentity(config.clientID) });
+  const signIn = new YandexSignIn({ configuration: () => config, accounts: (path, options) => accounts.request(path, options) });
+  for (const outcome of ["error=access_denied", "code=code"]) {
+    const start = signIn.start(new NextRequest("https://blot.example/auth/yandex/start"));
+    const cookie = start.cookies.get(YANDEX_COOKIE).value;
+    const state = new URL(start.headers.get("location")).searchParams.get("state");
+    const callback = await signIn.callback(new NextRequest(`https://blot.example/auth/yandex/callback?state=${state}&${outcome}`, {
+      headers: { cookie: `${YANDEX_COOKIE}=${cookie}` },
+    }));
+    assert.equal(new URL(callback.headers.get("location")).searchParams.get("auth_error"), outcome.startsWith("error=") ? "yandex_access_denied" : "yandex_link_required");
+    assert.equal(callback.cookies.has(SESSION_COOKIE), false);
+    assert.equal(callback.cookies.get(YANDEX_COOKIE).value, "");
+  }
+});
+
+test("Yandex schema upgrade is repeatable and preserves existing accounts and sessions", async () => {
+  const legacyPool = new TestPostgresPool(), legacy = new AccountDatabase(legacyPool);
+  try {
+    await legacy.initialize();
+    const original = new AccountService({ database: legacy, challengeSecret: randomToken(), email: {},
+      googleIdentity: { async verify() { return { subject: "existing-google", email: "existing@example.org", name: "Existing Person" }; } } });
+    const tokens = await original.request("google/login");
+    // Recreate the pre-Yandex schema with an existing Google account and active session.
+    await legacy.query("ALTER TABLE blot_accounts DROP COLUMN yandex_subject");
+    await new AccountDatabase(legacyPool).initialize();
+    await new AccountDatabase(legacyPool).initialize();
+    const profile = await original.request("me", { method: "GET", accessToken: tokens.accessToken });
+    assert.equal(profile.email, "existing@example.org");
+    const stored = (await legacy.query("SELECT google_subject, yandex_subject FROM blot_accounts WHERE id = $1", [profile.id])).rows[0];
+    assert.deepEqual(stored, { google_subject: "existing-google", yandex_subject: null });
+    await legacy.query("UPDATE blot_accounts SET yandex_subject = $1 WHERE id = $2", ["unique-yandex", profile.id]);
+    await assert.rejects(legacy.query(`INSERT INTO blot_accounts(id, workspace_id, email, name, yandex_subject)
+      VALUES ($1, $2, $3, $4, $5)`, [randomUUID(), randomUUID(), "other@example.org", "Other", "unique-yandex"]), error => error.code === "23505");
+  } finally { await legacyPool.close(); }
+});
+
+test("Provider portraits are returned by me and refreshed for an existing Google or Yandex identity", async () => {
+  for (const provider of ["google", "yandex"]) {
+    const identity = { subject: randomUUID(), email: `${randomUUID()}@example.org`, name: "Avatar owner", avatarURL: "https://lh3.googleusercontent.com/photo-a" };
+    const accounts = new AccountService({ database, email: {}, challengeSecret: randomToken(),
+      [provider + "Identity"]: { async verify() { return identity; } } });
+    const first = await accounts.request(provider + "/login");
+    const me = () => accounts.request("me", { method: "GET", accessToken: first.accessToken });
+    assert.equal((await me()).avatarURL, identity.avatarURL);
+    identity.avatarURL = provider === "google" ? "https://lh3.googleusercontent.com/photo-b" : "https://avatars.yandex.net/get-yapic/123/islands-200";
+    const second = await accounts.request(provider + "/login");
+    assert.equal(second.ownerID, first.ownerID);
+    assert.equal((await me()).avatarURL, identity.avatarURL);
+    identity.avatarURL = null;
+    await accounts.request(provider + "/login");
+    assert.equal((await me()).avatarURL, null);
+  }
+});
+
+test("Avatar schema upgrade preserves existing accounts and sessions and can run twice", async () => {
+  const legacyPool = new TestPostgresPool();
+  try {
+    const legacyDatabase = new AccountDatabase(legacyPool);
+    const options = { database: legacyDatabase, email: {}, challengeSecret: randomToken(),
+      googleIdentity: { async verify() { return { subject: "avatar-migration", email: "avatar-migration@example.org", name: "Existing" }; } } };
+    const original = new AccountService(options);
+    const session = await original.request("google/login");
+    await legacyPool.query("ALTER TABLE blot_accounts DROP COLUMN avatar_url");
+    const upgraded = new AccountService({ ...options, database: new AccountDatabase(legacyPool) });
+    const value = await upgraded.request("me", { method: "GET", accessToken: session.accessToken });
+    assert.equal(value.name, "Existing");
+    assert.equal(value.avatarURL, null);
+    await new AccountDatabase(legacyPool).initialize();
+    assert.equal((await upgraded.request("me", { method: "GET", accessToken: session.accessToken })).id, value.id);
+  } finally { await legacyPool.close(); }
+});
+
+test("account deletion requires its own email code and cascades sessions, backups and parts only for its owner", async () => {
+  const owner = await registered(), other = await registered();
+  const account = await service.authenticate(owner.tokens.accessToken);
+  const backups = new WorkspaceBackups(database), snapshotID = randomUUID();
+  const bytes = Buffer.from(JSON.stringify({ id: snapshotID, workspaceID: owner.tokens.workspaceID, ownerID: owner.tokens.ownerID,
+    watermark: {}, relayCursor: 0, records: [] }));
+  await backups.begin(account, { snapshotID, deviceID: randomUUID(), digest: digest(bytes), byteCount: bytes.length, chunkCount: 1 });
+  await backups.putPart(account, snapshotID, 0, { data: bytes.toString("base64") });
+  await backups.commit(account, snapshotID);
+  await assert.rejects(service.request("account/delete/request"), rejectCode("session_required"));
+  await service.request("account/delete/request", { accessToken: owner.tokens.accessToken });
+  const code = messages.findLast(m => m.email === owner.email && m.purpose === "delete").code;
+  const wrong = (code[0] === "0" ? "1" : "0") + code.slice(1);
+  await assert.rejects(service.request("account/delete", { accessToken: owner.tokens.accessToken, body: { code: wrong } }), rejectCode("code_expired_or_invalid"));
+  assert.equal((await backups.list(account)).length, 1);
+  await assert.rejects(service.request("account/delete", { accessToken: other.tokens.accessToken, body: { code } }), rejectCode("code_expired_or_invalid"));
+  await service.request("account/delete", { accessToken: owner.tokens.accessToken, body: { code, email: other.email } });
+  assert.equal((await database.query("SELECT id FROM blot_accounts WHERE id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT id FROM blot_sessions WHERE owner_id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT id FROM blot_workspace_backups WHERE owner_id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT snapshot_id FROM blot_workspace_backup_parts WHERE snapshot_id = $1", [snapshotID])).rows.length, 0);
+  await assert.rejects(service.authenticate(owner.tokens.accessToken), rejectCode("session_expired"));
+  await assert.rejects(service.request("refresh", { body: { refreshToken: owner.tokens.refreshToken } }), rejectCode("session_expired"));
+  assert.equal((await service.authenticate(other.tokens.accessToken)).email, other.email);
+});
+
+test("passwordless registration activates only after a code; sign-in preserves identity and rejects replay", async () => {
+  const email = `${randomUUID()}@example.org`;
+  await service.request("email/request", { body: { email, name: "Code account", intent: "register" } });
+  const accountBefore = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  assert.equal(accountBefore.verified, false);
+  assert.equal(accountBefore.password_hash, null);
+  const code = messages.findLast(m => m.email === email && m.purpose === "signin").code;
+  await assert.rejects(service.request("verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
+  await assert.rejects(service.request("email/verify", { body: { email, code: code === "000000" ? "111111" : "000000" } }), rejectCode("code_expired_or_invalid"));
+  const tokens = await service.request("email/verify", { body: { email, code } });
+  const me = await service.request("me", { method: "GET", accessToken: tokens.accessToken });
+  assert.equal(me.name, "Code account");
+  assert.equal(me.verified, true);
+  await assert.rejects(service.request("email/verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
+
+  await database.query("DELETE FROM blot_auth_rates");
+  await service.request("email/request", { body: { email, intent: "login" } });
+  const next = messages.findLast(m => m.email === email).code;
+  const repeat = await service.request("email/verify", { body: { email, code: next } });
+  assert.equal(repeat.ownerID, tokens.ownerID);
+});
+
+test("email codes cannot rename verified accounts, replace passwords, or reveal unknown sign-ins", async () => {
+  const { email } = await registered();
+  const before = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  await service.request("email/request", { body: { email, intent: "register", name: "Someone else" } });
+  const code = messages.findLast(m => m.email === email).code;
+  await service.request("email/verify", { body: { email, code } });
+  const after = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  assert.equal(after.name, before.name);
+  assert.equal(after.password_hash, before.password_hash);
+  assert.equal(after.workspace_id, before.workspace_id);
+  const count = messages.length;
+  const unknown = `${randomUUID()}@example.org`;
+  assert.equal(await service.request("email/request", { body: { email: unknown, intent: "login" } }), null);
+  assert.equal(messages.length, count);
+  assert.equal((await database.query("SELECT * FROM blot_accounts WHERE email = $1", [unknown])).rows.length, 0);
+  await assert.rejects(service.request("email/request", { body: { email: unknown, intent: "register", name: " " } }), rejectCode("invalid_name"));
+  await assert.rejects(service.request("email/request", { body: { email: unknown, intent: "other" } }), rejectCode("invalid_request"));
+});
+
+test("passwordless email challenges share cooldown and spend all five invalid attempts", async () => {
+  const email = `${randomUUID()}@example.org`;
+  const body = { email, intent: "register", name: "Limited account" };
+  await service.request("email/request", { body });
+  const code = messages.findLast(m => m.email === email).code;
+  await assert.rejects(service.request("email/request", { body }), rejectCode("challenge_cooldown"));
+  const wrong = code === "000000" ? "111111" : "000000";
+  for (let i = 0; i < 5; i++) await assert.rejects(service.request("email/verify", { body: { email, code: wrong } }), rejectCode("code_expired_or_invalid"));
+  await assert.rejects(service.request("email/verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
 });

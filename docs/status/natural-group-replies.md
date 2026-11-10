@@ -1,0 +1,13 @@
+# Natural group replies — 2026-11-06
+
+Changes are in the primary working project. User-facing generation now receives a late reply-style policy after existing role instructions: a short direct answer by default, no redundant role prefix, no copied plan or colleague answer, no unnecessary reconfirmation, and no claims of completed actions without evidence. Long answers and explicit user-requested formats remain possible. Quick tools no longer require a separate acknowledgement on every turn. Real tool approval requirements remain intact.
+
+Group history attributes other members as quoted teammate messages instead of examples of the current agent's assistant voice. The current member's own assistant history remains intact. Context compaction still includes explicit speaker attribution. Ordinary conversation produces one coordinator reply, rather than one potentially identical greeting per member. Team participants are instructed to contribute only their own new result; the coordinator's conclusion should report the overall outcome and remaining blocker rather than copy the discussion.
+
+Private group conclusions are decoded before publication. Nested control envelopes are unwrapped conservatively; completed cannot become true through unwrapping an inner incomplete result. Empty, malformed or leaked control envelopes fail closed instead of publishing raw summary/completed JSON. Existing messages are not rewritten. No generated contracts, permission checks or approval policies changed.
+
+Validation: 69 BlotWorkspace tests pass, including legacy/group history ownership and nested/invalid conclusion decoding. The production group-routing harness passes 8 scripted scenarios: greeting, social routing, specialist ownership, team tools/handoff, blocked completion, malformed routing, nested conclusion and malformed conclusion. Mac and iOS builds pass. Three tool-free requests to the configured real GigaChat model produced short replies without role prefixes or control JSON; one still deflected a status question to a colleague, so the final policy explicitly forbids that deflection. The final wording change was covered by build/unit checks, without a second live-model evaluation. This is not a guarantee of identical behavior on all real conversations.
+
+Automatic Mac relaunch was initially blocked because the existing Blot process was paused by a debugger. The run script intentionally leaves that debugging session intact.
+
+After the user stopped the debugger, the updated Mac app was rebuilt, relaunched through `script/build_and_run.sh --verify`, and its process was verified. Final unit run: 69 passing tests.

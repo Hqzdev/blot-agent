@@ -11,6 +11,6 @@ sources=()
 while IFS= read -r -d '' source; do sources+=("$source"); done < <(find apps/macos/BlotMac apps/shared -name '*.swift' ! -name 'BlotMacApp.swift' ! -name 'ContentView.swift' -print0)
 swiftc -module-cache-path "$work_dir/cache" -parse-as-library -whole-module-optimization -swift-version 5 -default-isolation MainActor -D DEBUG \
     -I "$products" -I packages/BlotWorkspace/Sources/CSQLite \
-    "$products/BlotDomain.o" "$products/BlotAPI.o" "$products/BlotDesign.o" "$products/BlotWorkspace.o" -lsqlite3 \
+    "$products/BlotDomain.o" "$products/BlotAPI.o" "$products/BlotDesign.o" "$products/BlotWorkspace.o" "$products/BlotAppleIntegrations.o" -lsqlite3 \
     "${sources[@]}" scripts/verify-workspace-v3.swift -o "$work_dir/verify"
 "$work_dir/verify" "$@"

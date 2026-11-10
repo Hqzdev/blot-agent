@@ -4,6 +4,7 @@ import SwiftUI
 /// A toolbar hosting view clips tall content. Keep layout fixed and anchor the
 /// expanding SwiftUI surface in a child panel at the button's window position.
 struct MacTeamToolbarExpansion<Content: View>: NSViewRepresentable {
+    @Environment(\.locale) private var locale
     @Binding var isPresented: Bool
     let size: CGSize
     @ViewBuilder let content: Content
@@ -14,7 +15,7 @@ struct MacTeamToolbarExpansion<Content: View>: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) {
         context.coordinator.dismiss = { isPresented = false }
         if isPresented {
-            context.coordinator.present(content: content, size: size, anchor: view)
+            context.coordinator.present(content: content, size: size, anchor: view, locale: locale)
         } else {
             context.coordinator.close()
         }
@@ -29,18 +30,18 @@ struct MacTeamToolbarExpansion<Content: View>: NSViewRepresentable {
         private var observations: [NSObjectProtocol] = []
         private var presentationTask: Task<Void, Never>?
 
-        func present(content: Content, size: CGSize, anchor: NSView) {
+        func present(content: Content, size: CGSize, anchor: NSView, locale: Locale) {
             guard panel == nil else { return }
             presentationTask?.cancel()
             presentationTask = Task { @MainActor [weak self, weak anchor] in
                 // The toolbar's background anchor receives its final frame after updateNSView.
                 await Task.yield()
                 guard !Task.isCancelled, let anchor, let window = anchor.window else { return }
-                self?.show(content: content, size: size, anchor: anchor, window: window)
+                self?.show(content: content, size: size, anchor: anchor, window: window, locale: locale)
             }
         }
 
-        private func show(content: Content, size: CGSize, anchor: NSView, window: NSWindow) {
+        private func show(content: Content, size: CGSize, anchor: NSView, window: NSWindow, locale: Locale) {
             guard panel == nil else { return }
             let rect = window.convertToScreen(anchor.convert(anchor.bounds, to: nil))
             let panel = MacTeamToolbarPanel(
@@ -50,8 +51,8 @@ struct MacTeamToolbarExpansion<Content: View>: NSViewRepresentable {
             panel.backgroundColor = .clear
             panel.hasShadow = false
             panel.isReleasedWhenClosed = false
-            panel.title = "Создать"
-            panel.contentView = NSHostingView(rootView: content)
+            panel.title = WorkspaceCopy.text("Create", language: locale.language.languageCode?.identifier ?? "en")
+            panel.contentView = NSHostingView(rootView: content.environment(\.locale, locale))
             panel.appearance = window.effectiveAppearance
             window.addChildWindow(panel, ordered: .above)
             panel.makeKeyAndOrderFront(nil)
