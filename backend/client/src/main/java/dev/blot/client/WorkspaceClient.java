@@ -212,23 +212,38 @@ public final class WorkspaceClient {
         throw new IllegalArgumentException("commandId уже связан с другим сообщением");
     }
     try {
-      return json.convert(request("POST", "/v3/commands", body), Receipt.class);
+      return validatedReceipt(request("POST", "/v3/commands", body), id);
     } catch (Failure failure) {
+      if (failure.status() >= 500 && failure.status() != 501) return reconcile(id);
       throw failure;
     } catch (IOException uncertain) {
-      try {
-        return receipt(id);
-      } catch (IOException unavailable) {
-        throw new Failure(
-            0,
-            "command_uncertain",
-            "Связь прервана. Статус отправки неизвестен; повторите проверку с тем же сообщением.");
-      }
+      return reconcile(id);
     }
   }
 
   public synchronized Receipt receipt(UUID commandId) throws IOException {
-    return json.convert(request("GET", "/v3/commands/" + commandId, null), Receipt.class);
+    return validatedReceipt(request("GET", "/v3/commands/" + commandId, null), commandId);
+  }
+
+  private Receipt reconcile(UUID id) throws IOException {
+    try {
+      return receipt(id);
+    } catch (IOException unavailable) {
+      throw new Failure(
+          0,
+          "command_uncertain",
+          "Связь прервана. Статус отправки неизвестен; повторите проверку с тем же сообщением.");
+    }
+  }
+
+  private Receipt validatedReceipt(JsonNode value, UUID id) throws IOException {
+    var receipt = json.convert(value, Receipt.class);
+    if (receipt.schemaVersion() != 3
+        || !id.equals(receipt.commandId())
+        || receipt.operationId() == null
+        || !"ACCEPTED".equals(receipt.state()))
+      throw new IOException("Сервер не подтвердил принятие команды");
+    return receipt;
   }
 
   private void requireConnected() {
