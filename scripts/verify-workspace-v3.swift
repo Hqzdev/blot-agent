@@ -8,6 +8,10 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if CommandLine.arguments.contains("--root-environment-only") {
+            try await verifyRootEnvironment()
+            return
+        }
         if let index = CommandLine.arguments.firstIndex(of: "--render-group-editor"), index + 1 < CommandLine.arguments.count {
             try renderGroupEditor(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
             return
@@ -103,6 +107,7 @@ struct WorkspaceVerification {
         precondition(!gated.busy)
         try await verifyLocalWorkspace()
         try await verifyStartupRestoration()
+        try await verifyRootEnvironment()
         print("PASS: 53 references, live isolation, authentication required, form validation, preview mutations, navigation, duplicate prevention")
         print("PASS: live UI adapter writes SQLite, streams through recorder, retries without resending user message, and restores after reopening (injected model)")
         if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
@@ -203,6 +208,34 @@ struct WorkspaceVerification {
         precondition(expected == actual)
         print("PASS: 10,000 messages / 1,000 conversation reads preserve ordering; repeated filter/sort=\(baseline), indexed=\(indexed)")
     }
+    static func verifyRootEnvironment() async throws {
+        _ = NSApplication.shared
+        NSApp.setActivationPolicy(.accessory)
+        let stores = [
+            WorkspaceStore(mode: .live, service: UnavailableWorkspaceService()),
+            WorkspaceStore(mode: .preview, route: .welcome),
+            WorkspaceStore(mode: .preview, route: .chat)
+        ]
+        for store in stores {
+            // Match the app entry point: the root must not need an ancestor's WorkspaceStore.
+            let host = NSHostingView(rootView: WorkspaceRootView(store: store))
+            let size = CGSize(width: 1040, height: 780)
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: size),
+                styleMask: [.borderless], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.contentView = host
+            host.frame = NSRect(origin: .zero, size: size)
+            host.layoutSubtreeIfNeeded()
+            try await _Concurrency.Task.sleep(for: .milliseconds(100))
+            host.layoutSubtreeIfNeeded()
+            host.displayIfNeeded()
+            precondition(host.bounds.width > 0 && host.bounds.height > 0)
+            window.contentView = nil
+            window.close()
+        }
+        print("PASS: root mounts during restoration, authentication and chat without an ancestor WorkspaceStore")
+    }
+
     static func verifyStartupRestoration() async throws {
         precondition(!WorkspaceStore(mode: .preview, route: .welcome).isRestoringSession)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -231,6 +264,26 @@ struct WorkspaceVerification {
                 precondition(store.route == .welcome && store.error != nil)
             }
         }
+        let seed = WorkspaceStore(mode: .live, service: local)
+        await seed.loadWorkspace()
+        precondition(seed.selectedConversationID == nil)
+        for name in ["First in sidebar", "Second in sidebar"] {
+            seed.form.agent = WorkspaceAgentForm(name: name, instructions: "Help with this project")
+            await seed.perform(.createAgent)
+        }
+        let firstAgentID = seed.snapshot.agents[0].metadata.id
+        await seed.newChat(with: seed.snapshot.agents[1].metadata.id)
+        let reopened = WorkspaceStore(mode: .live, service: local)
+        await reopened.loadWorkspace()
+        precondition(reopened.error == nil && reopened.route == .chat)
+        precondition(reopened.currentConversation?.agentId == firstAgentID)
+        precondition(reopened.selectedAgentID == firstAgentID && reopened.snapshot.conversations.count == 2)
+        let firstChatID = reopened.selectedConversationID
+        await reopened.openAgentChat(reopened.snapshot.agents[1].metadata.id)
+        let again = WorkspaceStore(mode: .live, service: local)
+        await again.loadWorkspace()
+        precondition(again.route == .chat && again.selectedConversationID == firstChatID)
+        precondition(again.snapshot.conversations.count == 2)
         try await local.close()
     }
     static func verifyBrowserLaunch() async throws {

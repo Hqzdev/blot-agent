@@ -38,6 +38,26 @@ struct WorkspaceModelCredentialStore {
         } else if updated != errSecSuccess { throw Failure.keychain(updated) }
     }
 
+    static func removeAccount(_ owner: UUID) throws {
+        let namespace = WorkspaceModelCredentialStore(accountNamespace: "")
+        var query = namespace.identity; query[kSecAttrAccount as String] = nil
+        query[kSecReturnAttributes as String] = true; query[kSecMatchLimit as String] = kSecMatchLimitAll
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return }
+        guard status == errSecSuccess, let items = result as? [[String: Any]] else { throw Failure.keychain(status) }
+        for item in items {
+            if let name = item[kSecAttrAccount as String] as? String, name.hasPrefix(owner.uuidString + ":") {
+                try WorkspaceModelCredentialStore(accountNamespace: name).remove()
+            }
+        }
+    }
+
+    func remove() throws {
+        let status = SecItemDelete(identity as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else { throw Failure.keychain(status) }
+    }
+
     private var identity: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
          kSecAttrAccount as String: accountNamespace, kSecAttrSynchronizable as String: false,

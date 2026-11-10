@@ -20,14 +20,14 @@ struct MacTeamSelect<Value: Hashable>: View {
     var body: some View {
         HStack(spacing: 20) {
             if showsTitle {
-                Text(title)
+                WorkspaceLocalizedText(title)
                 Spacer(minLength: 8)
             }
             Button {
                 expanded.toggle()
             } label: {
                 HStack(spacing: 10) {
-                    Text(options.first { $0.value == selection }?.title ?? title).lineLimit(1)
+                    WorkspaceLocalizedText(options.first { $0.value == selection }?.title ?? title).lineLimit(1)
                     BlotIcon(.chevronDown, size: BlotIconSize.inline).rotationEffect(.degrees(expanded ? 180 : 0))
                         .foregroundStyle(WorkspaceStyle.ink)
                 }.font(.system(size: 12, weight: .medium))
@@ -36,8 +36,8 @@ struct MacTeamSelect<Value: Hashable>: View {
                     .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
             }.buttonStyle(BlotPlainButtonStyle())
                 .kAnimation(KMotion.quick, value: expanded)
-                .accessibilityLabel(title)
-                .accessibilityValue(options.first { $0.value == selection }?.title ?? "")
+                .accessibilityLabel(Text(LocalizedStringKey(title)))
+                .accessibilityValue(Text(LocalizedStringKey(options.first { $0.value == selection }?.title ?? "")))
                 .popover(isPresented: $expanded, arrowEdge: .bottom) {
                     VStack(spacing: 3) {
                         ForEach(options, id: \.value) { option in
@@ -46,7 +46,7 @@ struct MacTeamSelect<Value: Hashable>: View {
                                 expanded = false
                             } label: {
                                 HStack(spacing: 24) {
-                                    Text(option.title)
+                                    WorkspaceLocalizedText(option.title)
                                     Spacer(minLength: 8)
                                     BlotIcon(symbol: "checkmark", size: BlotIconSize.inline)
                                         .opacity(selection == option.value ? 1 : 0)

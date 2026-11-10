@@ -20,7 +20,7 @@ public struct WorkspaceAgentDraft: Codable, Equatable, Sendable {
         guard [name, instructions, avatarShape, avatarColor, modelID].allSatisfy({ !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }),
               name.utf8.count <= 800, instructions.utf8.count <= 32 * 1024,
               avatarShape.utf8.count <= 100, avatarColor.utf8.count <= 100, modelID.utf8.count <= 200,
-              toolIDs.count <= 100, toolIDs.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 200 }),
+              WorkspaceToolCapacity.accepts(Set(toolIDs)), toolIDs.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 200 }),
               Set(toolIDs).count == toolIDs.count else { throw WorkspaceStorageError.invalidParameters }
     }
 }

@@ -2,7 +2,7 @@ import { accountRequest, AuthError } from "@/lib/auth/config.mjs";
 import { json, failure, clientIP } from "@/lib/auth/route-support.mjs";
 
 export const runtime = "nodejs";
-const POSTS = new Set(["register", "verify", "login", "refresh", "password/request", "password/reset", "logout", "revoke-sessions", "device-challenge", "device-bind", "browser/token"]);
+const POSTS = new Set(["account/delete/request", "account/delete", "register", "verify", "login", "refresh", "password/request", "password/reset", "logout", "revoke-sessions", "device-challenge", "device-bind", "browser/token"]);
 async function forward(request, context) {
   try {
     const { path: parts } = await context.params;
@@ -10,7 +10,7 @@ async function forward(request, context) {
     if (!(request.method === "GET" ? path === "me" : POSTS.has(path))) throw new AuthError("not_found", 404);
     let body;
     if (request.method === "POST") {
-      if (!request.headers.get("content-type")?.startsWith("application/json") && !["logout", "revoke-sessions", "device-challenge"].includes(path)) throw new AuthError("invalid_request");
+      if (!request.headers.get("content-type")?.startsWith("application/json") && !["logout", "revoke-sessions", "device-challenge", "account/delete/request"].includes(path)) throw new AuthError("invalid_request");
       const reader = request.body?.getReader(); const chunks = []; let size = 0;
       if (reader) try {
         while (true) { const { value, done } = await reader.read(); if (done) break; size += value.length;

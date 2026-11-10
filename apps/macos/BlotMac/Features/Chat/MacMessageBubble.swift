@@ -9,7 +9,7 @@ struct MacMessageBubble: View {
     private var isUser: Bool { message.role == .user }
     private var metadata: WorkspaceMessageMetadata? { store.chatInteractions.messages[message.metadata.id] }
     private var quoted: BlotV3.Message? {
-        (metadata?.replyToMessageID ?? message.replyToMessageId).flatMap { id in store.currentMessages.first { $0.metadata.id == id } }
+        (metadata?.replyToMessageID ?? message.replyToMessageId).flatMap { id in store.message(id) }
     }
 
     var body: some View {
@@ -20,13 +20,15 @@ struct MacMessageBubble: View {
                     Button { showMessage(quoted.metadata.id) } label: { WorkspaceQuotedMessage(message: quoted) }
                         .buttonStyle(.plain).padding(.horizontal, 12)
                 }
-                WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser)
+                WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser,
+                    agents: store.chatContent.agents, skills: store.chatContent.skills)
                     .font(.system(size: 14)).lineSpacing(3)
                     .padding(.horizontal, 12).padding(.vertical, 10)
                     .foregroundStyle(isUser ? BlotColor.onInverse : WorkspaceStyle.ink)
                     .background(isUser ? BlotColor.inverse : WorkspaceStyle.surface,
                                 in: RoundedRectangle(cornerRadius: BlotRadius.panel))
                     .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
+                WorkspaceMessagePlugins(message: message).padding(.horizontal, 12)
                 if let reaction = metadata?.reaction {
                     Button { store.toggleReaction(reaction, to: message.metadata.id) } label: {
                         Text(reaction).font(.system(size: 16)).padding(.horizontal, 7).padding(.vertical, 3)

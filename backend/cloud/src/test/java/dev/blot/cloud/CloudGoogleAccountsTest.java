@@ -87,6 +87,18 @@ final class CloudGoogleAccountsTest {
     var key = keys();
     var verifier = verifier(key);
     assertEquals("owner@example.org", verifier.verify(token(key, claims()), nonce).email());
+    var withPhoto = claims();
+    withPhoto.put("picture", "https://lh3.googleusercontent.com/profile");
+    assertEquals(
+        withPhoto.get("picture"), verifier.verify(token(key, withPhoto), nonce).avatarURL());
+    for (var url :
+        List.of(
+            "http://lh3.googleusercontent.com/photo",
+            "https://127.0.0.1/photo",
+            "https://lh3.googleusercontent.com.attacker.org/photo")) {
+      withPhoto.put("picture", url);
+      assertNull(verifier.verify(token(key, withPhoto), nonce).avatarURL());
+    }
     assertThrows(CloudFailure.class, () -> verifier.verify(token(keys(), claims()), nonce));
     assertThrows(CloudFailure.class, () -> verifier.verify(token(key, claims()), "x".repeat(43)));
     for (String field : List.of("aud", "iss", "email_verified", "exp")) {
@@ -111,9 +123,29 @@ final class CloudGoogleAccountsTest {
     var google =
         new CloudGoogleAccounts(
             db, verifier(key), sessions, new ArgonPasswordHasher(), tokens, clock);
-    var first = google.login(token(key, claims()), nonce);
+    var avatarClaims = claims();
+    avatarClaims.put("picture", "https://lh3.googleusercontent.com/profile-photo");
+    var first = google.login(token(key, avatarClaims), nonce);
+    assertEquals(
+        "https://lh3.googleusercontent.com/profile-photo",
+        db.transact(
+            tx ->
+                tx.one(
+                        "SELECT avatar_url FROM accounts WHERE id = ?",
+                        r -> r.getString(1),
+                        first.ownerID())
+                    .orElseThrow()));
     var again = google.login(token(key, claims()), nonce);
     assertEquals(first.ownerID(), again.ownerID());
+    boolean photoCleared =
+        db.transact(
+            tx ->
+                tx.one(
+                        "SELECT avatar_url IS NULL FROM accounts WHERE id = ?",
+                        r -> r.getBoolean(1),
+                        first.ownerID())
+                    .orElseThrow());
+    assertTrue(photoCleared);
     assertNotEquals(first.sessionID(), again.sessionID());
     assertTrue(first.bootstrapAllowed());
     var otherSubject = claims();

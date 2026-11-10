@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -36,8 +37,10 @@ struct WorkspaceSettingsView: View {
         case .models: models
         case .permissions: permissions
         case .connections: connections
-        case .devices: devices
-        case .pair: pair
+        case .devices:
+            if store.mode == .live { WorkspacePairedDevicesView() } else { devices }
+        case .pair:
+            if store.mode == .live { WorkspaceDevicePairingView() } else { pair }
         case .memory: memory
         case .mcp: mcp
         case .browserSettings: browserSettings
@@ -65,7 +68,7 @@ struct WorkspaceSettingsView: View {
             settingRow("Language") { language }
             settingRow("Show Blot in the menu bar") { WorkspaceV3ActionButton(title: "Configure", action: .saveSetting, kind: .secondary) }
             Divider()
-            settingRow("Default model") { Text(store.mode == .live ? "Compatible API" : "GigaChat") }
+            settingRow("Default model") { WorkspaceLocalizedText(store.mode == .live ? "Compatible API" : "GigaChat") }
             settingRow("Run tasks on") { Text(store.t("This computer")) }
             settingRow("Ask before significant actions") { BlotIcon(symbol: "checkmark.shield") }
             settingRow("Keep working after closing the window") { WorkspaceV3ActionButton(title: "Configure", action: .saveSetting, kind: .secondary) }
@@ -75,13 +78,13 @@ struct WorkspaceSettingsView: View {
     }
     private var account: some View {
         #if os(iOS)
-        PhoneAccountSettingsView()
+        PhoneSettingsProfileView()
         #else
         VStack(alignment: .leading, spacing: 24) {
             WorkspaceHeading(title: "Account", subtitle: "Profile and security")
             settingRow("Name") { Text(store.isPreview ? "Yaroslav" : store.t("Not signed in")) }
-            settingRow("Email") { Text(store.isPreview ? "preview@blot.local" : "—") }
-            settingRow("Sign-in method") { Text(store.isPreview ? "Google" : "—") }
+            settingRow("Email") { WorkspaceLocalizedText(store.isPreview ? "preview@blot.local" : "—") }
+            settingRow("Sign-in method") { WorkspaceLocalizedText(store.isPreview ? "Google" : "—") }
             Button(store.t("Sign out")) { store.signOut() }.buttonStyle(WorkspaceButtonStyle(.secondary))
             WorkspaceV3ActionButton(title: "Delete account", action: .saveSetting, kind: .destructive)
         }
@@ -91,7 +94,7 @@ struct WorkspaceSettingsView: View {
         VStack(alignment: .leading, spacing: 24) {
             WorkspaceHeading(title: "Choose a model", subtitle: "Default model for new chats.")
             WorkspaceCard {
-                BlotLabel("GigaChat", symbol: "bubble.left").font(.headline)
+                BlotLabel("Blot Agent", symbol: "bubble.left").font(.headline)
                 Text(store.t(store.isPreview ? "Trial access is set up. You can start without your own key." : "GigaChat connects directly from this device. The key is managed by this personal build.")).foregroundStyle(WorkspaceStyle.secondary)
             }
             Text(store.t("YOUR API KEY")).font(.caption.monospaced()).foregroundStyle(WorkspaceStyle.secondary)
@@ -133,7 +136,7 @@ struct WorkspaceSettingsView: View {
                 #endif
                 Text(store.t("Blot shows changes and asks before anything significant."))
             }
-            settingRow("Allowed folders") { Text("Blot Workspace") }
+            WorkspaceSessionDirectoriesView()
             settingRow("Send, publish and delete") { Text(store.t("Required")) }
             WorkspaceLink(title: "Permission rules", route: .permissionRules)
                 #if os(iOS)
@@ -149,8 +152,8 @@ struct WorkspaceSettingsView: View {
                     VStack(alignment: .leading, spacing: 7) { Text(connection.service).font(.headline); Text(connection.accountName).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
                     Spacer(); BlotIcon(symbol: "checkmark.circle").accessibilityLabel(store.t("Connected")) }
             }
-            ForEach(["Gmail", "Yandex Mail", "Google Calendar", "Yandex Calendar", "Telegram", "Slack", "Notion", "GitHub"], id: \.self) { name in
-                settingRow(name) { WorkspaceV3ActionButton(title: "Connect", action: .connect, kind: .secondary) }
+            ForEach(PluginCatalog.external) { plugin in
+                settingRow(plugin.name) { WorkspaceV3ActionButton(title: "Connect", action: .connect, kind: .secondary) }
             }
             WorkspaceLink(title: "MCP server", route: .mcp)
             WorkspaceCard { Text(store.t("You control access")).font(.headline)
@@ -243,38 +246,8 @@ struct WorkspaceSettingsView: View {
             WorkspaceV3ActionButton(title: "Never remembered", action: .saveSetting, kind: .secondary)
         }
     }
-    private var mcp: some View {
-        @Bindable var store = store
-        return VStack(alignment: .leading, spacing: 22) {
-            WorkspaceHeading(title: "MCP servers", subtitle: "Add a server, inspect its tools and choose allowed access.")
-            ForEach(store.snapshot.mcpConnections, id: \.metadata.id) { connection in
-                WorkspaceCard {
-                    HStack { Text(connection.name).font(.headline); Spacer(); Text(store.t(connection.state == .connected ? "Connected" : connection.state == .error ? "Reconnect" : "Not connected")).font(.caption) }
-                    Text(connection.endpoint).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
-                    ForEach(connection.toolIds, id: \.self) { tool in BlotLabel(tool, symbol: "checkmark.shield") }
-                }
-            }
-            WorkspaceField(title: "Server name", text: $store.form.mcp.name)
-            WorkspaceField(title: "Server URL", text: $store.form.mcp.endpoint)
-            Picker(store.t("Transport"), selection: $store.form.mcp.transport) {
-                Text("Streamable HTTP").tag("STREAMABLE_HTTP")
-                Text("stdio").tag("STDIO")
-            }.pickerStyle(.segmented)
-            Text(store.t("Transports: stdio on computer · Streamable HTTP")).foregroundStyle(WorkspaceStyle.secondary)
-            Text(store.t("Secrets belong in protected settings and never in prompts.")).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
-            WorkspaceV3ActionButton(title: "Add server", action: .addMcp)
-        }
-    }
-    private var browserSettings: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            WorkspaceHeading(title: "Blot for Chrome", subtitle: "Connect your browser on this computer.")
-            settingRow("Chrome extension") { Text(store.t(store.isPreview ? "Connected" : "Not connected")) }
-            settingRow("Allowed sites") { Text("mailerlite.com\nmail.google.com") }
-            settingRow("Pause on CAPTCHA, 2FA and sign-in") { Text(store.t("Always")) }
-            WorkspaceV3ActionButton(title: "Stop access", action: .saveSetting, kind: .destructive)
-            WorkspaceLink(title: "View browser", route: .browser)
-        }
-    }
+    private var mcp: some View { WorkspaceMCPSettingsView() }
+    private var browserSettings: some View { WorkspaceBrowserSettingsView() }
     private var rules: some View {
         VStack(alignment: .leading, spacing: 24) {
             WorkspaceHeading(title: "Permission rules", subtitle: "Saved rules apply only to their exact operation and scope.")
@@ -298,7 +271,7 @@ struct WorkspaceSettingsView: View {
     }
     private var language: some View {
         @Bindable var store = store
-        return Picker(store.t("Language"), selection: $store.language) { Text("Русский").tag("ru"); Text("English").tag("en") }.pickerStyle(.segmented)
+        return Picker(store.t("Language"), selection: $store.languageSelection) { Text(store.t("System default")).tag("system"); Text("Русский").tag("ru"); Text("English").tag("en") }.pickerStyle(.segmented)
     }
     private var notifications: some View {
         VStack(alignment: .leading, spacing: 20) {

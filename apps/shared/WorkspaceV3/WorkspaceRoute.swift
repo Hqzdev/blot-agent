@@ -3,13 +3,19 @@ import Foundation
 enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
     case welcome, signIn, createAccount, verifyEmail, firstRun, firstAgent, createAgent
     case home, chats, archivedChats, search, newChat, chat, running, approval, result, file, review
-    case agents, agentProfile, editAgent, files, schedules, createSchedule
-    case usage, personalization
+    case skills, agents, agentProfile, editAgent, files, schedules, createSchedule
+    #if os(iOS)
+    case overview
+    #endif
+    case usage, personalization, settingsProfile, settingsStorage, settingsUpdates
+    #if os(macOS)
+    case marketplace
+    #endif
     case settings, appSettings, account, models, permissions, connections, devices, pair, memory, mcp
     case browserSettings, browser, permissionRules, blocked, offline, appearance, notifications, language, recovery
     var id: String { rawValue }
     var isAuthentication: Bool { [.welcome, .signIn, .createAccount, .verifyEmail, .firstRun, .firstAgent, .recovery].contains(self) }
-    var isSetting: Bool { [.settings, .appSettings, .account, .usage, .personalization, .models, .permissions, .connections, .devices, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .notifications, .language].contains(self) }
+    var isSetting: Bool { [.settings, .settingsProfile, .settingsStorage, .settingsUpdates, .appSettings, .account, .usage, .personalization, .models, .permissions, .connections, .devices, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .notifications, .language].contains(self) }
     var title: String {
         switch self {
         case .welcome: "Blot"
@@ -26,17 +32,27 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
         case .chat, .running, .approval, .result, .offline: "Blot CEO"
         case .file: "week-meal-prep.md"
         case .review: "Code changes"
+        case .skills: "Skills"
         case .agents: "Agents"
         case .agentProfile: "Agent"
         case .editAgent: "Edit agent"
         case .files: "Files"
         case .schedules: "Schedules"
         case .createSchedule: "New schedule"
+        #if os(iOS)
+        case .overview: "Overview"
+        #endif
         case .settings: "General"
         case .appSettings: "App settings"
         case .account: "Account"
         case .usage: "Usage"
         case .personalization: "Personalization"
+        case .settingsProfile: "Profile"
+        case .settingsStorage: "Files and data"
+        case .settingsUpdates: "Updates"
+        #if os(macOS)
+        case .marketplace: "Apps and templates"
+        #endif
         case .models: "AI models"
         case .permissions: "Permissions"
         case .connections: "Connections"
@@ -121,6 +137,13 @@ struct WorkspaceReference: Identifiable {
         .init(platform: .ios, number: 22, file: "22-connections", route: .connections),
         .init(platform: .ios, number: 23, file: "23-settings", route: .settings),
         .init(platform: .ios, number: 24, file: "24-ai-models", route: .models),
-        .init(platform: .ios, number: 25, file: "25-browser-view", route: .browser)
-    ]
+        .init(platform: .ios, number: 25, file: "25-browser-view", route: .browser),
+    ] + phoneOverview
+    private static var phoneOverview: [Self] {
+        #if os(iOS)
+        [.init(platform: .ios, number: 26, file: "26-overview", route: .overview)]
+        #else
+        []
+        #endif
+    }
 }

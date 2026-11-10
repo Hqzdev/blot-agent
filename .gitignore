@@ -32,3 +32,9 @@ __pycache__/
 *.keystore
 *.key
 *.pem
+brag-output/composition/.hyperframes/
+brag-output/composition/.thumbnails/
+brag-output/**/*.log
+brag-output/audio-validation.log
+brag-output/composition/check.json
+brag-output/composition/lint.json

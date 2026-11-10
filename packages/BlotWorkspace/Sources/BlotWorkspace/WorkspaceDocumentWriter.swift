@@ -8,9 +8,13 @@ public struct WorkspaceDocumentWriter: Sendable {
     public func markdown(title: String, body: String) -> Data { Data(("# " + title + "\n\n" + body + "\n").utf8) }
 
     public func csv(headers: [String], rows: [[String]]) throws -> Data {
-        guard !headers.isEmpty, rows.allSatisfy({ $0.count == headers.count }) else { throw WorkspaceStorageError.invalidParameters }
+        guard !headers.isEmpty, headers.count <= 100, rows.count <= 10_000,
+              rows.allSatisfy({ $0.count == headers.count }) else { throw WorkspaceStorageError.invalidParameters }
+        var size = 0
+        for row in [headers] + rows { for cell in row { size += cell.utf8.count; guard size <= 2 * 1024 * 1024 else { throw WorkspaceFileError.tooLarge } } }
         func cell(_ text: String) -> String {
-            let value = text.first.map { "=+-@".contains($0) } == true ? "'" + text : text
+            let first = text.trimmingCharacters(in: .whitespacesAndNewlines.union(.init(charactersIn: "\u{feff}"))).first
+            let value = first.map { "=+-@".contains($0) } == true ? "'" + text : text
             return "\"" + value.replacingOccurrences(of: "\"", with: "\"\"") + "\""
         }
         return Data(([headers] + rows).map { $0.map(cell).joined(separator: ",") }.joined(separator: "\r\n").appending("\r\n").utf8)

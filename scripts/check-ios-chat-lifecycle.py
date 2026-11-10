@@ -35,11 +35,11 @@ def main():
     text = text.replace("fileSystemSynchronizedGroups = (D40000000000000000000009, D4000000000000000000000A,);",
                         "fileSystemSynchronizedGroups = (D40000000000000000000022, D40000000000000000000023, D4000000000000000000000A,);")
     text = text.replace("packageReferences = (D4000000000000000000001C, D4000000000000000000001D,);",
-                        "packageReferences = (D4000000000000000000001C, D4000000000000000000001D, D40000000000000000000025, D40000000000000000000026,);")
+                        "packageReferences = (D4000000000000000000001C, D4000000000000000000001D, D40000000000000000000025, D40000000000000000000026, D4000000000000000000002B, D4000000000000000000002E,);")
     text = text.replace("packageProductDependencies = (D4000000000000000000001E, D4000000000000000000001F,);",
-                        "packageProductDependencies = (D4000000000000000000001E, D4000000000000000000001F, D40000000000000000000027, D40000000000000000000028,);")
+                        "packageProductDependencies = (D4000000000000000000001E, D4000000000000000000001F, D40000000000000000000027, D40000000000000000000028, D4000000000000000000002C, D4000000000000000000002F,);")
     text = text.replace("files = (D40000000000000000000020, D40000000000000000000021,);",
-                        "files = (D40000000000000000000020, D40000000000000000000021, D40000000000000000000029, D4000000000000000000002A,);")
+                        "files = (D40000000000000000000020, D40000000000000000000021, D40000000000000000000029, D4000000000000000000002A, D4000000000000000000002D, D40000000000000000000030,);")
     # Product presentation sources use the same isolation and Swift mode as BlotIOS.
     text = text.replace('BUNDLE_LOADER = "$(TEST_HOST)";', 'SWIFT_VERSION = 5.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; BUNDLE_LOADER = "$(TEST_HOST)";')
     additions = f'''
@@ -52,6 +52,14 @@ def main():
         D40000000000000000000028 = {{ isa = XCSwiftPackageProductDependency; package = D40000000000000000000026; productName = BlotDesign; }};
         D40000000000000000000029 = {{ isa = PBXBuildFile; productRef = D40000000000000000000027; }};
         D4000000000000000000002A = {{ isa = PBXBuildFile; productRef = D40000000000000000000028; }};
+        D4000000000000000000002E = {{ isa = XCLocalSwiftPackageReference; relativePath = "{ROOT}/packages/BlotWidgetSupport"; }};
+        D4000000000000000000002F = {{ isa = XCSwiftPackageProductDependency; package = D4000000000000000000002E; productName = BlotWidgetSupport; }};
+        D40000000000000000000030 = {{ isa = PBXBuildFile; productRef = D4000000000000000000002F; }};
+'''
+    additions += f'''
+        D4000000000000000000002B = {{ isa = XCLocalSwiftPackageReference; relativePath = "{ROOT}/packages/BlotAppleIntegrations"; }};
+        D4000000000000000000002C = {{ isa = XCSwiftPackageProductDependency; package = D4000000000000000000002B; productName = BlotAppleIntegrations; }};
+        D4000000000000000000002D = {{ isa = PBXBuildFile; productRef = D4000000000000000000002C; }};
 '''
     text = text.replace("\tobjects = {", "\tobjects = {" + additions)
     (project / "project.pbxproj").write_text(text)

@@ -7,23 +7,24 @@ public struct WorkspaceTaskService: Sendable {
     public init(repository: WorkspaceRepository, identity: WorkspaceIdentity) { self.repository = repository; self.identity = identity }
 
     public func create(commandID: UUID, conversationID: UUID, agentID: UUID, goal: String, executorDeviceID: UUID,
-                       parentTaskID: UUID? = nil, skillRevisionID: UUID? = nil, budgetTokenLimit: Int = 20_000, now: Date = Date()) async throws -> UUID {
+                       projectID: UUID? = nil, parentTaskID: UUID? = nil, skillRevisionID: UUID? = nil, budgetTokenLimit: Int = 20_000, runnable: Bool = true, now: Date = Date()) async throws -> UUID {
         struct Input: Encodable {
             let conversationID: UUID; let agentID: UUID; let goal: String; let executorDeviceID: UUID
-            let parentTaskID: UUID?; let skillRevisionID: UUID?; let budgetTokenLimit: Int
+            let parentTaskID: UUID?; let skillRevisionID: UUID?; let budgetTokenLimit: Int; let runnable: Bool?
+            let projectID: UUID?
         }
         let command = try WorkspaceCommand(type: "task.create", workspaceID: identity.workspaceID,
             payload: Input(conversationID: conversationID, agentID: agentID, goal: goal, executorDeviceID: executorDeviceID,
-                parentTaskID: parentTaskID, skillRevisionID: skillRevisionID, budgetTokenLimit: budgetTokenLimit)).data()
+                parentTaskID: parentTaskID, skillRevisionID: skillRevisionID, budgetTokenLimit: budgetTokenLimit, runnable: runnable ? nil : false, projectID: projectID)).data()
         return try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             return try Self.insert(tx, taskID: commandID, conversationID: conversationID, agentID: agentID, goal: goal,
                 executorDeviceID: executorDeviceID, parentTaskID: parentTaskID, skillRevisionID: skillRevisionID,
-                budgetTokenLimit: budgetTokenLimit, now: now)
+                budgetTokenLimit: budgetTokenLimit, projectID: projectID, runnable: runnable, now: now)
         }
     }
 
     static func insert(_ tx: WorkspaceTransaction, taskID: UUID, conversationID: UUID, agentID: UUID, goal: String,
-                       executorDeviceID: UUID, parentTaskID: UUID?, skillRevisionID: UUID?, budgetTokenLimit: Int, now: Date) throws -> UUID {
+                       executorDeviceID: UUID, parentTaskID: UUID?, skillRevisionID: UUID?, budgetTokenLimit: Int, projectID: UUID? = nil, runnable: Bool = true, authorizationJSON: String? = nil, now: Date) throws -> UUID {
             guard budgetTokenLimit > 0 else { throw WorkspaceStorageError.invalidParameters }
             _ = try tx.require(BlotV3.Conversation.self, id: conversationID)
             let agent = try tx.require(BlotV3.AgentProfile.self, id: agentID)
@@ -34,9 +35,12 @@ public struct WorkspaceTaskService: Sendable {
             else if let legacy = try tx.records(BlotV3.AgentConfigurationRevision.self).filter({ $0.agentId == agentID }).max(by: { $0.revision < $1.revision }) { configuration = legacy }
             else { throw WorkspaceStorageError.missingRecord }
             var taskBudget = budgetTokenLimit
-            if let skillRevisionID { _ = try tx.require(BlotV3.SkillRevision.self, id: skillRevisionID) }
+            var selectedProjectID = projectID
+            if let skillRevisionID { try WorkspaceSkillAccess.require(revisionID: skillRevisionID, agentID: agentID, tx: tx) }
             if let parentTaskID {
                 var parent = try tx.require(BlotV3.Task.self, id: parentTaskID)
+                guard projectID == nil || projectID == parent.projectId else { throw WorkspaceStorageError.permissionDenied }
+                selectedProjectID = parent.projectId
                 var depth = 1
                 while true {
                     guard !Self.terminal(parent.state), parent.conversationId == conversationID,
@@ -48,12 +52,17 @@ public struct WorkspaceTaskService: Sendable {
                     parent = try tx.require(BlotV3.Task.self, id: ancestor)
                 }
             }
+            if let selectedProjectID {
+                try tx.requireResolved(kind: "Project", id: selectedProjectID)
+                let project = try tx.require(BlotV3.Project.self, id: selectedProjectID)
+                guard project.repositoryPath == "device:" + executorDeviceID.uuidString else { throw WorkspaceStorageError.permissionDenied }
+            }
             let execution = try BlotV3.ExecutionContext(executorDeviceId: executorDeviceID, originDeviceId: tx.identity.deviceID,
                 taskId: taskID, revision: 1)
-            let task = try BlotV3.Task(metadata: tx.metadata(id: taskID, now: now), execution: execution, projectId: nil,
-                conversationId: conversationID, goal: goal, state: .queued, plan: [], configurationId: configuration.metadata.id,
+            let task = try BlotV3.Task(metadata: tx.metadata(id: taskID, now: now), execution: execution, projectId: selectedProjectID,
+                conversationId: conversationID, goal: goal, state: runnable ? .queued : .waiting_approval, plan: [], configurationId: configuration.metadata.id,
                 parentTaskId: parentTaskID, skillRevisionId: skillRevisionID, budgetTokenLimit: taskBudget,
-                executionMode: executorDeviceID == tx.identity.deviceID ? .local_owned : .delegated)
+                executionMode: executorDeviceID == tx.identity.deviceID ? .local_owned : .delegated, authorizationJSON: authorizationJSON)
             let sessionID = WorkspaceLogicalID.make(kind: "AgentSession", workspaceID: tx.identity.workspaceID, parts: [taskID.uuidString, agentID.uuidString])
             let parentSession = try parentTaskID.flatMap { parentID in try tx.records(BlotV3.AgentSession.self).first { $0.execution.taskId == parentID }?.metadata.id }
             let session = try BlotV3.AgentSession(metadata: tx.metadata(id: sessionID, now: now), execution: execution,
@@ -61,6 +70,32 @@ public struct WorkspaceTaskService: Sendable {
             try tx.put(task, expectedVersion: 0)
             try tx.put(session, expectedVersion: 0)
             return taskID
+    }
+
+    /// Completes a local action task only when its recorded invocations have a known successful outcome.
+    public func completeActionTask(taskID: UUID) async throws {
+        struct Input: Encodable { let taskID: UUID }
+        let command = try WorkspaceCommand(type: "task.complete-action", workspaceID: identity.workspaceID, payload: Input(taskID: taskID)).data()
+        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
+            let task = try tx.require(BlotV3.Task.self, id: taskID)
+            // Resolving one action cannot complete a multi-step model task.
+            guard !(try tx.records(BlotV3.ModelStep.self)).contains(where: { $0.taskId == taskID }) else { return taskID }
+            let invocations = try tx.records(BlotV3.ToolInvocation.self).filter { $0.execution.taskId == taskID }
+            guard task.execution.executorDeviceId == identity.deviceID, !Self.terminal(task.state),
+                  !invocations.isEmpty, invocations.allSatisfy({ $0.state == .succeeded }) else { throw WorkspaceStorageError.permissionDenied }
+            let updated = try BlotV3.Task(metadata: tx.metadata(id: taskID, now: Date(), replacing: task.metadata),
+                execution: task.execution, projectId: task.projectId, conversationId: task.conversationId, goal: task.goal,
+                state: .completed, plan: task.plan, configurationId: task.configurationId, parentTaskId: task.parentTaskId,
+                skillRevisionId: task.skillRevisionId, budgetTokenLimit: task.budgetTokenLimit, executionMode: task.executionMode, authorizationJSON: task.authorizationJSON)
+            try tx.put(updated, expectedVersion: task.metadata.version)
+            for session in try tx.records(BlotV3.AgentSession.self) where session.execution.taskId == taskID {
+                let finished = try BlotV3.AgentSession(metadata: tx.metadata(id: session.metadata.id, now: Date(), replacing: session.metadata),
+                    execution: session.execution, agentId: session.agentId, configurationId: session.configurationId,
+                    parentSessionId: session.parentSessionId, state: .completed)
+                try tx.put(finished, expectedVersion: session.metadata.version)
+            }
+            return taskID
+        }
     }
 
     public func cancel(commandID: UUID, taskID: UUID, now: Date = Date()) async throws {
@@ -76,16 +111,7 @@ public struct WorkspaceTaskService: Sendable {
                 if count == family.count { break }
             }
             for task in tasks where family.contains(task.metadata.id) && !Self.terminal(task.state) {
-                let updated = try BlotV3.Task(metadata: tx.metadata(id: task.metadata.id, now: now, replacing: task.metadata),
-                    execution: task.execution, projectId: task.projectId, conversationId: task.conversationId, goal: task.goal,
-                    state: .canceled, plan: task.plan, configurationId: task.configurationId, parentTaskId: task.parentTaskId, skillRevisionId: task.skillRevisionId, budgetTokenLimit: task.budgetTokenLimit, executionMode: task.executionMode)
-                try tx.put(updated, expectedVersion: task.metadata.version)
-            }
-            for session in try tx.records(BlotV3.AgentSession.self) where family.contains(session.execution.taskId) && ![.completed, .failed, .canceled].contains(session.state) {
-                let updated = try BlotV3.AgentSession(metadata: tx.metadata(id: session.metadata.id, now: now, replacing: session.metadata),
-                    execution: session.execution, agentId: session.agentId, configurationId: session.configurationId,
-                    parentSessionId: session.parentSessionId, state: .canceled)
-                try tx.put(updated, expectedVersion: session.metadata.version)
+                try WorkspaceTaskLifecycle.setState(task, .canceled, tx: tx)
             }
             return taskID
         }

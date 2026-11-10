@@ -9,7 +9,7 @@ export class AccountEmailSender {
     try {
       transport = await new AccountSmtpTransport(this.#environment).create();
       await transport.sendMail({ from: this.#environment.BLOT_SMTP_FROM, to: email,
-        subject: purpose === "signin" ? "Blot — код для входа" : purpose === "verify" ? "Blot — подтверждение почты" : "Blot — восстановление доступа",
+        subject: purpose === "delete" ? "Blot — удаление аккаунта" : purpose === "signin" ? "Blot — код для входа" : purpose === "verify" ? "Blot — подтверждение почты" : "Blot — восстановление доступа",
         text: `Ваш код: ${code}\n\nКод действует 10 минут. Если вы не запрашивали письмо, проигнорируйте его.` });
     } catch (error) {
       if (error instanceof AuthError) throw error;

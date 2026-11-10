@@ -23,7 +23,7 @@ struct WorkspaceLocalSearchView: View {
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.buttonStyle(WorkspaceRowButtonStyle())
                 }
-                if let failure { Text(failure).foregroundStyle(WorkspaceStyle.secondary) }
+                if let failure { WorkspaceLocalizedText(failure).foregroundStyle(WorkspaceStyle.secondary) }
                 else if messages.isEmpty && !store.form.search.query.isEmpty { Text(store.t("No results")) }
             }.padding(24)
         }

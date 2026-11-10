@@ -1,0 +1,1831 @@
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamSettings.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamSettings.swift
+@@ -94,15 +94,7 @@
+                     }
+                 }
+             }
+-        case .mcp:
+-            MacTeamSettingsSection(title: "MCP-серверы") {
+-                if store.snapshot.mcpConnections.isEmpty {
+-                    MacTeamSettingsRow(title: "Нет подключённых MCP-серверов") { EmptyView() }
+-                }
+-                ForEach(store.snapshot.mcpConnections, id: \.metadata.id) { connection in
+-                    MacTeamSettingsRow(title: connection.name, detail: connection.endpoint) { MacTeamBadge(text: connection.state.rawValue) }
+-                }
+-            }
++        case .mcp: WorkspaceMCPSettingsView()
+         case .devices: WorkspacePairedDevicesView()
+         case .privacy:
+             MacTeamSettingsSection(title: "Данные и приватность") {
+--- a/apps/shared/WorkspaceV3/LocalWorkspaceService.swift
++++ b/apps/shared/WorkspaceV3/LocalWorkspaceService.swift
+@@ -13,6 +13,8 @@
+     var workspaceCommands: (any WorkspaceCommandService)? { self }
+     let appleIntegrations: AppleIntegrationController
+     let repository: WorkspaceRepository
++    var mcp: WorkspaceMCPService?
++    let mcpCredentials: any WorkspaceCredentialStore
+     private let deviceAuthority: WorkspaceDeviceAuthority?
+     private var delegationAuthorization: (@Sendable (BlotV3.Task) async throws -> Void)? {
+         guard let deviceAuthority, let identity else { return nil }
+@@ -42,8 +44,10 @@
+          maximumOutputTokens: Int = 2048, runTokenBudget: Int = 20000,
+          scheduleClock: any WorkspaceScheduleClock = WorkspaceSystemScheduleClock(),
+          deviceAuthority: WorkspaceDeviceAuthority? = nil,
++         mcpCredentials: any WorkspaceCredentialStore = WorkspaceKeychain(service: "dev.blot.apple.mcp"),
+          makeModel: (@MainActor (String) throws -> any ChatModel)? = nil) throws {
+         self.deviceAuthority = deviceAuthority
++        self.mcpCredentials = mcpCredentials
+         self.scheduleClock = scheduleClock
+         appleIntegrations = try AppleIntegrationController(bookmarkFile: databaseURL.deletingLastPathComponent().appendingPathComponent("AppleFolderBookmarks.plist"))
+         self.repository = try repository ?? WorkspaceRepository(url: databaseURL)
+@@ -62,6 +66,7 @@
+ 
+     func load() async throws -> WorkspaceSnapshot? {
+         let identity = try await context()
++        if !quiescing { await mcp?.resume() }
+         if recovery == nil {
+             let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
+             recovery = _Concurrency.Task {
+@@ -110,6 +115,7 @@
+     func suspendAccountOperations() async {
+         quiescing = true
+         appleIntegrations.interactions.cancelAll()
++        await mcp?.stop()
+         let workers = Array(responseWorkers.values)
+         for worker in workers { worker.cancel() }
+         await scheduleEngine?.stop(); scheduleHost.stop()
+@@ -307,7 +313,7 @@
+         let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
+         let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService()),
+             WorkspaceSkillTools(repository: repository, identity: identity),
+-            AppleToolProvider(repository: repository, identity: identity, controller: appleIntegrations)])
++            AppleToolProvider(repository: repository, identity: identity, controller: appleIntegrations), try await mcpProvider()])
+         let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: executorPool, tools: tools)
+         let responseID = UUID()
+         try _Concurrency.Task.checkCancellation()
+@@ -369,7 +375,7 @@
+         defer { taskConversations.remove(task.conversationId) }
+         let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService()),
+             WorkspaceSkillTools(repository: repository, identity: identity),
+-            AppleToolProvider(repository: repository, identity: identity, controller: appleIntegrations)])
++            AppleToolProvider(repository: repository, identity: identity, controller: appleIntegrations), try await mcpProvider()])
+         try await WorkspaceTaskExecution(repository: repository, identity: identity, pool: executorPool, tools: tools,
+             maximumOutputTokens: maximumOutputTokens, authorize: delegationAuthorization).run(taskID: taskID, makeModel: { [weak self] id in
+                 guard let self else { throw CancellationError() }
+@@ -442,7 +448,7 @@
+         return context
+     }
+ 
+-    private func context() async throws -> WorkspaceIdentity {
++    func context() async throws -> WorkspaceIdentity {
+         guard !closed && !quiescing else { throw WorkspaceStorageError.databaseClosed }
+         if let identity { return identity }
+         let value = try await repository.localIdentity()
+@@ -596,6 +602,7 @@
+         result.automationRuns = records.automationRuns
+         result.scheduleFailures = try await repository.scheduleFailures()
+         result.artifacts = records.artifacts; result.connections = records.connections
++        result.mcpConnections = try await repository.records(BlotV3.McpConnection.self, workspaceID: identity.workspaceID)
+         result.toolInvocations = records.invocations; result.preparedActions = records.actions
+         result.participants = records.participants; result.reactions = records.reactions; result.readPositions = records.readPositions
+         result.skillAssignments = WorkspaceSkillAccess.assignments(records.grants)
+--- a/apps/shared/WorkspaceV3/WorkspaceAccountApplicationService.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceAccountApplicationService.swift
+@@ -209,7 +209,7 @@
+             let model = try installation.makeModel()
+             let modelCredentials = WorkspaceModelCredentialStore(accountNamespace: identity.ownerID.uuidString + ":" + identity.deviceID.uuidString)
+             let service = try LocalWorkspaceService(databaseURL: database, repository: repository, identity: identity,
+-                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget, deviceAuthority: deviceAuthority,
++                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget, deviceAuthority: deviceAuthority, mcpCredentials: credentials,
+                 makeModel: { modelID in
+                     if modelID == "gigachat" { return model }
+                     let config = try modelCredentials.load()
+--- a/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift
+@@ -246,28 +246,7 @@
+             WorkspaceV3ActionButton(title: "Never remembered", action: .saveSetting, kind: .secondary)
+         }
+     }
+-    private var mcp: some View {
+-        @Bindable var store = store
+-        return VStack(alignment: .leading, spacing: 22) {
+-            WorkspaceHeading(title: "MCP servers", subtitle: "Add a server, inspect its tools and choose allowed access.")
+-            ForEach(store.snapshot.mcpConnections, id: \.metadata.id) { connection in
+-                WorkspaceCard {
+-                    HStack { Text(connection.name).font(.headline); Spacer(); Text(store.t(connection.state == .connected ? "Connected" : connection.state == .error ? "Reconnect" : "Not connected")).font(.caption) }
+-                    Text(connection.endpoint).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
+-                    ForEach(connection.toolIds, id: \.self) { tool in BlotLabel(tool, symbol: "checkmark.shield") }
+-                }
+-            }
+-            WorkspaceField(title: "Server name", text: $store.form.mcp.name)
+-            WorkspaceField(title: "Server URL", text: $store.form.mcp.endpoint)
+-            Picker(store.t("Transport"), selection: $store.form.mcp.transport) {
+-                Text("Streamable HTTP").tag("STREAMABLE_HTTP")
+-                Text("stdio").tag("STDIO")
+-            }.pickerStyle(.segmented)
+-            Text(store.t("Transports: stdio on computer · Streamable HTTP")).foregroundStyle(WorkspaceStyle.secondary)
+-            Text(store.t("Secrets belong in protected settings and never in prompts.")).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
+-            WorkspaceV3ActionButton(title: "Add server", action: .addMcp)
+-        }
+-    }
++    private var mcp: some View { WorkspaceMCPSettingsView() }
+     private var browserSettings: some View {
+         VStack(alignment: .leading, spacing: 24) {
+             WorkspaceHeading(title: "Blot for Chrome", subtitle: "Connect your browser on this computer.")
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -12,6 +12,12 @@
+     enum ScreenState: String, CaseIterable { case normal, empty, loading, error, offline, limit, unavailable, unknown }
+     let mode: Mode
+     private let service: any WorkspaceService
++    var mcpCommands: (any WorkspaceMCPProviding)? { service as? any WorkspaceMCPProviding }
++    func refreshMCP() async throws {
++        let generation = sessionGeneration
++        guard let fresh = try await service.load(), generation == sessionGeneration else { throw CancellationError() }
++        applyMutationSnapshot(fresh)
++    }
+     var pairingCommands: (any WorkspaceDevicePairingCommands)? {
+         (service as? any WorkspaceDevicePairingProviding)?.workspacePairing
+     }
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift
+@@ -36,7 +36,7 @@
+     public func cancelAll() {
+         for id in Array(continuations.keys) { finish(id, result: .failure(AppleIntegrationError.canceled)) }
+     }
+-    func confirm(title: String, details: String) async throws -> Bool {
++    public func confirm(title: String, details: String) async throws -> Bool {
+         let result = try await request(.init(id: UUID(), kind: .confirmation, title: title, details: details, fields: [:]))
+         return result == .bool(true)
+     }
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceAccountErasure.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceAccountErasure.swift
+@@ -29,7 +29,7 @@
+         }
+         defer { _ = locks }
+         if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
+-        var prefixes = ["profile:" + intent.ownerID.uuidString]
++        var prefixes = ["profile:" + intent.ownerID.uuidString, "mcp:" + intent.ownerID.uuidString + ":"]
+         for workspace in intent.workspaceIDs {
+             prefixes += ["device-keys:", "device-authority:", "device-trust-v2:"].map { $0 + workspace.uuidString + ":" }
+             for prefix in prefixes.suffix(3) { try await credentials.remove(prefix + intent.deviceID.uuidString) }
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceGroupOperationHistory.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceGroupOperationHistory.swift
+@@ -33,6 +33,6 @@
+     }
+     private static func key(_ call: ChatToolCall) throws -> String { call.name + ":" + String(decoding: try WorkspaceCoding.encode(call.arguments), as: UTF8.self) }
+     private static func isWrite(_ name: String) -> Bool {
+-        name == "document_create" || name.hasPrefix("apple_") && ["create", "update", "delete", "send", "reply", "move", "run"].contains(String(name.split(separator: "_").last ?? ""))
++        name.hasPrefix("mcp_") || name == "document_create" || name.hasPrefix("apple_") && ["create", "update", "delete", "send", "reply", "move", "run"].contains(String(name.split(separator: "_").last ?? ""))
+     }
+ }
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolRuntime.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolRuntime.swift
+@@ -16,9 +16,13 @@
+     var definitions: [ChatToolDefinition] { get }
+     func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition]
+     func execute(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON
++    func validate(_ call: ChatToolCall, definition: ChatToolDefinition) throws
+ }
+ 
+ public extension WorkspaceToolExecuting {
++    func validate(_ call: ChatToolCall, definition: ChatToolDefinition) throws {
++        try ToolArgumentValidator.validate(call.arguments, schema: definition.parameters)
++    }
+     func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
+         definitions.filter { context.allowedToolIDs.contains($0.name) }
+     }
+@@ -45,7 +49,7 @@
+         guard context.allowedToolIDs.contains(call.name),
+               let provider = providers.first(where: { $0.definitions.contains { $0.name == call.name } }),
+               let definition = provider.definitions.first(where: { $0.name == call.name }) else { throw WorkspaceToolError.unknownTool }
+-        try ToolArgumentValidator.validate(call.arguments, schema: definition.parameters)
++        try provider.validate(call, definition: definition)
+         try _Concurrency.Task.checkCancellation()
+         return try await provider.execute(call, context: context)
+     }
+--- a/scripts/check-group-routing.sh
++++ b/scripts/check-group-routing.sh
+@@ -5,7 +5,8 @@
+ verification="${2:-scripts/verify-group-routing.swift}"
+ checks="$PWD/.build/$(basename "$verification" .swift)"
+ mkdir -p "$checks/cache"
+-sources=(WorkspaceService WorkspaceForms WorkspacePersonalization WorkspaceMessageContext WorkspaceSnapshot WorkspaceApplicationInterfaces WorkspaceMessagePinProviding WorkspaceAccountApplicationService WorkspaceAccountProfileActions WorkspaceAccountSynchronizing WorkspaceModelCredentials WorkspaceBrowserAuthenticator LocalWorkspaceService WorkspaceScheduleHost WorkspaceSkillCommands WorkspaceSkillToolCatalog WorkspaceFileCommands WorkspaceDeviceCommands WorkspaceGroupResponder WorkspaceGroupBudget WorkspaceExportFormat)
++sources=(WorkspaceService WorkspaceForms WorkspacePersonalization WorkspaceMessageContext WorkspaceSnapshot WorkspaceApplicationInterfaces WorkspaceMessagePinProviding WorkspaceAccountApplicationService WorkspaceAccountProfileActions WorkspaceAccountSynchronizing WorkspaceModelCredentials WorkspaceBrowserAuthenticator LocalWorkspaceService WorkspaceScheduleHost WorkspaceSkillCommands WorkspaceSkillToolCatalog WorkspaceFileCommands WorkspaceDeviceCommands WorkspaceGroupResponder WorkspaceGroupBudget WorkspaceExportFormat WorkspaceMCPProviding)
++sources+=(WorkspaceDevicePairingCommands)
+ arguments=()
+ for source in "${sources[@]}"; do arguments+=("apps/shared/WorkspaceV3/$source.swift"); done
+ objects=("$products/BlotDomain.o" "$products/BlotWorkspace.o")
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/MCPConfigurationFields.swift
+@@ -0,0 +1,60 @@
++import BlotWorkspace
++import SwiftUI
++import UniformTypeIdentifiers
++
++struct MCPConfigurationFields: View {
++    @Binding var configuration: MCPConfiguration
++    @Binding var arguments: String
++    @Binding var environment: String
++    let russian: Bool
++    @State private var picking = MCPPath.executable
++    @State private var importing = false
++    private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
++    var body: some View {
++        VStack(alignment: .leading, spacing: 16) {
++            Picker(text("Транспорт", "Transport"), selection: $configuration.transport) {
++                Text("Streamable HTTP").tag(MCPConfiguration.Transport.http)
++                #if os(macOS)
++                Text("stdio").tag(MCPConfiguration.Transport.stdio)
++                #endif
++            }.pickerStyle(.segmented)
++            if configuration.transport == .http {
++                TextField("https://server.example/mcp", text: $configuration.endpoint)
++                SecureField(text("Bearer-токен (если нужен)", "Bearer token (optional)"), text: $configuration.bearerToken)
++                Text(text("Токен хранится в Связке ключей. Для сервера с OAuth используйте выданный им токен.", "The token stays in Keychain. For OAuth servers, supply a token issued by that server.")).font(.caption).foregroundStyle(.secondary)
++            } else {
++                TextField(text("Полный путь к программе", "Absolute executable path"), text: $configuration.endpoint)
++                #if os(macOS)
++                Button(text("Выбрать программу…", "Choose executable…")) { picking = .executable; importing = true }
++                #endif
++                TextField(text("Аргументы — JSON-массив", "Arguments — JSON array"), text: $arguments)
++                TextField(text("Рабочая папка", "Working directory"), text: $configuration.workingDirectory)
++                #if os(macOS)
++                Button(text("Выбрать папку…", "Choose directory…")) { picking = .directory; importing = true }
++                #endif
++                SecureField(text("Переменные среды — JSON-объект", "Environment — JSON object"), text: $environment)
++                Toggle(text("Я доверяю этой программе", "I trust this executable"), isOn: $configuration.trustedLocalProcess)
++                Text(text("Программа получает только заданные переменные среды и доступ в рамках системной песочницы Blot. MCP сам по себе не изолирует программу.", "The executable receives only the specified environment and access allowed by Blot’s system sandbox. MCP itself does not isolate a process.")).font(.caption).foregroundStyle(.secondary)
++            }
++            Stepper(value: $configuration.timeout, in: 5...300, step: 5) { Text(text("Таймаут: ", "Timeout: ") + String(Int(configuration.timeout)) + text(" с", " s")) }
++        }
++        .onChange(of: configuration.transport) { _, _ in
++            configuration.endpoint = ""; configuration.arguments = []; configuration.environment = [:]; configuration.workingDirectory = ""
++            configuration.bearerToken = ""; configuration.executableBookmark = nil; configuration.directoryBookmark = nil
++            arguments = "[]"; environment = "{}"
++        }
++        #if os(macOS)
++        .fileImporter(isPresented: $importing,
++                      allowedContentTypes: picking == .directory ? [.folder] : [.item]) { result in
++            let target = picking
++            guard let url = try? result.get() else { return }
++            let scoped = url.startAccessingSecurityScopedResource(); defer { if scoped { url.stopAccessingSecurityScopedResource() } }
++            guard let bookmark = try? url.bookmarkData(options: target == .directory ? [.withSecurityScope] : [.withSecurityScope, .securityScopeAllowOnlyReadAccess], includingResourceValuesForKeys: nil, relativeTo: nil) else { return }
++            if target == .directory { configuration.workingDirectory = url.path; configuration.directoryBookmark = bookmark }
++            else { configuration.endpoint = url.path; configuration.executableBookmark = bookmark }
++        }
++        #endif
++    }
++}
++
++private enum MCPPath { case executable, directory }
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceMCPProviding.swift
+@@ -0,0 +1,29 @@
++import BlotAppleIntegrations
++import BlotWorkspace
++import Foundation
++
++@MainActor
++protocol WorkspaceMCPProviding {
++    func mcpService() async throws -> WorkspaceMCPService
++}
++
++extension LocalWorkspaceService: WorkspaceMCPProviding {
++    func mcpService() async throws -> WorkspaceMCPService {
++        if let mcp { return mcp }
++        let identity = try await context()
++        let service = WorkspaceMCPService(repository: repository, identity: identity, credentials: mcpCredentials)
++        mcp = service
++        return service
++    }
++    func mcpProvider() async throws -> MCPToolProvider {
++        let interactions = appleIntegrations.interactions
++        return try await mcpService().provider { title, details in try await interactions.confirm(title: title, details: details) }
++    }
++}
++
++extension WorkspaceAccountApplicationService: WorkspaceMCPProviding {
++    func mcpService() async throws -> WorkspaceMCPService {
++        guard let workspace = workspaceCommands as? LocalWorkspaceService else { throw WorkspaceServiceError.unavailable }
++        return try await workspace.mcpService()
++    }
++}
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
+@@ -0,0 +1,204 @@
++import BlotDesign
++import BlotDomain
++import BlotWorkspace
++import SwiftUI
++
++struct WorkspaceMCPSettingsView: View {
++    @Environment(WorkspaceStore.self) private var store
++    @State private var entries: [MCPAccess] = []
++    @State private var sheet: MCPSettingsSheet?
++    @State private var error: String?
++    @State private var busy = false
++    @State private var resolving: BlotV3.ToolInvocation?
++    private var russian: Bool { store.language == "ru" }
++    private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
++    var body: some View {
++        VStack(alignment: .leading, spacing: 20) {
++            Text(text("MCP-серверы", "MCP servers")).font(.title2.bold())
++            Text(text("Выберите инструменты и агентов. Каждый вызов требует подтверждения с точными аргументами.",
++                      "Choose tools and agents. Every call requires confirmation of its exact arguments.")).foregroundStyle(.secondary)
++            ForEach(entries) { entry in
++                WorkspaceCard {
++                    HStack {
++                        VStack(alignment: .leading, spacing: 4) {
++                            Text(entry.name).font(.headline)
++                            Text(entry.enabled ? text("Подключён на этом устройстве", "Connected on this device") : text("Требуется выбор доступа", "Review access to enable"))
++                                .font(.caption).foregroundStyle(.secondary)
++                        }
++                        Spacer()
++                        Button(text("Настроить", "Manage")) { sheet = .access(entry) }.disabled(busy)
++                    }
++                    Text(text("Инструментов: ", "Tools: ") + String(entry.selectedTools.count))
++                    ForEach(unknown(entry.id), id: \.metadata.id) { invocation in
++                        Text(text("Исход вызова неизвестен. Новые вызовы заблокированы до сверки с сервером.", "A call has an unknown outcome. New calls are blocked until you verify it on the server."))
++                        Button(text("Сверить результат…", "Reconcile outcome…")) { resolving = invocation }.disabled(busy)
++                    }
++                }
++            }
++            ForEach(store.snapshot.mcpConnections.filter { record in !entries.contains { $0.id == record.metadata.id } }, id: \.metadata.id) { record in
++                WorkspaceCard {
++                    Text(record.name).font(.headline)
++                    Text(text("Настроен на другом устройстве. Здесь нет параметров запуска и доступа.", "Configured on another device. Launch settings and access are local to that device.")).font(.caption).foregroundStyle(.secondary)
++                }
++            }
++            if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
++            Button(text("Добавить MCP-сервер", "Add MCP server")) { sheet = .new }.buttonStyle(WorkspaceButtonStyle()).disabled(store.mcpCommands == nil || busy)
++        }
++        .task { await reload() }
++        .sheet(item: $sheet, onDismiss: { _Concurrency.Task { await reload() } }) { item in
++            WorkspaceMCPEditor(initial: item.access, agents: store.snapshot.agents, russian: russian, commands: store.mcpCommands)
++        }
++        .confirmationDialog(text("Проверьте фактический результат на сервере. Это решение не повторяет вызов.", "Verify the actual outcome on the server. This decision does not repeat the call."),
++            isPresented: Binding(get: { resolving != nil }, set: { if !$0 { resolving = nil } }), titleVisibility: .visible) {
++                Button(text("Проверено: выполнено", "Verified: completed")) { reconcile(true) }
++                Button(text("Проверено: не выполнено", "Verified: not completed")) { reconcile(false) }
++                Button(text("Отмена", "Cancel"), role: .cancel) { resolving = nil }
++            }
++    }
++    private func unknown(_ id: UUID) -> [BlotV3.ToolInvocation] {
++        let actions = Set((store.snapshot.preparedActions ?? []).filter { $0.resource == id.uuidString && $0.toolId.hasPrefix("mcp_") }.map(\.metadata.id))
++        return (store.snapshot.toolInvocations ?? []).filter { $0.state == .unknown && $0.execution.executorDeviceId == store.snapshot.localDeviceID && actions.contains($0.preparedActionId) }
++    }
++    private func reload() async {
++        do {
++            guard let commands = store.mcpCommands else { return }
++            entries = try await commands.mcpService().access()
++            try await store.refreshMCP()
++        } catch { self.error = error.localizedDescription }
++    }
++    private func reconcile(_ succeeded: Bool) {
++        guard let invocation = resolving, let commands = store.mcpCommands else { return }; resolving = nil; busy = true
++        _Concurrency.Task {
++            defer { busy = false }
++            do { try await commands.mcpService().resolve(invocationID: invocation.metadata.id, succeeded: succeeded); await reload() }
++            catch { self.error = error.localizedDescription }
++        }
++    }
++}
++
++private enum MCPSettingsSheet: Identifiable {
++    case new, access(MCPAccess)
++    var id: String { access?.id.uuidString ?? "new" }
++    var access: MCPAccess? { if case .access(let value) = self { value } else { nil } }
++}
++
++private struct WorkspaceMCPEditor: View {
++    let initial: MCPAccess?
++    let agents: [BlotV3.AgentProfile]
++    let russian: Bool
++    let commands: (any WorkspaceMCPProviding)?
++    @Environment(\.dismiss) private var dismiss
++    @State private var name = ""
++    @State private var configuration = MCPConfiguration()
++    @State private var arguments = "[]"
++    @State private var environment = "{}"
++    @State private var inspection: MCPInspection?
++    @State private var tools: [MCPTool] = []
++    @State private var selected: Set<String> = []
++    @State private var selectedAgents: Set<UUID> = []
++    @State private var error: String?
++    @State private var busy = false
++    @State private var removing = false
++    private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
++    var body: some View {
++        NavigationStack {
++            ScrollView {
++                VStack(alignment: .leading, spacing: 18) {
++                    if initial == nil && inspection == nil {
++                        TextField(text("Имя сервера", "Server name"), text: $name)
++                        MCPConfigurationFields(configuration: $configuration, arguments: $arguments, environment: $environment, russian: russian)
++                        Button(text("Проверить и получить инструменты", "Test and discover tools")) { inspect() }.disabled(busy)
++                    } else {
++                        Text(initial?.name ?? inspection?.name ?? "MCP").font(.headline)
++                        Text(text("Описания предоставлены сервером. Выбор инструмента не заменяет подтверждение каждого вызова.", "Descriptions come from the server. Selecting a tool does not approve its calls.")).font(.caption).foregroundStyle(.secondary)
++                        MCPAccessFields(tools: tools, agents: agents, selected: $selected, selectedAgents: $selectedAgents, russian: russian)
++                        Button(text("Сохранить доступ", "Save access")) { save() }.buttonStyle(WorkspaceButtonStyle()).disabled(busy || selected.isEmpty || selectedAgents.isEmpty)
++                        if initial != nil {
++                            Button(text("Обновить инструменты и сбросить доступ", "Refresh tools and reset access")) { refresh() }.disabled(busy)
++                            Button(text("Отключить и удалить настройки", "Disconnect and remove settings"), role: .destructive) { removing = true }.disabled(busy)
++                        } else {
++                            Button(text("Изменить параметры", "Change settings")) { inspection = nil; tools = []; selected = [] }.disabled(busy)
++                        }
++                    }
++                    if busy { ProgressView() }
++                    if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
++                }.textFieldStyle(.roundedBorder).padding(24).disabled(busy)
++            }
++            .navigationTitle(text("Подключение MCP", "MCP connection"))
++            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } }
++            .task { if let initial { tools = initial.tools; selected = initial.selectedTools; selectedAgents = initial.agentIDs } }
++            .confirmationDialog(text("Удалить локальные параметры и отозвать доступ агентов?", "Remove local settings and revoke agent access?"), isPresented: $removing, titleVisibility: .visible) {
++                Button(text("Отключить", "Disconnect"), role: .destructive) { disconnect() }
++            }
++        }
++        #if os(macOS)
++        .frame(width: 640, height: 650)
++        #endif
++        .interactiveDismissDisabled(busy)
++    }
++    private func perform(_ work: @escaping @MainActor (WorkspaceMCPService) async throws -> Void) {
++        guard !busy, let commands else { return }; busy = true; error = nil
++        _Concurrency.Task {
++            defer { busy = false }
++            do { try await work(commands.mcpService()) }
++            catch is CancellationError { return }
++            catch { self.error = (error as? MCPError)?.localizedDescription ?? text("Не удалось выполнить операцию MCP. Проверьте параметры и доступ.", "MCP operation failed. Check settings and access.") }
++        }
++    }
++    private func inspect() {
++        perform { service in
++            var input = configuration
++            if input.transport == .stdio {
++                input.arguments = try JSONDecoder().decode([String].self, from: Data(arguments.utf8))
++                input.environment = try JSONDecoder().decode([String: String].self, from: Data(environment.utf8))
++            }
++            let result = try await service.inspect(name: name, configuration: input)
++            inspection = result; tools = result.tools
++        }
++    }
++    private func save() {
++        perform { service in
++            if let initial { try await service.setAccess(id: initial.id, selectedTools: selected, agentIDs: selectedAgents) }
++            else if let inspection { _ = try await service.save(inspection, selectedTools: selected, agentIDs: selectedAgents) }
++            dismiss()
++        }
++    }
++    private func refresh() {
++        guard let initial else { return }
++        perform { service in
++            selected = []; try await service.refresh(id: initial.id)
++            tools = try await service.access().first { $0.id == initial.id }?.tools ?? []
++        }
++    }
++    private func disconnect() {
++        guard let initial else { return }
++        perform { service in try await service.disconnect(id: initial.id); dismiss() }
++    }
++}
++
++private struct MCPAccessFields: View {
++    let tools: [MCPTool]
++    let agents: [BlotV3.AgentProfile]
++    @Binding var selected: Set<String>
++    @Binding var selectedAgents: Set<UUID>
++    let russian: Bool
++    var body: some View {
++        VStack(alignment: .leading, spacing: 14) {
++            Text(russian ? "Инструменты" : "Tools").font(.headline)
++            if tools.isEmpty { Text(russian ? "Сервер не предоставил инструменты." : "The server returned no tools.") }
++            ForEach(tools) { tool in
++                Toggle(isOn: Binding(get: { selected.contains(tool.name) }, set: { if $0 { selected.insert(tool.name) } else { selected.remove(tool.name) } })) {
++                    VStack(alignment: .leading) { Text(tool.name); Text(tool.description).font(.caption).foregroundStyle(.secondary) }
++                }
++                DisclosureGroup(russian ? "Схема аргументов" : "Argument schema") {
++                    Text(String(decoding: (try? JSONEncoder().encode(tool.inputSchema)) ?? Data(), as: UTF8.self)).font(.caption.monospaced()).textSelection(.enabled)
++                }
++            }
++            Divider()
++            Text(russian ? "Агенты" : "Agents").font(.headline)
++            ForEach(agents, id: \.metadata.id) { agent in
++                Toggle(agent.name, isOn: Binding(get: { selectedAgents.contains(agent.metadata.id) }, set: { if $0 { selectedAgents.insert(agent.metadata.id) } else { selectedAgents.remove(agent.metadata.id) } }))
++            }
++        }.toggleStyle(.switch)
++    }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPClient.swift
+@@ -0,0 +1,74 @@
++import Foundation
++
++/// A bounded tools-only MCP session. Server instructions never become system instructions.
++public actor MCPClient {
++    public static let version = "2025-11-25"
++    private let transport: any MCPTransport
++    private var sequence = 0
++    private var ready = false
++    public init(transport: any MCPTransport) { self.transport = transport }
++    public static func connect(configuration: MCPConfiguration) throws -> MCPClient {
++        if configuration.transport == .http { return MCPClient(transport: try MCPHTTPTransport(configuration: configuration)) }
++        #if os(macOS)
++        return MCPClient(transport: try MCPStdioTransport(configuration: configuration))
++        #else
++        throw MCPError.configuration
++        #endif
++    }
++    private func initialize() async throws {
++        guard !ready else { return }
++        let result = try await request("initialize", params: .object(["protocolVersion": .string(Self.version), "capabilities": .object([:]),
++            "clientInfo": .object(["name": .string("Blot"), "version": .string("1.0")])]))
++        guard result.mcpFields["protocolVersion"] == .string(Self.version),
++              case .object = result.mcpFields["capabilities"]?.mcpFields["tools"] else { throw MCPError.version }
++        _ = try await transport.exchange(.object(["jsonrpc": .string("2.0"), "method": .string("notifications/initialized")]))
++        ready = true
++    }
++    public func tools() async throws -> [MCPTool] {
++        try await initialize()
++        var tools: [MCPTool] = [], cursor: String?, seen: Set<String> = []
++        for _ in 0..<20 {
++            let result = try await request("tools/list", params: .object(cursor.map { ["cursor": .string($0)] } ?? [:]))
++            guard case .array(let values) = result.mcpFields["tools"] else { throw MCPError.protocolViolation }
++            tools += try values.map(MCPTool.init)
++            guard tools.count <= 100, Set(tools.map(\.name)).count == tools.count else { throw MCPError.responseTooLarge }
++            guard try WorkspaceCoding.encode(tools).count <= 512 * 1024 else { throw MCPError.responseTooLarge }
++            guard let next = result.mcpFields["nextCursor"] else { return tools }
++            guard case .string(let value) = next, !value.isEmpty, value.utf8.count <= 2048, seen.insert(value).inserted else { throw MCPError.protocolViolation }
++            cursor = value
++        }
++        throw MCPError.responseTooLarge
++    }
++    public func call(name: String, arguments: ChatJSON) async throws -> ChatJSON {
++        try await initialize()
++        let result = try await request("tools/call", params: .object(["name": .string(name), "arguments": arguments]))
++        guard case .array = result.mcpFields["content"] else { throw MCPError.protocolViolation }
++        // Preserve text and structured JSON. Do not place embedded binary data into model context.
++        var fields = result.mcpFields
++        if case .array(let blocks) = fields["content"] {
++            fields["content"] = .array(blocks.map { block in
++                guard block.mcpFields["type"] == .string("text") || block.mcpFields["type"] == .string("resource_link") else {
++                    return .object(["type": .string("text"), "text": .string("[Non-text MCP content omitted]")])
++                }
++                return block
++            })
++        }
++        let filtered = ChatJSON.object(fields)
++        guard try WorkspaceCoding.encode(filtered).count <= 56 * 1024 else { throw MCPError.responseTooLarge }
++        return filtered
++    }
++    private func request(_ method: String, params: ChatJSON) async throws -> ChatJSON {
++        try _Concurrency.Task.checkCancellation()
++        sequence += 1; let id = ChatJSON.number(Double(sequence))
++        guard let response = try await transport.exchange(.object(["jsonrpc": .string("2.0"), "id": id, "method": .string(method), "params": params])),
++              response.mcpFields["jsonrpc"] == .string("2.0"), response.mcpFields["id"] == id else { throw MCPError.protocolViolation }
++        let fields = response.mcpFields
++        if let error = fields["error"] {
++            guard fields["result"] == nil, case .number(let code) = error.mcpFields["code"], code.isFinite, abs(code) <= Double(Int32.max) else { throw MCPError.protocolViolation }
++            throw MCPError.remote(Int(code))
++        }
++        guard let result = fields["result"] else { throw MCPError.protocolViolation }
++        return result
++    }
++    public func close() async { ready = false; await transport.close() }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPHTTPTransport.swift
+@@ -0,0 +1,87 @@
++import Foundation
++
++/// Credentials never cross redirects. Each session belongs to exactly one configured endpoint.
++public actor MCPHTTPTransport: MCPTransport {
++    private let configuration: MCPConfiguration
++    private let session: URLSession
++    private var sessionID: String?
++    private var initialized = false
++    private var closed = false
++    public init(configuration: MCPConfiguration) throws {
++        try configuration.validate()
++        guard configuration.transport == .http else { throw MCPError.configuration }
++        self.configuration = configuration
++        let settings = URLSessionConfiguration.ephemeral
++        settings.timeoutIntervalForRequest = configuration.timeout; settings.timeoutIntervalForResource = configuration.timeout
++        settings.httpCookieStorage = nil; settings.urlCache = nil; settings.urlCredentialStorage = nil
++        session = URLSession(configuration: settings, delegate: MCPNoRedirects(), delegateQueue: nil)
++    }
++    public func exchange(_ message: ChatJSON) async throws -> ChatJSON? {
++        guard !closed else { throw MCPError.unavailable }
++        var request = URLRequest(url: URL(string: configuration.endpoint)!)
++        request.httpMethod = "POST"; request.httpBody = try WorkspaceCoding.encode(message)
++        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
++        request.setValue("application/json, text/event-stream", forHTTPHeaderField: "Accept")
++        if !configuration.bearerToken.isEmpty { request.setValue("Bearer " + configuration.bearerToken, forHTTPHeaderField: "Authorization") }
++        if let sessionID { request.setValue(sessionID, forHTTPHeaderField: "Mcp-Session-Id") }
++        if initialized { request.setValue(MCPClient.version, forHTTPHeaderField: "MCP-Protocol-Version") }
++        let (bytes, response) = try await session.bytes(for: request)
++        guard let response = response as? HTTPURLResponse else { throw MCPError.protocolViolation }
++        guard (200...299).contains(response.statusCode) else { throw MCPError.http(response.statusCode) }
++        if let id = response.value(forHTTPHeaderField: "Mcp-Session-Id") {
++            guard id.utf8.count <= 1024, !id.isEmpty, id.utf8.allSatisfy({ (33...126).contains($0) }), sessionID == nil || sessionID == id else { throw MCPError.protocolViolation }
++            sessionID = id
++        }
++        if message.mcpFields["method"]?.mcpString == "notifications/initialized" { initialized = true }
++        guard let expectedID = message.mcpFields["id"], message.mcpFields["method"] != nil else {
++            guard response.statusCode == 202 else { throw MCPError.protocolViolation }; return nil
++        }
++        let type = response.value(forHTTPHeaderField: "Content-Type")?.lowercased() ?? ""
++        guard type.hasPrefix("application/json") || type.hasPrefix("text/event-stream") else { throw MCPError.protocolViolation }
++        var body = Data(), line = Data(), event: [String] = []
++        var total = 0
++        for try await byte in bytes {
++            try _Concurrency.Task.checkCancellation()
++            total += 1; guard total <= 1_048_576 else { throw MCPError.responseTooLarge }
++            if type.hasPrefix("application/json") { body.append(byte); continue }
++            if byte != 10 { line.append(byte); continue }
++            let text = String(decoding: line, as: UTF8.self).trimmingCharacters(in: .newlines); line.removeAll(keepingCapacity: true)
++            if text.isEmpty {
++                if !event.isEmpty {
++                    let payload = event.joined(separator: "\n"); event.removeAll(keepingCapacity: true)
++                    if !payload.isEmpty {
++                        let value = try JSONDecoder().decode(ChatJSON.self, from: Data(payload.utf8))
++                        if let result = try await handle(value, expectedID: expectedID) { return result }
++                    }
++                }
++            } else if text.hasPrefix("data:") {
++                let data = text.dropFirst(5); event.append(String(data.first == " " ? data.dropFirst() : data))
++            }
++        }
++        guard type.hasPrefix("application/json") else { throw MCPError.unavailable }
++        let value = try JSONDecoder().decode(ChatJSON.self, from: body)
++        guard value.mcpFields["id"] == expectedID else { throw MCPError.protocolViolation }
++        return value
++    }
++    private func handle(_ value: ChatJSON, expectedID: ChatJSON) async throws -> ChatJSON? {
++        let fields = value.mcpFields
++        guard fields["jsonrpc"] == .string("2.0") else { throw MCPError.protocolViolation }
++        if let method = fields["method"]?.mcpString {
++            if let id = fields["id"] {
++                let reply: ChatJSON = method == "ping"
++                    ? .object(["jsonrpc": .string("2.0"), "id": id, "result": .object([:])])
++                    : .object(["jsonrpc": .string("2.0"), "id": id, "error": .object(["code": .number(-32601), "message": .string("Client capability not supported")])])
++                _ = try await exchange(reply)
++            }
++            return nil
++        }
++        guard fields["id"] == expectedID else { throw MCPError.protocolViolation }
++        return value
++    }
++    public func close() { closed = true; session.invalidateAndCancel() }
++}
++
++private final class MCPNoRedirects: NSObject, URLSessionTaskDelegate, Sendable {
++    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
++                    newRequest request: URLRequest, completionHandler: @escaping @Sendable (URLRequest?) -> Void) { completionHandler(nil) }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPJSONSchema.swift
+@@ -0,0 +1,104 @@
++import Foundation
++
++/// Common JSON Schema assertions, including local references and unions. The MCP server also validates its inputs.
++enum MCPJSONSchema {
++    static func validate(_ value: ChatJSON, schema: ChatJSON) throws {
++        var budget = 10_000
++        try check(value, schema: schema, root: schema, depth: 0, budget: &budget)
++    }
++    private static func check(_ value: ChatJSON, schema: ChatJSON, root: ChatJSON, depth: Int, budget: inout Int) throws {
++        budget -= 1
++        guard depth <= 32, budget >= 0 else { throw WorkspaceToolError.invalidArguments }
++        if case .bool(let allowed) = schema { guard allowed else { throw WorkspaceToolError.invalidArguments }; return }
++        guard case .object(let spec) = schema else { throw WorkspaceToolError.invalidArguments }
++        func nested(_ value: ChatJSON, _ schema: ChatJSON) throws { try check(value, schema: schema, root: root, depth: depth + 1, budget: &budget) }
++        if let ref = spec["$ref"]?.mcpString {
++            guard ref.hasPrefix("#/") else { throw WorkspaceToolError.invalidArguments }
++            var target = root
++            for raw in ref.dropFirst(2).split(separator: "/", omittingEmptySubsequences: false) {
++                let key = raw.replacingOccurrences(of: "~1", with: "/").replacingOccurrences(of: "~0", with: "~")
++                guard let next = target.mcpFields[key] else { throw WorkspaceToolError.invalidArguments }; target = next
++            }
++            try nested(value, target)
++        }
++        if let constant = spec["const"], value != constant { throw WorkspaceToolError.invalidArguments }
++        if case .array(let options) = spec["enum"], !options.contains(value) { throw WorkspaceToolError.invalidArguments }
++        for mode in ["allOf", "anyOf", "oneOf"] {
++            if case .array(let schemas) = spec[mode] {
++                let matches = schemas.filter { (try? nested(value, $0)) != nil }.count
++                guard mode == "allOf" ? matches == schemas.count : mode == "oneOf" ? matches == 1 : matches > 0 else { throw WorkspaceToolError.invalidArguments }
++            }
++        }
++        if let forbidden = spec["not"], (try? nested(value, forbidden)) != nil { throw WorkspaceToolError.invalidArguments }
++        if let condition = spec["if"] {
++            if let branch = spec[(try? nested(value, condition)) != nil ? "then" : "else"] { try nested(value, branch) }
++        }
++        if let type = spec["type"] {
++            let types: [String]
++            if case .array(let values) = type { types = values.compactMap(\.mcpString) }
++            else { types = type.mcpString.map { [$0] } ?? [] }
++            guard types.contains(where: { matches(value, type: $0) }) else { throw WorkspaceToolError.invalidArguments }
++        }
++        func bound(_ key: String, _ number: Double, minimum: Bool) throws {
++            if case .number(let limit) = spec[key], minimum ? number < limit : number > limit { throw WorkspaceToolError.invalidArguments }
++        }
++        switch value {
++        case .object(let fields):
++            let properties = spec["properties"]?.mcpFields ?? [:], patterns = spec["patternProperties"]?.mcpFields ?? [:]
++            if case .array(let required) = spec["required"] {
++                guard required.allSatisfy({ $0.mcpString.map { fields[$0] != nil } == true }) else { throw WorkspaceToolError.invalidArguments }
++            }
++            try bound("minProperties", Double(fields.count), minimum: true); try bound("maxProperties", Double(fields.count), minimum: false)
++            for (name, field) in fields {
++                var known = false
++                if let property = properties[name] { try nested(field, property); known = true }
++                for (pattern, schema) in patterns {
++                    if try matching(name, pattern: pattern) { try nested(field, schema); known = true }
++                }
++                if !known, let additional = spec["additionalProperties"] { try nested(field, additional) }
++            }
++        case .array(let items):
++            guard items.count <= 1000 else { throw WorkspaceToolError.invalidArguments }
++            try bound("minItems", Double(items.count), minimum: true); try bound("maxItems", Double(items.count), minimum: false)
++            if spec["uniqueItems"] == .bool(true) {
++                for i in items.indices where items[..<i].contains(items[i]) { throw WorkspaceToolError.invalidArguments }
++            }
++            var prefix = 0
++            if case .array(let schemas) = spec["prefixItems"] {
++                prefix = schemas.count
++                for (item, schema) in zip(items, schemas) { try nested(item, schema) }
++            }
++            if let schema = spec["items"] { for item in items.dropFirst(prefix) { try nested(item, schema) } }
++        case .string(let text):
++            guard text.utf8.count <= 48 * 1024 else { throw WorkspaceToolError.invalidArguments }
++            try bound("minLength", Double(text.unicodeScalars.count), minimum: true); try bound("maxLength", Double(text.unicodeScalars.count), minimum: false)
++            if let pattern = spec["pattern"]?.mcpString {
++                guard try matching(text, pattern: pattern) else { throw WorkspaceToolError.invalidArguments }
++            }
++        case .number(let number):
++            guard number.isFinite else { throw WorkspaceToolError.invalidArguments }
++            try bound("minimum", number, minimum: true); try bound("maximum", number, minimum: false)
++            if case .number(let limit) = spec["exclusiveMinimum"], number <= limit { throw WorkspaceToolError.invalidArguments }
++            if case .number(let limit) = spec["exclusiveMaximum"], number >= limit { throw WorkspaceToolError.invalidArguments }
++        default: break
++        }
++    }
++    private static func matching(_ text: String, pattern: String) throws -> Bool {
++        guard pattern.utf8.count <= 2048, let regex = try? NSRegularExpression(pattern: pattern) else { throw WorkspaceToolError.invalidArguments }
++        let deadline = ContinuousClock.now.advanced(by: .milliseconds(50))
++        var matched = false, expired = false
++        regex.enumerateMatches(in: text, options: [.reportProgress], range: NSRange(text.startIndex..., in: text)) { result, _, stop in
++            if ContinuousClock.now > deadline { expired = true; stop.pointee = true }
++            else if result != nil { matched = true; stop.pointee = true }
++        }
++        guard !expired else { throw WorkspaceToolError.invalidArguments }
++        return matched
++    }
++    private static func matches(_ value: ChatJSON, type: String) -> Bool {
++        switch (type, value) {
++        case ("object", .object), ("array", .array), ("string", .string), ("number", .number), ("boolean", .bool), ("null", .null): true
++        case ("integer", .number(let number)): number.isFinite && number.rounded() == number
++        default: false
++        }
++    }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPStdioTransport.swift
+@@ -0,0 +1,129 @@
++#if os(macOS)
++import Foundation
++import Darwin
++
++/// Launches one explicitly trusted executable. No shell and no inherited application environment.
++public actor MCPStdioTransport: MCPTransport {
++    private let process = Process()
++    private let input = Pipe()
++    private let output = Pipe()
++    private let errors = Pipe()
++    private let writer = DispatchQueue(label: "dev.blot.mcp.stdin")
++    private let timeout: Double
++    private var reader: _Concurrency.Task<Void, Never>?
++    private var waiting: (ChatJSON, CheckedContinuation<ChatJSON?, Error>)?
++    private var timer: _Concurrency.Task<Void, Never>?
++    private var closed = false
++    private var started = false
++    private let executableURL: URL
++    private let directoryURL: URL
++    private var scopes: [URL] = []
++    public init(configuration: MCPConfiguration) throws {
++        try configuration.validate()
++        guard configuration.transport == .stdio else { throw MCPError.configuration }
++        timeout = configuration.timeout
++        executableURL = try Self.resolve(configuration.executableBookmark, path: configuration.endpoint)
++        directoryURL = try Self.resolve(configuration.directoryBookmark, path: configuration.workingDirectory)
++        process.executableURL = executableURL
++        process.arguments = configuration.arguments
++        process.currentDirectoryURL = directoryURL
++        process.environment = configuration.environment
++        process.standardInput = input; process.standardOutput = output; process.standardError = errors
++    }
++    private func start() throws {
++        guard !started else { return }; started = true
++        for url in [executableURL, directoryURL] where url.startAccessingSecurityScopedResource() { scopes.append(url) }
++        let stream = AsyncThrowingStream<Data, Error>(bufferingPolicy: .bufferingOldest(64)) { continuation in
++            output.fileHandleForReading.readabilityHandler = { handle in
++                let data = handle.availableData
++                if data.isEmpty { continuation.finish() }
++                else if case .dropped = continuation.yield(data) { continuation.finish(throwing: MCPError.responseTooLarge) }
++            }
++        }
++        errors.fileHandleForReading.readabilityHandler = { handle in _ = handle.availableData }
++        do { try process.run() } catch { close(); throw MCPError.unavailable }
++        reader = _Concurrency.Task { [weak self] in
++            var buffer = Data()
++            do {
++                for try await chunk in stream {
++                    buffer.append(chunk)
++                    guard buffer.count <= 1_048_576 else { throw MCPError.responseTooLarge }
++                    while let end = buffer.firstIndex(of: 10) {
++                        let line = buffer.prefix(upTo: end); buffer.removeSubrange(...end)
++                        if !line.isEmpty { try await self?.receive(JSONDecoder().decode(ChatJSON.self, from: line)) }
++                    }
++                }
++                await self?.fail(MCPError.unavailable)
++            } catch { await self?.fail(error) }
++        }
++    }
++    public func exchange(_ message: ChatJSON) async throws -> ChatJSON? {
++        try _Concurrency.Task.checkCancellation()
++        guard !closed, waiting == nil else { throw MCPError.unavailable }
++        try start()
++        guard let id = message.mcpFields["id"] else { try await write(message); return nil }
++        return try await withTaskCancellationHandler {
++            try await withCheckedThrowingContinuation { continuation in
++                waiting = (id, continuation)
++                timer = _Concurrency.Task { [weak self, timeout] in
++                    do { try await _Concurrency.Task.sleep(for: .seconds(timeout)); await self?.fail(MCPError.timeout) } catch {}
++                }
++                _Concurrency.Task {
++                    do { try await write(message) } catch { fail(error) }
++                }
++            }
++        } onCancel: { _Concurrency.Task { await self.fail(CancellationError()) } }
++    }
++    private func write(_ value: ChatJSON) async throws {
++        var data = try WorkspaceCoding.encode(value); data.append(10)
++        guard data.count <= 64 * 1024 else { throw MCPError.responseTooLarge }
++        let bytes = data, handle = input.fileHandleForWriting
++        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
++            writer.async {
++                do { try handle.write(contentsOf: bytes); continuation.resume() }
++                catch { continuation.resume(throwing: error) }
++            }
++        }
++    }
++    private func receive(_ value: ChatJSON) async throws {
++        let fields = value.mcpFields
++        guard fields["jsonrpc"] == .string("2.0") else { throw MCPError.protocolViolation }
++        if let method = fields["method"]?.mcpString {
++            if let id = fields["id"] {
++                try await write(method == "ping" ? .object(["jsonrpc": .string("2.0"), "id": id, "result": .object([:])]) :
++                    .object(["jsonrpc": .string("2.0"), "id": id, "error": .object(["code": .number(-32601), "message": .string("Client capability not supported")])]))
++            }
++        } else if let pending = waiting, fields["id"] == pending.0 {
++            waiting = nil; timer?.cancel(); timer = nil; pending.1.resume(returning: value)
++        } else { throw MCPError.protocolViolation }
++    }
++    private func fail(_ error: Error) {
++        let pending = waiting; waiting = nil; timer?.cancel(); timer = nil
++        pending?.1.resume(throwing: error)
++        close()
++    }
++    public func close() {
++        guard !closed else { return }; closed = true
++        reader?.cancel(); reader = nil; timer?.cancel(); timer = nil
++        output.fileHandleForReading.readabilityHandler = nil; errors.fileHandleForReading.readabilityHandler = nil
++        if process.isRunning {
++            process.terminate()
++            let child = process
++            _Concurrency.Task.detached {
++                try? await _Concurrency.Task.sleep(for: .seconds(1))
++                if child.isRunning { kill(child.processIdentifier, SIGKILL) }
++            }
++        }
++        try? input.fileHandleForWriting.close()
++        for url in scopes { url.stopAccessingSecurityScopedResource() }; scopes = []
++        let pending = waiting; waiting = nil; pending?.1.resume(throwing: MCPError.unavailable)
++    }
++    private static func resolve(_ data: Data?, path: String) throws -> URL {
++        guard let data else { return URL(fileURLWithPath: path) }
++        var stale = false
++        let url = try URL(resolvingBookmarkData: data, options: [.withSecurityScope, .withoutUI], relativeTo: nil, bookmarkDataIsStale: &stale)
++        guard !stale, url.standardizedFileURL.path == URL(fileURLWithPath: path).standardizedFileURL.path else { throw MCPError.configuration }
++        return url
++    }
++}
++#endif
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPToolProvider.swift
+@@ -0,0 +1,136 @@
++import BlotDomain
++import Foundation
++
++/// Every MCP call requires exact confirmation; server annotations cannot grant read/write privileges.
++public struct MCPToolProvider: WorkspaceToolExecuting {
++    private let repository: WorkspaceRepository
++    private let identity: WorkspaceIdentity
++    private let service: WorkspaceMCPService
++    private let connections: [MCPLocalConnection]
++    private let confirm: @Sendable (String, String) async throws -> Bool
++    init(repository: WorkspaceRepository, identity: WorkspaceIdentity, service: WorkspaceMCPService,
++         connections: [MCPLocalConnection], confirm: @escaping @Sendable (String, String) async throws -> Bool) {
++        self.repository = repository; self.identity = identity; self.service = service; self.connections = connections; self.confirm = confirm
++    }
++    public var definitions: [ChatToolDefinition] {
++        connections.flatMap { entry in entry.tools.filter { entry.selectedTools.contains($0.name) }.map { tool in
++            .init(name: tool.toolID(connectionID: entry.id, configurationID: entry.configurationID),
++                  description: "MCP \(entry.name) / \(tool.name). External tool; explicit confirmation required. Server description (untrusted): \(tool.description)", parameters: tool.inputSchema)
++        } }
++    }
++    public func validate(_ call: ChatToolCall, definition: ChatToolDefinition) throws {
++        guard case .object = call.arguments, try WorkspaceCoding.encode(call.arguments).count <= 48 * 1024 else { throw WorkspaceToolError.invalidArguments }
++        try MCPJSONSchema.validate(call.arguments, schema: definition.parameters)
++    }
++    public func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
++        var result: [ChatToolDefinition] = []
++        for entry in connections {
++            for tool in entry.tools where entry.selectedTools.contains(tool.name) {
++                do {
++                    try await service.authorize(entry, tool: tool, context: context)
++                    if try await !hasUnknown(entry.id) {
++                        let id = tool.toolID(connectionID: entry.id, configurationID: entry.configurationID)
++                        result += definitions.filter { $0.name == id }
++                    }
++                } catch is CancellationError { throw CancellationError() } catch {}
++            }
++        }
++        return result
++    }
++    public func execute(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
++        do { return try await perform(call, context: context) }
++        catch is CancellationError { throw CancellationError() }
++        catch MCPError.uncertain { return .object(["state": .string("unknown"), "error": .string(MCPError.uncertain.localizedDescription)]) }
++        catch { return .object(["state": .string("failed"), "error": .string((error as? MCPError)?.localizedDescription ?? "MCP-действие не выполнено. Проверьте доступ и параметры.")]) }
++    }
++    private func perform(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
++        guard let entry = connections.first(where: { $0.toolIDs.contains(call.name) }),
++              let tool = entry.tools.first(where: { $0.toolID(connectionID: entry.id, configurationID: entry.configurationID) == call.name }),
++              let definition = definitions.first(where: { $0.name == call.name }) else { throw MCPError.accessChanged }
++        try validate(call, definition: definition)
++        try await service.authorize(entry, tool: tool, context: context)
++        let permission = WorkspacePermissionService(repository: repository, identity: identity)
++        let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id)
++        if let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) {
++            guard action.toolId == call.name, action.resource == entry.id.uuidString,
++                  try JSONDecoder().decode(ChatJSON.self, from: Data(action.parameters.utf8)) == call.arguments else { throw WorkspaceToolError.invalidArguments }
++            let projection = try await repository.projection(identity: identity)
++            if let invocation = projection.invocations.first(where: { $0.preparedActionId == actionID }), [.succeeded, .failed].contains(invocation.state), let result = invocation.result {
++                return try JSONDecoder().decode(ChatJSON.self, from: Data(result.utf8))
++            }
++            if [.denied, .expired].contains(action.state) { return .object(["state": .string("failed"), "error": .string("MCP-вызов не разрешён.")]) }
++            throw MCPError.uncertain
++        }
++        guard try await !hasUnknown(entry.id) else { throw MCPError.uncertain }
++        let (clientID, client) = try await service.open(entry)
++        do {
++            // Discovery is rechecked in the same session that will execute the confirmed call.
++            let live = try await client.tools()
++            guard live.first(where: { $0.name == tool.name }) == tool else { throw MCPError.accessChanged }
++            try await service.authorize(entry, tool: tool, context: context)
++            guard let source = try await repository.record(BlotV3.Message.self, id: context.sourceMessageID, workspaceID: identity.workspaceID),
++                  let agentID = context.agentID else { throw MCPError.accessChanged }
++            let taskID: UUID
++            if let id = context.taskID { taskID = id }
++            else { taskID = try await WorkspaceTaskService(repository: repository, identity: identity).create(commandID: UUID(),
++                conversationID: source.conversationId, agentID: agentID, goal: "MCP: " + entry.name + " / " + tool.name,
++                executorDeviceID: identity.deviceID, runnable: false) }
++            let parameters = String(decoding: try WorkspaceCoding.encode(call.arguments), as: UTF8.self)
++            let details = "Сервер: \(entry.name)\nАдрес / программа: \(entry.configuration.endpoint)\nИнструмент: \(tool.name)\nУстройство: \(identity.deviceID.uuidString)\n\nАргументы:\n\(parameters)\n\nСервер получит эти данные и может изменить внешние ресурсы."
++            _ = try await permission.prepare(commandID: actionID, taskID: taskID,
++                draft: .init(toolID: call.name, resource: entry.id.uuidString, parametersJSON: parameters,
++                    consequences: "MCP: \(entry.name) / \(tool.name). Сервер получит точные параметры действия и может изменить внешние ресурсы."), expiresAt: Date().addingTimeInterval(600))
++            guard let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) else { throw MCPError.uncertain }
++            do {
++                guard try await confirm("MCP: " + entry.name + " / " + tool.name, details) else { throw MCPError.denied }
++                try _Concurrency.Task.checkCancellation()
++                try await service.authorize(entry, tool: tool, context: context)
++                guard try await !hasUnknown(entry.id) else { throw MCPError.uncertain }
++                guard try await client.tools().first(where: { $0.name == tool.name }) == tool else { throw MCPError.accessChanged }
++                try await service.authorize(entry, tool: tool, context: context)
++            } catch {
++                try? await permission.deny(commandID: UUID(), actionID: actionID, expectedVersion: action.metadata.version)
++                if context.taskID == nil { try? await WorkspaceTaskService(repository: repository, identity: identity).cancel(commandID: UUID(), taskID: taskID) }
++                throw error
++            }
++            _ = try await permission.approve(commandID: UUID(), actionID: actionID, expectedVersion: action.metadata.version, digest: action.digest)
++            let outcome = try await permission.begin(actionID: actionID, digest: action.digest)
++            guard outcome.applied else { throw MCPError.uncertain }
++            do {
++                try await service.authorize(entry, tool: tool, context: context)
++                try _Concurrency.Task.checkCancellation()
++                let raw = redact(try await client.call(name: tool.name, arguments: call.arguments), configuration: entry.configuration)
++                let failed = raw.mcpFields["isError"] == .bool(true)
++                let result = ChatJSON.object(["state": .string(failed ? "failed" : "succeeded"), "untrusted_content": raw])
++                try await permission.finish(commandID: UUID(), invocationID: outcome.resultID, state: failed ? .failed : .succeeded,
++                    result: String(decoding: try WorkspaceCoding.encode(result), as: UTF8.self))
++                if context.taskID == nil { try? await WorkspaceTaskService(repository: repository, identity: identity).completeActionTask(taskID: taskID) }
++                await service.close(clientID)
++                return result
++            } catch {
++                try? await permission.finish(commandID: UUID(), invocationID: outcome.resultID, state: .unknown)
++                if error is CancellationError { throw error }; throw MCPError.uncertain
++            }
++        } catch { await service.close(clientID); throw error }
++    }
++    private func hasUnknown(_ id: UUID) async throws -> Bool {
++        let projection = try await repository.projection(identity: identity)
++        let actions = Set(projection.actions.filter { $0.resource == id.uuidString && $0.toolId.hasPrefix("mcp_") && $0.execution.executorDeviceId == identity.deviceID }.map(\.metadata.id))
++        return projection.invocations.contains { actions.contains($0.preparedActionId) && $0.state == .unknown }
++    }
++    private func redact(_ value: ChatJSON, configuration: MCPConfiguration) -> ChatJSON {
++        let secrets = configuration.secrets
++        func clean(_ value: ChatJSON) -> ChatJSON {
++            switch value {
++            case .string(let text): return .string(secrets.reduce(text) { $0.replacingOccurrences(of: $1, with: "[redacted]") })
++            case .object(let fields):
++                var result: [String: ChatJSON] = [:]
++                for (key, value) in fields { result[secrets.reduce(key) { $0.replacingOccurrences(of: $1, with: "[redacted]") }] = clean(value) }
++                return .object(result)
++            case .array(let values): return .array(values.map(clean))
++            default: return value
++            }
++        }
++        return clean(value)
++    }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/MCPTypes.swift
+@@ -0,0 +1,97 @@
++import CryptoKit
++import Foundation
++
++public enum MCPError: Error, Equatable, Sendable, LocalizedError {
++    case configuration, unavailable, protocolViolation, version, timeout, responseTooLarge, remote(Int), http(Int), accessChanged, uncertain, denied
++    public var errorDescription: String? {
++        switch self {
++        case .configuration: "Проверьте адрес, команду и параметры MCP-сервера. Для сети требуется HTTPS, для stdio — явное доверие."
++        case .unavailable: "MCP-сервер недоступен. Проверьте подключение и права запуска."
++        case .protocolViolation: "MCP-сервер вернул некорректное сообщение."
++        case .version: "Сервер не поддерживает MCP 2025-11-25 или инструменты."
++        case .timeout: "MCP-сервер не ответил вовремя."
++        case .responseTooLarge: "Ответ MCP-сервера превышает допустимый размер."
++        case .remote(let code): "MCP-сервер отклонил запрос (\(code))."
++        case .http(let code): "MCP-сервер вернул HTTP \(code). Проверьте адрес и токен."
++        case .accessChanged: "Доступ или схема MCP изменились. Проверьте сервер и заново выберите инструменты."
++        case .uncertain: "Исход MCP-действия неизвестен. Проверьте результат на сервере перед новыми вызовами."
++        case .denied: "Пользователь отклонил MCP-вызов."
++        }
++    }
++}
++
++public struct MCPConfiguration: Codable, Equatable, Sendable {
++    public enum Transport: String, Codable, Sendable { case http, stdio }
++    public var transport: Transport
++    public var endpoint: String
++    public var arguments: [String]
++    public var workingDirectory: String
++    public var environment: [String: String]
++    public var bearerToken: String
++    public var timeout: Double
++    public var trustedLocalProcess: Bool
++    public var executableBookmark: Data?
++    public var directoryBookmark: Data?
++    public init(transport: Transport = .http, endpoint: String = "", arguments: [String] = [], workingDirectory: String = "",
++                environment: [String: String] = [:], bearerToken: String = "", timeout: Double = 60, trustedLocalProcess: Bool = false) {
++        self.transport = transport; self.endpoint = endpoint; self.arguments = arguments; self.workingDirectory = workingDirectory
++        self.environment = environment; self.bearerToken = bearerToken; self.timeout = timeout; self.trustedLocalProcess = trustedLocalProcess
++    }
++    public func validate() throws {
++        guard (1...300).contains(timeout), endpoint.utf8.count <= 2048, arguments.count <= 100,
++              arguments.allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }),
++              environment.count <= 50, environment.allSatisfy({ key, value in
++                  key.range(of: #"^[A-Za-z_][A-Za-z0-9_]*$"#, options: .regularExpression) != nil && value.utf8.count <= 8192 && !value.contains("\0")
++              }), bearerToken.utf8.count <= 8192, !bearerToken.contains(where: { $0.isNewline }) else { throw MCPError.configuration }
++        switch transport {
++        case .http:
++            guard let url = URL(string: endpoint), url.scheme == "https" || url.scheme == "http" && ["localhost", "127.0.0.1", "[::1]"].contains(url.host),
++                  url.host != nil, url.user == nil, url.password == nil, url.fragment == nil, url.query == nil,
++                  arguments.isEmpty, environment.isEmpty, workingDirectory.isEmpty else { throw MCPError.configuration }
++        case .stdio:
++            #if os(macOS)
++            guard trustedLocalProcess, endpoint.hasPrefix("/"), workingDirectory.hasPrefix("/"),
++                  !endpoint.contains("\0"), !workingDirectory.contains("\0"), bearerToken.isEmpty else { throw MCPError.configuration }
++            #else
++            throw MCPError.configuration
++            #endif
++        }
++    }
++    var secrets: [String] { ([bearerToken] + Array(environment.values)).filter { !$0.isEmpty } }
++}
++
++public struct MCPTool: Codable, Equatable, Sendable, Identifiable {
++    public let name: String
++    public let description: String
++    public let inputSchema: ChatJSON
++    public var id: String { name }
++    init(_ json: ChatJSON) throws {
++        guard case .object(let fields) = json, case .string(let name) = fields["name"],
++              !name.isEmpty, name.utf8.count <= 128, case .object = fields["inputSchema"] else { throw MCPError.protocolViolation }
++        self.name = name; inputSchema = fields["inputSchema"]!
++        if case .string(let text) = fields["description"] { description = String(text.prefix(4000)) } else { description = name }
++    }
++    public func toolID(connectionID: UUID, configurationID: UUID) -> String {
++        let data = (try? WorkspaceCoding.encode(self)) ?? Data()
++        let digest = SHA256.hash(data: data).prefix(8).map { String(format: "%02x", $0) }.joined()
++        return "mcp_" + connectionID.uuidString.replacingOccurrences(of: "-", with: "").prefix(16) + "_" + configurationID.uuidString.prefix(8) + "_" + digest
++    }
++}
++
++extension ChatJSON {
++    var mcpFields: [String: ChatJSON] { if case .object(let fields) = self { fields } else { [:] } }
++    var mcpString: String? { if case .string(let text) = self { text } else { nil } }
++    func mcpContains(_ strings: [String]) -> Bool {
++        switch self {
++        case .string(let text): strings.contains(where: text.contains)
++        case .array(let values): values.contains { $0.mcpContains(strings) }
++        case .object(let fields): fields.contains { key, value in strings.contains(where: key.contains) || value.mcpContains(strings) }
++        default: false
++        }
++    }
++}
++
++public protocol MCPTransport: Sendable {
++    func exchange(_ message: ChatJSON) async throws -> ChatJSON?
++    func close() async
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceMCPService.swift
+@@ -0,0 +1,216 @@
++import BlotDomain
++import Foundation
++
++public struct MCPInspection: Sendable {
++    public let id: UUID
++    public let name: String
++    public let tools: [MCPTool]
++    let configurationID: UUID
++    let configuration: MCPConfiguration
++}
++
++public struct MCPAccess: Sendable, Identifiable {
++    public let id: UUID
++    public let name: String
++    public let tools: [MCPTool]
++    public let selectedTools: Set<String>
++    public let agentIDs: Set<UUID>
++    public let enabled: Bool
++}
++
++struct MCPLocalConnection: Codable, Sendable {
++    let id: UUID
++    let name: String
++    let configurationID: UUID
++    let configuration: MCPConfiguration
++    let tools: [MCPTool]
++    var selectedTools: Set<String>
++    var agentIDs: Set<UUID>
++    var enabled: Bool
++    var toolIDs: [String] { tools.filter { selectedTools.contains($0.name) }.map { $0.toolID(connectionID: id, configurationID: configurationID) } }
++}
++
++/// Authority and secrets are device-only. Replicated McpConnection rows cannot start a process or grant access.
++public actor WorkspaceMCPService {
++    private let repository: WorkspaceRepository
++    private let identity: WorkspaceIdentity
++    private let credentials: any WorkspaceCredentialStore
++    private let connect: @Sendable (MCPConfiguration) throws -> MCPClient
++    private var connections: [MCPLocalConnection]?
++    private var mutating = false
++    private var suspended = false
++    private var clients: [UUID: (UUID, MCPClient)] = [:]
++    public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, credentials: any WorkspaceCredentialStore,
++                connect: @escaping @Sendable (MCPConfiguration) throws -> MCPClient = { try MCPClient.connect(configuration: $0) }) {
++        self.repository = repository; self.identity = identity; self.credentials = credentials; self.connect = connect
++    }
++    private var key: String { "mcp:" + identity.ownerID.uuidString + ":" + identity.workspaceID.uuidString + ":" + identity.deviceID.uuidString }
++    private func load() async throws -> [MCPLocalConnection] {
++        if let connections { return connections }
++        let data = try await credentials.read(key)
++        let loaded = try data.map { try WorkspaceCoding.decode([MCPLocalConnection].self, from: $0) } ?? []
++        if connections == nil { connections = loaded }
++        return connections ?? []
++    }
++    private func persist(_ values: [MCPLocalConnection]) async throws {
++        // Fail closed even if the credential store becomes unavailable.
++        connections = values
++        try await credentials.write(WorkspaceCoding.encode(values), name: key)
++    }
++    public func inspect(name: String, configuration: MCPConfiguration) async throws -> MCPInspection {
++        guard !suspended else { throw MCPError.unavailable }
++        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 200 else { throw MCPError.configuration }
++        try configuration.validate()
++        let id = UUID(), client = try connect(configuration)
++        clients[id] = (id, client)
++        do {
++            let tools = try await client.tools(); await client.close(); clients[id] = nil
++            guard !suspended else { throw MCPError.unavailable }
++            try Self.checkCatalog(tools, configuration: configuration)
++            return MCPInspection(id: id, name: name, tools: tools, configurationID: UUID(), configuration: configuration)
++        } catch { await client.close(); clients[id] = nil; throw error }
++    }
++    public func access() async throws -> [MCPAccess] {
++        try await load().map { .init(id: $0.id, name: $0.name, tools: $0.tools, selectedTools: $0.selectedTools, agentIDs: $0.agentIDs, enabled: $0.enabled) }
++    }
++    @discardableResult
++    public func save(_ inspection: MCPInspection, selectedTools: Set<String>, agentIDs: Set<UUID>) async throws -> UUID {
++        try await saveConnection(.init(id: inspection.id, name: inspection.name, configurationID: inspection.configurationID,
++            configuration: inspection.configuration, tools: inspection.tools, selectedTools: selectedTools, agentIDs: agentIDs, enabled: false))
++        return inspection.id
++    }
++    public func setAccess(id: UUID, selectedTools: Set<String>, agentIDs: Set<UUID>) async throws {
++        guard var entry = try await load().first(where: { $0.id == id }) else { throw MCPError.unavailable }
++        entry.selectedTools = selectedTools; entry.agentIDs = agentIDs
++        try await saveConnection(entry)
++    }
++    private func saveConnection(_ entry: MCPLocalConnection) async throws {
++        guard !mutating, !suspended else { throw MCPError.accessChanged }; mutating = true; defer { mutating = false }
++        guard !entry.selectedTools.isEmpty, !entry.agentIDs.isEmpty,
++              entry.selectedTools.isSubset(of: Set(entry.tools.map(\.name))) else { throw MCPError.configuration }
++        var values = try await load()
++        guard values.count < 30 || values.contains(where: { $0.id == entry.id }) else { throw MCPError.configuration }
++        let previous = values.first { $0.id == entry.id }
++        var disabled = entry; disabled.enabled = false
++        values.removeAll { $0.id == entry.id }; values.append(disabled)
++        try await persist(values)
++        await closeClients(connectionID: entry.id)
++        guard !suspended else { throw MCPError.unavailable }
++        struct Input: Encodable { let id: UUID; let tools: [String]; let agents: [UUID] }
++        let commandID = UUID()
++        let command = try WorkspaceCommand(type: "mcp.save", workspaceID: identity.workspaceID,
++            payload: Input(id: entry.id, tools: entry.toolIDs.sorted(), agents: entry.agentIDs.sorted { $0.uuidString < $1.uuidString })).data()
++        _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
++            try tx.requireResolved(kind: "McpConnection", id: entry.id)
++            let old = try tx.record(BlotV3.McpConnection.self, id: entry.id)
++            let record = try BlotV3.McpConnection(metadata: tx.metadata(id: entry.id, now: Date(), replacing: old?.metadata), name: entry.name,
++                transport: entry.configuration.transport == .http ? "STREAMABLE_HTTP" : "STDIO",
++                endpoint: "device:" + tx.identity.deviceID.uuidString, toolIds: entry.toolIDs.sorted(), state: .connected)
++            for agentID in entry.agentIDs.union(previous?.agentIDs ?? []) {
++                try Self.updateAgent(tx, id: agentID, removing: Set((previous?.toolIDs ?? []) + (old?.toolIds ?? [])), adding: entry.agentIDs.contains(agentID) ? entry.toolIDs : [])
++            }
++            try tx.put(record, expectedVersion: old?.metadata.version ?? 0)
++            return entry.id
++        }
++        guard !suspended else { throw MCPError.unavailable }
++        disabled.enabled = true
++        values.removeAll { $0.id == entry.id }; values.append(disabled)
++        do { try await persist(values) }
++        catch { connections = values.map { var value = $0; if value.id == entry.id { value.enabled = false }; return value }; throw error }
++    }
++    public func refresh(id: UUID) async throws {
++        guard !mutating, !suspended, var entry = try await load().first(where: { $0.id == id }) else { throw MCPError.accessChanged }
++        mutating = true; defer { mutating = false }
++        // Refresh revokes all access before making a network request. The owner must select it again.
++        entry.enabled = false
++        var values = try await load(); values.removeAll { $0.id == id }; values.append(entry); try await persist(values)
++        await closeClients(connectionID: id)
++        let client = try connect(entry.configuration); let sessionID = UUID(); clients[sessionID] = (id, client)
++        do {
++            let tools = try await client.tools(); await client.close(); clients[sessionID] = nil
++            guard !suspended else { throw MCPError.unavailable }
++            try Self.checkCatalog(tools, configuration: entry.configuration)
++            let fresh = MCPLocalConnection(id: id, name: entry.name, configurationID: UUID(), configuration: entry.configuration,
++                tools: tools, selectedTools: [], agentIDs: entry.agentIDs, enabled: false)
++            values.removeAll { $0.id == id }; values.append(fresh); try await persist(values)
++        } catch { await client.close(); clients[sessionID] = nil; throw error }
++    }
++    public func disconnect(id: UUID) async throws {
++        guard !mutating else { throw MCPError.accessChanged }; mutating = true; defer { mutating = false }
++        var values = try await load()
++        guard let entry = values.first(where: { $0.id == id }) else { throw MCPError.unavailable }
++        values.removeAll { $0.id == id }; try await persist(values)
++        await closeClients(connectionID: id)
++        struct Input: Encodable { let id: UUID }
++        let command = try WorkspaceCommand(type: "mcp.disconnect", workspaceID: identity.workspaceID, payload: Input(id: id)).data()
++        _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
++            for agentID in entry.agentIDs { try Self.updateAgent(tx, id: agentID, removing: Set(entry.toolIDs), adding: []) }
++            if let old = try tx.record(BlotV3.McpConnection.self, id: id) { try tx.delete(old) }
++            return id
++        }
++    }
++    public func provider(confirm: @escaping @Sendable (String, String) async throws -> Bool) async throws -> MCPToolProvider {
++        let records = try await repository.records(BlotV3.McpConnection.self, workspaceID: identity.workspaceID)
++        let entries = records.isEmpty ? [] : try await load().filter(\.enabled)
++        return MCPToolProvider(repository: repository, identity: identity, service: self, connections: entries, confirm: confirm)
++    }
++    func authorize(_ entry: MCPLocalConnection, tool: MCPTool, context: WorkspaceToolContext) async throws {
++        guard !suspended, !mutating, let current = try await load().first(where: { $0.id == entry.id }), current.enabled,
++              current.configurationID == entry.configurationID, current.tools.contains(tool), current.selectedTools.contains(tool.name),
++              let agentID = context.agentID, current.agentIDs.contains(agentID) else { throw MCPError.accessChanged }
++        let name = tool.toolID(connectionID: entry.id, configurationID: entry.configurationID)
++        let projection = try await repository.projection(identity: identity)
++        guard let source = projection.messages.first(where: { $0.metadata.id == context.sourceMessageID }), source.metadata.ownerId == identity.ownerID,
++              WorkspaceToolRestrictions(userRequest: source.content).allows(operation: "send"),
++              WorkspaceToolRestrictions(userRequest: source.content).allows(operation: "update"),
++              context.allowedToolIDs.contains(name),
++              try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection)?.toolIds.contains(name) == true,
++              let record = try await repository.record(BlotV3.McpConnection.self, id: entry.id, workspaceID: identity.workspaceID),
++              record.state == .connected, record.endpoint == "device:" + identity.deviceID.uuidString, record.toolIds.contains(name),
++              !projection.conflicts.contains(where: { !$0.resolved && ($0.recordId == entry.id || $0.recordId == agentID) }) else { throw MCPError.accessChanged }
++        if let taskID = context.taskID {
++            guard let task = projection.tasks.first(where: { $0.metadata.id == taskID }), task.execution.executorDeviceId == identity.deviceID,
++                  !WorkspaceTaskService.terminal(task.state), task.state != .paused else { throw MCPError.accessChanged }
++        }
++    }
++    func open(_ entry: MCPLocalConnection) throws -> (UUID, MCPClient) {
++        guard !suspended, !mutating, connections?.contains(where: { $0.id == entry.id && $0.enabled && $0.configurationID == entry.configurationID }) == true else { throw MCPError.accessChanged }
++        let id = UUID(), client = try connect(entry.configuration); clients[id] = (entry.id, client); return (id, client)
++    }
++    public func resolve(invocationID: UUID, succeeded: Bool) async throws {
++        let projection = try await repository.projection(identity: identity)
++        guard let invocation = projection.invocations.first(where: { $0.metadata.id == invocationID && $0.state == .unknown && $0.execution.executorDeviceId == identity.deviceID }),
++              let action = projection.actions.first(where: { $0.metadata.id == invocation.preparedActionId && $0.toolId.hasPrefix("mcp_") }),
++              try await load().contains(where: { $0.id.uuidString == action.resource }) else { throw MCPError.accessChanged }
++        let result = ChatJSON.object(["state": .string(succeeded ? "succeeded" : "failed"), "owner_verified": .bool(true)])
++        try await WorkspacePermissionService(repository: repository, identity: identity).finish(commandID: UUID(), invocationID: invocationID,
++            state: succeeded ? .succeeded : .failed, result: String(decoding: try WorkspaceCoding.encode(result), as: UTF8.self))
++    }
++    func close(_ id: UUID) async { guard let (_, client) = clients.removeValue(forKey: id) else { return }; await client.close() }
++    private func closeClients(connectionID: UUID) async {
++        for id in clients.filter({ $0.value.0 == connectionID }).map(\.key) { await close(id) }
++    }
++    public func stop() async { suspended = true; for id in Array(clients.keys) { await close(id) } }
++    public func resume() { suspended = false }
++    private static func checkCatalog(_ tools: [MCPTool], configuration: MCPConfiguration) throws {
++        let data = try WorkspaceCoding.encode(tools)
++        let json = try JSONDecoder().decode(ChatJSON.self, from: data)
++        guard !json.mcpContains(configuration.secrets) else { throw MCPError.protocolViolation }
++    }
++    private static func updateAgent(_ tx: WorkspaceTransaction, id: UUID, removing: Set<String>, adding: [String]) throws {
++        guard let agent = try tx.record(BlotV3.AgentProfile.self, id: id) else {
++            if adding.isEmpty { return }; throw WorkspaceStorageError.missingRecord
++        }
++        try tx.requireResolved(kind: "AgentProfile", id: id)
++        guard let configurationID = agent.configurationId else { throw WorkspaceStorageError.invalidRecord }
++        let configuration = try tx.require(BlotV3.AgentConfigurationRevision.self, id: configurationID)
++        let tools = Set(configuration.toolIds).subtracting(removing).union(adding).sorted()
++        guard tools.count <= 100 else { throw WorkspaceStorageError.invalidParameters }
++        let revisionID = UUID()
++        try tx.put(BlotV3.AgentConfigurationRevision(metadata: tx.metadata(id: revisionID, now: Date()), agentId: id,
++            revision: agent.metadata.version + 1, instructions: configuration.instructions, toolIds: tools, modelId: configuration.modelId), expectedVersion: 0)
++        try tx.put(BlotV3.AgentProfile(metadata: tx.metadata(id: id, now: Date(), replacing: agent.metadata), name: agent.name, roleId: agent.roleId,
++            avatarShape: agent.avatarShape, avatarColor: agent.avatarColor, instructions: agent.instructions, modelId: agent.modelId,
++            accessMode: agent.accessMode, configurationId: revisionID), expectedVersion: agent.metadata.version)
++    }
++}
+--- /dev/null
++++ b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/MCPHTTPTests.swift
+@@ -0,0 +1,118 @@
++#if os(macOS)
++import Foundation
++import Testing
++@testable import BlotWorkspace
++
++/// An independent Python standard-library server exercises actual sockets, HTTP headers and SSE framing.
++private final class MCPHTTPFixture {
++    let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++    let process = Process()
++    let endpoint: String
++    init() async throws {
++        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
++        let portFile = directory.appendingPathComponent("port")
++        let script = #"""
++import json,sys,threading,time
++from http.server import ThreadingHTTPServer,BaseHTTPRequestHandler
++from pathlib import Path
++root=Path(sys.argv[1])
++class Handler(BaseHTTPRequestHandler):
++    def log_message(self,*args): pass
++    def do_POST(self):
++        m=json.loads(self.rfile.read(int(self.headers['Content-Length'])))
++        with (root/'requests').open('a') as f: f.write(json.dumps({'path':self.path,'body':m,'auth':self.headers.get('Authorization'),'version':self.headers.get('MCP-Protocol-Version'),'session':self.headers.get('Mcp-Session-Id')})+'\n')
++        if self.path=='/redirect':
++            self.send_response(307);self.send_header('Location','/leak');self.end_headers();return
++        if self.path=='/auth': self.send_response(401);self.end_headers();return
++        method=m.get('method')
++        if 'id' not in m or method is None: self.send_response(202);self.end_headers();return
++        if method=='initialize':
++            r={'protocolVersion':'2024-11-05' if self.path=='/version' else '2025-11-25','capabilities':{'tools':{}}}
++        else:
++            if self.headers.get('Authorization')!='Bearer fixture-token' or self.headers.get('MCP-Protocol-Version')!='2025-11-25' or self.headers.get('Mcp-Session-Id')!='fixture-session':
++                self.send_response(400);self.end_headers();return
++            if method=='tools/list':
++                if m.get('params',{}).get('cursor')=='second': r={'tools':[{'name':'second','inputSchema':{'type':'object'}}]}
++                else: r={'tools':[{'name':'echo','description':'Independent HTTP echo','inputSchema':{'type':'object'}}],'nextCursor':'second'}
++            elif method=='tools/call':
++                if self.path=='/large': r={'content':[{'type':'text','text':'x'*1100000}]}
++                else: r={'content':[{'type':'text','text':'socket result'}],'structuredContent':{'ok':True},'isError':False}
++            else: r={}
++        response={'jsonrpc':'2.0','id':m['id'],'result':r}
++        if self.path=='/wrong-id': response['id']='wrong'
++        self.send_response(200)
++        self.send_header('Mcp-Session-Id','fixture-session')
++        self.send_header('Content-Type','text/event-stream' if self.path=='/sse' else 'application/json')
++        self.end_headers()
++        if self.path=='/sse':
++            ping={'jsonrpc':'2.0','id':'server-ping','method':'ping'}
++            self.wfile.write(('data: '+json.dumps(ping)+'\r\n\r\n').encode());self.wfile.flush()
++            self.wfile.write(('event: message\r\ndata: '+json.dumps(response)+'\r\n\r\n').encode());self.wfile.flush()
++        else: self.wfile.write(json.dumps(response).encode())
++server=ThreadingHTTPServer(('127.0.0.1',0),Handler)
++(root/'port').write_text(str(server.server_port))
++server.serve_forever()
++"""#
++        process.executableURL = URL(fileURLWithPath: "/usr/bin/python3")
++        process.arguments = ["-u", "-c", script, directory.path]; process.environment = [:]
++        process.standardOutput = FileHandle.nullDevice; process.standardError = FileHandle.nullDevice
++        try process.run()
++        var port: String?
++        for _ in 0..<100 {
++            if let value = try? String(contentsOf: portFile, encoding: .utf8), Int(value) != nil { port = value; break }
++            if !process.isRunning { break }
++            try await _Concurrency.Task.sleep(for: .milliseconds(25))
++        }
++        guard let port else { if process.isRunning { process.terminate() }; throw MCPError.unavailable }
++        endpoint = "http://127.0.0.1:" + port
++    }
++    func client(_ path: String) throws -> MCPClient {
++        try MCPClient.connect(configuration: .init(endpoint: endpoint + path, bearerToken: "fixture-token", timeout: 3))
++    }
++    func stop() {
++        if process.isRunning { process.terminate(); process.waitUntilExit() }
++        cleanupWorkspaceTestStorage(directory)
++    }
++    func requests() throws -> [ChatJSON] {
++        try String(contentsOf: directory.appendingPathComponent("requests"), encoding: .utf8).split(separator: "\n").map { try JSONDecoder().decode(ChatJSON.self, from: Data($0.utf8)) }
++    }
++}
++
++@Test func mcpRealHTTPAndSSESupportSessionsPaginationAndServerPing() async throws {
++    let server = try await MCPHTTPFixture(); defer { server.stop() }
++    for path in ["/json", "/sse"] {
++        let client = try server.client(path)
++        do {
++            #expect(try await client.tools().map(\.name) == ["echo", "second"])
++            let result = try await client.call(name: "echo", arguments: .object([:]))
++            #expect(result.mcpFields["structuredContent"] == .object(["ok": .bool(true)]))
++            await client.close()
++        } catch { await client.close(); throw error }
++    }
++    let requests = try server.requests()
++    #expect(requests.contains { $0.mcpFields["body"]?.mcpFields["id"] == .string("server-ping") && $0.mcpFields["body"]?.mcpFields["result"] != nil })
++    #expect(requests.allSatisfy { $0.mcpFields["auth"] == .string("Bearer fixture-token") })
++}
++
++@Test func mcpHTTPRejectsRedirectsOldVersionsWrongIDsAndOversizedResults() async throws {
++    let server = try await MCPHTTPFixture(); defer { server.stop() }
++    for (path, expected) in [("/redirect", MCPError.http(307)), ("/auth", .http(401)), ("/version", .version), ("/wrong-id", .protocolViolation)] {
++        let client = try server.client(path)
++        await #expect(throws: expected) { _ = try await client.tools() }
++        await client.close()
++    }
++    let large = try server.client("/large")
++    _ = try await large.tools()
++    await #expect(throws: MCPError.responseTooLarge) { _ = try await large.call(name: "echo", arguments: .object([:])) }
++    await large.close()
++    #expect(try !server.requests().contains { $0.mcpFields["path"] == .string("/leak") })
++}
++
++@Test func mcpConfigurationRejectsCredentialURLsRemotePlaintextAndUntrustedProcesses() throws {
++    for endpoint in ["http://example.com/mcp", "https://user:password@example.com/mcp", "https://example.com/mcp?key=secret", "file:///tmp/mcp"] {
++        #expect(throws: MCPError.configuration) { try MCPConfiguration(endpoint: endpoint).validate() }
++    }
++    #expect(throws: MCPError.configuration) { try MCPConfiguration(transport: .stdio, endpoint: "/usr/bin/python3", workingDirectory: "/tmp").validate() }
++    try MCPConfiguration(endpoint: "http://127.0.0.1:8000/mcp").validate()
++}
++#endif
+--- /dev/null
++++ b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/MCPTests.swift
+@@ -0,0 +1,223 @@
++import BlotDomain
++import Foundation
++import Testing
++@testable import BlotWorkspace
++
++private actor MCPCredentials: WorkspaceCredentialStore {
++    var values: [String: Data] = [:]
++    func read(_ name: String) -> Data? { values[name] }
++    func write(_ value: Data, name: String) { values[name] = value }
++    func remove(_ name: String) { values[name] = nil }
++}
++
++private actor MCPTestTransport: MCPTransport {
++    var calls = 0
++    var changed = false
++    var unknown = false
++    var errorResult = false
++    var returnedText: String?
++    var schema: ChatJSON { .object(["type": .string("object"), "properties": .object(["text": .object(["type": .string("string"), "minLength": .number(changed ? 2 : 1)])]), "required": .array([.string("text")]), "additionalProperties": .bool(false)]) }
++    func change() { changed = true }
++    func loseResponse() { unknown = true }
++    func businessError() { errorResult = true }
++    func echoCredential() { returnedText = "credential-value" }
++    func exchange(_ message: ChatJSON) async throws -> ChatJSON? {
++        let fields = message.mcpFields
++        guard let id = fields["id"] else { return nil }
++        let result: ChatJSON
++        switch fields["method"]?.mcpString {
++        case "initialize": result = .object(["protocolVersion": .string(MCPClient.version), "capabilities": .object(["tools": .object([:])])])
++        case "tools/list": result = .object(["tools": .array([.object(["name": .string("echo"), "description": .string("Echo text"), "inputSchema": schema])])])
++        case "tools/call":
++            calls += 1
++            if unknown { throw MCPError.unavailable }
++            result = .object(["isError": .bool(errorResult), "content": .array([.object(["type": .string("text"), "text": returnedText.map(ChatJSON.string) ?? fields["params"]?.mcpFields["arguments"]?.mcpFields["text"] ?? .string("")])])])
++        default: throw MCPError.protocolViolation
++        }
++        return .object(["jsonrpc": .string("2.0"), "id": id, "result": result])
++    }
++    func close() {}
++}
++
++private struct MCPHarness {
++    let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++    let repository: WorkspaceRepository
++    let identity: WorkspaceIdentity
++    let credentials = MCPCredentials()
++    let transport = MCPTestTransport()
++    let service: WorkspaceMCPService
++    let agent: UUID
++    let conversation: UUID
++    let source: UUID
++    init(request: String = "Use the MCP tool") async throws {
++        repository = try await workspaceTestRepository(url: folder.appendingPathComponent("workspace.sqlite"))
++        identity = try await repository.localIdentity()
++        let server = transport
++        service = WorkspaceMCPService(repository: repository, identity: identity, credentials: credentials, connect: { _ in MCPClient(transport: server) })
++        agent = try await WorkspaceAgentService(repository: repository, identity: identity).save(commandID: UUID(), draft: .init(name: "MCP agent", instructions: "Use approved tools"))
++        conversation = try await WorkspaceChatService(repository: repository, identity: identity).createConversation(commandID: UUID(), title: "MCP", agentID: agent)
++        source = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: request)
++    }
++    func connect(token: String = "") async throws -> UUID {
++        let inspection = try await service.inspect(name: "Test MCP", configuration: .init(endpoint: "https://example.test/mcp", bearerToken: token))
++        return try await service.save(inspection, selectedTools: ["echo"], agentIDs: [agent])
++    }
++    func context(_ definition: ChatToolDefinition) -> WorkspaceToolContext { .init(sourceMessageID: source, taskID: nil, allowedToolIDs: [definition.name], agentID: agent) }
++}
++
++@Test func mcpCallsRequireConfirmationAndReplayUsesDurableResult() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    _ = try await h.connect()
++    let provider = try await h.service.provider { _, details in #expect(details.contains("hello")); return true }
++    let definition = try #require(provider.definitions.first)
++    let registry = try WorkspaceToolRegistry(providers: [provider])
++    let call = ChatToolCall(id: "one", name: definition.name, arguments: .object(["text": .string("hello")]))
++    let first = try await registry.execute(call, context: h.context(definition))
++    let replay = try await registry.execute(call, context: h.context(definition))
++    #expect(first == replay); #expect(first.mcpFields["state"] == .string("succeeded")); #expect(await h.transport.calls == 1)
++    let projection = try await h.repository.projection(identity: h.identity)
++    #expect(projection.invocations.count == 1); #expect(projection.invocations.first?.state == .succeeded)
++    let record = try #require(try await h.repository.records(BlotV3.McpConnection.self, workspaceID: h.identity.workspaceID).first)
++    #expect(record.endpoint == "device:" + h.identity.deviceID.uuidString)
++    #expect(!String(decoding: try JSONEncoder().encode(record), as: UTF8.self).contains("example.test"))
++}
++
++@Test func mcpDenialChangedArgumentsAndSchemaNeverReachTool() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    _ = try await h.connect()
++    let provider = try await h.service.provider { _, _ in false }
++    let definition = try #require(provider.definitions.first)
++    let call = ChatToolCall(id: "deny", name: definition.name, arguments: .object(["text": .string("hello")]))
++    _ = try await provider.execute(call, context: h.context(definition))
++    #expect(await h.transport.calls == 0)
++    let accepted = try await h.service.provider { _, _ in true }
++    let changed = ChatToolCall(id: "deny", name: definition.name, arguments: .object(["text": .string("different")]))
++    let changedResult = try await accepted.execute(changed, context: h.context(definition))
++    #expect(changedResult.mcpFields["state"] == .string("failed"))
++    await h.transport.change()
++    let schemaResult = try await accepted.execute(.init(id: "schema", name: definition.name, arguments: call.arguments), context: h.context(definition))
++    #expect(schemaResult.mcpFields["state"] == .string("failed")); #expect(await h.transport.calls == 0)
++}
++
++@Test func mcpUnknownOutcomeBlocksNewCallsUntilOwnerReconciles() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    let connectionID = try await h.connect()
++    let provider = try await h.service.provider { _, _ in true }
++    let definition = try #require(provider.definitions.first)
++    await h.transport.loseResponse()
++    let call = ChatToolCall(id: "lost", name: definition.name, arguments: .object(["text": .string("hello")]))
++    let result = try await provider.execute(call, context: h.context(definition))
++    #expect(result.mcpFields["state"] == .string("unknown"))
++    #expect(try await provider.availableDefinitions(context: h.context(definition)).isEmpty)
++    _ = try await provider.execute(.init(id: "other", name: call.name, arguments: call.arguments), context: h.context(definition))
++    #expect(await h.transport.calls == 1)
++    let projection = try await h.repository.projection(identity: h.identity)
++    let invocation = try #require(projection.invocations.first)
++    try await h.service.resolve(invocationID: invocation.metadata.id, succeeded: true)
++    #expect(try await !provider.availableDefinitions(context: h.context(definition)).isEmpty)
++    try await h.service.disconnect(id: connectionID)
++    #expect(try await provider.availableDefinitions(context: h.context(definition)).isEmpty)
++}
++
++@Test func mcpRevocationDuringConfirmationAndForeignReplicaCannotAuthorizeCalls() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    let id = try await h.connect()
++    let service = h.service, agent = h.agent
++    let provider = try await service.provider { _, _ in
++        try await service.refresh(id: id)
++        return true
++    }
++    let definition = try #require(provider.definitions.first)
++    _ = try await provider.execute(.init(id: "revoke", name: definition.name, arguments: .object(["text": .string("hello")])), context: h.context(definition))
++    #expect(await h.transport.calls == 0)
++    try await service.setAccess(id: id, selectedTools: ["echo"], agentIDs: [agent])
++    let other = try await workspaceTestRepository(url: h.folder.appendingPathComponent("other.sqlite"))
++    let otherIdentity = try await other.joinWorkspace(ownerID: h.identity.ownerID, workspaceID: h.identity.workspaceID)
++    try await other.installReplicaSnapshot(h.repository.replicaSnapshot(identity: h.identity), identity: otherIdentity)
++    let foreign = WorkspaceMCPService(repository: other, identity: otherIdentity, credentials: MCPCredentials())
++    #expect(try await foreign.provider { _, _ in true }.definitions.isEmpty)
++    let reopened = WorkspaceMCPService(repository: h.repository, identity: h.identity, credentials: h.credentials)
++    #expect(try await reopened.access().first?.enabled == true)
++    #expect(try await reopened.provider { _, _ in true }.definitions.count == 1)
++}
++
++@Test func mcpReadOnlyRequestsAndInvalidArgumentsCannotReachTool() async throws {
++    let h = try await MCPHarness(request: "Только чтение"); defer { cleanupWorkspaceTestStorage(h.folder) }
++    _ = try await h.connect()
++    let provider = try await h.service.provider { _, _ in true }
++    let definition = try #require(provider.definitions.first)
++    #expect(try await provider.availableDefinitions(context: h.context(definition)).isEmpty)
++    let registry = try WorkspaceToolRegistry(providers: [provider])
++    await #expect(throws: WorkspaceToolError.invalidArguments) {
++        _ = try await registry.execute(.init(id: "invalid", name: definition.name, arguments: .object(["text": .number(1)])), context: h.context(definition))
++    }
++    #expect(await h.transport.calls == 0)
++}
++
++@Test func mcpSchemasAcceptUnionsReferencesAndAdditionalProperties() throws {
++    let schema: ChatJSON = .object(["type": .string("object"), "$defs": .object(["nullable": .object(["type": .array([.string("string"), .string("null")])])]),
++        "properties": .object(["value": .object(["$ref": .string("#/$defs/nullable")])]), "additionalProperties": .object(["type": .string("integer")])])
++    try MCPJSONSchema.validate(.object(["value": .null, "extra": .number(4)]), schema: schema)
++    #expect(throws: WorkspaceToolError.invalidArguments) { try MCPJSONSchema.validate(.object(["extra": .string("no")]), schema: schema) }
++}
++
++@Test func mcpToolErrorsStayFailedAndCredentialEchoIsRedactedBeforePersistence() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    _ = try await h.connect(token: "credential-value")
++    await h.transport.businessError(); await h.transport.echoCredential()
++    let provider = try await h.service.provider { _, _ in true }, definition = try #require(provider.definitions.first)
++    let result = try await provider.execute(.init(id: "error", name: definition.name, arguments: .object(["text": .string("hello")])), context: h.context(definition))
++    #expect(result.mcpFields["state"] == .string("failed"))
++    let invocation = try #require(try await h.repository.projection(identity: h.identity).invocations.first)
++    #expect(invocation.state == .failed); #expect(invocation.result?.contains("credential-value") == false)
++    #expect(invocation.result?.contains("[redacted]") == true)
++}
++
++@Test func mcpSchemaChangingWhileOwnerConfirmsCannotExecute() async throws {
++    let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
++    _ = try await h.connect()
++    let server = h.transport
++    let provider = try await h.service.provider { _, _ in await server.change(); return true }
++    let definition = try #require(provider.definitions.first)
++    let result = try await provider.execute(.init(id: "change", name: definition.name, arguments: .object(["text": .string("hello")])), context: h.context(definition))
++    #expect(result.mcpFields["state"] == .string("failed")); #expect(await h.transport.calls == 0)
++}
++
++#if os(macOS)
++@Test func mcpRealStdioInitializesDiscoversCallsAndCancels() async throws {
++    let script = #"""
++import json,sys,time,os
++for line in sys.stdin:
++    m=json.loads(line)
++    if 'id' not in m: continue
++    method=m.get('method')
++    if method=='initialize': r={'protocolVersion':'2025-11-25','capabilities':{'tools':{}}}
++    elif method=='tools/list': r={'tools':[{'name':'echo','inputSchema':{'type':'object','properties':{}}}]}
++    elif method=='tools/call':
++        if m['params']['arguments'].get('wait'): time.sleep(10)
++        r={'content':[{'type':'text','text':'real '+str('HOME' not in os.environ)}]}
++    else: continue
++    print(json.dumps({'jsonrpc':'2.0','id':m['id'],'result':r}),flush=True)
++"""#
++    let config = MCPConfiguration(transport: .stdio, endpoint: "/usr/bin/python3", arguments: ["-u", "-c", script], workingDirectory: "/private/tmp", timeout: 2, trustedLocalProcess: true)
++    let client = try MCPClient.connect(configuration: config)
++    do {
++        #expect(try await client.tools().map(\.name) == ["echo"])
++        let result = try await client.call(name: "echo", arguments: .object([:]))
++        #expect(String(decoding: try JSONEncoder().encode(result), as: UTF8.self).contains("real True"))
++        let task = _Concurrency.Task { try await client.call(name: "echo", arguments: .object(["wait": .bool(true)])) }
++        try await _Concurrency.Task.sleep(for: .milliseconds(80)); task.cancel()
++        await #expect(throws: (any Error).self) { _ = try await task.value }
++        await client.close()
++    } catch { await client.close(); throw error }
++}
++
++@Test func mcpStdioTimeoutClosesANonresponsiveServer() async throws {
++    let client = try MCPClient.connect(configuration: .init(transport: .stdio, endpoint: "/usr/bin/python3",
++        arguments: ["-c", "import time; time.sleep(30)"], workingDirectory: "/private/tmp", timeout: 1, trustedLocalProcess: true))
++    let start = ContinuousClock.now
++    await #expect(throws: MCPError.timeout) { _ = try await client.tools() }
++    #expect(ContinuousClock.now - start < .seconds(3))
++    await client.close()
++}
++#endif
+--- /dev/null
++++ b/scripts/verify-mcp-execution.swift
+@@ -0,0 +1,96 @@
++import BlotAppleIntegrations
++import BlotDomain
++import BlotWorkspace
++import Foundation
++
++private actor MCPVerificationCredentials: WorkspaceCredentialStore {
++    var values: [String: Data] = [:]
++    func read(_ name: String) -> Data? { values[name] }
++    func write(_ value: Data, name: String) { values[name] = value }
++    func remove(_ name: String) { values[name] = nil }
++}
++
++private struct MCPVerificationModel: ChatModel {
++    func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
++        AsyncThrowingStream { continuation in
++            if request.messages.last?.role == "tool" {
++                let result = request.messages.last!.content
++                precondition(result.contains("real MCP result") && result.contains("untrusted_content"), "Missing actual MCP tool result")
++                continuation.yield(.text("Completed using the real MCP server.")); continuation.yield(.finished(.stop))
++            } else {
++                guard let tool = request.tools.first(where: { $0.name.hasPrefix("mcp_") }) else {
++                    continuation.finish(throwing: MCPError.unavailable); return
++                }
++                continuation.yield(.toolCall(.init(id: "execute", name: tool.name, arguments: .object(["text": .string("request")]))))
++                continuation.yield(.finished(.toolCalls))
++            }
++            continuation.finish()
++        }
++    }
++}
++
++@main struct VerifyMCPExecution {
++    static func require(_ condition: Bool, _ message: String = "MCP verification failed") { precondition(condition, message) }
++    @MainActor static func wait(_ condition: () async throws -> Bool) async throws {
++        let end = ContinuousClock.now.advanced(by: .seconds(10))
++        while try await !condition(), ContinuousClock.now < end { try await _Concurrency.Task.sleep(for: .milliseconds(10)) }
++        require(try await condition(), "MCP verification timed out")
++    }
++    @MainActor static func approve(_ service: LocalWorkspaceService) async throws {
++        try await wait { service.appleIntegrations.interactions.pending != nil }
++        let pending = service.appleIntegrations.interactions.pending!
++        precondition(pending.title.contains("MCP") && pending.details.contains("request"))
++        service.appleIntegrations.interactions.finish(pending.id, result: .success(.bool(true)))
++    }
++    @MainActor static func main() async throws {
++        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: directory) }
++        let database = directory.appendingPathComponent("workspace.sqlite")
++        let repository = try WorkspaceRepository(url: database), identity = try await repository.localIdentity()
++        let credentials = MCPVerificationCredentials()
++        let agent = try await WorkspaceAgentService(repository: repository, identity: identity).save(commandID: UUID(),
++            draft: .init(name: "MCP worker", instructions: "Use the approved MCP tool", modelID: "compatible"))
++        let conversation = try await WorkspaceChatService(repository: repository, identity: identity).createConversation(commandID: UUID(), title: "MCP", agentID: agent)
++        let service = try LocalWorkspaceService(databaseURL: database, repository: repository, identity: identity,
++            maximumOutputTokens: 64, mcpCredentials: credentials, makeModel: { _ in MCPVerificationModel() })
++        _ = try await service.load()
++        let mcp = try await service.mcpService()
++        let script = #"""
++import json,sys
++for line in sys.stdin:
++    m=json.loads(line)
++    if 'id' not in m: continue
++    if m.get('method')=='initialize': r={'protocolVersion':'2025-11-25','capabilities':{'tools':{}}}
++    elif m.get('method')=='tools/list': r={'tools':[{'name':'echo','description':'Independent stdio tool','inputSchema':{'type':'object','properties':{'text':{'type':'string'}},'required':['text'],'additionalProperties':False}}]}
++    elif m.get('method')=='tools/call': r={'content':[{'type':'text','text':'real MCP result'}]}
++    else: continue
++    print(json.dumps({'jsonrpc':'2.0','id':m['id'],'result':r}),flush=True)
++"""#
++        let inspection = try await mcp.inspect(name: "Independent stdio MCP", configuration: .init(transport: .stdio,
++            endpoint: "/usr/bin/python3", arguments: ["-u", "-c", script], workingDirectory: directory.path, timeout: 5, trustedLocalProcess: true))
++        let connectionID = try await mcp.save(inspection, selectedTools: ["echo"], agentIDs: [agent])
++        require(try await service.currentSnapshot().mcpConnections.count == 1)
++        let sourceID = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: "Use MCP")
++        let source = try await repository.record(BlotV3.Message.self, id: sourceID, workspaceID: identity.workspaceID)!
++        let response = _Concurrency.Task { @MainActor in for try await _ in try await service.responses(to: source) {} }
++        try await approve(service); try await response.value
++        require(try await service.currentSnapshot().toolInvocations?.filter { $0.state == .succeeded }.count == 1)
++        print("PASS: real stdio discovery → agent tool → exact native confirmation → durable result → model response")
++
++        let taskID = try await WorkspaceTaskService(repository: repository, identity: identity).create(commandID: UUID(), conversationID: conversation,
++            agentID: agent, goal: "Use MCP in the task queue", executorDeviceID: identity.deviceID)
++        try await approve(service)
++        try await wait { try await service.currentSnapshot().tasks?.first { $0.metadata.id == taskID }?.state == .completed }
++        require(try await service.currentSnapshot().toolInvocations?.filter { $0.state == .succeeded }.count == 2)
++        print("PASS: queued task invokes MCP and completes after confirmed real result")
++        await service.stopAll()
++        let reopened = try LocalWorkspaceService(databaseURL: database, identity: identity, mcpCredentials: credentials, makeModel: { _ in MCPVerificationModel() })
++        _ = try await reopened.load()
++        let restored = try await reopened.mcpService()
++        require(try await restored.access().first?.enabled == true)
++        try await restored.disconnect(id: connectionID)
++        require(try await reopened.currentSnapshot().mcpConnections.isEmpty)
++        await reopened.stopAll()
++        print("PASS: device-local configuration survives reopen; disconnect revokes tools and removes credentials")
++    }
++}

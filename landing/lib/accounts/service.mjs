@@ -5,6 +5,7 @@ import { AccountRateLimiter, EmailCodeSecurity, PasswordHasher, emailAddress } f
 import { AccountEmailSender } from "./email.mjs";
 import { AccountEmailChallenges } from "./challenges.mjs";
 import { AccountSessions } from "./sessions.mjs";
+import { AccountDeletion } from "./deletion.mjs";
 import { EmailSignIn } from "./email-sign-in.mjs";
 import { Accounts } from "./accounts.mjs";
 import { BrowserAuthorizationCodes } from "./browser-codes.mjs";
@@ -20,6 +21,7 @@ export class AccountService {
   #browser;
   #google;
   #yandex;
+  #deletion;
   #emailSignIn;
   constructor({ database, email, challengeSecret, googleIdentity, yandexIdentity }) {
     this.#database = database;
@@ -27,6 +29,7 @@ export class AccountService {
     this.#sessions = new AccountSessions(database);
     const challenges = new AccountEmailChallenges({ database, security: new EmailCodeSecurity(challengeSecret), email, rates: this.#rates });
     this.#emailSignIn = new EmailSignIn(database, challenges, this.#sessions);
+    this.#deletion = new AccountDeletion(this.#sessions, challenges);
     this.#accounts = new Accounts({ database, passwords: new PasswordHasher(), challenges, sessions: this.#sessions });
     this.#browser = new BrowserAuthorizationCodes(database, this.#sessions);
     this.#google = new ProviderAccounts(database, googleIdentity, this.#sessions, "google");
@@ -44,6 +47,8 @@ export class AccountService {
       if (path === "password/request") await this.#rates.check(`reset-email:${email}`, 1, 60);
     }
     switch (path) {
+      case "account/delete/request": return this.#deletion.request(accessToken);
+      case "account/delete": return this.#deletion.confirm(accessToken, body.code);
       case "email/request": return this.#emailSignIn.request(body);
       case "email/verify": return this.#emailSignIn.verify(body);
       case "register": return this.#accounts.register(body);

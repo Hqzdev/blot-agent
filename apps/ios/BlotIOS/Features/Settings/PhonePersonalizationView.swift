@@ -3,43 +3,50 @@ import SwiftUI
 
 struct PhonePersonalizationView: View {
     @Environment(WorkspaceStore.self) private var store
-
+    @AppStorage(PhoneSettingsPreferenceKey.defaultRole) private var defaultRole = ""
+    @AppStorage(PhoneSettingsPreferenceKey.defaultInstructions) private var defaultInstructions = ""
     var body: some View {
         @Bindable var store = store
-        ScrollView {
-            VStack(spacing: 28) {
-                Text(store.t("Applies to new replies from every agent. Individual agent roles stay unchanged."))
-                    .font(.subheadline).foregroundStyle(WorkspaceStyle.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                PhoneSettingsGroup(title: "Character") {
-                    options(WorkspacePersonalization.Tone.allCases, selection: $store.form.personalization.tone)
+        PhoneSettingsPage {
+            PhoneSettingsGroup(title: "Agent memory") {
+                Button { store.navigate(.memory) } label: {
+                    PhoneSettingsRow(title: "Saved memories", detail: "Saved information helps your team understand your context.", value: store.snapshot.memories.count.formatted())
+                }.buttonStyle(.plain)
+            }
+            PhoneSettingsGroup(title: "Responses", detail: "Shared response preferences for all agents.") {
+                PhoneSettingsValueRow(title: "Communication tone") {
+                    options(WorkspacePersonalization.Tone.allCases, title: "Communication tone", selection: $store.form.personalization.tone)
                 }
-                PhoneSettingsGroup(title: "Answer length") {
-                    options(WorkspacePersonalization.Length.allCases, selection: $store.form.personalization.length)
+                PhoneSettingsDivider()
+                PhoneSettingsValueRow(title: "Answer detail") {
+                    options(WorkspacePersonalization.Length.allCases, title: "Answer detail", selection: $store.form.personalization.length)
                 }
-                PhoneSettingsGroup(title: "Formatting") {
-                    options(WorkspacePersonalization.Format.allCases, selection: $store.form.personalization.format)
+                PhoneSettingsDivider()
+                PhoneSettingsValueRow(title: "Text formatting") {
+                    options(WorkspacePersonalization.Format.allCases, title: "Text formatting", selection: $store.form.personalization.format)
                 }
-                Text(store.t("Changes are saved automatically."))
-                    .font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
-                if store.mode == .live { WorkspaceLink(title: "Memory", route: .memory, symbol: "brain") }
-                WorkspaceFeedback()
-            }.padding(20)
-        }.background(PhoneSettingsStyle.canvas.ignoresSafeArea())
-    }
-
-    private func options<Value>(_ values: [Value], selection: Binding<Value>) -> some View
-    where Value: RawRepresentable & Identifiable & Equatable, Value.RawValue == String {
-        ForEach(Array(values.enumerated()), id: \.element.id) { index, value in
-            if index > 0 { PhoneSettingsDivider() }
-            Button { selection.wrappedValue = value } label: {
-                HStack(spacing: 16) {
-                    Text(store.t(value.rawValue)).font(.body)
-                    Spacer(minLength: 8)
-                    if value == selection.wrappedValue { BlotIcon(.checkCircle).foregroundStyle(WorkspaceStyle.ink) }
-                    else { Circle().strokeBorder(WorkspaceStyle.secondary.opacity(0.25), lineWidth: 1.5).frame(width: 20, height: 20) }
-                }.padding(.horizontal, 18).frame(minHeight: 54).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityAddTraits(value == selection.wrappedValue ? .isSelected : [])
+            }
+            PhoneSettingsGroup(title: "New agents", detail: "Defaults for new specialists. Existing agents keep their instructions.") {
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(store.settingsText("Default role")).font(.subheadline)
+                    TextField(store.settingsText("Assistant"), text: $defaultRole).textInputAutocapitalization(.sentences)
+                        .font(.subheadline).accessibilityLabel(store.settingsText("Default role"))
+                }.padding(16)
+                PhoneSettingsDivider()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text(store.settingsText("Default instructions")).font(.subheadline)
+                    TextField(store.settingsText("Default instructions"), text: $defaultInstructions, axis: .vertical)
+                        .lineLimit(4...10).font(.subheadline)
+                }.padding(16)
+            }
+            WorkspaceFeedback()
         }
+        .onChange(of: store.form.personalization) { _, _ in store.persistChatState() }
+    }
+    private func options<Value>(_ values: [Value], title: String, selection: Binding<Value>) -> some View
+    where Value: RawRepresentable & Identifiable & Hashable, Value.RawValue == String {
+        Picker(store.settingsText(title), selection: selection) {
+            ForEach(values) { value in Text(store.t(value.rawValue)).tag(value) }
+        }.labelsHidden()
     }
 }

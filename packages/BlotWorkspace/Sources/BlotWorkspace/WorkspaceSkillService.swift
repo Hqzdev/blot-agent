@@ -23,11 +23,14 @@ public struct WorkspaceSkillService: Sendable {
         return try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                   !instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  name.utf8.count <= 800, instructions.utf8.count <= 32 * 1024, parameters.count <= 32, toolIDs.count <= 100,
                   Set(parameters.map(\.name)).count == parameters.count, Set(toolIDs).count == toolIDs.count,
-                  toolIDs.allSatisfy({ !$0.isEmpty }), parameters.allSatisfy({ Self.validParameterName($0.name) }) else {
+                  toolIDs.allSatisfy({ !$0.isEmpty && $0.utf8.count <= 200 }), parameters.allSatisfy({ Self.validParameterName($0.name) }) else {
                 throw WorkspaceStorageError.invalidParameters
             }
+            try Self.validateTemplate(instructions, parameters: parameters)
             let id = skillID ?? commandID
+            try tx.requireResolved(kind: "Skill", id: id)
             let old = try skillID.map { try tx.require(BlotV3.Skill.self, id: $0, version: expectedVersion) }
             if old == nil && expectedVersion != 0 { throw WorkspaceStorageError.versionConflict }
             let metadata = try tx.metadata(id: id, now: now, replacing: old?.metadata)
@@ -42,6 +45,33 @@ public struct WorkspaceSkillService: Sendable {
         }
     }
 
+    public func setArchived(commandID: UUID, skillID: UUID, expectedVersion: Int, archived: Bool) async throws {
+        try await update(commandID: commandID, skillID: skillID, expectedVersion: expectedVersion, revisionID: nil, archived: archived)
+    }
+    public func activate(commandID: UUID, skillID: UUID, expectedVersion: Int, revisionID: UUID) async throws {
+        try await update(commandID: commandID, skillID: skillID, expectedVersion: expectedVersion, revisionID: revisionID, archived: nil)
+    }
+    private func update(commandID: UUID, skillID: UUID, expectedVersion: Int, revisionID: UUID?, archived: Bool?) async throws {
+        struct Input: Encodable { let skillID: UUID; let expectedVersion: Int; let revisionID: UUID?; let archived: Bool? }
+        let command = try WorkspaceCommand(type: "skill.update", workspaceID: identity.workspaceID,
+            payload: Input(skillID: skillID, expectedVersion: expectedVersion, revisionID: revisionID, archived: archived)).data()
+        _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
+            let old = try tx.require(BlotV3.Skill.self, id: skillID, version: expectedVersion)
+            try tx.requireResolved(kind: "Skill", id: skillID)
+            if let revisionID {
+                let revision = try tx.require(BlotV3.SkillRevision.self, id: revisionID)
+                guard revision.skillId == skillID else { throw WorkspaceSkillError.revisionUnavailable }
+            }
+            try tx.put(BlotV3.Skill(metadata: tx.metadata(id: skillID, now: Date(), replacing: old.metadata), name: old.name,
+                activeRevisionId: revisionID ?? old.activeRevisionId, archived: archived ?? old.archived), expectedVersion: expectedVersion)
+            return skillID
+        }
+    }
+
+    public static func parameters(_ revision: BlotV3.SkillRevision) throws -> [SkillParameter] {
+        try WorkspaceCoding.decode([SkillParameter].self, from: Data(revision.parametersJSON.utf8))
+    }
+
     public func render(revisionID: UUID, values: [String: String]) async throws -> String {
         guard let revision = try await repository.record(BlotV3.SkillRevision.self, id: revisionID, workspaceID: identity.workspaceID) else {
             throw WorkspaceStorageError.missingRecord
@@ -50,8 +80,12 @@ public struct WorkspaceSkillService: Sendable {
     }
 
     static func render(_ revision: BlotV3.SkillRevision, values: [String: String]) throws -> String {
-        let parameters = try WorkspaceCoding.decode([SkillParameter].self, from: Data(revision.parametersJSON.utf8))
+        let parameters = try Self.parameters(revision)
+        guard parameters.count <= 32, Set(parameters.map(\.name)).count == parameters.count,
+              parameters.allSatisfy({ validParameterName($0.name) }) else { throw WorkspaceStorageError.invalidParameters }
+        try validateTemplate(revision.instructions, parameters: parameters)
         guard Set(values.keys).isSubset(of: Set(parameters.map(\.name))),
+              values.values.allSatisfy({ $0.utf8.count <= 32 * 1024 }),
               parameters.allSatisfy({ !$0.required || !(values[$0.name]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true) }) else {
             throw WorkspaceStorageError.invalidParameters
         }
@@ -67,10 +101,21 @@ public struct WorkspaceSkillService: Sendable {
             guard parameters.contains(where: { $0.name == name }) else { throw WorkspaceStorageError.invalidParameters }
             output.replaceSubrange(range, with: values[name] ?? "")
         }
+        guard output.utf8.count <= 32 * 1024 else { throw WorkspaceStorageError.invalidParameters }
         return output
     }
 
+    private static func validateTemplate(_ instructions: String, parameters: [SkillParameter]) throws {
+        let regex = try NSRegularExpression(pattern: #"\{\{([^{}]*)\}\}"#)
+        let source = instructions as NSString
+        let matches = regex.matches(in: instructions, range: NSRange(location: 0, length: source.length))
+        let names = Set(parameters.map(\.name))
+        guard matches.allSatisfy({ names.contains(source.substring(with: $0.range(at: 1))) }) else { throw WorkspaceSkillError.invalidTemplate }
+        let residue = regex.stringByReplacingMatches(in: instructions, range: NSRange(location: 0, length: source.length), withTemplate: "")
+        guard !residue.contains("{{"), !residue.contains("}}") else { throw WorkspaceSkillError.invalidTemplate }
+    }
+
     private static func validParameterName(_ value: String) -> Bool {
-        value.range(of: #"^[A-Za-z_][A-Za-z0-9_]*$"#, options: .regularExpression) != nil
+        value.utf8.count <= 64 && value.range(of: #"^[A-Za-z_][A-Za-z0-9_]*$"#, options: .regularExpression) != nil
     }
 }

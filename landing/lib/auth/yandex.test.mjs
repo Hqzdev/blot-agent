@@ -29,7 +29,7 @@ test("Yandex uses a fresh state and S256 verifier; only the server exchanges the
   const urlAttempt = authorization.start(null), second = authorization.start(null);
   const query = urlAttempt.url.searchParams;
   assert.equal(urlAttempt.url.origin, "https://oauth.yandex.ru");
-  assert.equal(query.get("scope"), "login:info login:email");
+  assert.equal(query.get("scope"), "login:info login:email login:avatar");
   assert.equal(query.get("code_challenge_method"), "S256");
   assert.equal(query.has("client_secret"), false);
   assert.equal(query.has("code_verifier"), false);

@@ -3,7 +3,7 @@ import Foundation
 
 enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
     case general, notifications, profile, appearance, account, personalization, shortcuts, usage
-    case memory, storage, privacy, connections, mcp, updates
+    case memory, storage, privacy, devices, connections, mcp, updates
     var id: String { rawValue }
     var title: String {
         switch self {
@@ -17,6 +17,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .usage: "Использование и подписка"
         case .memory: "Память агентов"
         case .storage: "Файлы и данные"
+        case .devices: "Устройства"
         case .privacy: "Данные и приватность"
         case .connections: "Приложения"
         case .mcp: "MCP-серверы"
@@ -25,7 +26,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
     }
     var group: String {
         switch self {
-        case .memory, .storage, .privacy: "Пространство"
+        case .memory, .storage, .privacy, .devices: "Пространство"
         case .connections, .mcp, .updates: "Интеграции"
         default: "Личное"
         }
@@ -42,6 +43,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .usage: .usage
         case .memory: .memory
         case .storage: .folder
+        case .devices: .network
         case .privacy: .shieldCheck
         case .connections: .puzzle
         case .mcp: .network
@@ -60,6 +62,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .usage: "Действия команды, лимиты и подписка."
         case .memory: "Общий контекст и воспоминания отдельных агентов."
         case .storage: "Локальные документы, переписки и экспорт пространства."
+        case .devices: "Доверие iPhone и Mac, передача задач и отзыв доступа."
         case .privacy: "Хранение данных и разрешения подключённых аккаунтов."
         case .connections: "Ваши сервисы и аккаунты для работы команды."
         case .mcp: "Подключение инструментов через Composio, Zapier и MCP."
@@ -75,7 +78,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
         case .usage: "Pro оплата недельный месячный предел"
         default: ""
         }
-        return (title + " " + detail + " " + keywords).localizedCaseInsensitiveContains(query)
+        return (["en", "ru"].map { WorkspaceCopy.text(title, language: $0) + " " + WorkspaceCopy.text(detail, language: $0) }.joined(separator: " ") + " " + keywords + " language system theme light dark motion compact tasks subscription billing").localizedCaseInsensitiveContains(query)
     }
 }
 

@@ -22,6 +22,8 @@ public final class CloudAuthController {
 
   public record Refresh(String refreshToken) {}
 
+  public record Deletion(String code) {}
+
   public record Binding(UUID deviceID, String nonce, byte[] signature) {}
 
   private final CloudAccounts accounts;
@@ -93,6 +95,21 @@ public final class CloudAuthController {
       @RequestBody Binding request) {
     sessions.bind(
         sessions.require(auth, false), request.deviceID(), request.nonce(), request.signature());
+  }
+
+  @PostMapping("/account/delete/request")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void requestDeletion(
+      @RequestHeader(value = "Authorization", required = false) String auth) {
+    accounts.requestDeletion(sessions.require(auth, false));
+  }
+
+  @PostMapping("/account/delete")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteAccount(
+      @RequestHeader(value = "Authorization", required = false) String auth,
+      @RequestBody Deletion request) {
+    accounts.deleteAccount(sessions.require(auth, false), request.code());
   }
 
   @PostMapping("/logout")
