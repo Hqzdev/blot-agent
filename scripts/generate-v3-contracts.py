@@ -35,7 +35,8 @@ for name,values in spec['enums'].items():
     swift_parts.append(f'extension BlotV3 {{\n    public enum {name}: String, Codable, CaseIterable, Sendable {{\n{cases}\n    }}\n}}')
 for name,fields in spec['models'].items():
     props={k:describe(t)[2] for k,t in fields.items()}
-    defs[name]={'type':'object','additionalProperties':False,'required':[k for k in fields if not (name == 'Task' and k == 'authorizationJSON')],'properties':props}
+    optional_fields = {'Task': {'authorizationJSON'}, 'Connection': {'pluginId', 'resourceIds', 'agentIds', 'allowedOperations'}}
+    defs[name]={'type':'object','additionalProperties':False,'required':[k for k in fields if k not in optional_fields.get(name, set())],'properties':props}
     declarations=',\n    '.join(describe(t)[0]+' '+k for k,t in fields.items())
     checks=[]
     for k,t in fields.items():

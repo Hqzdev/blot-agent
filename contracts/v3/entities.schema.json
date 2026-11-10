@@ -1323,11 +1323,7 @@
         "accountName",
         "scopes",
         "state",
-        "deviceId",
-        "pluginId",
-        "resourceIds",
-        "agentIds",
-        "allowedOperations"
+        "deviceId"
       ],
       "properties": {
         "metadata": {
