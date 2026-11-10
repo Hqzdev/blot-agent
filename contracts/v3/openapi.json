@@ -1,11 +1,11 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Blot v3 target local API",
+    "title": "Blot v3 local API",
     "version": "3.0.0",
-    "description": "Contract for November clients. Runtime implementation is pending; v2 is not v3 compatible."
+    "description": "Direct-chat runtime with isolated v3 storage. See x-supported-commands; other target commands return 501. v2 records are not converted."
   },
-  "x-runtime-implemented": false,
+  "x-runtime-implemented": true,
   "paths": {
     "/v3/commands": {
       "post": {
@@ -317,6 +317,16 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
           }
         ]
       }
@@ -355,6 +365,47 @@
             }
           }
         ]
+      }
+    },
+    "/v3/compatibility": {
+      "get": {
+        "summary": "Read authenticated v3 capabilities and workspace identity",
+        "responses": {
+          "200": {
+            "description": "Implemented commands, features, ownerId and workspaceId"
+          }
+        }
+      }
+    },
+    "/v3/commands/{id}": {
+      "get": {
+        "summary": "Reconcile a command receipt without repeating execution",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Previously committed receipt",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Receipt"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No confirmed receipt exists for this owner and command"
+          }
+        }
       }
     }
   },
@@ -401,5 +452,12 @@
     {
       "deviceSession": []
     }
+  ],
+  "x-supported-commands": [
+    "agent.save",
+    "conversation.create",
+    "conversation.send_message",
+    "conversation.update",
+    "conversation.delete"
   ]
 }
