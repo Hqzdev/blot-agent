@@ -1,0 +1,24 @@
+name: Android client
+on:
+  push:
+    branches: ['android/**']
+    paths: ['apps/android/**', 'backend/client/**', 'backend/core/src/main/java/dev/blot/core/v3/**', 'fixtures/v3/**', '.github/workflows/android-client.yml']
+  pull_request:
+    paths: ['apps/android/**', 'backend/client/**', 'backend/core/src/main/java/dev/blot/core/v3/**', 'fixtures/v3/**', '.github/workflows/android-client.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Install the compile SDK without an emulator
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0"'
+      - name: Test shared records and assemble APK
+        working-directory: apps/android
+        run: bash gradlew --no-daemon :core-contracts:test :app:assembleDebug
