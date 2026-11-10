@@ -5,6 +5,21 @@
 - Follow OOP principles strictly: single responsibility, encapsulation, composition over inheritance.
 - Write clean, minimal, intentional code. No dead code or placeholders.
 
+## Application launch and test devices
+
+- Install, launch, and debug applications only on the user's own physical devices: the current Mac or Windows computer for desktop apps, and the user's connected physical iPhone or Android device for mobile apps.
+- Do not create, download, install, boot, or use simulators, emulators, or their runtime images unless the user explicitly requests them for the current task. Builds and automated checks must not implicitly download or start them.
+- Verify that the selected run destination is the intended physical device before launching. Never automatically fall back to a simulator or emulator.
+- If the required physical device is unavailable or blocked by pairing, signing, or permissions, continue checks that do not require it and report which on-device validation could not run.
+
+## Build storage and cleanup
+
+- Before a large build or toolchain download, check free disk space. Keep at least 20 GiB free; below this threshold, reclaim the current task's disposable outputs before proceeding, and report if sufficient space cannot be recovered safely.
+- Reuse stable build directories in the current project, such as `.build/ios`, `.build/macos`, and `.build/swift`, across sequential checks. Do not create a new DerivedData, Swift scratch directory, or compiler cache in `/tmp` for every check. Concurrent builds need separate directories; remove those temporary outputs when their checks finish.
+- Reuse installed toolchains and shared package-manager caches. Do not duplicate dependency caches or download runtimes for each task unless isolation is required.
+- Validate changes in the current project before preparing the focused task branch. Keep branch-preparation worktrees free of generated outputs; repeat a build there only when differences in source or configuration require validation. Apply the current project's device and storage rules in secondary worktrees too.
+- After validation, remove disposable build directories created only for that task, retaining one reusable incremental build per active platform. Preserve required deliverables and concise validation results. Before deletion, verify that no active build uses the path and that it contains no tracked files, working copies, source backups, or user data. Never delete an entire worktree or `/tmp` as build cleanup.
+
 ## Platform branches
 
 This repository is developed on two computers: macOS for Mac/iPhone, and Windows for Windows/Android. Android is written in Java.
@@ -18,8 +33,8 @@ This repository is developed on two computers: macOS for Mac/iPhone, and Windows
 
 - Choose the prefix from the application being changed. On the Mac computer, iPhone tasks use `ios/` and Mac tasks use `mac/`; on the Windows computer, Android tasks use `android/` and Windows tasks use `windows/`. The host OS alone does not identify the target.
 - Git cannot have both `ios` and `ios/auth`; the same restriction applies to the other platforms. Always use `<platform>/main` for the platform base. Do not create bare `ios`, `mac`, `windows`, or `android` branches.
-- Before editing, inspect `git status`, the current branch, and worktrees. Fetch `origin`, then create a task branch from the current remote platform base: `git switch -c ios/auth origin/ios/main`. Replace the platform and task as appropriate.
-- Use a separate branch/worktree per task. Do not switch, reset, stash, or include another task's uncommitted changes without authorization. If an existing task branch matches the work, continue on it.
+- Before editing, inspect `git status`, the current branch, and worktrees. First implement and validate requested changes in the user's current project; only then prepare the task branch. A task is not complete while its changes exist only in a separate branch or worktree. Preserve unrelated uncommitted changes when applying the task to the current project.
+- Prepare the focused platform task branch after the changes are available in the current project. Fetch `origin` and base that task branch on the current remote platform base, for example `origin/ios/main`. A separate worktree may be used to prepare the branch, but it must not replace applying the changes to the current project. Do not switch, reset, stash, or include another task's uncommitted changes without authorization. If an existing task branch matches the work, continue on it.
 - Push explicitly to the matching remote branch, for example `git push -u origin ios/auth`. Never push iOS work to `mac/*`, Android work to `windows/*`, or vice versa. These names replace the earlier `codex/*` and `work/*` conventions.
 - Platform bases receive reviewed task changes through pull requests. `main` remains the shared integration/default branch; integrate platform changes into `main` through a reviewed pull request. Bring updates from `origin/main` into a platform through an adaptation task branch and validate before merging into its base, as described below. Never force-push shared branches.
 - Work spanning both Apple clients goes into one owning platform task branch (for example, `mac/shared-auth`), then reaches the other platform through `main`. Do not independently duplicate shared changes in several branches.
