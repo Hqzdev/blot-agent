@@ -11,5 +11,9 @@
   "accountName": "accountName",
   "scopes": [],
   "state": "CONNECTED",
-  "deviceId": null
+  "deviceId": null,
+  "pluginId": null,
+  "resourceIds": null,
+  "agentIds": null,
+  "allowedOperations": null
 }

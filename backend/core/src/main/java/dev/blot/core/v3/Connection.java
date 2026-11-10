@@ -10,7 +10,11 @@ public record Connection(
     String accountName,
     List<String> scopes,
     ConnectionState state,
-    UUID deviceId) {
+    UUID deviceId,
+    String pluginId,
+    List<String> resourceIds,
+    List<UUID> agentIds,
+    List<String> allowedOperations) {
   public Connection {
     Objects.requireNonNull(metadata, "metadata");
     Objects.requireNonNull(service, "service");
@@ -18,5 +22,18 @@ public record Connection(
     Objects.requireNonNull(scopes, "scopes");
     scopes = List.copyOf(scopes);
     Objects.requireNonNull(state, "state");
+    resourceIds = resourceIds == null ? null : List.copyOf(resourceIds);
+    agentIds = agentIds == null ? null : List.copyOf(agentIds);
+    allowedOperations = allowedOperations == null ? null : List.copyOf(allowedOperations);
+  }
+
+  public Connection(
+      RecordMetadata metadata,
+      String service,
+      String accountName,
+      List<String> scopes,
+      ConnectionState state,
+      UUID deviceId) {
+    this(metadata, service, accountName, scopes, state, deviceId, null, null, null, null);
   }
 }

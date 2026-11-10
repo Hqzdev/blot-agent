@@ -45,7 +45,10 @@ public final class SmtpEmailSender implements EmailSender {
       message.setFrom(new InternetAddress(from));
       message.setRecipient(Message.RecipientType.TO, new InternetAddress(email));
       message.setSubject(
-          "Blot: " + (purpose.equals("verify") ? "подтверждение почты" : "восстановление пароля"),
+          "Blot: "
+              + (purpose.equals("delete")
+                  ? "удаление аккаунта"
+                  : purpose.equals("verify") ? "подтверждение почты" : "восстановление пароля"),
           "UTF-8");
       message.setText(
           "Ваш код: "
