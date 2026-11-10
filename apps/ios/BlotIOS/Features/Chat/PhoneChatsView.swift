@@ -18,15 +18,17 @@ struct PhoneChatsView: View {
             }
         }
     }
+    private enum Creation { case agent, group }
+    @State private var creationMenuVisible = false
+    @State private var pendingCreation: Creation?
     var showsAgents = false
     var showsArchive = false
     @Environment(WorkspaceStore.self) private var store
 
     private var scrollRoute: WorkspaceRoute { showsArchive ? .archivedChats : showsAgents ? .agents : .chats }
     private var conversations: [BlotV3.Conversation] {
-        store.snapshot.conversations.filter { showsArchive ? $0.archived : !$0.archived }
+        store.snapshot.conversations.filter { showsArchive ? $0.archived : !$0.archived && !$0.pinned }
             .sorted {
-                if $0.pinned != $1.pinned { return $0.pinned }
                 if $0.metadata.updatedAt != $1.metadata.updatedAt { return $0.metadata.updatedAt > $1.metadata.updatedAt }
                 return $0.metadata.id.uuidString < $1.metadata.id.uuidString
             }
@@ -77,7 +79,7 @@ struct PhoneChatsView: View {
                 }.buttonStyle(.plain)
                     .contextMenu {
                         BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agent.metadata.id) }
-                        BlotIconButton(store.t("New chat"), symbol: "square.and.pencil") {
+                        BlotIconButton(store.t("Open chat"), symbol: "square.and.pencil") {
                             _Concurrency.Task { await store.startNewChat(with: agent.metadata.id) }
                         }
                     }
@@ -87,9 +89,10 @@ struct PhoneChatsView: View {
                     .buttonStyle(.plain)
                     .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) { store.pendingChatDeletionID = chat.metadata.id } label: {
+                        // Confirmation does not remove the row. A destructive swipe would optimistically delete it in UIKit.
+                        Button { store.pendingChatDeletionID = chat.metadata.id } label: {
                             BlotLabel(store.t("Delete chat"), symbol: "trash")
-                        }
+                        }.tint(.red)
                         Button { store.setChatArchived(chat.metadata.id, archived: !chat.archived) } label: {
                             BlotLabel(store.t(chat.archived ? "Unarchive chat" : "Archive chat"), symbol: "archivebox")
                         }.tint(.gray)
@@ -115,6 +118,7 @@ struct PhoneChatsView: View {
                     .listRowSeparator(.hidden).listRowBackground(Color.clear)
             }
         }
+        .refreshable { await store.synchronizeAccount() }
         .listStyle(.plain).scrollContentBackground(.hidden)
         .listRowInsets(EdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 18))
         .contentMargins(.top, 68, for: .scrollContent)
@@ -126,6 +130,11 @@ struct PhoneChatsView: View {
         }
         .overlay(alignment: .top) { header.padding(.horizontal, 18).padding(.top, 6) }
         .workspaceGlassContainer()
+        .sheet(isPresented: $creationMenuVisible, onDismiss: presentCreation) {
+            PhoneCreationMenu(createAgent: { pendingCreation = .agent; creationMenuVisible = false },
+                              createGroup: { pendingCreation = .group; creationMenuVisible = false })
+                .environment(store)
+        }
     }
 
     private var header: some View {
@@ -133,11 +142,23 @@ struct PhoneChatsView: View {
             if showsArchive {
                 PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { store.back() }
                 Text(store.t("Archive")).font(.headline)
+            } else if !showsAgents {
+                Button { store.navigate(.settingsProfile) } label: {
+                    Group {
+                        if let avatar = store.profile.avatar {
+                            PhoneProfileAvatar(data: avatar, size: 44)
+                        } else {
+                            BlotIcon(.person, size: 22).frame(width: 44, height: 44)
+                        }
+                    }
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .contentShape(Circle())
+                }.buttonStyle(.plain).accessibilityLabel(store.settingsText("Profile"))
             }
             Spacer()
             PhoneGlassCircleButton(symbol: "magnifyingglass", title: store.t("Search")) { store.navigate(.search) }
-            if store.mode == .live && !store.snapshot.agents.isEmpty && !showsArchive {
-                PhoneGlassCircleButton(symbol: "person.2", title: store.t("New group")) { store.groupCreationVisible = true }
+            if !showsArchive && !showsAgents {
+                PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("Create")) { creationMenuVisible = true }
             }
             if showsAgents {
                 Button { store.beginAgentCreation() } label: {
@@ -145,11 +166,16 @@ struct PhoneChatsView: View {
                         .padding(.horizontal, 14).frame(minHeight: 44)
                         .glassEffect(.regular.interactive(), in: .capsule)
                 }.buttonStyle(.plain).accessibilityLabel(store.t("Create agent"))
-            } else if !showsArchive {
-                PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("New chat")) {
-                    _Concurrency.Task { await store.startNewChat() }
-                }.disabled(store.busy)
             }
+        }
+    }
+
+    private func presentCreation() {
+        guard let creation = pendingCreation else { return }
+        pendingCreation = nil
+        switch creation {
+        case .agent: store.beginAgentCreation()
+        case .group: store.groupCreationVisible = true
         }
     }
 
@@ -157,11 +183,12 @@ struct PhoneChatsView: View {
         ScrollView(.horizontal) {
             HStack(alignment: .top, spacing: 24) {
                 ForEach(store.pinnedConversations, id: \.metadata.id) { chat in
-                    let agent = store.snapshot.agents.first { $0.metadata.id == chat.agentId }
+                    let identity = PhoneConversationIdentity(conversation: chat, agents: store.snapshot.agents, participants: store.snapshot.participants ?? [])
                     Button { store.openConversation(chat.metadata.id) } label: {
                         VStack(spacing: 8) {
                             Group {
-                                if let agent { WorkspaceAvatarView(agent: agent, size: 70) }
+                                if identity.isGroup { PhoneGroupAvatar(agents: identity.members, size: 70) }
+                                else if let agent = identity.agent { WorkspaceAvatarView(agent: agent, size: 70) }
                                 else { WorkspaceAvatar(size: 70) }
                             }
                             .overlay(alignment: .topTrailing) {
@@ -169,12 +196,7 @@ struct PhoneChatsView: View {
                                     muted: store.chatInteractions.isMuted(chat.metadata.id))
                             }
                             .overlay(alignment: .bottomLeading) {
-                                WorkspacePresenceDot(online: store.isAgentOnline(chat.agentId, in: chat.metadata.id))
-                            }
-                            .overlay(alignment: .bottomTrailing) {
-                                BlotIcon(.star, size: 10).foregroundStyle(.white)
-                                    .frame(width: 20, height: 20).background(Color.orange, in: Circle())
-                                    .overlay(Circle().strokeBorder(WorkspaceStyle.canvas, lineWidth: 2))
+                                if !identity.isGroup { WorkspacePresenceDot(online: store.isAgentOnline(chat.agentId, in: chat.metadata.id)) }
                             }
                             Text(store.t(chat.title)).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
                                 .lineLimit(1).frame(width: 86)
@@ -193,9 +215,10 @@ private struct PhoneConversationRow: View {
     let conversation: BlotV3.Conversation
     @Environment(WorkspaceStore.self) private var store
 
-    private var agent: BlotV3.AgentProfile? {
-        store.snapshot.agents.first { $0.metadata.id == conversation.agentId }
+    private var identity: PhoneConversationIdentity {
+        .init(conversation: conversation, agents: store.snapshot.agents, participants: store.snapshot.participants ?? [])
     }
+    private var agent: BlotV3.AgentProfile? { identity.agent }
     private var lastMessage: String {
         return store.snapshot.messages.last { $0.conversationId == conversation.metadata.id }.map { store.t($0.content) } ?? ""
     }
@@ -207,7 +230,7 @@ private struct PhoneConversationRow: View {
                 HStack(spacing: 8) {
                     Text(store.t(conversation.title)).font(.system(size: 17, weight: .medium)).lineLimit(1)
                     if conversation.pinned {
-                        BlotIcon(.star, size: 11).foregroundStyle(.orange)
+                        BlotIcon(symbol: "pin.fill", size: 11).foregroundStyle(.orange)
                             .accessibilityLabel(store.t("Pinned chat"))
                     }
                     if let tag {
@@ -237,29 +260,19 @@ private struct PhoneConversationRow: View {
     }
 
     private var tag: String? {
-        switch agent?.roleId {
+        switch identity.isGroup ? nil : agent?.roleId {
         case "meal-planner": "Meal prepping"
         default: nil
         }
     }
 
     @ViewBuilder private var avatar: some View {
-        if let agent {
+        if identity.isGroup { PhoneGroupAvatar(agents: identity.members, size: 48) }
+        else if let agent {
             WorkspaceAvatarView(agent: agent, size: 48)
                 .overlay(alignment: .bottomTrailing) {
                     WorkspacePresenceDot(online: store.isAgentOnline(agent.metadata.id, in: conversation.metadata.id), size: 11)
                 }
-        } else {
-            let members = store.snapshot.agents.filter { conversation.title.contains($0.name) }.prefix(3)
-            if members.isEmpty { WorkspaceAvatar(size: 48) }
-            else {
-                ZStack {
-                    ForEach(Array(members.enumerated()), id: \.element.metadata.id) { index, member in
-                        WorkspaceAvatarView(agent: member, size: 27)
-                            .offset(x: index == 0 ? 0 : index == 1 ? -13 : 13, y: index == 0 ? -13 : 11)
-                    }
-                }.accessibilityHidden(true)
-            }
-        }
+        } else { WorkspaceAvatar(size: 48) }
     }
 }

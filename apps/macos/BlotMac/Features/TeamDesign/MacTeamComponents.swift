@@ -1,4 +1,5 @@
 import AppKit
+import BlotAppleIntegrations
 import BlotDesign
 import SwiftUI
 
@@ -26,7 +27,7 @@ struct MacTeamIconButton: View {
             BlotIcon(symbol: symbol, size: BlotIconSize.control).frame(width: 28, height: 28)
                 .background(WorkspaceStyle.ink.opacity(hovered ? 0.055 : 0), in: Circle()).contentShape(Circle())
         }
-        .buttonStyle(BlotPlainButtonStyle()).foregroundStyle(WorkspaceStyle.ink).help(title).accessibilityLabel(title)
+        .buttonStyle(BlotPlainButtonStyle()).foregroundStyle(WorkspaceStyle.ink).help(Text(LocalizedStringKey(title))).accessibilityLabel(Text(LocalizedStringKey(title)))
         .onHover { hovered = $0 }.kAnimation(KMotion.quick, value: hovered)
     }
 }
@@ -36,8 +37,8 @@ struct MacTeamSectionHeading: View {
     var subtitle: String? = nil
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 25, weight: .semibold))
-            if let subtitle { Text(subtitle).font(.system(size: 13)).foregroundStyle(.secondary) }
+            WorkspaceLocalizedText(title).font(.system(size: 25, weight: .semibold))
+            if let subtitle { WorkspaceLocalizedText(subtitle).font(.system(size: 13)).foregroundStyle(.secondary) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -46,7 +47,7 @@ struct MacTeamBadge: View {
     let text: String
     var color: Color = .secondary
     var body: some View {
-        Text(text).font(.system(size: 10, weight: .medium)).foregroundStyle(color)
+        WorkspaceLocalizedText(text).font(.system(size: 10, weight: .medium)).foregroundStyle(color)
             .padding(.horizontal, 7).padding(.vertical, 3).background(color.opacity(0.09), in: Capsule())
             .contentTransition(.opacity).kAnimation(KMotion.quick, value: text)
     }
@@ -56,6 +57,12 @@ struct MacTeamPluginIcon: View {
     let plugin: MacTeamPlugin
     var size: CGFloat = 38
     var body: some View {
+        Group {
+            if let apple = ApplePluginID(rawValue: plugin.id) { ApplePluginIcon(plugin: apple, size: size) }
+            else { externalIcon }
+        }
+    }
+    private var externalIcon: some View {
         Image(plugin.assetName).renderingMode(.original)
             .resizable().scaledToFit().padding(size * 0.16)
             .frame(width: size, height: size)
@@ -72,7 +79,7 @@ struct MacTeamSheetHeader: View {
     @Environment(\.dismiss) private var dismiss
     var body: some View {
         HStack {
-            Text(title).font(.system(size: 16, weight: .semibold))
+            WorkspaceLocalizedText(title).font(.system(size: 16, weight: .semibold))
             Spacer()
             MacTeamIconButton(title: "Закрыть", symbol: "xmark") { dismiss() }
         }.padding(.horizontal, 24).padding(.vertical, 16)

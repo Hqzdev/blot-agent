@@ -20,6 +20,7 @@ struct BlotMacApp: App {
             #endif
         }
         .defaultSize(width: 1280, height: 820)
+        .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unifiedCompact)
         .commands {

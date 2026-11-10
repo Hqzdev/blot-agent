@@ -61,7 +61,7 @@ struct PhoneWorkspaceView: View {
                     NavigationLink {
                         PhoneChatView(client: client, conversation: row.id, title: title)
                     } label: {
-                        Text(title.isEmpty ? "Untitled conversation" : title)
+                        WorkspaceLocalizedText(title.isEmpty ? "Untitled conversation" : title)
                             .blotFont(.body)
                             .foregroundStyle(BlotColor.text)
                             .frame(minHeight: BlotLayout.minimumTapTarget, alignment: .leading)

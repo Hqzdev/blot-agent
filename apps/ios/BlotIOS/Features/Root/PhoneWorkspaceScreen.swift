@@ -24,17 +24,22 @@ struct PhoneWorkspaceScreen: View {
                 case .agents: PhoneChatsView(showsAgents: true)
                 case .connections: PhonePluginsView()
                 case .chat: PhoneConversationView()
-                case .search:
-                    if store.mode == .live { WorkspaceLocalSearchView() }
-                    else { PhoneSearchView() }
+                case .search: PhoneSearchView()
                 case .newChat: PhoneNewChatView()
                 case .settings: PhoneSettingsMenuView()
-                case .account: PhoneAccountSettingsView()
-                case .usage: PhoneUsageView()
+                case .overview: PhoneOverviewView()
+                case .schedules: PhoneSchedulesView()
+                case .appSettings, .language: PhoneGeneralSettingsView()
+                case .appearance: PhoneAppearanceSettingsView()
+                case .settingsProfile, .account, .usage: PhoneSettingsProfileView()
+                case .settingsStorage: PhoneStorageSettingsView()
+                case .settingsUpdates: PhoneUpdatesSettingsView()
+                case .permissions: PhonePrivacySettingsView()
+                case .mcp: PhoneMcpSettingsView()
+                case .models, .devices, .pair, .permissionRules, .browserSettings:
+                    PhoneSettingsPage { WorkspaceSettingsView(route: route) }
                 case .personalization: PhonePersonalizationView()
-                case .memory:
-                    if store.mode == .live { WorkspacePage(route: .memory) }
-                    else { PhonePersonalizationView() }
+                case .memory: PhoneMemorySettingsView()
                 case .notifications: PhoneNotificationSettingsView()
                 case .createSchedule: PhoneScheduleEditor()
                 case .file:

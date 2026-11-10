@@ -11,13 +11,7 @@ enum PhoneMessageTimeline {
     }
 
     static func rows(in messages: [BlotV3.Message]) -> [Row] {
-        let visible = messages.filter { message in
-            guard message.role == .assistant else { return true }
-            switch message.delivery {
-            case .saved, .waiting_connection, .delivered, .accepted, .running: return false
-            default: return !message.content.isEmpty || !message.artifactIds.isEmpty
-            }
-        }
+        let visible = messages.filter(WorkspaceMessagePresentation.isVisible)
         return visible.enumerated().map { index, message in
             let previous = index > 0 ? visible[index - 1] : nil
             let next = index + 1 < visible.count ? visible[index + 1] : nil

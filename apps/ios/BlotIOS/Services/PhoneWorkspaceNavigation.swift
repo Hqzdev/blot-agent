@@ -1,33 +1,45 @@
 import Foundation
 import Observation
 import SwiftUI
+import UIKit
 
 @MainActor @Observable
 final class PhoneWorkspaceNavigation {
-    struct Context {
-        var path: [WorkspaceRoute]
-        var conversationID: UUID?
-        var agentID: UUID?
-        var recordID: UUID?
-    }
-
     var filesQuery = ""
-    private var contexts: [WorkspaceRoute: Context] = [:]
+    var scheduleDate = Date()
+    private(set) var tabActivationCount = 0
+    private var tabActivations: [WorkspaceRoute: Int] = [:]
+    private let selectionFeedback = UISelectionFeedbackGenerator()
+    #if DEBUG
+    let tabInteractionRecorder = PhoneTabInteractionRecorder()
+    #endif
     private var positions: [WorkspaceRoute: ScrollPosition] = [:]
     private var offsets: [WorkspaceRoute: CGFloat] = [:]
 
-    func remember(_ context: Context, for tab: WorkspaceRoute) { contexts[tab] = context }
-    func context(for tab: WorkspaceRoute) -> Context? { contexts[tab] }
+    func activation(for route: WorkspaceRoute) -> Int { tabActivations[route, default: 0] }
+
+    func activateTab(_ route: WorkspaceRoute) {
+        tabActivations[route, default: 0] += 1
+        tabActivationCount += 1
+        #if DEBUG
+        tabInteractionRecorder?.tapped(route, sequence: tabActivationCount)
+        #endif
+        selectionFeedback.selectionChanged()
+        selectionFeedback.prepare()
+        #if DEBUG
+        tabInteractionRecorder?.requestedFeedback(route, sequence: tabActivationCount)
+        #endif
+    }
+
+    #if DEBUG
+    func recordRouteFeedback(_ route: WorkspaceRoute) {
+        tabInteractionRecorder?.requestedFeedback(route, sequence: tabActivationCount)
+    }
+    #endif
 
     func position(for route: WorkspaceRoute) -> Binding<ScrollPosition> {
         Binding(get: { self.positions[route] ?? ScrollPosition(edge: .top) },
                 set: { self.positions[route] = $0 })
-    }
-
-    func forgetConversation(_ id: UUID) {
-        for (tab, context) in contexts where context.conversationID == id {
-            contexts[tab] = Context(path: [], conversationID: nil, agentID: nil, recordID: nil)
-        }
     }
 
     func recordOffset(_ offset: CGFloat, for route: WorkspaceRoute) { offsets[route] = offset }
@@ -39,5 +51,5 @@ final class PhoneWorkspaceNavigation {
         positions[route] = position
     }
 
-    func reset() { contexts = [:]; positions = [:]; offsets = [:]; filesQuery = "" }
+    func reset() { positions = [:]; offsets = [:]; filesQuery = ""; scheduleDate = Date() }
 }

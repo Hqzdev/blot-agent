@@ -8,6 +8,7 @@ struct MacWorkspaceComposer: View {
     var onInputFrameChange: ((CGRect) -> Void)? = nil
     var onSend: (() -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.colorScheme) private var colorScheme
     @State private var importingFiles = false
     @FocusState private var focused: Bool
     @AppStorage(MacTeamPreferenceKey.sendOnReturn) private var sendOnReturn = true
@@ -30,6 +31,7 @@ struct MacWorkspaceComposer: View {
             if !store.form.composer.attachments.isEmpty { attachments }
             HStack(alignment: .bottom, spacing: 8) {
                 Menu {
+                    BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
                     BlotIconButton(store.t("Attach files"), symbol: "paperclip") { importingFiles = true }
                     Divider()
                     Picker(store.t("Access mode"), selection: $store.form.preferences.accessMode) {
@@ -39,10 +41,18 @@ struct MacWorkspaceComposer: View {
                     }
                     BlotIconButton(store.t("AI models"), symbol: "cpu") { store.navigate(.models) }
                     BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
+                    BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
                 } label: {
-                    BlotIcon(.plus, size: 17).foregroundStyle(WorkspaceStyle.secondary)
-                        .frame(width: 30, height: 30).background(WorkspaceStyle.surface, in: Circle())
-                }.menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+                    Color.clear.frame(width: 30, height: 30)
+                }.menuStyle(.borderlessButton).menuIndicator(.hidden)
+                    .frame(width: 30, height: 30)
+                    .background(WorkspaceStyle.surface, in: Circle())
+                    // Draw outside the native menu label, which applies its own template tint.
+                    .overlay {
+                        BlotIcon(.plus, size: 17)
+                            .foregroundStyle(colorScheme == .dark ? Color.white : WorkspaceStyle.ink)
+                            .allowsHitTesting(false)
+                    }
                     .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
                 TextField(placeholder, text: $store.form.composer.draft, axis: .vertical)
                     .font(.system(size: 13)).textFieldStyle(.plain).lineLimit(1...6)
@@ -60,18 +70,18 @@ struct MacWorkspaceComposer: View {
                     Group {
                         if store.isReplying { BlotIcon(.stop, size: 15) }
                         else if store.busy { ProgressView().controlSize(.mini).tint(BlotColor.onInverse) }
-                        else { BlotIcon(teamLayout || canSend ? .arrowUp : .microphoneOff, size: 15) }
+                        else { BlotIcon(.arrowUp, size: 15) }
                     }.frame(width: 30, height: 30)
                         .foregroundStyle(BlotColor.onInverse).background(BlotColor.inverse, in: Circle())
-                }.buttonStyle(.plain).disabled(!canSend && !store.isReplying).opacity(canSend || store.isReplying ? 1 : 0.45)
-                    .help(store.t(store.isReplying ? "Stop reply" : canSend ? "Send message" : "Voice is planned for a later release."))
-                    .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : canSend ? "Send message" : "Voice is planned for a later release."))
+                }.buttonStyle(.plain)
+                    .help(store.t(store.isReplying ? "Stop reply" : "Send message"))
+                    .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
             }.padding(teamLayout ? 10 : 5)
                 .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 23))
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
             if teamLayout && composerHints {
-                Text("Прикрепите файл или задайте агенту задачу сообщением")
+                Text(store.currentConversation?.kind == .group ? "Задайте общую задачу — команда распределит работу по ролям" : "Прикрепите файл или задайте агенту задачу сообщением")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.horizontal, 14)
             }
         }
@@ -90,6 +100,7 @@ struct MacWorkspaceComposer: View {
     }
 
     private var placeholder: String {
+        if let group = store.currentConversation, group.kind == .group { return store.t("Message group") + " «" + group.title + "»" }
         let id = store.route == .home ? store.selectedAgentID : store.currentConversation?.agentId
         let name = store.snapshot.agents.first { $0.metadata.id == id }?.name ?? "Blot Agent"
         return store.t("Message agent") + " " + name

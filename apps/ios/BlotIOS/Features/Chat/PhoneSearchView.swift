@@ -3,114 +3,100 @@ import BlotDomain
 import SwiftUI
 
 struct PhoneSearchView: View {
-    private enum Scope: String, CaseIterable { case all = "All", chats = "Chats", agents = "Agents", files = "Files" }
     @Environment(WorkspaceStore.self) private var store
-    @State private var scope = Scope.all
+    @Environment(\.dismiss) private var dismiss
+    @State private var query = ""
     @FocusState private var focused: Bool
 
-    private var query: String { store.form.search.query.trimmingCharacters(in: .whitespacesAndNewlines) }
-    private var conversations: [BlotV3.Conversation] {
-        guard scope == .all || scope == .chats else { return [] }
-        return store.snapshot.conversations.filter { conversation in
-            matches(conversation.title) || store.snapshot.messages.contains { $0.conversationId == conversation.metadata.id && matches($0.content) }
-        }
-    }
-    private var agents: [BlotV3.AgentProfile] {
-        guard scope == .all || scope == .agents else { return [] }
-        return store.snapshot.agents.filter { matches($0.name) || matches($0.instructions) }
-    }
-    private var artifacts: [BlotV3.Artifact] {
-        guard scope == .all || scope == .files else { return [] }
-        return store.snapshot.artifacts.filter { matches($0.name) }
-    }
-
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 8) {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        ForEach(Scope.allCases, id: \.self) { item in
-                            Button { scope = item } label: {
-                                Text(store.t(item.rawValue)).font(.subheadline)
-                                    .foregroundStyle(scope == item ? BlotColor.onInverse : WorkspaceStyle.ink)
-                                    .padding(.horizontal, 16).frame(minHeight: 38)
-                                    .background(scope == item ? BlotColor.inverse : WorkspaceStyle.surface, in: Capsule())
-                            }.buttonStyle(.plain).accessibilityAddTraits(scope == item ? .isSelected : [])
+        let results = PhoneSearchResults(snapshot: store.snapshot, query: query)
+        VStack(spacing: 0) {
+            header.padding(.horizontal, 20).padding(.top, 18).padding(.bottom, 12)
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 4) {
+                    if !results.agents.isEmpty {
+                        sectionTitle("Agents")
+                        ForEach(results.agents, id: \.metadata.id) { agent in
+                            Button {
+                                focused = false
+                                _Concurrency.Task {
+                                    await store.openAgentChat(agent.metadata.id)
+                                    if store.error == nil { dismiss() }
+                                }
+                            } label: { PhoneAgentRow(agent: agent) }
+                                .buttonStyle(.plain).disabled(store.busy)
+                                .accessibilityIdentifier("workspace.search.agent.\(agent.metadata.id)")
                         }
                     }
-                }.scrollIndicators(.hidden).padding(.bottom, 16)
-                if !conversations.isEmpty {
-                    sectionTitle("Chats")
-                    ForEach(conversations, id: \.metadata.id) { conversation in
-                        Button { focused = false; store.openConversation(conversation.metadata.id) } label: {
-                            HStack(spacing: 14) {
-                                BlotIcon(symbol: "bubble.left.and.bubble.right").font(.title3).frame(width: 48, height: 48)
-                                Text(store.t(conversation.title)).font(.body.weight(.medium))
-                                Spacer(minLength: 0)
-                            }.frame(minHeight: 60).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
+                    if !results.groups.isEmpty {
+                        sectionTitle("Groups")
+                        ForEach(results.groups, id: \.metadata.id) { group in
+                            Button {
+                                focused = false
+                                store.openConversation(group.metadata.id)
+                                dismiss()
+                            } label: { PhoneSearchGroupRow(group: group) }
+                                .buttonStyle(.plain).disabled(store.busy)
+                                .accessibilityIdentifier("workspace.search.group.\(group.metadata.id)")
+                        }
                     }
-                }
-                if !agents.isEmpty {
-                    sectionTitle("Agents")
-                    ForEach(agents, id: \.metadata.id) { agent in
-                        Button {
-                            focused = false
-                            _Concurrency.Task { await store.openAgentChat(agent.metadata.id) }
-                        } label: { PhoneAgentRow(agent: agent) }.buttonStyle(.plain).disabled(store.busy)
+                    if results.isEmpty {
+                        ContentUnavailableView {
+                            BlotLabel(store.t("No results"), symbol: "magnifyingglass", size: 36)
+                        } description: { Text(store.t("Try another name or clear the search.")) }
                     }
-                }
-                if !artifacts.isEmpty {
-                    sectionTitle("Files")
-                    ForEach(artifacts, id: \.metadata.id) { artifact in
-                        Button {
-                            focused = false
-                            store.selectedRecordID = artifact.metadata.id
-                            store.navigate(.file)
-                        } label: {
-                            PhoneFileRow(file: artifact)
-                        }.buttonStyle(.plain)
-                    }
-                }
-                if conversations.isEmpty && agents.isEmpty && artifacts.isEmpty {
-                    ContentUnavailableView {
-                        BlotLabel(store.t("No results"), symbol: "magnifyingglass", size: 44)
-                    } description: { Text(query) }
-                        .padding(.top, 36)
-                }
-                WorkspaceFeedback()
-            }.padding(.horizontal, 18).padding(.top, 72).padding(.bottom, 24)
+                    WorkspaceFeedback()
+                }.padding(.horizontal, 20).padding(.bottom, 24)
+            }.scrollDismissesKeyboard(.interactively)
         }
-        .scrollDismissesKeyboard(.interactively)
-        .overlay(alignment: .top) { header.padding(.horizontal, 18).padding(.top, 6) }
+        .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
         .workspaceGlassContainer()
-        .sensoryFeedback(.selection, trigger: scope)
-        .task { focused = true }
+        .accessibilityIdentifier("workspace.search.sheet")
     }
 
     private var header: some View {
-        @Bindable var store = store
-        return HStack(spacing: 10) {
-            PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { focused = false; store.back() }
+        VStack(spacing: 12) {
+            HStack {
+                Text(store.t("Search")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+                Spacer()
+                PhoneGlassCircleButton(symbol: "xmark", title: store.t("Close")) { focused = false; dismiss() }
+                    .accessibilityIdentifier("workspace.search.close")
+            }
             HStack(spacing: 8) {
-                BlotIcon(symbol: "magnifyingglass").foregroundStyle(WorkspaceStyle.secondary)
-                TextField(store.t("Search chats, files and agents"), text: $store.form.search.query)
-                    .textFieldStyle(.plain).font(.subheadline).autocorrectionDisabled()
+                BlotIcon(.search, size: 20).foregroundStyle(WorkspaceStyle.secondary)
+                TextField(store.t("Search agents and groups"), text: $query)
+                    .textFieldStyle(.plain).font(.body).autocorrectionDisabled()
                     .textInputAutocapitalization(.never).focused($focused)
-                if !store.form.search.query.isEmpty {
-                    Button { store.form.search.query = "" } label: {
-                        BlotIcon(symbol: "xmark.circle.fill", size: 17).foregroundStyle(WorkspaceStyle.secondary)
+                    .accessibilityIdentifier("workspace.search.query")
+                if !query.isEmpty {
+                    Button { query = "" } label: {
+                        BlotIcon(.closeCircle, size: 18).foregroundStyle(WorkspaceStyle.secondary)
+                            .frame(width: 32, height: 44)
                     }.buttonStyle(.plain).accessibilityLabel(store.t("Clear search"))
                 }
-            }.padding(.horizontal, 14).frame(minHeight: 44).glassEffect(.regular.interactive(), in: .capsule)
+            }.padding(.horizontal, 14).frame(minHeight: 48)
+                .glassEffect(.regular.interactive(), in: .capsule)
         }
     }
-
-    private func matches(_ text: String) -> Bool {
-        query.isEmpty || text.localizedCaseInsensitiveContains(query) || store.t(text).localizedCaseInsensitiveContains(query)
-    }
     private func sectionTitle(_ title: String) -> some View {
-        Text(store.t(title)).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
-            .padding(.top, 12).padding(.bottom, 4).accessibilityAddTraits(.isHeader)
+        Text(store.t(title)).font(.subheadline.weight(.medium)).foregroundStyle(WorkspaceStyle.secondary)
+            .padding(.top, 16).padding(.bottom, 6).accessibilityAddTraits(.isHeader)
+    }
+}
+
+private struct PhoneSearchGroupRow: View {
+    let group: BlotV3.Conversation
+    @Environment(WorkspaceStore.self) private var store
+    var body: some View {
+        let identity = PhoneConversationIdentity(conversation: group, agents: store.snapshot.agents, participants: store.snapshot.participants ?? [])
+        HStack(spacing: 14) {
+            PhoneGroupAvatar(agents: identity.members, size: 48)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(group.title).font(.body.weight(.medium))
+                Text(identity.members.map(\.name).joined(separator: ", "))
+                    .font(.subheadline).foregroundStyle(WorkspaceStyle.secondary).lineLimit(1)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+            if group.archived { BlotIcon(.archiveBox, size: 16).foregroundStyle(WorkspaceStyle.secondary).accessibilityLabel(store.t("Archive")) }
+        }.frame(minHeight: 76).contentShape(Rectangle())
     }
 }

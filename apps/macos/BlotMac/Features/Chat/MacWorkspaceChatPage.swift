@@ -6,11 +6,14 @@ struct MacWorkspaceChatPage: View {
     let route: WorkspaceRoute
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.blotReduceMotion) private var reduceMotion
     @State private var followsLatest = false
     @State private var visibleConversationID: UUID?
+    @State private var history = WorkspaceTranscriptWindow()
     private var activeDraft: WorkspaceChatActivity.Draft? {
-        store.selectedConversationID.flatMap { store.chatActivity.drafts[$0] }
+        store.currentReplyDraft
     }
+    private var messages: [BlotV3.Message] { Array(history.messages(in: store.currentVisibleMessages)) }
     private var isHome: Bool { route == .home || route == .newChat }
 
     var body: some View {
@@ -21,6 +24,7 @@ struct MacWorkspaceChatPage: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
                 WorkspaceFeedback().font(MacWorkspaceStyle.caption)
+                if store.selectedConversationID != nil { WorkspaceNativeProjectButton() }
                 MacWorkspaceComposer()
             }.frame(maxWidth: MacWorkspaceStyle.composerWidth)
                 .padding(.horizontal, 18).padding(.top, 8).padding(.bottom, 14)
@@ -33,10 +37,10 @@ struct MacWorkspaceChatPage: View {
     private var welcome: some View {
         GeometryReader { geometry in
             VStack(spacing: 22) {
-                if let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
+                if let agent = store.chatContent.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
                     WorkspaceAvatarView(agent: agent, size: 68, animated: true)
                 } else { WorkspaceAnimatedAvatar(size: 68) }
-                Text(store.t("What are we doing today?"))
+                WorkspaceWelcomeGreeting()
                     .font(.system(size: 26, weight: .regular))
                     .multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
             }
@@ -49,6 +53,14 @@ struct MacWorkspaceChatPage: View {
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 6) {
+                    if history.hasEarlier(in: store.currentVisibleMessages) {
+                        Button(store.language == "ru" ? "Загрузить предыдущие сообщения" : "Load earlier messages") {
+                            let anchor = messages.first?.metadata.id
+                            followsLatest = false
+                            history.loadEarlier()
+                            _Concurrency.Task { await _Concurrency.Task.yield(); if let anchor { proxy.scrollTo(anchor, anchor: .top) } }
+                        }.font(.callout).frame(maxWidth: .infinity).padding(.vertical, 12)
+                    }
                     ForEach(store.desktopContent.blocks(at: .top, in: store.selectedConversationID)) { block in
                         MacConversationBlockView(block: block)
                     }
@@ -57,10 +69,12 @@ struct MacWorkspaceChatPage: View {
                             .font(.system(size: 11)).foregroundStyle(WorkspaceStyle.secondary)
                             .frame(maxWidth: .infinity).padding(.top, 20).padding(.bottom, 12)
                     }
-                    ForEach(store.currentMessages, id: \.metadata.id) { message in
+                    ForEach(messages, id: \.metadata.id) { message in
                         MacMessageBubble(message: message) { id in proxy.scrollTo(id, anchor: .center) }
                             .id(message.metadata.id)
-                        ForEach(store.snapshot.artifacts.filter { message.artifactIds.contains($0.metadata.id) }, id: \.metadata.id) { file in
+                            .transition(reduceMotion ? .opacity : .scale(scale: 0.82, anchor: message.role == .user ? .bottomTrailing : .bottomLeading)
+                                .combined(with: .offset(y: 18)).combined(with: .opacity))
+                        ForEach(message.artifactIds.compactMap { store.chatContent.artifacts[$0] }, id: \.metadata.id) { file in
                             attachment(file).padding(.trailing, 70)
                         }
                         ForEach(store.desktopContent.blocks(at: .after(message.metadata.id), in: store.selectedConversationID)) { block in
@@ -81,16 +95,18 @@ struct MacWorkspaceChatPage: View {
                     Color.clear.frame(height: 1).id("mac-conversation-bottom")
                 }.frame(maxWidth: MacWorkspaceStyle.readingWidth)
                     .padding(.horizontal, 20).padding(.bottom, 12).frame(maxWidth: .infinity)
+                    .kAnimation(MacTeamMessageMotion.receive, value: messages.last?.metadata.id)
             }
             .onScrollGeometryChange(for: Bool.self) { $0.visibleRect.maxY >= $0.contentSize.height - 50 } action: { _, nearBottom in
                 followsLatest = nearBottom; updateVisibility()
             }
-            .onChange(of: store.currentMessages.count) { _, _ in
+            .onChange(of: messages.last?.metadata.id) { _, _ in
                 if followsLatest || store.currentMessages.last?.role == .user { proxy.scrollTo("mac-conversation-bottom", anchor: .bottom) }
             }
             .task(id: store.messageNavigationTarget) {
                 guard let id = store.messageNavigationTarget,
                       store.currentMessages.contains(where: { $0.metadata.id == id }) else { return }
+                history.reveal(id, in: store.currentVisibleMessages)
                 await _Concurrency.Task.yield()
                 followsLatest = false
                 proxy.scrollTo(id, anchor: .center)
@@ -110,9 +126,11 @@ struct MacWorkspaceChatPage: View {
             .onChange(of: scenePhase) { _, _ in updateVisibility() }
             .onChange(of: store.selectedConversationID) { old, _ in
                 store.clearChatVisibility(old); visibleConversationID = store.selectedConversationID; followsLatest = true
+                history.reset()
                 proxy.scrollTo("mac-conversation-bottom", anchor: .bottom); updateVisibility()
             }
             .onDisappear { store.clearChatVisibility(visibleConversationID) }
+            .onChange(of: store.currentVisibleMessages.count) { previous, current in history.retainPosition(added: current - previous, followingLatest: followsLatest) }
         }
     }
 

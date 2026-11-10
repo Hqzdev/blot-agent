@@ -79,7 +79,7 @@ struct MacTeamSidebar: View {
         }.background(MacTeamStyle.sidebar)
     }
     private func sectionTitle(_ title: String) -> some View {
-        Text(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(WorkspaceStyle.secondary)
+        WorkspaceLocalizedText(title).font(.system(size: 11, weight: .semibold)).foregroundStyle(WorkspaceStyle.secondary)
             .padding(.horizontal, 12).padding(.top, 4).padding(.bottom, 6)
             .accessibilityAddTraits(.isHeader)
     }

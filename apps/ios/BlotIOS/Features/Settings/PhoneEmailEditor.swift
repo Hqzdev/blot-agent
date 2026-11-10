@@ -7,27 +7,30 @@ struct PhoneEmailEditor: View {
     @Environment(\.dismiss) private var dismiss
     @State private var email = ""
     @State private var invalid = false
+    @State private var saving = false
     @FocusState private var focused: Bool
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section(store.t("Email")) {
+            PhoneSettingsPage {
+                PhoneSettingsGroup(title: "Email") {
+                    VStack(alignment: .leading, spacing: 12) {
                     TextField(store.t("Your email address"), text: $email)
                         .keyboardType(.emailAddress).textInputAutocapitalization(.never)
                         .textContentType(.emailAddress).autocorrectionDisabled().focused($focused)
                     if invalid { Text(store.t("Enter a valid email address.")).font(.footnote).foregroundStyle(.red) }
+                    }.padding(PhonePageLayout.rowInset)
                 }
                 WorkspaceFeedback()
             }
-            .navigationTitle(store.t("Email")).navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(store.t("Save")) { save() }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                PhonePageHeader(title: store.t("Email"), back: { dismiss() }) {
+                    Button(store.t("Save")) { save() }.frame(minWidth: 44, minHeight: 44)
                 }
-            }
-        }.onAppear { email = store.form.account.email; store.error = nil; focused = true }
+                .disabled(saving)
+            }.toolbar(.hidden, for: .navigationBar)
+        }.interactiveDismissDisabled(saving)
+        .onAppear { email = store.profile.contactEmail ?? store.form.account.email; store.error = nil; focused = true }
     }
 
     private func save() {
@@ -37,9 +40,12 @@ struct PhoneEmailEditor: View {
               !parts[1].hasPrefix("."), !parts[1].hasSuffix("."), !value.contains(where: { $0.isWhitespace }) else {
             invalid = true; focused = true; return
         }
-        store.error = nil
-        store.form.account.email = value
-        store.persistWorkspace(immediately: true)
-        if store.error == nil { dismiss() }
+        saving = true
+        var profile = store.profile
+        profile.contactEmail = value
+        Task {
+            defer { saving = false }
+            if await store.saveProfile(profile) { dismiss() }
+        }
     }
 }
