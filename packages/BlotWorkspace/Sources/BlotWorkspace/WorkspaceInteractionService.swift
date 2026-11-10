@@ -34,14 +34,22 @@ public struct WorkspaceInteractionService: Sendable {
             payload: Input(conversationID: conversationID, messageID: messageID)).data()
         _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             _ = try tx.require(BlotV3.Conversation.self, id: conversationID)
-            let messages = WorkspaceMessageOrder.ordered(try tx.records(BlotV3.Message.self).filter { $0.conversationId == conversationID })
+            let index = WorkspaceDirectConversations(try tx.records(BlotV3.Conversation.self))
+            let messages = WorkspaceMessageOrder.ordered(try index.messages(tx.records(BlotV3.Message.self)).filter {
+                $0.conversationId == index.canonicalID(conversationID)
+            })
             guard let index = messages.firstIndex(where: { $0.metadata.id == messageID }) else { throw WorkspaceStorageError.invalidRecord }
             let id = WorkspaceLogicalID.make(kind: "ConversationReadPosition", workspaceID: tx.identity.workspaceID,
                 parts: [conversationID.uuidString, tx.identity.ownerID.uuidString])
             let old = try tx.record(BlotV3.ConversationReadPosition.self, id: id)
             let source = messages[index]
             let position = source.position ?? index + 1
-            guard WorkspaceMessageOrder.isAfter(source, legacyPosition: index + 1, read: old) else { return id }
+            let anchor = old.flatMap { read in messages.first { $0.metadata.id == read.messageId } }
+            let normalizedRead = try old.map { read in
+                try BlotV3.ConversationReadPosition(metadata: read.metadata, conversationId: read.conversationId,
+                    participantId: read.participantId, messageId: read.messageId, position: anchor?.position ?? read.position)
+            }
+            guard WorkspaceMessageOrder.isAfter(source, legacyPosition: index + 1, read: normalizedRead) else { return id }
             let record = try BlotV3.ConversationReadPosition(metadata: tx.metadata(id: id, now: now, replacing: old?.metadata),
                 conversationId: conversationID, participantId: tx.identity.ownerID, messageId: messageID, position: position)
             try tx.put(record, expectedVersion: old?.metadata.version ?? 0)

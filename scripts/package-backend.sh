@@ -10,11 +10,21 @@ if [ -n "$(find "$bundle" -type f \( -name '.env' -o -name '.env.*' \) -print -q
     echo 'Remove .env files from the app bundle before packaging.' >&2
     exit 1
 fi
-if [ -x .build/tools/jdk-25.0.4.1+1/Contents/Home/bin/java ]; then
-    JAVA_HOME="$PWD/.build/tools/jdk-25.0.4.1+1/Contents/Home"
-    export JAVA_HOME
-fi
-: "${JAVA_HOME:?Select JDK 25 before packaging}"
+select_java_home() {
+    for candidate in "${JAVA_HOME:-}" "$PWD"/.build/tools/jdk-*/Contents/Home \
+        "$(/usr/libexec/java_home -F -v 25 2>/dev/null || true)"; do
+        [ -x "$candidate/bin/java" ] && [ -x "$candidate/bin/javac" ] && \
+            [ -x "$candidate/bin/jlink" ] && [ -f "$candidate/include/jni.h" ] || continue
+        if grep -Eq '^JAVA_VERSION="25([.+-]|")' "$candidate/release"; then
+            printf '%s\n' "$candidate"
+            return
+        fi
+    done
+    echo 'JDK 25 is required. Install it or set JAVA_HOME to a full JDK 25 installation.' >&2
+    return 1
+}
+JAVA_HOME="$(select_java_home)"
+export JAVA_HOME
 GRADLE_USER_HOME="${GRADLE_USER_HOME:-$PWD/.build/gradle-home}"
 export GRADLE_USER_HOME
 echo '[Blot] Building Java backend'
@@ -62,6 +72,7 @@ for library in "$bundle"/Contents/MacOS/*.dylib; do
     [ -f "$library" ] || continue
     scripts/sign-native.sh "$library"
 done
+scripts/build-native-executor.sh "$bundle" "${BUILT_PRODUCTS_DIR:-$(dirname "$bundle")}"
 scripts/sign-native.sh --entitlements apps/macos/BlotMac/BlotMac.entitlements "$bundle"
 codesign --verify --deep --strict "$bundle"
 [ -x "$runtime/bin/java" ] && [ -s "$resources/blot-backend.jar" ] || { echo 'Backend packaging is incomplete.' >&2; exit 1; }

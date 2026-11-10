@@ -11,6 +11,7 @@ public actor WorkspaceRepository {
 
     public init(url: URL) throws {
         let database = try SQLiteDatabase(url: url)
+        try database.execute("CREATE INDEX IF NOT EXISTS outbox_task_admission ON outbox(kind,record_id,origin_device,version)")
         self.database = database
         self.store = WorkspaceRecordStore(database: database)
         self.replicas = WorkspaceReplicaStore(database: database)
@@ -83,6 +84,39 @@ public actor WorkspaceRepository {
     private func removeObserver(_ id: UUID) { observers[id] = nil }
     private func publishChanges() { for observer in observers.values { observer.yield(()) } }
 
+    public func pinnedGroupPlans() throws -> [UUID: UUID] {
+        let pairs = try database.query("SELECT key,value FROM local_settings WHERE key LIKE 'group-plan:%'") { row -> (UUID, UUID)? in
+            guard let conversation = UUID(uuidString: String(SQLiteDatabase.text(row, 0).dropFirst("group-plan:".count))),
+                  let message = UUID(uuidString: SQLiteDatabase.text(row, 1)) else { return nil }
+            return (conversation, message)
+        }.compactMap { $0 }
+        return Dictionary(uniqueKeysWithValues: pairs)
+    }
+    public func pinGroupPlan(messageID: UUID, identity: WorkspaceIdentity) throws {
+        guard let message = try store.record(BlotV3.Message.self, id: messageID, workspaceID: identity.workspaceID),
+              message.metadata.ownerId == identity.ownerID, message.role == .assistant, message.delivery == .completed,
+              let group = try store.record(BlotV3.Conversation.self, id: message.conversationId, workspaceID: identity.workspaceID),
+              group.kind == .group, message.authorAgentId == group.agentId else { throw WorkspaceStorageError.permissionDenied }
+        try database.execute("INSERT INTO local_settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            [.text("group-plan:" + message.conversationId.uuidString), .text(messageID.uuidString)])
+        publishChanges()
+    }
+    public func unpinGroupPlan(conversationID: UUID, messageID: UUID) throws {
+        try database.execute("DELETE FROM local_settings WHERE key = ? AND value = ?",
+            [.text("group-plan:" + conversationID.uuidString), .text(messageID.uuidString)])
+        publishChanges()
+    }
+
+    public func executionAdmitted(_ task: BlotV3.Task, identity: WorkspaceIdentity) throws -> Bool {
+        try store.executionAdmitted(task, identity: identity)
+    }
+    func rememberTerminalTask(_ task: BlotV3.Task, identity: WorkspaceIdentity) throws {
+        guard task.execution.executorDeviceId == identity.deviceID, task.metadata.ownerId == identity.ownerID,
+              task.metadata.workspaceId == identity.workspaceID, WorkspaceTaskService.terminal(task.state) else { return }
+        try database.execute("INSERT INTO local_settings(key,value) VALUES (?,?) ON CONFLICT(key) DO NOTHING",
+            [.text("task-terminal:" + task.metadata.id.uuidString), .text(task.state.rawValue)])
+    }
+
     public func presentationState() throws -> Data? {
         try database.query("SELECT value FROM local_settings WHERE key = 'presentation-state'", row: { Data(SQLiteDatabase.text($0, 0).utf8) }).first
     }
@@ -108,8 +142,49 @@ public actor WorkspaceRepository {
         try store.records(type, workspaceID: workspaceID)
     }
 
+    private struct ScheduleWatermark: Codable { let version: Int; let through: TimeInterval }
+    func scheduleWatermark(id: UUID, version: Int) throws -> Date? {
+        guard let raw = try database.query("SELECT value FROM local_settings WHERE key = ?", [.text("schedule-watermark:" + id.uuidString)],
+            row: { SQLiteDatabase.text($0, 0) }).first,
+              let saved = try? JSONDecoder().decode(ScheduleWatermark.self, from: Data(raw.utf8)), saved.version == version else { return nil }
+        return Date(timeIntervalSince1970: saved.through)
+    }
+    func saveScheduleWatermark(id: UUID, version: Int, through: Date, identity: WorkspaceIdentity) throws {
+        try database.transaction {
+            guard let schedule = try store.record(BlotV3.Automation.self, id: id, workspaceID: identity.workspaceID),
+                  schedule.metadata.ownerId == identity.ownerID, schedule.metadata.version == version,
+                  schedule.enabled, schedule.executorDeviceId == identity.deviceID else { return }
+            if let saved = try scheduleWatermark(id: id, version: version), saved >= through { return }
+            let data = try JSONEncoder().encode(ScheduleWatermark(version: version, through: through.timeIntervalSince1970))
+            try database.execute("INSERT INTO local_settings(key,value) VALUES (?,?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                [.text("schedule-watermark:" + id.uuidString), .text(String(decoding: data, as: UTF8.self))])
+        }
+    }
+    public func scheduleFailures() throws -> [UUID] {
+        guard let raw = try database.query("SELECT value FROM local_settings WHERE key = 'schedule-failures'", row: { SQLiteDatabase.text($0, 0) }).first else { return [] }
+        return (try? JSONDecoder().decode([UUID].self, from: Data(raw.utf8))) ?? []
+    }
+    func saveScheduleFailures(_ ids: [UUID]) throws {
+        let sorted = Array(Set(ids)).sorted { $0.uuidString < $1.uuidString }
+        guard try scheduleFailures() != sorted else { return }
+        let data = try JSONEncoder().encode(sorted)
+        try database.execute("INSERT INTO local_settings(key,value) VALUES ('schedule-failures',?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            [.text(String(decoding: data, as: UTF8.self))])
+        publishChanges()
+    }
+
     public func record<T: BlotWorkspaceRecord>(_ type: T.Type, id: UUID, workspaceID: UUID) throws -> T? {
         try store.record(type, id: id, workspaceID: workspaceID)
+    }
+
+    /// Stream-event fencing needs live task and invocation state, never the entire chat history.
+    func taskExecutionProjection(identity: WorkspaceIdentity) throws -> WorkspaceProjection {
+        try database.transaction {
+            var result = WorkspaceProjection()
+            result.tasks = try store.records(BlotV3.Task.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
+            result.invocations = try store.records(BlotV3.ToolInvocation.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
+            return result
+        }
     }
 
     public func projection(identity: WorkspaceIdentity) throws -> WorkspaceProjection {
@@ -139,7 +214,7 @@ public actor WorkspaceRepository {
             result.invocations = try store.records(BlotV3.ToolInvocation.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.budgets = try store.records(BlotV3.BudgetLedger.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.conflicts = try store.records(BlotV3.ConflictingRevision.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
-            return result
+            return try WorkspaceDirectConversations(result.conversations).project(result)
         }
     }
 
@@ -270,6 +345,19 @@ public actor WorkspaceRepository {
 
     public func relayCursor() throws -> Int64 {
         try database.query("SELECT value FROM replica_state WHERE key = 'relay_cursor'", row: { sqlite3_column_int64($0, 0) }).first ?? 0
+    }
+
+    public func messagePins() throws -> [WorkspaceMessagePin] {
+        try WorkspaceMessagePinStore(database: database).states()
+    }
+
+    public func setMessagePinned(_ messageID: UUID, pinned: Bool, identity: WorkspaceIdentity) throws {
+        try database.transaction {
+            guard let message = try store.record(BlotV3.Message.self, id: messageID, workspaceID: identity.workspaceID),
+                  message.metadata.ownerId == identity.ownerID else { throw WorkspaceStorageError.missingRecord }
+            try WorkspaceMessagePinStore(database: database).set(message: message, pinned: pinned, identity: identity)
+        }
+        publishChanges()
     }
 
     public func replicaSnapshot(identity: WorkspaceIdentity) throws -> WorkspaceReplicaSnapshot {

@@ -78,6 +78,8 @@ public struct WorkspaceReplicaSnapshot: Codable, Equatable, Sendable {
     public let watermark: WorkspaceVersionVector
     public let relayCursor: Int64
     public let records: [WorkspaceReplicaRecord]
+    // Older snapshots omit this metadata; absence never removes newer local pins.
+    public var messagePins: [WorkspaceMessagePin]? = nil
 }
 
 enum JSONFields {

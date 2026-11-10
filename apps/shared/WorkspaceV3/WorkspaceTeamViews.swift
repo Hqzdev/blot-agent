@@ -9,7 +9,7 @@ struct WorkspaceTeamView: View {
     var body: some View {
         switch route {
         case .createAgent, .editAgent: editor
-        case .agentProfile: profile
+        case .agentProfile: profileDetails
         case .files: files
         case .schedules: schedules
         case .createSchedule: scheduleEditor
@@ -25,7 +25,7 @@ struct WorkspaceTeamView: View {
     }
     private var agentColumns: [GridItem] {
         #if os(macOS)
-        Array(repeating: GridItem(.flexible(), alignment: .top), count: 3)
+        [GridItem(.adaptive(minimum: 200), alignment: .top)]
         #else
         Array(repeating: GridItem(.flexible(), alignment: .top), count: 2)
         #endif
@@ -51,23 +51,6 @@ struct WorkspaceTeamView: View {
             if store.snapshot.agents.isEmpty { WorkspaceDataState(state: .empty) }
         }
     }
-    private var profile: some View {
-        #if os(macOS)
-        HStack(alignment: .top, spacing: 28) {
-            WorkspaceCard {
-                if let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) {
-                    WorkspaceAvatarView(agent: agent, size: 110).frame(maxWidth: .infinity).padding(.vertical, 30)
-                    Text(agent.name).font(.title2)
-                    Text(store.t(agent.instructions)).foregroundStyle(WorkspaceStyle.secondary)
-                    Button(store.t("Open chat")) { _Concurrency.Task { await store.openAgentChat(agent.metadata.id) } }.buttonStyle(WorkspaceButtonStyle())
-                }
-            }.frame(width: 260)
-            profileDetails
-        }
-        #else
-        profileDetails
-        #endif
-    }
     private var profileDetails: some View {
         @Bindable var store = store
         let agent = store.snapshot.agents.first(where: { $0.metadata.id == store.selectedAgentID }) ?? store.snapshot.agents.first
@@ -82,7 +65,7 @@ struct WorkspaceTeamView: View {
                     WorkspaceLink(title: "Instructions", route: .editAgent)
                     WorkspaceLink(title: "Model", route: .models)
                     WorkspaceLink(title: "Access mode", route: .permissions)
-                    WorkspaceLink(title: "Skills", route: .mcp)
+                    WorkspaceLink(title: "Skills", route: .skills)
                 }
                 #if os(iOS)
                 WorkspaceCard { WorkspaceLink(title: "Personalization", route: .personalization, symbol: "sliders") }
@@ -138,7 +121,8 @@ struct WorkspaceTeamView: View {
         @Bindable var store = store
         return VStack(alignment: .leading, spacing: 22) {
             WorkspaceHeading(title: "Files", subtitle: "Workspace results and documents")
-            WorkspaceField(title: "Search by name and content", text: $store.form.search.query)
+            WorkspaceFilesImportButton()
+            WorkspaceField(title: "Search by name", text: $store.form.search.query)
             ForEach(store.snapshot.artifacts.filter { store.form.search.query.isEmpty || $0.name.localizedCaseInsensitiveContains(store.form.search.query) }, id: \.metadata.id) { file in
                 Button { store.selectedRecordID = file.metadata.id; store.navigate(.file) } label: {
                     HStack { BlotIcon(symbol: "doc"); Text(file.name); Spacer(); BlotIcon(symbol: "chevron.right") }
@@ -165,12 +149,9 @@ struct WorkspaceTeamView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(store.t(schedule.name)).font(.headline)
                             Text(schedule.localTime + " · " + schedule.timezone).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
-                            if store.mode == .live, let next = try? WorkspaceScheduleCalculator().nextRun(for: schedule, after: Date()) {
-                                Text(next, format: .dateTime.day().month().hour().minute())
-                                    .environment(\.timeZone, TimeZone(identifier: schedule.timezone) ?? .current).font(.caption)
-                            }
+                            if store.mode == .live { WorkspaceScheduleRunSummary(schedule: schedule) }
                             Text(store.t(schedule.goal)).foregroundStyle(WorkspaceStyle.secondary)
-                            BlotLabel("MacBook Pro", symbol: "laptopcomputer").font(.caption).foregroundStyle(WorkspaceStyle.secondary)
+                            BlotLabel(executorName(schedule), symbol: "laptopcomputer").font(.caption).foregroundStyle(WorkspaceStyle.secondary)
                         }
                         Spacer(minLength: 0)
                         Toggle(store.t("Enabled"), isOn: Binding(get: { schedule.enabled }, set: { _ in
@@ -184,7 +165,15 @@ struct WorkspaceTeamView: View {
             WorkspaceLink(title: "New schedule", route: .createSchedule, symbol: "plus")
             if store.snapshot.schedules.isEmpty { WorkspaceDataState(state: .empty) }
             WorkspaceFeedback()
+            if store.mode == .live {
+                Text(store.language == "ru" ? "На Mac расписания работают, пока Blot запущен, в том числе при свёрнутом окне. После сна или перезапуска применяется выбранная политика пропущенных запусков. На iPhone точное выполнение в фоне не гарантируется." : "On Mac, schedules run while Blot is running, including with its window minimized. Missed-run policy applies after sleep or restart. Exact background execution is not guaranteed on iPhone.")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
         }
+    }
+    private func executorName(_ schedule: BlotV3.Automation) -> String {
+        if schedule.executorDeviceId == store.snapshot.localDeviceID { return store.t("This device") }
+        return store.snapshot.devices.first { $0.metadata.id == schedule.executorDeviceId }?.name ?? store.t("Selected computer")
     }
     private var week: some View {
         #if os(macOS)
@@ -253,7 +242,10 @@ struct WorkspaceTeamView: View {
                     ForEach(store.snapshot.devices, id: \.metadata.id) { device in Text(device.name).tag(Optional(device.metadata.id)) }
                 }
                 Picker(store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy) {
-                    ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in Text(policy.rawValue).tag(policy) }
+                    ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in WorkspaceSchedulePolicyLabel(policy: policy).tag(policy) }
+                }
+                if store.form.schedule.missedRunPolicy == .catch_up {
+                    Stepper(store.t("Maximum catch-up runs") + ": \(store.form.schedule.maximumCatchUpRuns)", value: $store.form.schedule.maximumCatchUpRuns, in: 1...100)
                 }
             }
             WorkspaceCard { WorkspaceLink(title: "Agent", route: .agents); WorkspaceLink(title: "Computer", route: .devices)

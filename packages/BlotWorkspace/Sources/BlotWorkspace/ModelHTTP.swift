@@ -96,7 +96,12 @@ enum ModelRequestEncoder {
     }
     static func gigaChat(_ request: ChatModelRequest, model: String) throws -> [String: Any] {
         guard request.maximumOutputTokens > 0 else { throw ChatModelError.invalidConfiguration }
-        let messages = try request.messages.map { message -> [String: Any] in
+        // GigaChat requires a single system message at the start, including memory and runtime instructions.
+        let instructions = request.messages.filter { $0.role == "system" }
+        let history = request.messages.filter { $0.role != "system" }
+        let input = instructions.isEmpty ? history
+            : [ChatModelMessage(role: "system", content: instructions.map(\.content).joined(separator: "\n\n"))] + history
+        let messages = try input.map { message -> [String: Any] in
             var value: [String: Any] = ["role": message.role == "tool" ? "function" : message.role, "content": message.content]
             if let name = message.name { value["name"] = name }
             if let call = message.toolCalls.first {

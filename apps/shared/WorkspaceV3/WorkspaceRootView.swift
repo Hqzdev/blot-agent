@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import BlotWorkspace
@@ -35,11 +36,13 @@ struct WorkspacePage: View {
         #endif
     }
     @ViewBuilder private func page(height: CGFloat) -> some View {
-        if route == .file && store.mode == .live { WorkspaceLocalFileView() }
+        if route == .browser { WorkspaceBrowserDestination() }
+        else if route == .file && store.mode == .live { WorkspaceLocalFileView() }
         else if route == .search && store.mode == .live { WorkspaceLocalSearchView() }
         else {
         #if os(macOS)
         if [.createAgent, .editAgent, .firstAgent].contains(route) { MacAgentCreationView(isEditing: route == .editAgent) }
+        else if route == .marketplace { MacMarketplacePage() }
         else if [.home, .chat, .newChat].contains(route) { MacWorkspaceChatPage(route: route) }
         else { scrollingPage(height: height) }
         #else
@@ -48,6 +51,25 @@ struct WorkspacePage: View {
         }
     }
     private func scrollingPage(height: CGFloat) -> some View {
+        scrollingContent(height: height)
+        #if os(iOS)
+        .scrollDismissesKeyboard(.interactively)
+        .scrollPosition(store.navigation.position(for: route))
+        .onAppear { store.navigation.restorePosition(for: route) }
+        .onScrollGeometryChange(for: CGFloat.self) { max(0, $0.contentOffset.y + $0.contentInsets.top) } action: { old, new in
+            if abs(old - new) > 0.5 { store.navigation.recordOffset(new, for: route) }
+        }
+        #endif
+    }
+    @ViewBuilder private func scrollingContent(height: CGFloat) -> some View {
+        #if os(iOS)
+        if PhoneWorkspacePageHeader.isUsed(on: route) { PhonePage { content } }
+        else { legacyScrollingContent(height: height) }
+        #else
+        legacyScrollingContent(height: height)
+        #endif
+    }
+    private func legacyScrollingContent(height: CGFloat) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) { content }
                 .padding(pagePadding)
@@ -57,14 +79,6 @@ struct WorkspacePage: View {
                 .frame(minHeight: route == .home ? max(0, height - 1) : nil, alignment: .top)
                 .frame(maxWidth: WorkspaceStyle.contentWidth).frame(maxWidth: .infinity, alignment: .top)
         }
-        #if os(iOS)
-        .scrollDismissesKeyboard(.interactively)
-        .scrollPosition(store.navigation.position(for: route))
-        .onAppear { store.navigation.restorePosition(for: route) }
-        .onScrollGeometryChange(for: CGFloat.self) { max(0, $0.contentOffset.y + $0.contentInsets.top) } action: { old, new in
-            if abs(old - new) > 0.5 { store.navigation.recordOffset(new, for: route) }
-        }
-        #endif
     }
     private var pagePadding: CGFloat {
         #if os(macOS)
@@ -75,8 +89,9 @@ struct WorkspacePage: View {
     }
     @ViewBuilder private var content: some View {
         switch route {
+        case .skills: WorkspaceSkillsView()
         case .agents, .agentProfile, .createAgent, .editAgent, .files, .schedules, .createSchedule: WorkspaceTeamView(route: route)
-        case .settings, .appSettings, .account, .models, .permissions, .connections, .devices, .pair, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .language, .notifications: WorkspaceSettingsView(route: route)
+        case .settings, .settingsProfile, .settingsStorage, .settingsUpdates, .appSettings, .account, .models, .permissions, .connections, .devices, .pair, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .language, .notifications: WorkspaceSettingsView(route: route)
         default: WorkspaceTaskView(route: route)
         }
     }
@@ -93,24 +108,26 @@ struct WorkspaceRootView: View {
     @Environment(\.scenePhase) private var scenePhase
     var body: some View {
         Group {
+            #if os(macOS)
             if store.isRestoringSession {
                 ProgressView()
                     .controlSize(.small)
                     .accessibilityLabel(store.t("Loading…"))
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    #if os(macOS)
-                    .frame(minWidth: 900, minHeight: 620)
-                    #endif
+                    .frame(minWidth: MacWorkspaceLayout.minimumWidth, minHeight: MacWorkspaceLayout.minimumHeight)
                     .accessibilityIdentifier("workspace.restoring-session")
             } else {
-                #if os(macOS)
                 desktop
-                #else
-                phone
-                #endif
             }
+            #else
+            phone
+            #endif
         }
+        .modifier(WorkspaceBrowserHost())
         .environment(store)
+        .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
+            store.languagePreferences.refreshSystemLanguage()
+        }
         .environment(\.locale, Locale(identifier: store.language == "ru" ? "ru_RU" : "en_GB"))
         .environment(\.timeZone, store.mode == .preview ? TimeZone(identifier: "Asia/Yekaterinburg")! : .current)
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
@@ -118,21 +135,45 @@ struct WorkspaceRootView: View {
         .tint(WorkspaceStyle.ink)
         .kMotionRoot(reduceMotion: reduceMotion)
         .sheet(isPresented: $store.catalogVisible) { WorkspaceCatalogView().environment(store) }
-        .sheet(isPresented: $store.groupCreationVisible) { WorkspaceGroupEditor().environment(store) }
+        .sheet(isPresented: $store.groupCreationVisible, onDismiss: { store.groupEditingID = nil }) {
+            WorkspaceGroupEditor(conversation: store.snapshot.conversations.first { $0.metadata.id == store.groupEditingID },
+                participants: store.snapshot.participants ?? []).environment(store)
+        }
         .sheet(isPresented: $store.conflictsVisible) { WorkspaceConflictsView().environment(store) }
         .task { await store.loadWorkspace() }
         .task(id: scenePhase) {
+            guard scenePhase == .active else { return }
+            await store.synchronizeAccount()
+        }
+        .task(id: scenePhase) {
             guard scenePhase == .active, store.mode == .live else { return }
-            while !_Concurrency.Task.isCancelled {
-                await store.enqueueDueSchedules()
-                do { try await _Concurrency.Task.sleep(for: .seconds(30)) } catch { return }
-            }
+            store.languagePreferences.refreshSystemLanguage()
+            await store.enqueueDueSchedules()
         }
         .onChange(of: scenePhase) { _, phase in
             if phase != .active { store.updateChatVisibility(nil, atLatest: false); store.persistChatState(immediately: true) }
         }
         .onDisappear { store.persistChatState(immediately: true) }
-        .onOpenURL { store.handleBrowserLaunch($0) }
+        .modifier(AppleInteractionHost(center: store.appleIntegrations?.interactions))
+        .onOpenURL { url in
+            #if os(iOS)
+            if store.handleWidgetURL(url) { return }
+            #endif
+            if ["blot-agent-ios", "blot-agent-macos"].contains(url.scheme ?? ""), url.host == "apple-connections" {
+                #if os(macOS)
+                store.navigate(.marketplace)
+                #else
+                store.pluginCatalogVisible = true
+                #endif
+            } else if store.appleIntegrations?.interactions.handle(url) != true { store.handleBrowserLaunch(url) }
+        }
+        #if os(macOS)
+        .handlesExternalEvents(preferring: ["*"], allowing: ["*"])
+        #endif
+        #if os(iOS)
+        .onChange(of: scenePhase) { _, _ in store.publishWidgets(immediately: true) }
+        .onChange(of: store.language) { _, _ in store.publishWidgets() }
+        #endif
         .confirmationDialog(store.t("Delete chat?"), isPresented: Binding(
             get: { store.pendingChatDeletionID != nil },
             set: { if !$0 { store.pendingChatDeletionID = nil } }), titleVisibility: .visible,
@@ -148,6 +189,9 @@ struct WorkspaceRootView: View {
                     .disabled(store.chatTitleDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 Button(store.t("Cancel"), role: .cancel) { store.pendingChatRenameID = nil }
         }
+        #if os(macOS)
+        .modifier(MacAdaptiveSheetHost())
+        #endif
     }
     private var effectiveTheme: ThemePreference {
         #if os(macOS)
@@ -161,7 +205,7 @@ struct WorkspaceRootView: View {
         Group {
             if store.route.isAuthentication && store.route != .firstAgent { WorkspacePage(route: store.route) }
             else { MacWorkspaceShell() }
-        }.frame(minWidth: 900, minHeight: 620)
+        }.frame(minWidth: MacWorkspaceLayout.minimumWidth, minHeight: MacWorkspaceLayout.minimumHeight)
             .overlay {
                 if store.mode == .preview && !ProcessInfo.processInfo.arguments.contains("--team-design") && store.route.isSetting {
                     Color.black.opacity(0.25)
@@ -179,18 +223,19 @@ struct WorkspaceRootView: View {
     }
     #else
     private var phone: some View {
-        NavigationStack(path: Binding(get: { store.history }, set: { store.restoreNavigation($0) })) {
-            phonePage(store.rootRoute)
-                .navigationDestination(for: WorkspaceRoute.self) { destination in phonePage(destination) }
-        }
+        PhoneWorkspaceNavigationStack()
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !store.rootRoute.isAuthentication && PhoneTabBar.isVisible(on: store.route) {
+            if !store.rootRoute.isAuthentication && !store.pluginCatalogVisible && PhoneTabBar.isVisible(on: store.route) {
                 PhoneTabBar().offset(y: 8)
             }
         }
-        .sheet(isPresented: $store.profileEditorVisible) {
-            PhoneProfileEditor().environment(store)
-                .presentationDetents([.medium, .large]).presentationCornerRadius(36)
+        .sheet(isPresented: $store.searchVisible) {
+            PhoneSearchView().environment(store)
+                .presentationDetents([.medium, .large]).presentationCornerRadius(32)
+                .presentationDragIndicator(.visible)
+        }
+        .task(id: store.providerAvatarRequest) {
+            if let request = store.providerAvatarRequest { await store.importProviderAvatar(request) }
         }
         .sheet(isPresented: $store.agentPickerVisible) {
             PhoneChatAgentPicker().environment(store)
@@ -224,40 +269,19 @@ struct WorkspaceRootView: View {
         .sensoryFeedback(.selection, trigger: store.pinnedConversationIDs)
         .sensoryFeedback(.selection, trigger: store.chatInteractions.messages)
         .sensoryFeedback(.success, trigger: store.snapshot.agents.count) { old, new in new > old }
-        .sensoryFeedback(.selection, trigger: store.route)
+        .sensoryFeedback(.selection, trigger: store.route) { _, destination in
+            guard !PhoneTabBar.isTab(destination) else { return false }
+            #if DEBUG
+            store.navigation.recordRouteFeedback(destination)
+            #endif
+            return true
+        }
         .sensoryFeedback(.success, trigger: store.snapshot.messages.last?.metadata.id) { _, _ in
             store.snapshot.messages.last?.role == .user
         }
         .sensoryFeedback(.error, trigger: store.error) { _, error in error != nil }
     }
-    private func phonePage(_ route: WorkspaceRoute) -> some View {
-        let floating = PhoneWorkspaceScreen.usesFloatingControls(route) && store.screenState == .normal
-        return PhoneWorkspaceScreen(route: route)
-            .id(route)
-            .modifier(PhoneComposerMenuOverlay())
-            .navigationTitle(floating ? "" : (route == .file ? store.selectedFile?.name ?? store.t("Files") : store.t(route == .settings ? "Settings" : route == .account ? "Security and sign-in" : route == .memory ? "Personalization" : route.title)))
-            .toolbar(floating ? .hidden : .visible, for: .navigationBar)
-            .navigationBarBackButtonHidden(floating)
-            .navigationBarTitleDisplayMode([.chats, .agents, .schedules, .settings].contains(route) ? .large : .inline)
-            .toolbarBackground(.automatic, for: .navigationBar)
-            .toolbar {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    if !floating && [.agents, .schedules].contains(route) {
-                        BlotIconButton(store.t("Create"), symbol: "plus") {
-                            if route == .agents { store.beginAgentCreation() }
-                            else { store.navigate(.createSchedule) }
-                        }.labelStyle(.iconOnly)
-                    } else if !floating && [.running, .result].contains(route) {
-                        Menu {
-                            Button(store.t("Task details")) { store.navigate(.running) }
-                            Button(store.t("Review prepared action")) { store.navigate(.approval) }
-                            Button(store.t("Result")) { store.navigate(.result) }
-                            Button(store.t("View browser")) { store.navigate(.browser) }
-                        } label: { BlotIcon(symbol: "ellipsis") }
-                    }
-                }
-            }
-    }
+
     #endif
 }
 

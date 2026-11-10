@@ -3,15 +3,29 @@ import Foundation
 public struct WorkspaceToolContext: Sendable {
     public let sourceMessageID: UUID
     public let taskID: UUID?
+    public let agentID: UUID?
+    public let connectionID: UUID?
     public let allowedToolIDs: Set<String>
-    public init(sourceMessageID: UUID, taskID: UUID?, allowedToolIDs: Set<String>) {
+    public init(sourceMessageID: UUID, taskID: UUID?, allowedToolIDs: Set<String>, agentID: UUID? = nil, connectionID: UUID? = nil) {
         self.sourceMessageID = sourceMessageID; self.taskID = taskID; self.allowedToolIDs = allowedToolIDs
+        self.agentID = agentID; self.connectionID = connectionID
     }
 }
 
 public protocol WorkspaceToolExecuting: Sendable {
     var definitions: [ChatToolDefinition] { get }
+    func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition]
     func execute(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON
+    func validate(_ call: ChatToolCall, definition: ChatToolDefinition) throws
+}
+
+public extension WorkspaceToolExecuting {
+    func validate(_ call: ChatToolCall, definition: ChatToolDefinition) throws {
+        try ToolArgumentValidator.validate(call.arguments, schema: definition.parameters)
+    }
+    func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
+        definitions.filter { context.allowedToolIDs.contains($0.name) }
+    }
 }
 
 public enum WorkspaceToolError: Error, Equatable, Sendable { case unknownTool, invalidArguments, approvalRequired, uncertainResult }
@@ -25,12 +39,17 @@ public struct WorkspaceToolRegistry: Sendable {
         self.providers = providers
     }
     public func definitions(allowed: Set<String>) -> [ChatToolDefinition] { providers.flatMap(\.definitions).filter { allowed.contains($0.name) } }
+    public func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
+        var result: [ChatToolDefinition] = []
+        for provider in providers { result += try await provider.availableDefinitions(context: context) }
+        return result
+    }
     public func execute(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
         try _Concurrency.Task.checkCancellation()
         guard context.allowedToolIDs.contains(call.name),
               let provider = providers.first(where: { $0.definitions.contains { $0.name == call.name } }),
               let definition = provider.definitions.first(where: { $0.name == call.name }) else { throw WorkspaceToolError.unknownTool }
-        try ToolArgumentValidator.validate(call.arguments, schema: definition.parameters)
+        try provider.validate(call, definition: definition)
         try _Concurrency.Task.checkCancellation()
         return try await provider.execute(call, context: context)
     }

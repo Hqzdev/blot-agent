@@ -77,13 +77,40 @@ private func event(_ payload: String, parser: inout ChatCompletionStreamParser) 
 
 @Test func gigaChatRequestUsesNativeFunctionHistoryAndPreservesState() throws {
     let call = ChatToolCall(id: "call", name: "file_read", arguments: .object(["artifact_id": .string("abc")]), stateID: "state-1")
-    let request = ChatModelRequest(messages: [.init(role: "assistant", content: "", toolCalls: [call]),
+    let request = ChatModelRequest(messages: [.init(role: "system", content: "Agent instructions"),
+        .init(role: "system", content: "Runtime instructions"), .init(role: "assistant", content: "", toolCalls: [call]),
         .init(role: "tool", content: "{}", toolCallID: "call", name: "file_read")])
     let body = try ModelRequestEncoder.gigaChat(request, model: "GigaChat")
     let messages = try #require(body["messages"] as? [[String: Any]])
-    #expect(messages[0]["functions_state_id"] as? String == "state-1")
-    #expect((messages[0]["function_call"] as? [String: Any])?["arguments"] is [String: Any])
-    #expect(messages[1]["role"] as? String == "function")
-    #expect(messages[1]["name"] as? String == "file_read")
-    #expect(messages[1]["tool_call_id"] == nil)
+    #expect(messages.map { $0["role"] as? String } == ["system", "assistant", "function"])
+    #expect(messages[1]["functions_state_id"] as? String == "state-1")
+    #expect((messages[1]["function_call"] as? [String: Any])?["arguments"] is [String: Any])
+    #expect(messages[2]["name"] as? String == "file_read")
+    #expect(messages[2]["tool_call_id"] == nil)
+}
+
+@Test func gigaChatCombinesSystemContextWithoutChangingSeparateRepliesOrHistory() throws {
+    let request = ChatModelRequest(messages: [
+        .init(role: "system", content: "Runtime rules"), .init(role: "system", content: "Agent instructions"),
+        .init(role: "user", content: "Inspect this"), .init(role: "assistant", content: "I'll check."),
+        .init(role: "assistant", content: "Checked."), .init(role: "system", content: "Approved memory"),
+        .init(role: "user", content: "What next?")
+    ])
+    let body = try ModelRequestEncoder.gigaChat(request, model: "GigaChat")
+    let messages = try #require(body["messages"] as? [[String: Any]])
+    #expect(messages.map { $0["role"] as? String } == ["system", "user", "assistant", "assistant", "user"])
+    #expect(messages.map { $0["content"] as? String } == [
+        "Runtime rules\n\nAgent instructions\n\nApproved memory", "Inspect this", "I'll check.", "Checked.", "What next?"
+    ])
+    let compatible = try ModelRequestEncoder.compatible(request, model: "compatible")
+    let original = try #require(compatible["messages"] as? [[String: Any]])
+    #expect(original.map { $0["content"] as? String } == request.messages.map(\.content))
+}
+
+@Test func gigaChatDoesNotAddSystemInstructionsToPlainConversation() throws {
+    let body = try ModelRequestEncoder.gigaChat(.init(messages: [.init(role: "user", content: "Hello")]), model: "GigaChat")
+    let messages = try #require(body["messages"] as? [[String: Any]])
+    #expect(messages.count == 1)
+    #expect(messages[0]["role"] as? String == "user")
+    #expect(messages[0]["content"] as? String == "Hello")
 }

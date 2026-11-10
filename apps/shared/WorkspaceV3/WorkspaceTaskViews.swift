@@ -11,7 +11,9 @@ struct WorkspaceTaskView: View {
         case .chats: chats
         case .search: search
         case .newChat: newChat
-        case .running: running
+        case .running:
+            if store.mode == .live { WorkspaceTaskExecutionView() }
+            else { running }
         case .approval: approval
         case .result: result
         case .file: document
@@ -26,7 +28,7 @@ struct WorkspaceTaskView: View {
         VStack(spacing: 30) {
             Spacer(minLength: 30)
             WorkspaceAvatar(size: 100)
-            Text(store.t("What are we doing today?")).font(.system(size: 34)).multilineTextAlignment(.center)
+            WorkspaceWelcomeGreeting().font(.system(size: 34)).multilineTextAlignment(.center)
             Text(store.t("Give Blot a task — it assembles the team and delivers the result."))
                 .foregroundStyle(WorkspaceStyle.secondary).multilineTextAlignment(.center)
             WorkspaceComposer().padding(.top, 10)
@@ -303,28 +305,5 @@ struct WorkspaceTaskView: View {
             #endif
         }
     }
-    private var browser: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            WorkspaceHeading(title: "Researcher is browsing", subtitle: "Needs you on MacBook Pro")
-            if store.isPreview {
-                VStack(alignment: .leading, spacing: 18) {
-                    BlotLabel("mailerlite.com/pricing · preview", symbol: "globe").font(.caption)
-                    HStack { Capsule().frame(width: 72, height: 8); Capsule().frame(width: 45, height: 8).opacity(0.2); Capsule().frame(width: 32, height: 8).opacity(0.2) }
-                    Rectangle().frame(height: 12).padding(.trailing, 90)
-                    HStack { ForEach(0..<3) { _ in WorkspaceCard(padding: 14) { RoundedRectangle(cornerRadius: 3).frame(height: 8); RoundedRectangle(cornerRadius: 3).frame(height: 6).opacity(0.2) } } }
-                    WorkspaceCard { Text(store.t("Verify you are human")); BlotLabel(store.t("I’m not a robot"), symbol: "square") }
-                }.padding(18).overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(BlotColor.edge))
-            }
-            WorkspaceCard { Text(store.t("Needs you on MacBook Pro")).font(.headline)
-                Text(store.t("The site asks to verify you’re human. Complete the check on your computer, then Blot continues.")).foregroundStyle(WorkspaceStyle.secondary) }
-            BlotLabel(store.t("Opened pricing page"), symbol: "checkmark")
-            BlotLabel(store.t("Read plan limits"), symbol: "checkmark")
-            BlotLabel(store.t("Paused: human check"), symbol: "pause")
-            WorkspaceV3ActionButton(title: "Stop task", action: .stop, next: .chat, kind: .destructive)
-            WorkspaceFeedback()
-            #if os(macOS)
-            WorkspaceComposer()
-            #endif
-        }
-    }
+    private var browser: some View { WorkspaceBrowserDestination() }
 }

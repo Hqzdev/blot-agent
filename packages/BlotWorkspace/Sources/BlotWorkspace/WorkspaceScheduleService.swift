@@ -42,15 +42,18 @@ public struct WorkspaceScheduleService: Sendable {
                   TimeZone(identifier: draft.timezone) != nil, (1...100).contains(draft.maximumCatchUpRuns),
                   Set(draft.weekdays).count == draft.weekdays.count else { throw WorkspaceStorageError.invalidParameters }
             _ = try tx.require(BlotV3.AgentProfile.self, id: draft.agentID)
-            if let revisionID = draft.skillRevisionID { _ = try tx.require(BlotV3.SkillRevision.self, id: revisionID) }
+            if let revisionID = draft.skillRevisionID, draft.enabled { try WorkspaceSkillAccess.require(revisionID: revisionID, agentID: draft.agentID, tx: tx) }
             let id = scheduleID ?? commandID
             try tx.requireResolved(kind: "Automation", id: id)
             let old = try scheduleID.map { try tx.require(BlotV3.Automation.self, id: $0, version: expectedVersion) }
             if old == nil && expectedVersion != 0 { throw WorkspaceStorageError.versionConflict }
+            let scheduledAt = draft.scheduledAt.map { Date(timeIntervalSince1970: floor($0.timeIntervalSince1970)) }
+            if draft.enabled, let scheduledAt, scheduledAt <= now,
+               old == nil || old?.scheduledAt != scheduledAt || old?.enabled == false { throw WorkspaceStorageError.invalidParameters }
             let record = try BlotV3.Automation(metadata: tx.metadata(id: id, now: now, replacing: old?.metadata), kind: .task,
                 executorDeviceId: draft.executorDeviceID, agentId: draft.agentID, name: draft.name, goal: draft.goal,
                 timezone: draft.timezone, localTime: draft.localTime, weekdays: draft.weekdays, missedRunPolicy: draft.missedRunPolicy,
-                enabled: draft.enabled, skillRevisionId: draft.skillRevisionID, scheduledAt: draft.scheduledAt, maxCatchUpRuns: draft.maximumCatchUpRuns)
+                enabled: draft.enabled, skillRevisionId: draft.skillRevisionID, scheduledAt: scheduledAt, maxCatchUpRuns: draft.maximumCatchUpRuns)
             var validation = record
             if !record.enabled {
                 validation = try BlotV3.Automation(metadata: record.metadata, kind: record.kind, executorDeviceId: record.executorDeviceId,
@@ -64,23 +67,30 @@ public struct WorkspaceScheduleService: Sendable {
         }
     }
 
-    public func fire(scheduleID: UUID, scheduledAt: Date, now: Date = Date()) async throws -> UUID {
+    public func fire(scheduleID: UUID, scheduledAt: Date, expectedVersion: Int? = nil, now: Date = Date()) async throws -> UUID {
         let id = WorkspaceLogicalID.make(kind: "AutomationRun", workspaceID: identity.workspaceID,
             parts: [scheduleID.uuidString, ISO8601DateFormatter().string(from: scheduledAt)])
-        return try await enqueue(commandID: id, scheduleID: scheduleID, scheduledAt: scheduledAt, now: now)
+        return try await enqueue(commandID: id, scheduleID: scheduleID, scheduledAt: scheduledAt, expectedVersion: expectedVersion, now: now)
     }
 
     public func runManually(commandID: UUID, scheduleID: UUID, now: Date = Date()) async throws -> UUID {
         try await enqueue(commandID: commandID, scheduleID: scheduleID, scheduledAt: nil, now: now)
     }
 
-    private func enqueue(commandID: UUID, scheduleID: UUID, scheduledAt: Date?, now: Date) async throws -> UUID {
+    private func enqueue(commandID: UUID, scheduleID: UUID, scheduledAt: Date?, expectedVersion: Int? = nil, now: Date) async throws -> UUID {
         struct Input: Encodable { let scheduleID: UUID; let scheduledAt: Date? }
         let command = try WorkspaceCommand(type: scheduledAt == nil ? "automation.run.manual" : "automation.fire",
             workspaceID: identity.workspaceID, payload: Input(scheduleID: scheduleID, scheduledAt: scheduledAt)).data()
         return try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             let schedule = try tx.require(BlotV3.Automation.self, id: scheduleID)
             try tx.requireResolved(kind: "Automation", id: scheduleID)
+            // Restoring a replica restores runs, but not necessarily this device's command receipts.
+            if let run = try tx.record(BlotV3.AutomationRun.self, id: commandID) {
+                guard run.automationId == scheduleID, run.trigger == nil || run.trigger == (scheduledAt == nil ? .manual : .scheduled),
+                      scheduledAt == nil || run.scheduledAt == scheduledAt else { throw WorkspaceStorageError.commandConflict }
+                return run.execution.taskId
+            }
+            if let expectedVersion, schedule.metadata.version != expectedVersion { throw WorkspaceStorageError.versionConflict }
             guard let executor = schedule.executorDeviceId, let agentID = schedule.agentId else { throw WorkspaceStorageError.invalidRecord }
             if let scheduledAt {
                 guard schedule.enabled, executor == tx.identity.deviceID, scheduledAt <= now,

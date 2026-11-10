@@ -135,9 +135,9 @@ public struct BlotEmptyState: View {
                 .frame(width: 44, height: 44)
                 .blotPanel(fill: BlotColor.fill)
                 .accessibilityHidden(true)
-            Text(title).blotFont(.body, weight: .semibold).foregroundStyle(BlotColor.text)
+            Text(LocalizedStringKey(title)).blotFont(.body, weight: .semibold).foregroundStyle(BlotColor.text)
                 .multilineTextAlignment(.center)
-            Text(message).blotFont(.caption).foregroundStyle(BlotColor.textSecondary)
+            Text(LocalizedStringKey(message)).blotFont(.caption).foregroundStyle(BlotColor.textSecondary)
                 .multilineTextAlignment(.center).frame(maxWidth: 380)
                 .fixedSize(horizontal: false, vertical: true)
             if let actionTitle, let action {

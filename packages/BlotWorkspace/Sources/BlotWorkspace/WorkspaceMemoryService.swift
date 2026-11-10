@@ -58,9 +58,10 @@ public struct WorkspaceMemoryService: Sendable {
             guard !sourceIDs.isEmpty, Set(sourceIDs).count == sourceIDs.count,
                   !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw WorkspaceStorageError.invalidParameters }
             let removedSources = Set(try tx.records(BlotV3.MemoryEntry.self).filter { $0.state == .deleted }.map(\.sourceId))
+            let index = WorkspaceDirectConversations(try tx.records(BlotV3.Conversation.self))
             for id in sourceIDs {
                 let source = try tx.require(BlotV3.Message.self, id: id)
-                guard source.conversationId == conversationID, !removedSources.contains(id) else { throw WorkspaceStorageError.permissionDenied }
+                guard index.canonicalID(source.conversationId) == index.canonicalID(conversationID), !removedSources.contains(id) else { throw WorkspaceStorageError.permissionDenied }
             }
             let summary = try BlotV3.ContextSummary(metadata: tx.metadata(id: commandID, now: now), conversationId: conversationID,
                 content: content, sourceIds: sourceIDs, valid: true)

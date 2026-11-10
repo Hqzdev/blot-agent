@@ -230,3 +230,61 @@ private struct SyncPair {
     #expect(final.content == String(repeating: "part", count: 100) + " final")
     #expect(final.delivery == .completed && final.executorDeviceId == pair.identityA.deviceID)
 }
+
+@Test func offlineDuplicateAgentThreadsConvergeAsOneChatWithoutChangingExecutors() async throws {
+    let pair = try await SyncPair(); defer { pair.clean() }
+    let agent = try await WorkspaceAgentService(repository: pair.a, identity: pair.identityA).save(commandID: UUID(),
+        draft: .init(name: "Agent", instructions: "Help"))
+    try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    let first = try await WorkspaceChatService(repository: pair.a, identity: pair.identityA).createConversation(commandID: UUID(),
+        title: "Agent", agentID: agent, now: Date(timeIntervalSince1970: 10))
+    let second = try await WorkspaceChatService(repository: pair.b, identity: pair.identityB).createConversation(commandID: UUID(),
+        title: "Agent", agentID: agent, now: Date(timeIntervalSince1970: 20))
+    let sourceID = try await WorkspaceChatService(repository: pair.b, identity: pair.identityB).sendMessage(commandID: UUID(),
+        conversationID: second, content: "From phone")
+    let source = try #require(try await pair.b.record(BlotV3.Message.self, id: sourceID, workspaceID: pair.identityB.workspaceID))
+    let recorder = WorkspaceResponseRecorder(repository: pair.b, identity: pair.identityB)
+    let responseID = UUID()
+    _ = try await recorder.begin(id: responseID, replyingTo: source, agentID: agent)
+    _ = try await recorder.finish(responseID, delivery: .completed, content: "Phone reply")
+    try await pair.engineA.synchronize(); try await pair.engineB.synchronize(); try await pair.engineA.synchronize()
+    let left = try await pair.a.projection(identity: pair.identityA)
+    let right = try await pair.b.projection(identity: pair.identityB)
+    #expect(left.conversations.map(\.metadata.id) == [first])
+    #expect(left.conversations == right.conversations && left.messages == right.messages)
+    #expect(left.messages.allSatisfy { $0.conversationId == first })
+    #expect(try await pair.a.record(BlotV3.Message.self, id: responseID, workspaceID: pair.identityA.workspaceID)?.conversationId == second)
+    #expect(try await pair.a.record(BlotV3.Message.self, id: responseID, workspaceID: pair.identityA.workspaceID)?.executorDeviceId == pair.identityB.deviceID)
+    _ = try await WorkspaceChatService(repository: pair.a, identity: pair.identityA).sendMessage(commandID: UUID(),
+        conversationID: first, content: "Reply from Mac", replyToMessageID: responseID)
+    try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    #expect(try await pair.b.projection(identity: pair.identityB).messages.count == 3)
+}
+
+@Test func skillAssignmentsConvergeWithRevocationAndCanBeReassignedCausally() async throws {
+    let pair = try await SyncPair(); defer { pair.clean() }
+    let agent = try await WorkspaceAgentService(repository: pair.a, identity: pair.identityA).save(commandID: UUID(), draft: .init(name: "Worker", instructions: "Work"))
+    let skill = try await WorkspaceSkillService(repository: pair.a, identity: pair.identityA).save(commandID: UUID(), name: "Brief", instructions: "Summarize", parameters: [], toolIDs: [])
+    let a = WorkspaceSkillAssignmentService(repository: pair.a, identity: pair.identityA)
+    let b = WorkspaceSkillAssignmentService(repository: pair.b, identity: pair.identityB)
+    try await a.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: 0)
+    try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    try await a.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: false, expectedVersion: 1)
+    try await b.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: 1)
+    try await pair.engineB.synchronize(); try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    let projectionA = try await pair.a.projection(identity: pair.identityA)
+    let projectionB = try await pair.b.projection(identity: pair.identityB)
+    #expect(WorkspaceSkillAccess.assignments(projectionA.grants).first?.assigned == false)
+    #expect(WorkspaceSkillAccess.assignments(projectionB.grants).first?.assigned == false)
+    let version = try #require(WorkspaceSkillAccess.assignments(projectionB.grants).first?.version)
+    try await b.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: version)
+    try await pair.engineB.synchronize(); try await pair.engineA.synchronize()
+    #expect(WorkspaceSkillAccess.assignments(try await pair.a.projection(identity: pair.identityA).grants).first?.assigned == true)
+    let snapshot = try await pair.a.replicaSnapshot(identity: pair.identityA)
+    let restored = try await workspaceTestRepository(url: pair.directory.appendingPathComponent("restored.sqlite"))
+    let identity = try await restored.joinWorkspace(ownerID: pair.identityA.ownerID, workspaceID: pair.identityA.workspaceID)
+    try await restored.installReplicaSnapshot(snapshot, identity: identity)
+    let final = try await restored.projection(identity: identity)
+    #expect(final.skills.count == 1 && final.skillRevisions.count == 1)
+    #expect(WorkspaceSkillAccess.assignments(final.grants).first?.assigned == true)
+}

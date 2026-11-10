@@ -8,6 +8,22 @@ import SwiftUI
 @main
 struct WorkspaceVerification {
     static func main() async throws {
+        if CommandLine.arguments.contains("--root-environment-only") {
+            try await verifyRootEnvironment()
+            return
+        }
+        if let index = CommandLine.arguments.firstIndex(of: "--render-group-editor"), index + 1 < CommandLine.arguments.count {
+            try renderGroupEditor(to: URL(fileURLWithPath: CommandLine.arguments[index + 1]))
+            return
+        }
+        if CommandLine.arguments.contains("--group-only") {
+            try await verifyGroupEditing()
+            return
+        }
+        if CommandLine.arguments.contains("--conversation-only") {
+            try await verifyAgentConversations()
+            return
+        }
         if CommandLine.arguments.contains("--responsiveness-only") {
             try await verifyPresentationWrites()
             try verifyMessageIndex()
@@ -91,12 +107,52 @@ struct WorkspaceVerification {
         precondition(!gated.busy)
         try await verifyLocalWorkspace()
         try await verifyStartupRestoration()
+        try await verifyRootEnvironment()
         print("PASS: 53 references, live isolation, authentication required, form validation, preview mutations, navigation, duplicate prevention")
         print("PASS: live UI adapter writes SQLite, streams through recorder, retries without resending user message, and restores after reopening (injected model)")
         if let i = CommandLine.arguments.firstIndex(of: "--render"), i + 1 < CommandLine.arguments.count {
             try render(to: URL(fileURLWithPath: CommandLine.arguments[i + 1], isDirectory: true))
         }
     }
+    static func verifyAgentConversations() async throws {
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let model = CompactingChatModel()
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"),
+            maximumOutputTokens: 512, runTokenBudget: 14000, makeModel: { _ in model })
+        do {
+            let store = WorkspaceStore(mode: .live, service: service)
+            await store.loadWorkspace()
+            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Help with this project")
+            await store.perform(.createAgent)
+            let agent = store.selectedAgentID
+            await store.newChat(with: agent)
+            let conversation = store.selectedConversationID
+            for index in 0..<20 {
+                await store.newChat(with: agent)
+                precondition(store.selectedConversationID == conversation && store.snapshot.conversations.count == 1)
+                store.form.composer.draft = "Project Atlas, entry \(index): " + String(repeating: "Preserve facts and decisions. ", count: 12)
+                await store.perform(.send)
+                try await waitUntil { !store.isReplying }
+                precondition(store.error == nil)
+            }
+            precondition(store.currentMessages.count == 40)
+            precondition(!(store.snapshot.summaries ?? []).isEmpty)
+            let summaries = await model.summaryCount
+            precondition(summaries > 0)
+            try await service.close()
+            let reopened = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+            let restored = try await reopened.load()
+            precondition(restored?.conversations.count == 1 && restored?.messages.count == 40)
+            try await reopened.close()
+            try FileManager.default.removeItem(at: directory)
+            print("PASS: repeated agent opens reuse one chat; long dialogue compacts automatically, retains all 40 messages, and reopens")
+        } catch {
+            try? await service.close()
+            try? FileManager.default.removeItem(at: directory)
+            throw error
+        }
+    }
+
     static func verifyPresentationWrites() async throws {
         let writer = WorkspacePresentationWriter()
         var writes: [Data] = []
@@ -152,6 +208,34 @@ struct WorkspaceVerification {
         precondition(expected == actual)
         print("PASS: 10,000 messages / 1,000 conversation reads preserve ordering; repeated filter/sort=\(baseline), indexed=\(indexed)")
     }
+    static func verifyRootEnvironment() async throws {
+        _ = NSApplication.shared
+        NSApp.setActivationPolicy(.accessory)
+        let stores = [
+            WorkspaceStore(mode: .live, service: UnavailableWorkspaceService()),
+            WorkspaceStore(mode: .preview, route: .welcome),
+            WorkspaceStore(mode: .preview, route: .chat)
+        ]
+        for store in stores {
+            // Match the app entry point: the root must not need an ancestor's WorkspaceStore.
+            let host = NSHostingView(rootView: WorkspaceRootView(store: store))
+            let size = CGSize(width: 1040, height: 780)
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: size),
+                styleMask: [.borderless], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false
+            window.contentView = host
+            host.frame = NSRect(origin: .zero, size: size)
+            host.layoutSubtreeIfNeeded()
+            try await _Concurrency.Task.sleep(for: .milliseconds(100))
+            host.layoutSubtreeIfNeeded()
+            host.displayIfNeeded()
+            precondition(host.bounds.width > 0 && host.bounds.height > 0)
+            window.contentView = nil
+            window.close()
+        }
+        print("PASS: root mounts during restoration, authentication and chat without an ancestor WorkspaceStore")
+    }
+
     static func verifyStartupRestoration() async throws {
         precondition(!WorkspaceStore(mode: .preview, route: .welcome).isRestoringSession)
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -180,6 +264,26 @@ struct WorkspaceVerification {
                 precondition(store.route == .welcome && store.error != nil)
             }
         }
+        let seed = WorkspaceStore(mode: .live, service: local)
+        await seed.loadWorkspace()
+        precondition(seed.selectedConversationID == nil)
+        for name in ["First in sidebar", "Second in sidebar"] {
+            seed.form.agent = WorkspaceAgentForm(name: name, instructions: "Help with this project")
+            await seed.perform(.createAgent)
+        }
+        let firstAgentID = seed.snapshot.agents[0].metadata.id
+        await seed.newChat(with: seed.snapshot.agents[1].metadata.id)
+        let reopened = WorkspaceStore(mode: .live, service: local)
+        await reopened.loadWorkspace()
+        precondition(reopened.error == nil && reopened.route == .chat)
+        precondition(reopened.currentConversation?.agentId == firstAgentID)
+        precondition(reopened.selectedAgentID == firstAgentID && reopened.snapshot.conversations.count == 2)
+        let firstChatID = reopened.selectedConversationID
+        await reopened.openAgentChat(reopened.snapshot.agents[1].metadata.id)
+        let again = WorkspaceStore(mode: .live, service: local)
+        await again.loadWorkspace()
+        precondition(again.route == .chat && again.selectedConversationID == firstChatID)
+        precondition(again.snapshot.conversations.count == 2)
         try await local.close()
     }
     static func verifyBrowserLaunch() async throws {
@@ -199,6 +303,81 @@ struct WorkspaceVerification {
         await startup.value
         try await waitUntil { !store.busy }
         precondition(service.calls == 1 && store.snapshot.ownerID == nil && store.error != nil)
+    }
+
+    static func renderGroupEditor(to directory: URL) throws {
+        _ = NSApplication.shared
+        NSApp.setActivationPolicy(.accessory)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        for (editing, dark) in [(false, false), (true, false), (true, true)] {
+            let store = WorkspaceStore(mode: .preview, route: .chat)
+            store.language = "ru"
+            let metadata = store.snapshot.conversations[0].metadata
+            let group = try BlotV3.Conversation(metadata: metadata, agentId: store.snapshot.agents.first?.metadata.id,
+                title: "Запуск продукта", mobileOwned: false, pinned: false, archived: false, kind: .group)
+            let participants = try store.snapshot.agents.prefix(3).map { agent in
+                try BlotV3.ConversationParticipant(metadata: .init(id: UUID(), ownerId: metadata.ownerId,
+                    workspaceId: metadata.workspaceId, version: 1, createdAt: metadata.createdAt, updatedAt: metadata.updatedAt),
+                    conversationId: metadata.id, participantId: agent.metadata.id, kind: .agent, removed: false)
+            }
+            let root = WorkspaceGroupEditor(conversation: editing ? group : nil, participants: participants)
+                .environment(store).blotTheme(dark ? .dark : .light).environment(\.colorScheme, dark ? .dark : .light)
+            let host = NSHostingView(rootView: root)
+            host.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+            let size = CGSize(width: 720, height: 650)
+            let window = NSWindow(contentRect: NSRect(origin: .zero, size: size), styleMask: [.borderless], backing: .buffered, defer: false)
+            window.isReleasedWhenClosed = false; window.contentView = host
+            host.frame = NSRect(origin: .zero, size: size)
+            host.layoutSubtreeIfNeeded()
+            RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
+            host.displayIfNeeded()
+            guard let bitmap = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { throw CheckFailure.timedOut }
+            host.cacheDisplay(in: host.bounds, to: bitmap)
+            guard let data = bitmap.representation(using: .png, properties: [:]) else { throw CheckFailure.timedOut }
+            try data.write(to: directory.appendingPathComponent(dark ? "group-edit-dark.png" : editing ? "group-edit.png" : "group-create.png"))
+            window.contentView = nil; window.close()
+        }
+        print("PASS: production group editor rendered in creation and editing states")
+    }
+
+    static func verifyGroupEditing() async throws {
+        var draft = WorkspaceGroupDraft()
+        let a = UUID(), b = UUID(), c = UUID()
+        draft.title = "Team"; draft.selectAll([a, b, c, a])
+        precondition(draft.selectedIDs == [a, b, c] && draft.canSave)
+        draft.coordinate(with: b); draft.remove(b)
+        precondition(draft.coordinatorID == a && draft.orderedAgentIDs == [a, c])
+        draft.reconcile(availableIDs: [c]); precondition(draft.coordinatorID == c)
+        draft.clear(); precondition(!draft.canSave && draft.coordinatorID == nil)
+        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
+        do {
+            let store = WorkspaceStore(mode: .live, service: service)
+            await store.loadWorkspace()
+            var ids: [UUID] = []
+            for name in ["First", "Second", "Third"] {
+                store.form.agent = WorkspaceAgentForm(name: name, instructions: "Help")
+                await store.perform(.createAgent)
+                guard let id = store.selectedAgentID else { throw CheckFailure.timedOut }
+                ids.append(id)
+            }
+            let commandID = UUID()
+            let created = await store.createGroup(title: "Team", agentIDs: ids, commandID: commandID)
+            precondition(created && store.currentConversation?.metadata.id == commandID)
+            let retried = await store.createGroup(title: "Team", agentIDs: ids, commandID: commandID)
+            precondition(retried && store.snapshot.conversations.filter { $0.kind == .group }.count == 1)
+            guard let group = store.currentConversation else { throw CheckFailure.timedOut }
+            let saved = await store.updateGroup(group.metadata.id, expectedVersion: group.metadata.version,
+                title: "Updated team", agentIDs: [ids[2], ids[0]])
+            precondition(saved && store.currentConversation?.agentId == ids[2] && store.currentConversation?.title == "Updated team")
+            let members = (store.snapshot.participants ?? []).filter { $0.conversationId == group.metadata.id && $0.kind == .agent && !$0.removed }
+            precondition(Set(members.map(\.participantId)) == Set([ids[0], ids[2]]))
+            try await service.close()
+            try FileManager.default.removeItem(at: directory)
+            print("PASS: selection, coordinator fallback, reconciliation and atomic group editing through the production store")
+        } catch {
+            try? await service.close(); try? FileManager.default.removeItem(at: directory); throw error
+        }
     }
 
     static func renderLiveTeam(to directory: URL) throws {
@@ -263,24 +442,26 @@ struct WorkspaceVerification {
         do {
             let store = WorkspaceStore(mode: .live, service: service)
             await store.loadWorkspace()
-            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Отвечай кратко, одним словом.")
+            store.form.agent = WorkspaceAgentForm(name: "Verification", instructions: "Отвечай кратко, одним словом.", toolIDs: ["memory_candidate"])
             await store.perform(.createAgent)
             guard store.error == nil, store.selectedAgentID != nil else { throw CheckFailure.timedOut }
             await store.perform(.createConversation, next: .chat)
-            store.form.composer.draft = "Ответь одним словом: работает"
-            await store.perform(.send)
-            let deadline = ContinuousClock.now.advanced(by: .seconds(60))
-            while store.isReplying {
-                guard ContinuousClock.now < deadline else { throw CheckFailure.timedOut }
-                try await _Concurrency.Task.sleep(for: .milliseconds(50))
+            for index in 0..<2 {
+                store.form.composer.draft = "Ответь одним словом: работает"
+                await store.perform(.send)
+                let deadline = ContinuousClock.now.advanced(by: .seconds(60))
+                while store.isReplying {
+                    guard ContinuousClock.now < deadline else { throw CheckFailure.timedOut }
+                    try await _Concurrency.Task.sleep(for: .milliseconds(50))
+                }
+                guard store.error == nil, store.currentMessages.count == (index + 1) * 2,
+                      let response = store.currentMessages.last, response.role == .assistant,
+                      response.delivery == .completed, !response.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    print("Live app model verification failed: \(store.error ?? "missing completed response")")
+                    throw CheckFailure.timedOut
+                }
+                print("PASS: live agent with tools, conversation turn=\(index + 1), completed reply characters=\(response.content.count)")
             }
-            guard store.error == nil, store.currentMessages.count == 2,
-                  let response = store.currentMessages.last, response.role == .assistant,
-                  response.delivery == .completed, !response.content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                print("Live app model verification failed: \(store.error ?? "missing completed response")")
-                throw CheckFailure.timedOut
-            }
-            print("PASS: live WorkspaceStore -> LocalWorkspaceService -> GigaChat -> persisted completed response; characters=\(response.content.count)")
             try await service.close()
             try FileManager.default.removeItem(at: directory)
         } catch {
@@ -322,7 +503,9 @@ struct WorkspaceVerification {
             await cancel.perform(.createConversation, next: .chat)
             cancel.form.composer.draft = "Stop this response"
             await cancel.perform(.send)
-            try await waitUntil { cancel.currentMessages.last?.content == "Partial" }
+            try await waitUntil { cancel.currentMessages.last?.delivery == .running }
+            precondition(cancel.currentReplyDraft != nil)
+            precondition(!cancel.currentMessages.filter(WorkspaceMessagePresentation.isVisible).contains { $0.role == .assistant })
             // Reopening the view on an active service must not mark its live stream interrupted.
             await cancel.loadWorkspace()
             precondition(cancel.currentMessages.last?.delivery == .running)
@@ -336,7 +519,7 @@ struct WorkspaceVerification {
             services.append(canceledService)
             let canceled = WorkspaceStore(mode: .live, route: .chats, service: canceledService)
             await canceled.loadWorkspace()
-            precondition(canceled.snapshot.messages.count == 2 && canceled.snapshot.messages.last?.content == "Partial")
+            precondition(canceled.snapshot.messages.count == 2)
             precondition(canceled.snapshot.messages.last?.delivery == .canceled)
         } catch {
             for service in services { try? await service.close() }
@@ -462,4 +645,21 @@ private final class BrowserLaunchGateService: WorkspaceService {
         throw WorkspaceServiceError.unavailable
     }
     func finish() { continuation?.resume(); continuation = nil }
+}
+
+private actor CompactingChatModel: ChatModel {
+    private(set) var summaryCount = 0
+    nonisolated func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
+        AsyncThrowingStream { continuation in
+            let worker = _Concurrency.Task {
+                let summary = request.messages.first?.content.hasPrefix("Сожми историю") == true
+                if summary { await recordSummary() }
+                continuation.yield(.text(summary ? "Project Atlas: preserve facts and decisions; continue the pending work." : "Recorded."))
+                continuation.yield(.finished(.stop))
+                continuation.finish()
+            }
+            continuation.onTermination = { _ in worker.cancel() }
+        }
+    }
+    private func recordSummary() { summaryCount += 1 }
 }

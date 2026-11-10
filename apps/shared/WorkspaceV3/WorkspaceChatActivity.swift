@@ -6,6 +6,11 @@ import Observation
 final class WorkspaceChatActivity {
     struct Draft: Equatable {
         let messageID: UUID
+        let agentIDs: [UUID]
+        init(messageID: UUID, agentIDs: [UUID] = []) {
+            self.messageID = messageID
+            self.agentIDs = agentIDs
+        }
     }
 
     private(set) var readMessageIDs: Set<UUID> = []

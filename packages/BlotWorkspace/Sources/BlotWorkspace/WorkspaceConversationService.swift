@@ -18,10 +18,14 @@ public struct WorkspaceConversationService: Sendable {
         _ = try await repository.execute(commandID: commandID, command: input, identity: identity, legacyResultID: conversationID) { tx in
             let chat = try tx.require(BlotV3.Conversation.self, id: conversationID, version: expectedVersion)
             if let title, title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty { throw WorkspaceStorageError.invalidRecord }
-            let updated = try BlotV3.Conversation(metadata: tx.metadata(id: conversationID, now: now, replacing: chat.metadata),
-                agentId: chat.agentId, title: title ?? chat.title, mobileOwned: chat.mobileOwned,
-                pinned: pinned ?? chat.pinned, archived: archived ?? chat.archived, kind: chat.kind)
-            try tx.put(updated, expectedVersion: expectedVersion)
+            let conversations = try tx.records(BlotV3.Conversation.self)
+            let index = WorkspaceDirectConversations(conversations)
+            for member in conversations where index.canonicalID(member.metadata.id) == index.canonicalID(chat.metadata.id) {
+                let updated = try BlotV3.Conversation(metadata: tx.metadata(id: member.metadata.id, now: now, replacing: member.metadata),
+                    agentId: member.agentId, title: member.metadata.id == conversationID ? title ?? member.title : member.title,
+                    mobileOwned: member.mobileOwned, pinned: pinned ?? member.pinned, archived: archived ?? member.archived, kind: member.kind)
+                try tx.put(updated, expectedVersion: member.metadata.version)
+            }
             return conversationID
         }
     }
@@ -33,15 +37,18 @@ public struct WorkspaceConversationService: Sendable {
         }
         let input = try WorkspaceCoding.encode(Input(workspaceID: identity.workspaceID, conversationID: conversationID, expectedVersion: expectedVersion))
         _ = try await repository.execute(commandID: commandID, command: input, identity: identity, legacyResultID: conversationID) { tx in
-            let chat = try tx.require(BlotV3.Conversation.self, id: conversationID, version: expectedVersion)
-            let messages = try tx.records(BlotV3.Message.self).filter { $0.conversationId == conversationID }
+            _ = try tx.require(BlotV3.Conversation.self, id: conversationID, version: expectedVersion)
+            let conversations = try tx.records(BlotV3.Conversation.self)
+            let index = WorkspaceDirectConversations(conversations)
+            let family = Set(conversations.filter { index.canonicalID($0.metadata.id) == index.canonicalID(conversationID) }.map(\.metadata.id))
+            let messages = try tx.records(BlotV3.Message.self).filter { family.contains($0.conversationId) }
             let ids = Set(messages.map(\.metadata.id))
             for record in try tx.records(BlotV3.MessageReaction.self) where ids.contains(record.messageId) { try tx.delete(record) }
-            for record in try tx.records(BlotV3.ConversationParticipant.self) where record.conversationId == conversationID { try tx.delete(record) }
-            for record in try tx.records(BlotV3.ConversationReadPosition.self) where record.conversationId == conversationID { try tx.delete(record) }
-            for record in try tx.records(BlotV3.ContextSummary.self) where record.conversationId == conversationID { try tx.delete(record) }
+            for record in try tx.records(BlotV3.ConversationParticipant.self) where family.contains(record.conversationId) { try tx.delete(record) }
+            for record in try tx.records(BlotV3.ConversationReadPosition.self) where family.contains(record.conversationId) { try tx.delete(record) }
+            for record in try tx.records(BlotV3.ContextSummary.self) where family.contains(record.conversationId) { try tx.delete(record) }
             for message in messages { try tx.delete(message) }
-            try tx.delete(chat)
+            for conversation in conversations where family.contains(conversation.metadata.id) { try tx.delete(conversation) }
             return conversationID
         }
     }

@@ -29,15 +29,31 @@ public struct WorkspaceScheduleCalculator: Sendable {
         if let scheduledAt = schedule.scheduledAt {
             return direction == .forward ? (scheduledAt > date ? scheduledAt : nil) : (scheduledAt < date ? scheduledAt : nil)
         }
-        let parts = schedule.localTime.split(separator: ":").compactMap { Int($0) }
-        guard parts.count == 2, (0...23).contains(parts[0]), (0...59).contains(parts[1]),
+        let components = schedule.localTime.split(separator: ":", omittingEmptySubsequences: false)
+        guard components.count == 2, let hour = Int(components[0]), let minute = Int(components[1]),
+              (0...23).contains(hour), (0...59).contains(minute),
               !schedule.weekdays.isEmpty, schedule.weekdays.allSatisfy({ (1...7).contains($0) }) else { throw WorkspaceStorageError.invalidParameters }
         var calendar = Calendar(identifier: .gregorian)
         calendar.timeZone = timezone
         let candidates = schedule.weekdays.compactMap { day -> Date? in
-            let components = DateComponents(hour: parts[0], minute: parts[1], second: 0, weekday: day % 7 + 1)
-            return calendar.nextDate(after: date, matching: components, matchingPolicy: .nextTime,
-                repeatedTimePolicy: .first, direction: direction)
+            let components = DateComponents(hour: hour, minute: minute, second: 0, weekday: day % 7 + 1)
+            var cursor = date
+            for _ in 0..<2 {
+                guard let candidate = calendar.nextDate(after: cursor, matching: components, matchingPolicy: .nextTime,
+                    repeatedTimePolicy: .first, direction: direction) else { return nil }
+                let start = calendar.startOfDay(for: candidate)
+                // A backward search may return the second occurrence in a repeated hour.
+                guard let canonical = calendar.nextDate(after: start.addingTimeInterval(-0.001),
+                    matching: DateComponents(hour: hour, minute: minute, second: 0), matchingPolicy: .nextTime,
+                    repeatedTimePolicy: .first, direction: .forward) else { return nil }
+                if direction == .forward ? canonical > date : canonical < date { return canonical }
+                if direction == .backward { cursor = start }
+                else {
+                    guard let nextDay = calendar.date(byAdding: .day, value: 1, to: start) else { return nil }
+                    cursor = nextDay.addingTimeInterval(-0.001)
+                }
+            }
+            return nil
         }
         return direction == .forward ? candidates.min() : candidates.max()
     }

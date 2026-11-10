@@ -77,16 +77,17 @@ public actor WorkspaceCloudBackup {
                     try Task.checkCancellation()
                     try await self?.synchronize()
                 } catch is CancellationError { return }
-                catch { await self?.reportFailure() }
+                catch { await self?.reportFailure(error) }
             }
         }
         poller = Task { [weak self] in
             while !Task.isCancelled {
                 do {
-                    try await Task.sleep(for: .seconds(30))
                     try await self?.synchronize()
                 } catch is CancellationError { return }
-                catch { await self?.reportFailure() }
+                catch { await self?.reportFailure(error) }
+                do { try await Task.sleep(for: .seconds(5)) }
+                catch { return }
             }
         }
     }
@@ -101,6 +102,13 @@ public actor WorkspaceCloudBackup {
         active = nil
     }
 
+    /// Foreground refreshes are best-effort; failures are retained in diagnostics and retried.
+    public func refresh() async {
+        do { try await synchronize() }
+        catch is CancellationError { return }
+        catch { reportFailure(error) }
+    }
+
     public func synchronize() async throws {
         if let active { return try await active.value }
         let worker = Task { try await self.performSync() }
@@ -110,62 +118,98 @@ public actor WorkspaceCloudBackup {
     }
 
     private func performSync() async throws {
+        // Receiving and sending are independent. A full upload quota or a failed local
+        // snapshot must never prevent this device from receiving the account's chats.
+        var failure: (any Error)?
+        do { try await downloadSnapshots() }
+        catch is CancellationError { throw CancellationError() }
+        catch { failure = error }
+        try Task.checkCancellation()
+        do { try await uploadLatestSnapshot() }
+        catch is CancellationError { throw CancellationError() }
+        catch { if failure == nil { failure = error } }
+        if let failure { throw failure }
+    }
+
+    private func uploadLatestSnapshot() async throws {
+        // Finish an interrupted immutable upload before publishing newer local edits.
+        if pending != nil { try await uploadPendingSnapshot() }
         try Task.checkCancellation()
         let snapshot = try await repository.replicaSnapshot(identity: identity)
         let fingerprint = try Self.fingerprint(snapshot)
-        if fingerprint != uploadedFingerprint, !snapshot.records.isEmpty {
-            if pending == nil {
-                let bytes = try WorkspaceCoding.encode(snapshot)
-                guard bytes.count <= Self.maximumBytes else { throw WorkspaceSyncError.invalidSnapshot }
-                pending = (.init(snapshotID: snapshot.id, deviceID: identity.deviceID, digest: Self.digest(bytes),
-                    byteCount: bytes.count, chunkCount: (bytes.count + Self.chunkBytes - 1) / Self.chunkBytes), bytes, fingerprint)
-            }
-            if let pending {
-                try await transport.begin(pending.manifest)
-                for part in 0..<pending.manifest.chunkCount {
-                    try Task.checkCancellation()
-                    let start = part * Self.chunkBytes
-                    let chunk = pending.bytes.subdata(in: start..<min(start + Self.chunkBytes, pending.bytes.count))
-                    try await transport.upload(snapshotID: pending.manifest.snapshotID, part: part, data: chunk)
-                }
-                try await transport.commit(snapshotID: pending.manifest.snapshotID)
-                uploadedFingerprint = pending.fingerprint
-                self.pending = nil
-            }
-        }
-        let manifests = try await transport.manifests()
-        guard manifests.count <= 32 else { throw WorkspaceSyncError.invalidSnapshot }
-        for manifest in manifests where manifest.deviceID != identity.deviceID && !downloaded.contains(manifest.snapshotID) {
-            try Task.checkCancellation()
-            guard manifest.byteCount > 0, manifest.byteCount <= Self.maximumBytes,
-                  manifest.chunkCount == (manifest.byteCount + Self.chunkBytes - 1) / Self.chunkBytes else {
-                throw WorkspaceSyncError.invalidSnapshot
-            }
-            var bytes = Data()
-            for part in 0..<manifest.chunkCount {
-                try Task.checkCancellation()
-                let chunk = try await transport.download(snapshotID: manifest.snapshotID, part: part)
-                guard chunk.count == min(Self.chunkBytes, manifest.byteCount - part * Self.chunkBytes) else { throw WorkspaceSyncError.invalidSnapshot }
-                bytes.append(chunk)
-            }
-            guard Self.digest(bytes) == manifest.digest else { throw WorkspaceSyncError.invalidSnapshot }
-            let remote = try WorkspaceCoding.decode(WorkspaceReplicaSnapshot.self, from: bytes)
-            guard remote.id == manifest.snapshotID else { throw WorkspaceSyncError.invalidSnapshot }
-            try await repository.installReplicaSnapshot(remote, identity: identity)
-            downloaded.insert(manifest.snapshotID)
-        }
-        // Bound memory while retaining the current manifests, which are the only versions listed by the API.
-        downloaded.formIntersection(Set(manifests.map(\.snapshotID)))
+        guard fingerprint != uploadedFingerprint, (!snapshot.records.isEmpty || !(snapshot.messagePins ?? []).isEmpty) else { return }
+        let bytes = try WorkspaceCoding.encode(snapshot)
+        guard bytes.count <= Self.maximumBytes else { throw WorkspaceSyncError.invalidSnapshot }
+        pending = (.init(snapshotID: snapshot.id, deviceID: identity.deviceID, digest: Self.digest(bytes),
+            byteCount: bytes.count, chunkCount: (bytes.count + Self.chunkBytes - 1) / Self.chunkBytes), bytes, fingerprint)
+        try await uploadPendingSnapshot()
     }
 
-    private func reportFailure() { logger.warning("Cloud backup will retry; local workspace is preserved.") }
+    private func uploadPendingSnapshot() async throws {
+        guard let pending else { return }
+        try await transport.begin(pending.manifest)
+        for part in 0..<pending.manifest.chunkCount {
+            try Task.checkCancellation()
+            let start = part * Self.chunkBytes
+            let chunk = pending.bytes.subdata(in: start..<min(start + Self.chunkBytes, pending.bytes.count))
+            try await transport.upload(snapshotID: pending.manifest.snapshotID, part: part, data: chunk)
+        }
+        try await transport.commit(snapshotID: pending.manifest.snapshotID)
+        uploadedFingerprint = pending.fingerprint
+        self.pending = nil
+    }
+
+    private func downloadSnapshots() async throws {
+        try Task.checkCancellation()
+        let manifests = try await transport.manifests()
+        guard manifests.count <= 32 else { throw WorkspaceSyncError.invalidSnapshot }
+        var failure: (any Error)?
+        for manifest in manifests where manifest.deviceID != identity.deviceID && !downloaded.contains(manifest.snapshotID) {
+            do {
+                try await downloadSnapshot(manifest)
+                downloaded.insert(manifest.snapshotID)
+            } catch is CancellationError { throw CancellationError() }
+            catch { if failure == nil { failure = error } }
+        }
+        downloaded.formIntersection(Set(manifests.map(\.snapshotID)))
+        if let failure { throw failure }
+    }
+
+    private func downloadSnapshot(_ manifest: WorkspaceCloudBackupManifest) async throws {
+        try Task.checkCancellation()
+        guard manifest.byteCount > 0, manifest.byteCount <= Self.maximumBytes,
+              manifest.chunkCount == (manifest.byteCount + Self.chunkBytes - 1) / Self.chunkBytes else {
+            throw WorkspaceSyncError.invalidSnapshot
+        }
+        var bytes = Data()
+        for part in 0..<manifest.chunkCount {
+            try Task.checkCancellation()
+            let chunk = try await transport.download(snapshotID: manifest.snapshotID, part: part)
+            guard chunk.count == min(Self.chunkBytes, manifest.byteCount - part * Self.chunkBytes) else { throw WorkspaceSyncError.invalidSnapshot }
+            bytes.append(chunk)
+        }
+        guard Self.digest(bytes) == manifest.digest else { throw WorkspaceSyncError.invalidSnapshot }
+        let remote = try WorkspaceCoding.decode(WorkspaceReplicaSnapshot.self, from: bytes)
+        guard remote.id == manifest.snapshotID else { throw WorkspaceSyncError.invalidSnapshot }
+        try await repository.installReplicaSnapshot(remote, identity: identity)
+    }
+
+    private func reportFailure(_ error: any Error) {
+        if case let WorkspaceCloudError.rejected(status, _) = error {
+            logger.warning("Account synchronization will retry; HTTP status=\(status, privacy: .public)")
+        } else {
+            let failure = error as NSError
+            logger.warning("Account synchronization will retry; domain=\(failure.domain, privacy: .public) code=\(failure.code)")
+        }
+    }
     private static func digest(_ bytes: Data) -> String { SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined() }
     private static func fingerprint(_ snapshot: WorkspaceReplicaSnapshot) throws -> String {
         struct Content: Encodable {
             let watermark: WorkspaceVersionVector
             let records: [WorkspaceReplicaRecord]
+            let messagePins: [WorkspaceMessagePin]
         }
         let records = snapshot.records.sorted { $0.kind + $0.recordID.uuidString < $1.kind + $1.recordID.uuidString }
-        return digest(try WorkspaceCoding.encode(Content(watermark: snapshot.watermark, records: records)))
+        return digest(try WorkspaceCoding.encode(Content(watermark: snapshot.watermark, records: records, messagePins: (snapshot.messagePins ?? []).sorted { $0.messageID.uuidString < $1.messageID.uuidString })))
     }
 }
