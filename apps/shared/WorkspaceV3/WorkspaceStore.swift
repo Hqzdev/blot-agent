@@ -85,8 +85,11 @@ final class WorkspaceStore {
     private(set) var snapshot = WorkspaceSnapshot() {
         didSet {
             if snapshot.ownerID != oldValue.ownerID { guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
+            let previousActivityIDs = chatContent.activityMessageIDs
             chatContent.update(snapshot, previous: oldValue)
-            if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
+            if snapshot.messages != oldValue.messages || previousActivityIDs != chatContent.activityMessageIDs {
+                messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
+            }
             if mode == .live {
                 if let selectedConversationID, !snapshot.conversations.contains(where: { $0.metadata.id == selectedConversationID }),
                    let previous = oldValue.conversations.first(where: { $0.metadata.id == selectedConversationID }), previous.kind != .group {
@@ -276,7 +279,7 @@ final class WorkspaceStore {
         }
         #endif
         chatContent.update(snapshot, previous: WorkspaceSnapshot())
-        messageIndex = WorkspaceMessageIndex(snapshot.messages)
+        messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
     }
     var currentPinnedMessages: [BlotV3.Message] {
         selectedConversationID.flatMap { chatContent.pinnedMessages[$0] } ?? []
@@ -826,6 +829,8 @@ final class WorkspaceStore {
         if let draft = chatActivity.drafts[id] { return draft }
         guard mode == .live,
               let source = messageIndex.lastUser(in: id) else { return nil }
+        if let latest = currentVisibleMessages.last, latest.commandId == source.commandId,
+           chatContent.activities(for: latest).contains(where: { $0.state == .running || $0.state == .approval }) { return nil }
         let responses = messageIndex.activeResponses(in: id)
         guard isReplying || !responses.isEmpty else { return nil }
         let activeIDs = Set(responses.compactMap(\.authorAgentId))

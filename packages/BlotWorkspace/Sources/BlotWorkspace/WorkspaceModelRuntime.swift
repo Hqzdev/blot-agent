@@ -33,7 +33,7 @@ public struct WorkspaceModelRuntime: Sendable {
             if !definitions.isEmpty {
                 context.insert(.init(role: "system", content:
                     "For quick tool actions, call the tool directly and report the result once. " +
-                    "Give a short progress update only for longer work or required user interaction; do not repeat acknowledgements on each tool turn. " +
+                    "For multi-step work, give brief updates with tool calls as findings change, then verified results. No repeated names or logs. " +
                     "Never claim an action succeeded before its tool result confirms success. " +
                     "For a requested saved skill, discover assigned skills with skill_list, then use skill_run with its required values. Never invent missing values. A queued skill is not completed; its task will post the result separately. Do not launch unrelated skills. " +
                     "When reporting an app tool result, mention its user-facing @App name from the tool description once in your sentence. " +
