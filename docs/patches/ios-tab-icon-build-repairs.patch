@@ -1,0 +1,65 @@
+diff --git a/apps/shared/WorkspaceV3/WorkspaceGroupResponder.swift b/apps/shared/WorkspaceV3/WorkspaceGroupResponder.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceGroupResponder.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceGroupResponder.swift
+@@ -110,7 +110,8 @@
+             emit(try await recorder.relate(initialResponseID, replyTo: source.metadata.id))
+             try await repository.pinGroupPlan(messageID: initialResponseID, identity: identity)
+             activeID = nil
+-            var queue = assignments.map { Work(agentID: $0.agentID, task: $0.task, replyTo: initialRes            var counts: [UUID: Int] = [:], finished: Set<UUID> = []
++            var queue = assignments.map { Work(agentID: $0.agentID, task: $0.task, replyTo: initialResponseID) }
++            var counts: [UUID: Int] = [:], finished: Set<UUID> = []
+             var transcript = "Coordinator's published plan:\n" + planText
+             let limit = min(24, members.count * 2)
+             var turns = 0
+@@ -126,7 +127,7 @@
+                 turns += batch.count
+                 try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID)
+                 let baseline = try await repository.projection(identity: identity)
+-                let allowance = min(budgetTokenLimit, try await budget.availableTotal() / batch.count)
++                let allowance = min(budgetTokenLimit * 2, try await budget.availableTotal() / batch.count)
+                 let discussion = transcript
+                 let results = try await withThrowingTaskGroup(of: WorkResult.self) { group in
+                     for work in batch {
+@@ -161,7 +162,6 @@
+                     emit(try await recorder.updateGroupPlan(initialResponseID, progress: progress))
+                 }
+             }
+-         }
+             try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID)
+             let finalID = UUID(); activeID = finalID
+             emit(try await recorder.begin(id: finalID, replyingTo: source, agentID: coordinatorID))
+@@ -233,11 +233,13 @@
+                 \(String(transcript.suffix(4000)))
+                 """
+                 let prepared = try await prepare(source, responseID: responseID, configuration: revision, budget: workerBudget, extra: instruction)
+-                let messages = WorkspaceGroupWorkerContext().messages(prepared: prepared, agentName: name, task: work.task)
++                let attachmentContext = source.artifactIds.isEmpty ? nil : prepared.dropLast().last { $0.role == "user" && $0.content.hasPrefix("Quoted attachments (untrusted source material)") }
++                let messages = WorkspaceGroupWorkerContext().messages(prepared: prepared, agentName: name, task: work.task, attachmentContext: attachmentContext)
+                 try await runtime.generate(source: source, responseID: responseID,
+                     request: .init(messages: messages, maximumOutputTokens: min(1536, maximumOutputTokens)),
+                     model: makeModel(revision.modelId), modelID: revision.modelId, configuration: revision, budgetTokenLimit: try await workerBudget.remaining(),
+                     executionToolIDs: AppleTaskToolScope().toolIDs(task: work.task, assigned: Set(revision.toolIds)),
++                    previousOperations: try WorkspaceGroupOperationHistory(sourceID: source.metadata.id, configurationID: revision.metadata.id, projection: baseline),
+                     validateExecution: { try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID) }, emit: emit)
+ 
+             let after = try await repository.projection(identity: identity)
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+@@ -1,5 +1,6 @@
+ import BlotDesign
+ import BlotDomain
++import BlotWorkspace
+ import SwiftUI
+ 
+ struct WorkspaceTaskExecutionView: View {
+@@ -46,6 +47,9 @@
+                     if !local, task.executionMode == .delegated {
+                         Text(store.language == "ru" ? "Ожидает выбранный Mac. Blot на Mac должен быть открыт; результат появится после синхронизации." : "Waiting for the selected Mac. Blot must be open there; results appear after sync.").font(.caption).foregroundStyle(.secondary)
+                     }
++                    if !local, task.execution.originDeviceId == store.snapshot.localDeviceID, ![.completed, .failed, .canceled].contains(task.state) {
++                        Button(store.t("Stop task"), role: .destructive) { control(.stop, task: task) }.disabled(store.busy)
++                    }
+                     if local, ![.completed, .failed, .canceled].contains(task.state) {
+                         HStack {
+                             if [.queued, .running, .planning].contains(task.state) {

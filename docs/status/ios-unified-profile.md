@@ -1,0 +1,11 @@
+# Unified iPhone profile — 2026-11-06
+
+The avatar in Chats now navigates to the same Profile page as Settings. The page contains inline name/photo editing, token totals and per-model/input/output breakdowns, activity, team and workspace information, and a Danger zone. Settings no longer lists separate Account or Usage pages; existing iOS routes for these pages resolve to Profile. Other privacy/storage settings remain available.
+
+Name and photo changes use the existing durable `saveProfile` flow. Contact email is now an optional `WorkspaceUserProfile.contactEmail` so it survives presentation-state saves without overwriting the authenticated sign-in email. The field is explicitly described as local profile email: the current account API does not support changing the sign-in address. Legacy profiles without this optional field still decode, and Mac preserves it. No server API or generated DTO/schema changes are required.
+
+Password change uses the existing server reset-code endpoints with the authenticated account email, then closes the local account session and requires sign-in again. Codes and passwords stay in the editor's transient state. These operations require the real user to request and enter their email code; tests use an isolated spy and never send mail or modify real credentials.
+
+Local deletion is no longer an unavailable-action message. After user confirmation, the store invalidates its UI/observation, flushes pending presentation state and joins response workers. The account service stops backup/execution, closes SQLite and releases the lock before deleting only the opened account/workspace directory and cached account profile. A failed database close prevents removal. Cloud copies, other accounts and other workspaces are not removed. This is local workspace deletion, not remote account deletion.
+
+Validation: signed iOS build, macOS build, and 8 passing XCTest checks on the physical iPhone 13 Pro Max (5 profile/security/persistence checks and 3 tab-navigation checks). Tests cover legacy decoding, profile route consolidation, contact-email persistence and login-email isolation, invalid/rejected password handling, success sign-out, separate deletion dispatch, and draft-preserving tab reset. No real credential change or destructive action was executed against the user's account. No simulator was used.

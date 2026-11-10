@@ -1,0 +1,495 @@
+--- a/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
++++ b/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
+@@ -18,7 +18,10 @@
+ 
+     @Environment(WorkspaceStore.self) private var store
+     @Namespace private var selection
+-    @State private var iconActivations: [WorkspaceRoute: Int] = [:]
++    @State private var availableWidth: CGFloat = 340
++    @ScaledMetric(relativeTo: .subheadline) private var minimumLabeledWidth: CGFloat = 340
++
++    static func isTab(_ route: WorkspaceRoute) -> Bool { items.contains { $0.route == route } }
+ 
+     static func isVisible(on route: WorkspaceRoute) -> Bool {
+         !route.isAuthentication && ![WorkspaceRoute.chat, .search, .newChat, .createAgent, .editAgent,
+@@ -35,7 +38,10 @@
+             .padding(.horizontal, 16).padding(.vertical, 2)
+             .accessibilityElement(children: .contain)
+             .accessibilityLabel(store.t("Main navigation"))
+-            .onChange(of: store.tab) { _, route in iconActivations[route, default: 0] += 1 }
++            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
++            #if DEBUG
++            .environment(\.phoneTabInteractionRecorder, store.navigation.tabInteractionRecorder)
++            #endif
+     }
+ 
+     @ViewBuilder private var surface: some View {
+@@ -49,36 +55,31 @@
+ 
+     private var bar: some View {
+         VStack(spacing: 6) {
+-            ViewThatFits(in: .horizontal) {
+-                tabs(showsTitles: true)
+-                tabs(showsTitles: false)
++            HStack(spacing: 4) {
++                ForEach(Self.items) { item in tab(item) }
+             }
+-            if dynamicTypeSize.isAccessibilitySize,
++            if !showsInlineTitle,
+                let selected = Self.items.first(where: { $0.route == store.tab }) {
+                 Text(store.t(selected.title)).font(.body).multilineTextAlignment(.center)
+                     .fixedSize(horizontal: false, vertical: true)
+                     .padding(.horizontal, 12).padding(.bottom, 6).accessibilityHidden(true)
+             }
+         }
+-        .padding(6)
++        .padding(6).frame(maxWidth: .infinity)
+         .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: store.tab)
+     }
+ 
+-    private func tabs(showsTitles: Bool) -> some View {
+-        HStack(spacing: 4) {
+-            ForEach(Self.items) { item in tab(item, showsTitles: showsTitles) }
+-        }
+-    }
++    private var showsInlineTitle: Bool { !dynamicTypeSize.isAccessibilitySize && availableWidth >= minimumLabeledWidth }
+ 
+-    private func tab(_ item: Item, showsTitles: Bool) -> some View {
++    private func tab(_ item: Item) -> some View {
+         let selected = store.tab == item.route
+-        let showsTitle = showsTitles && selected && !dynamicTypeSize.isAccessibilitySize
++        let showsTitle = showsInlineTitle && selected
+         return Button {
+-            if selected { iconActivations[item.route, default: 0] += 1 }
+             store.selectTab(item.route)
++            store.navigation.activateTab(item.route)
+         } label: {
+             HStack(spacing: 9) {
+-                PhoneTabIcon(kind: item.icon, activation: iconActivations[item.route, default: 0])
++                PhoneTabIcon(kind: item.icon, activation: store.navigation.activation(for: item.route))
+                 if showsTitle {
+                     Text(store.t(item.title)).font(.subheadline.weight(.medium))
+                         .lineLimit(1).fixedSize(horizontal: true, vertical: false).transition(.opacity)
+@@ -96,6 +97,7 @@
+             }
+             .contentShape(Capsule())
+         }
++        .layoutPriority(selected ? 1 : 0)
+         .buttonStyle(BlotPlainButtonStyle())
+         .accessibilityElement(children: .ignore)
+         .accessibilityLabel(store.t(item.title))
+--- a/apps/ios/BlotIOS/Features/Root/PhoneTabIcon.swift
++++ b/apps/ios/BlotIOS/Features/Root/PhoneTabIcon.swift
+@@ -9,6 +9,9 @@
+     @ScaledMetric(relativeTo: .body) private var size: CGFloat = 22
+     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+     @Environment(\.blotReduceMotion) private var reduceMotion
++    #if DEBUG
++    @Environment(\.phoneTabInteractionRecorder) private var recorder
++    #endif
+ 
+     private struct Frame {
+         var travel = 0.0
+@@ -22,7 +25,7 @@
+             if systemReduceMotion || reduceMotion { artwork(Frame()) }
+             else {
+                 KeyframeAnimator(initialValue: Frame(), trigger: activation) { frame in
+-                    artwork(frame)
++                    artwork(frame).transaction { $0.animation = nil }
+                 } keyframes: { current in
+                     KeyframeTrack(\.travel) {
+                         CubicKeyframe(-0.35, duration: 0.10)
+@@ -51,6 +54,9 @@
+         .frame(width: size, height: size)
+         .accessibilityHidden(true)
+         .allowsHitTesting(false)
++        #if DEBUG
++        .onChange(of: activation) { _, sequence in recorder?.activatedIcon(kind, sequence: sequence) }
++        #endif
+     }
+ 
+     private func artwork(_ frame: Frame) -> some View {
+--- a/apps/shared/WorkspaceV3/WorkspaceRootView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+@@ -223,11 +223,7 @@
+     }
+     #else
+     private var phone: some View {
+-        NavigationStack(path: Binding(get: { store.history }, set: { store.restoreNavigation($0) })) {
+-            phonePage(store.rootRoute)
+-                .navigationDestination(for: WorkspaceRoute.self) { destination in phonePage(destination) }
+-        }
+-        .id(store.rootRoute)
++        PhoneWorkspaceNavigationStack()
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+             if !store.rootRoute.isAuthentication && PhoneTabBar.isVisible(on: store.route) {
+                 PhoneTabBar().offset(y: 8)
+@@ -273,28 +269,19 @@
+         .sensoryFeedback(.selection, trigger: store.pinnedConversationIDs)
+         .sensoryFeedback(.selection, trigger: store.chatInteractions.messages)
+         .sensoryFeedback(.success, trigger: store.snapshot.agents.count) { old, new in new > old }
+-        .sensoryFeedback(.selection, trigger: store.route)
++        .sensoryFeedback(.selection, trigger: store.route) { _, destination in
++            guard !PhoneTabBar.isTab(destination) else { return false }
++            #if DEBUG
++            store.navigation.recordRouteFeedback(destination)
++            #endif
++            return true
++        }
+         .sensoryFeedback(.success, trigger: store.snapshot.messages.last?.metadata.id) { _, _ in
+             store.snapshot.messages.last?.role == .user
+         }
+         .sensoryFeedback(.error, trigger: store.error) { _, error in error != nil }
+     }
+-    private func phonePage(_ route: WorkspaceRoute) -> some View {
+-        let unified = PhoneWorkspacePageHeader.isUsed(on: route)
+-        let floating = unified || PhoneWorkspaceScreen.usesFloatingControls(route) && store.screenState == .normal
+-        return PhoneWorkspaceScreen(route: route)
+-            .id(route)
+-            .modifier(PhoneComposerMenuOverlay())
+-            .environment(\.phonePageTitle, unified ? PhoneWorkspacePageHeader.title(for: route, store: store) : nil)
+-            .safeAreaInset(edge: .top, spacing: 0) {
+-                if unified { PhoneWorkspacePageHeader(route: route) }
+-            }
+-            .navigationTitle(floating ? "" : store.t(route.title))
+-            .toolbar(floating ? .hidden : .visible, for: .navigationBar)
+-            .navigationBarBackButtonHidden(floating)
+-            .navigationBarTitleDisplayMode(!unified && [.chats, .agents, .schedules, .settings].contains(route) ? .large : .inline)
+-            .toolbarBackground(.automatic, for: .navigationBar)
+-    }
++
+     #endif
+ }
+ 
+--- a/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift
++++ b/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift
+@@ -1,13 +1,41 @@
+ import Foundation
+ import Observation
+ import SwiftUI
++import UIKit
+ 
+ @MainActor @Observable
+ final class PhoneWorkspaceNavigation {
+     var filesQuery = ""
+     var scheduleDate = Date()
++    private(set) var tabActivationCount = 0
++    private var tabActivations: [WorkspaceRoute: Int] = [:]
++    private let selectionFeedback = UISelectionFeedbackGenerator()
++    #if DEBUG
++    let tabInteractionRecorder = PhoneTabInteractionRecorder()
++    #endif
+     private var positions: [WorkspaceRoute: ScrollPosition] = [:]
+     private var offsets: [WorkspaceRoute: CGFloat] = [:]
++
++    func activation(for route: WorkspaceRoute) -> Int { tabActivations[route, default: 0] }
++
++    func activateTab(_ route: WorkspaceRoute) {
++        tabActivations[route, default: 0] += 1
++        tabActivationCount += 1
++        #if DEBUG
++        tabInteractionRecorder?.tapped(route, sequence: tabActivationCount)
++        #endif
++        selectionFeedback.selectionChanged()
++        selectionFeedback.prepare()
++        #if DEBUG
++        tabInteractionRecorder?.requestedFeedback(route, sequence: tabActivationCount)
++        #endif
++    }
++
++    #if DEBUG
++    func recordRouteFeedback(_ route: WorkspaceRoute) {
++        tabInteractionRecorder?.requestedFeedback(route, sequence: tabActivationCount)
++    }
++    #endif
+ 
+     func position(for route: WorkspaceRoute) -> Binding<ScrollPosition> {
+         Binding(get: { self.positions[route] ?? ScrollPosition(edge: .top) },
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Root/PhoneWorkspaceNavigationStack.swift
+@@ -0,0 +1,41 @@
++import SwiftUI
++
++struct PhoneWorkspaceNavigationStack: View {
++    @Environment(WorkspaceStore.self) private var store
++
++    var body: some View {
++        let root = store.rootRoute
++        NavigationStack(path: Binding(
++            get: { store.rootRoute == root ? store.history : [] },
++            set: { path in
++                guard store.rootRoute == root else { return }
++                store.restoreNavigation(path)
++            })) {
++            PhoneWorkspacePage(route: root)
++                .navigationDestination(for: WorkspaceRoute.self) { PhoneWorkspacePage(route: $0) }
++        }
++        .id(root)
++    }
++}
++
++private struct PhoneWorkspacePage: View {
++    let route: WorkspaceRoute
++    @Environment(WorkspaceStore.self) private var store
++
++    var body: some View {
++        let unified = PhoneWorkspacePageHeader.isUsed(on: route)
++        let floating = unified || PhoneWorkspaceScreen.usesFloatingControls(route) && store.screenState == .normal
++        return PhoneWorkspaceScreen(route: route)
++            .id(route)
++            .modifier(PhoneComposerMenuOverlay())
++            .environment(\.phonePageTitle, unified ? PhoneWorkspacePageHeader.title(for: route, store: store) : nil)
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if unified { PhoneWorkspacePageHeader(route: route) }
++            }
++            .navigationTitle(floating ? "" : store.t(route.title))
++            .toolbar(floating ? .hidden : .visible, for: .navigationBar)
++            .navigationBarBackButtonHidden(floating)
++            .navigationBarTitleDisplayMode(!unified && [.chats, .agents, .schedules, .settings].contains(route) ? .large : .inline)
++            .toolbarBackground(.automatic, for: .navigationBar)
++    }
++}
+--- /dev/null
++++ b/apps/ios/BlotIOS/Services/PhoneTabInteractionRecorder.swift
+@@ -0,0 +1,59 @@
++#if DEBUG
++import Foundation
++import SwiftUI
++
++extension EnvironmentValues {
++    @Entry var phoneTabInteractionRecorder: PhoneTabInteractionRecorder? = nil
++}
++
++/// Records UI-test input and feedback requests without changing accessibility labels.
++@MainActor
++final class PhoneTabInteractionRecorder {
++    private struct Event: Codable {
++        let route: String
++        let sequence: Int
++    }
++    private struct Snapshot: Codable {
++        var taps: [Event] = []
++        var feedback: [Event] = []
++        var playbacks: [Event] = []
++    }
++
++    private let url: URL
++    private var snapshot = Snapshot()
++
++    init?() {
++        guard ProcessInfo.processInfo.arguments.contains("--tab-interaction-probe"),
++              let directory = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first else { return nil }
++        url = directory.appendingPathComponent("tab-interactions.json")
++        save()
++    }
++
++    func tapped(_ route: WorkspaceRoute, sequence: Int) {
++        snapshot.taps.append(Event(route: route.rawValue, sequence: sequence))
++        save()
++    }
++
++    func requestedFeedback(_ route: WorkspaceRoute, sequence: Int) {
++        snapshot.feedback.append(Event(route: route.rawValue, sequence: sequence))
++        save()
++    }
++
++    func activatedIcon(_ kind: PhoneTabIcon.Kind, sequence: Int) {
++        let route: String
++        switch kind {
++        case .chats: route = "chats"
++        case .calendar: route = "schedules"
++        case .overview: route = "overview"
++        case .settings: route = "settings"
++        }
++        snapshot.playbacks.append(Event(route: route, sequence: sequence))
++        save()
++    }
++
++    private func save() {
++        guard let data = try? JSONEncoder().encode(snapshot) else { return }
++        try? data.write(to: url, options: .atomic)
++    }
++}
++#endif
+--- /dev/null
++++ b/apps/verification/WorkspaceUITests/PhoneTabBarInteractionTests.swift
+@@ -0,0 +1,38 @@
++import XCTest
++
++@MainActor
++final class PhoneTabBarInteractionTests: XCTestCase {
++    func testTabsAndRepeatedTaps() throws {
++        continueAfterFailure = false
++        let app = XCUIApplication(bundleIdentifier: "yaroslavstrelkov.blot-agent.ios")
++        app.launchArguments = ["--workspace-preview", "--screen", "07-all-chats", "--ru", "--tab-interaction-probe"]
++        app.launch()
++        let allTabs = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "workspace.tab."))
++        XCTAssertTrue(app.buttons["workspace.tab.chats"].waitForExistence(timeout: 10))
++        let routes = ["schedules", "overview", "settings", "chats", "chats", "settings",
++                      "overview", "schedules", "chats", "overview", "settings", "chats"]
++        var expected: [String: Int] = [:]
++        for route in routes {
++            XCTAssertEqual(allTabs.count, 4)
++            let button = app.buttons["workspace.tab." + route]
++            XCTAssertTrue(button.isHittable)
++            button.tap()
++            expected[route, default: 0] += 1
++            XCTAssertTrue(button.isSelected)
++            XCTAssertTrue(app.descendants(matching: .any).matching(identifier: "workspace.screen." + route)
++                .firstMatch.waitForExistence(timeout: 3))
++        }
++        for route in ["chats", "settings", "overview", "schedules"] {
++            app.buttons["workspace.tab." + route].doubleTap()
++            expected[route, default: 0] += 2
++            XCTAssertTrue(app.buttons["workspace.tab." + route].isSelected)
++            XCTAssertEqual(allTabs.count, 4)
++        }
++        let attachment = XCTAttachment(screenshot: app.screenshot())
++        attachment.name = "Tab bar after switching and repeated taps"
++        attachment.lifetime = .keepAlways
++        add(attachment)
++        let encoded = try JSONSerialization.data(withJSONObject: expected, options: .sortedKeys)
++        print("BLOT_TAB_UI_EXPECTED_COUNTS=" + String(decoding: encoded, as: UTF8.self))
++    }
++}
+--- /dev/null
++++ b/scripts/check-ios-tab-interactions.py
+@@ -0,0 +1,138 @@
++#!/usr/bin/env python3
++"""Tap the installed iOS app on a physical device and audit navigation feedback."""
++import argparse
++from collections import Counter
++import hashlib
++import json
++from pathlib import Path
++import plistlib
++import re
++import shutil
++import subprocess
++
++ROOT = Path(__file__).resolve().parents[1]
++
++
++def sign_runner(products, bundle_id, team, identity):
++    profiles = Path.home() / "Library/Developer/Xcode/UserData/Provisioning Profiles"
++    for path in profiles.glob("*.mobileprovision"):
++        profile = plistlib.loads(subprocess.check_output(
++            ["security", "cms", "-D", "-i", str(path)], stderr=subprocess.DEVNULL))
++        if profile["Entitlements"].get("application-identifier") == team + "." + bundle_id:
++            break
++    else:
++        raise RuntimeError("No existing development profile for " + bundle_id)
++    identities = subprocess.check_output(["security", "find-identity", "-v", "-p", "codesigning"], text=True)
++    identity = identity.upper()
++    assert identity in identities, "Signing identity is unavailable"
++    assert identity in [hashlib.sha1(cert).hexdigest().upper() for cert in profile["DeveloperCertificates"]], \
++        "Signing identity is not included in the verification profile"
++    runner = products / "Debug-iphoneos/BlotTabUITests-Runner.app"
++    info = runner / "Info.plist"
++    metadata = plistlib.loads(info.read_bytes())
++    metadata["CFBundleIdentifier"] = bundle_id
++    info.write_bytes(plistlib.dumps(metadata))
++    shutil.copy2(path, runner / "embedded.mobileprovision")
++    entitlements = products / "runner-entitlements.plist"
++    entitlements.write_bytes(plistlib.dumps(profile["Entitlements"]))
++    children = [p for p in runner.rglob("*") if p.suffix in (".framework", ".xctest", ".dylib")]
++    for child in sorted(children, key=lambda p: len(p.parts), reverse=True):
++        subprocess.run(["codesign", "--force", "--sign", identity, str(child)], check=True,
++                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
++    subprocess.run(["codesign", "--force", "--sign", identity, "--entitlements", str(entitlements),
++                    str(runner)], check=True, stdout=subprocess.DEVNULL)
++    configuration = next(products.glob("*.xctestrun"))
++    metadata = plistlib.loads(configuration.read_bytes())
++    metadata["BlotTabUITests"]["TestHostBundleIdentifier"] = bundle_id
++    configuration.write_bytes(plistlib.dumps(metadata))
++    return configuration
++
++
++def main():
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument("--device-udid", required=True)
++    parser.add_argument("--team")
++    parser.add_argument("--signing-identity", required=True, help="SHA-1 of the installed app's trusted signing certificate")
++    parser.add_argument("--runner-bundle-id", default="yaroslavstrelkov.blot-agent.workspace-verification",
++                        help="Existing dedicated verification app profile; this test replaces that app")
++    args = parser.parse_args()
++    team = args.team
++    if not team:
++        settings = subprocess.check_output(
++            ["xcodebuild", "-project", "apps/Blot.xcodeproj", "-scheme", "BlotIOS",
++             "-showBuildSettings", "-json"], cwd=ROOT, stderr=subprocess.DEVNULL)
++        team = json.loads(settings)[0]["buildSettings"]["DEVELOPMENT_TEAM"]
++    directory = ROOT / ".build/ios-tab-ui"
++    project = directory / "BlotTabUITests.xcodeproj"
++    schemes = project / "xcshareddata/xcschemes"
++    schemes.mkdir(parents=True, exist_ok=True)
++    sources = ROOT / "apps/verification/WorkspaceUITests"
++    text = f'''// !$*UTF8*$!
++{{
++ archiveVersion = 1; classes = {{}}; objectVersion = 77;
++ objects = {{
++  A10000000000000000000001 = {{ isa = PBXProject; attributes = {{ LastUpgradeCheck = 2700; }}; buildConfigurationList = A10000000000000000000009; compatibilityVersion = "Xcode 16.0"; developmentRegion = en; knownRegions = (en, Base,); mainGroup = A10000000000000000000002; productRefGroup = A10000000000000000000003; projectDirPath = ""; projectRoot = ""; targets = (A10000000000000000000004,); }};
++  A10000000000000000000002 = {{ isa = PBXGroup; children = (A10000000000000000000005, A10000000000000000000003,); sourceTree = "<group>"; }};
++  A10000000000000000000003 = {{ isa = PBXGroup; name = Products; children = (A10000000000000000000006,); sourceTree = "<group>"; }};
++  A10000000000000000000004 = {{ isa = PBXNativeTarget; buildConfigurationList = A1000000000000000000000A; buildPhases = (A10000000000000000000007,A10000000000000000000008,); buildRules = (); dependencies = (); fileSystemSynchronizedGroups = (A10000000000000000000005,); name = BlotTabUITests; productName = BlotTabUITests; productReference = A10000000000000000000006; productType = "com.apple.product-type.bundle.ui-testing"; }};
++  A10000000000000000000005 = {{ isa = PBXFileSystemSynchronizedRootGroup; path = "{sources}"; sourceTree = "<absolute>"; }};
++  A10000000000000000000006 = {{ isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BlotTabUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; }};
++  A10000000000000000000007 = {{ isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};
++  A10000000000000000000008 = {{ isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; }};
++  A10000000000000000000009 = {{ isa = XCConfigurationList; buildConfigurations = (A1000000000000000000000B,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; }};
++  A1000000000000000000000A = {{ isa = XCConfigurationList; buildConfigurations = (A1000000000000000000000C,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Debug; }};
++  A1000000000000000000000B = {{ isa = XCBuildConfiguration; name = Debug; buildSettings = {{ CLANG_ENABLE_MODULES = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; }}; }};
++  A1000000000000000000000C = {{ isa = XCBuildConfiguration; name = Debug; buildSettings = {{ CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = {team}; GENERATE_INFOPLIST_FILE = YES; PRODUCT_NAME = "$(TARGET_NAME)"; PRODUCT_BUNDLE_IDENTIFIER = "yaroslavstrelkov.blot-agent.tab-ui-tests"; SUPPORTED_PLATFORMS = iphoneos; TARGETED_DEVICE_FAMILY = 1; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks"; }}; }};
++ }};
++ rootObject = A10000000000000000000001;
++}}
++'''
++    (project / "project.pbxproj").write_text(text)
++    reference = '<BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="A10000000000000000000004" BuildableName="BlotTabUITests.xctest" BlueprintName="BlotTabUITests" ReferencedContainer="container:BlotTabUITests.xcodeproj"/>'
++    (schemes / "BlotTabUITests.xcscheme").write_text(f'''<?xml version="1.0" encoding="UTF-8"?>
++<Scheme LastUpgradeVersion="2700" version="1.3">
++ <BuildAction parallelizeBuildables="YES" buildImplicitDependencies="YES"><BuildActionEntries><BuildActionEntry buildForTesting="YES" buildForRunning="NO" buildForProfiling="NO" buildForArchiving="NO" buildForAnalyzing="YES">{reference}</BuildActionEntry></BuildActionEntries></BuildAction>
++ <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.IDEFoundation.Launcher.LLDB"><Testables><TestableReference skipped="NO" parallelizable="NO">{reference}</TestableReference></Testables></TestAction>
++</Scheme>''')
++    log_path = directory / "tests.log"
++    derived = directory / "DerivedData"
++    with (directory / "build.log").open("w") as log:
++        result = subprocess.run(
++            ["xcodebuild", "-project", str(project), "-scheme", "BlotTabUITests",
++             "-destination", "platform=iOS,id=" + args.device_udid,
++             "-derivedDataPath", str(derived), "CODE_SIGNING_ALLOWED=NO", "build-for-testing"],
++            cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
++    if result.returncode:
++        print("FAIL", directory / "build.log")
++        return result.returncode
++    configuration = sign_runner(derived / "Build/Products", args.runner_bundle_id, team, args.signing_identity)
++    with log_path.open("w") as log:
++        result = subprocess.run(
++            ["xcodebuild", "test-without-building", "-xctestrun", str(configuration),
++             "-destination", "platform=iOS,id=" + args.device_udid, "-derivedDataPath", str(derived)],
++            cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
++    if result.returncode:
++        print("FAIL", log_path)
++        return result.returncode
++    trace_path = directory / "tab-interactions.json"
++    subprocess.run(
++        ["xcrun", "devicectl", "device", "copy", "from", "--device", args.device_udid,
++         "--domain-type", "appDataContainer", "--domain-identifier", "yaroslavstrelkov.blot-agent.ios",
++         "--source", "Library/Caches/tab-interactions.json", "--destination", str(trace_path)],
++        check=True, stdout=subprocess.DEVNULL)
++    expected = re.search(r'BLOT_TAB_UI_EXPECTED_COUNTS=(\{[^\r\n]+\})', log_path.read_text())
++    assert expected, "UI test did not publish its input counts"
++    expected = json.loads(expected.group(1))
++    trace = json.loads(trace_path.read_text())
++    assert dict(Counter(event["route"] for event in trace["taps"])) == expected, trace
++    assert [event["sequence"] for event in trace["taps"]] == list(range(1, sum(expected.values()) + 1)), trace
++    assert trace["feedback"] == trace["taps"], "Feedback requests must match physical taps exactly"
++    assert dict(Counter(event["route"] for event in trace["playbacks"])) == expected, "Every tap must reach its mounted icon"
++    for route, count in expected.items():
++        assert [event["sequence"] for event in trace["playbacks"] if event["route"] == route] == list(range(1, count + 1)), trace
++    print("PASS:", len(trace["taps"]), "physical taps,", len(trace["playbacks"]), "icon activations,", len(trace["feedback"]), "feedback requests")
++    return 0
++
++
++if __name__ == "__main__":
++    raise SystemExit(main())

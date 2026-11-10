@@ -1,0 +1,317 @@
+diff --git a/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift b/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
+--- a/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
++++ b/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
+@@ -5,19 +5,20 @@
+     private struct Item: Identifiable {
+         let route: WorkspaceRoute
+         let title: String
+-        let symbol: String
++        let icon: PhoneTabIcon.Kind
+         var id: WorkspaceRoute { route }
+     }
+ 
+     private static let items: [Item] = [
+-        .init(route: .chats, title: "Chats", symbol: "bubble.left.and.bubble.right"),
+-        .init(route: .schedules, title: "Schedules", symbol: "calendar"),
+-        .init(route: .overview, title: "Overview", symbol: "square.grid.2x2"),
+-        .init(route: .settings, title: "Settings", symbol: "slider.horizontal.3")
++        .init(route: .chats, title: "Chats", icon: .chats),
++        .init(route: .schedules, title: "Schedules", icon: .calendar),
++        .init(route: .overview, title: "Overview", icon: .overview),
++        .init(route: .settings, title: "Settings", icon: .settings)
+     ]
+ 
+     @Environment(WorkspaceStore.self) private var store
+     @Namespace private var selection
++    @State private var iconActivations: [WorkspaceRoute: Int] = [:]
+ 
+     static func isVisible(on route: WorkspaceRoute) -> Bool {
+         !route.isAuthentication && ![WorkspaceRoute.chat, .search, .newChat, .createAgent, .editAgent,
+@@ -34,6 +35,7 @@
+             .padding(.horizontal, 16).padding(.vertical, 2)
+             .accessibilityElement(children: .contain)
+             .accessibilityLabel(store.t("Main navigation"))
++            .onChange(of: store.tab) { _, route in iconActivations[route, default: 0] += 1 }
+     }
+ 
+     @ViewBuilder private var surface: some View {
+@@ -71,9 +73,12 @@
+     private func tab(_ item: Item, showsTitles: Bool) -> some View {
+         let selected = store.tab == item.route
+         let showsTitle = showsTitles && selected && !dynamicTypeSize.isAccessibilitySize
+-        return Button { store.selectTab(item.route) } label: {
++        return Button {
++            if selected { iconActivations[item.route, default: 0] += 1 }
++            store.selectTab(item.route)
++        } label: {
+             HStack(spacing: 9) {
+-                BlotIcon(symbol: item.symbol, size: 22)
++                PhoneTabIcon(kind: item.icon, activation: iconActivations[item.route, default: 0])
+                 if showsTitle {
+                     Text(store.t(item.title)).font(.subheadline.weight(.medium))
+                         .lineLimit(1).fixedSize(horizontal: true, vertical: false).transition(.opacity)
+diff --git a/apps/ios/BlotIOS/Features/Root/PhoneTabIcon.swift b/apps/ios/BlotIOS/Features/Root/PhoneTabIcon.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Root/PhoneTabIcon.swift
+@@ -0,0 +1,135 @@
++import BlotDesign
++import SwiftUI
++
++struct PhoneTabIcon: View {
++    enum Kind { case chats, calendar, overview, settings }
++
++    let kind: Kind
++    let activation: Int
++    @ScaledMetric(relativeTo: .body) private var size: CGFloat = 22
++    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
++    @Environment(\.blotReduceMotion) private var reduceMotion
++
++    private struct Frame {
++        var travel = 0.0
++        var tilt = 0.0
++        var page = 0.0
++        var rotation = 0.0
++    }
++
++    var body: some View {
++        Group {
++            if systemReduceMotion || reduceMotion { artwork(Frame()) }
++            else {
++                KeyframeAnimator(initialValue: Frame(), trigger: activation) { frame in
++                    artwork(frame)
++                } keyframes: { current in
++                    KeyframeTrack(\.travel) {
++                        CubicKeyframe(-0.35, duration: 0.10)
++                        CubicKeyframe(1, duration: 0.14)
++                        CubicKeyframe(-1.2, duration: 0.16)
++                        CubicKeyframe(0.28, duration: 0.14)
++                        CubicKeyframe(-0.08, duration: 0.10)
++                        CubicKeyframe(0, duration: 0.12)
++                    }
++                    KeyframeTrack(\.tilt) {
++                        CubicKeyframe(-8, duration: 0.10)
++                        CubicKeyframe(5, duration: 0.14)
++                        CubicKeyframe(-4, duration: 0.16)
++                        CubicKeyframe(1.5, duration: 0.14)
++                        CubicKeyframe(0, duration: 0.22)
++                    }
++                    KeyframeTrack(\.page) {
++                        CubicKeyframe(current.page.rounded(.down) + 2, duration: 0.76)
++                    }
++                    KeyframeTrack(\.rotation) {
++                        CubicKeyframe(current.rotation + 360, duration: 0.76)
++                    }
++                }
++            }
++        }
++        .frame(width: size, height: size)
++        .accessibilityHidden(true)
++        .allowsHitTesting(false)
++    }
++
++    private func artwork(_ frame: Frame) -> some View {
++        ZStack {
++            switch kind {
++            case .chats:
++                PhoneChatIconBubble(rear: true).stroke(style: stroke)
++                    .rotationEffect(.degrees(-frame.tilt), anchor: .init(x: 0.65, y: 0.65))
++                    .offset(x: -frame.travel * 1.2, y: frame.travel * 1.6)
++                PhoneChatIconBubble(rear: false).stroke(style: stroke)
++                    .rotationEffect(.degrees(frame.tilt), anchor: .init(x: 0.4, y: 0.4))
++                    .offset(x: frame.travel * 1.2, y: -frame.travel * 1.6)
++            case .calendar:
++                BlotIcon(symbol: "calendar", size: 24)
++                calendarPage(turn: frame.page)
++            case .overview:
++                ForEach(0..<4, id: \.self) { index in
++                    let x: CGFloat = index % 2 == 0 ? 1 : -1
++                    let y: CGFloat = index < 2 ? 1 : -1
++                    RoundedRectangle(cornerRadius: 2).stroke(style: stroke)
++                        .frame(width: 7, height: 7)
++                        .rotationEffect(.degrees(frame.tilt * Double(x * y) * 0.7))
++                        .position(x: x > 0 ? 6.5 : 17.5, y: y > 0 ? 6.5 : 17.5)
++                        .offset(x: frame.travel * 2 * x, y: frame.travel * 2 * y)
++                }
++            case .settings:
++                BlotIcon(.settings, size: 24).rotationEffect(.degrees(frame.rotation))
++            }
++        }
++        .frame(width: 24, height: 24)
++        .environment(\.dynamicTypeSize, .large)
++        .scaleEffect(size / 24)
++        .frame(width: size, height: size)
++    }
++
++    private var stroke: StrokeStyle { StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round) }
++
++    private func calendarPage(turn: Double) -> some View {
++        let phase = turn.truncatingRemainder(dividingBy: 1)
++        let opacity = sin(.pi * min(phase / 0.58, 1))
++        return ZStack {
++            RoundedRectangle(cornerRadius: 1.5).stroke(lineWidth: 1.2)
++            ForEach(0..<5, id: \.self) { index in
++                Circle().frame(width: 1.4, height: 1.4)
++                    .position(x: 4 + CGFloat(index % 3) * 4, y: index < 3 ? 3.5 : 7.5)
++            }
++        }
++        .frame(width: 16, height: 10)
++        .rotation3DEffect(.degrees(-180 * phase), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.35)
++        .opacity(opacity)
++        .position(x: 12, y: 15.5)
++    }
++}
++
++private nonisolated struct PhoneChatIconBubble: Shape {
++    let rear: Bool
++
++    func path(in rect: CGRect) -> Path {
++        var path = Path()
++        if rear {
++            path.move(to: .init(x: 18, y: 8))
++            path.addLine(to: .init(x: 19, y: 8))
++            path.addCurve(to: .init(x: 22, y: 11), control1: .init(x: 20.66, y: 8), control2: .init(x: 22, y: 9.34))
++            path.addLine(to: .init(x: 22, y: 21))
++            path.addLine(to: .init(x: 17, y: 18))
++            path.addLine(to: .init(x: 12, y: 18))
++            path.addCurve(to: .init(x: 9, y: 15), control1: .init(x: 10.34, y: 18), control2: .init(x: 9, y: 16.66))
++        } else {
++            path.move(to: .init(x: 5, y: 3))
++            path.addLine(to: .init(x: 15, y: 3))
++            path.addCurve(to: .init(x: 18, y: 6), control1: .init(x: 16.66, y: 3), control2: .init(x: 18, y: 4.34))
++            path.addLine(to: .init(x: 18, y: 12))
++            path.addCurve(to: .init(x: 15, y: 15), control1: .init(x: 18, y: 13.66), control2: .init(x: 16.66, y: 15))
++            path.addLine(to: .init(x: 8, y: 15))
++            path.addLine(to: .init(x: 3, y: 18))
++            path.addLine(to: .init(x: 3, y: 6))
++            path.addCurve(to: .init(x: 5, y: 3), control1: .init(x: 3, y: 4.6), control2: .init(x: 3.6, y: 3.4))
++            path.closeSubpath()
++        }
++        return path.applying(.init(scaleX: rect.width / 24, y: rect.height / 24))
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceRootView.swift b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceRootView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+@@ -227,6 +227,7 @@
+             phonePage(store.rootRoute)
+                 .navigationDestination(for: WorkspaceRoute.self) { destination in phonePage(destination) }
+         }
++        .id(store.rootRoute)
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+             if !store.rootRoute.isAuthentication && PhoneTabBar.isVisible(on: store.route) {
+                 PhoneTabBar().offset(y: 8)
+diff --git a/apps/verification/WorkspacePresentationTests/PhoneTabIconMotionTests.swift b/apps/verification/WorkspacePresentationTests/PhoneTabIconMotionTests.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/verification/WorkspacePresentationTests/PhoneTabIconMotionTests.swift
+@@ -0,0 +1,109 @@
++import BlotDesign
++import Observation
++import SwiftUI
++import UIKit
++import XCTest
++
++@MainActor
++final class PhoneTabIconMotionTests: XCTestCase {
++    func testEachIconMovesReplaysAndSettles() async throws {
++        try XCTSkipIf(UIAccessibility.isReduceMotionEnabled, "Motion is disabled by the device accessibility setting")
++        let previousIdleTimer = UIApplication.shared.isIdleTimerDisabled
++        UIApplication.shared.isIdleTimerDisabled = true
++        defer { UIApplication.shared.isIdleTimerDisabled = previousIdleTimer }
++        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
++        let previous = scene.windows.first(where: \.isKeyWindow)
++        let window = UIWindow(windowScene: scene)
++        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
++        let kinds: [PhoneTabIcon.Kind] = [.chats, .calendar, .overview, .settings]
++        for (index, kind) in kinds.enumerated() {
++            let probe = PhoneIconMotionProbe()
++            window.rootViewController = nil
++            let host = UIHostingController(rootView: PhoneIconMotionFixture(kind: kind, probe: probe))
++            window.rootViewController = host
++            host.loadViewIfNeeded()
++            window.makeKeyAndVisible()
++            try await waitUntilActive()
++            try await pause(window, milliseconds: 250)
++            let idle = capture(window)
++            probe.activation += 1
++            try await pause(window, milliseconds: 230)
++            let moving = capture(window)
++            XCTAssertNotEqual(idle.pngData(), moving.pngData(), "Icon \(index) must animate its artwork")
++            attach(moving, name: "Tab icon \(index) · impact")
++            probe.activation += 1
++            try await pause(window, milliseconds: 220)
++            attach(capture(window), name: "Tab icon \(index) · repeated selection")
++            try await pause(window, milliseconds: 900)
++            let settled = capture(window)
++            try await pause(window, milliseconds: 140)
++            XCTAssertEqual(settled.pngData(), capture(window).pngData(), "Icon \(index) must stop after selection")
++            probe.activation += 1
++            try await pause(window, milliseconds: 230)
++            XCTAssertNotEqual(settled.pngData(), capture(window).pngData(), "Icon \(index) must replay on another tap")
++        }
++    }
++
++    func testAppReducedMotionKeepsIconsStill() async throws {
++        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
++        let previous = scene.windows.first(where: \.isKeyWindow)
++        let window = UIWindow(windowScene: scene)
++        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
++        let probe = PhoneIconMotionProbe()
++        window.rootViewController = UIHostingController(rootView: PhoneIconMotionFixture(kind: .overview, probe: probe,
++            appReduceMotion: true))
++        window.makeKeyAndVisible()
++        try await waitUntilActive()
++        try await pause(window, milliseconds: 150)
++        let idle = capture(window)
++        probe.activation += 1
++        try await pause(window, milliseconds: 230)
++        XCTAssertEqual(idle.pngData(), capture(window).pngData())
++    }
++
++    private func pause(_ window: UIWindow, milliseconds: Int) async throws {
++        window.layoutIfNeeded()
++        try await _Concurrency.Task.sleep(for: .milliseconds(milliseconds))
++        window.layoutIfNeeded()
++    }
++
++    private func waitUntilActive() async throws {
++        let deadline = Date().addingTimeInterval(5)
++        while UIApplication.shared.applicationState != .active && Date() < deadline {
++            try await _Concurrency.Task.sleep(for: .milliseconds(100))
++        }
++        try XCTSkipUnless(UIApplication.shared.applicationState == .active,
++                          "The physical test app must be in the foreground to capture animation")
++    }
++
++    private func capture(_ window: UIWindow) -> UIImage {
++        UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
++            window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
++        }
++    }
++
++    private func attach(_ image: UIImage, name: String) {
++        let attachment = XCTAttachment(image: image)
++        attachment.name = name
++        attachment.lifetime = .keepAlways
++        add(attachment)
++    }
++}
++
++@MainActor @Observable
++private final class PhoneIconMotionProbe {
++    var activation = 0
++}
++
++private struct PhoneIconMotionFixture: View {
++    let kind: PhoneTabIcon.Kind
++    let probe: PhoneIconMotionProbe
++    var appReduceMotion = false
++
++    var body: some View {
++        PhoneTabIcon(kind: kind, activation: probe.activation).scaleEffect(4)
++            .frame(maxWidth: .infinity, maxHeight: .infinity)
++            .foregroundStyle(.black).background(.white)
++            .environment(\.blotReduceMotion, appReduceMotion)
++    }
++}
