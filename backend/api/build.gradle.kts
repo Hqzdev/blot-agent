@@ -5,6 +5,7 @@ dependencies {
     implementation(platform("org.springframework.boot:spring-boot-dependencies:${libs.versions.spring.boot.get()}"))
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
     implementation(libs.jackson)
+    testImplementation(project(":client"))
 }
 
 tasks.withType<JavaExec>().configureEach { jvmArgs("--enable-native-access=ALL-UNNAMED") }

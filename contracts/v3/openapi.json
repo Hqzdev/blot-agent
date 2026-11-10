@@ -1,11 +1,11 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "Blot v3 target local API",
+    "title": "Blot v3 local API",
     "version": "3.0.0",
-    "description": "Contract for November clients. Runtime implementation is pending; v2 is not v3 compatible."
+    "description": "Direct-chat runtime with isolated v3 storage. See x-supported-commands; other target commands return 501. v2 records are not converted."
   },
-  "x-runtime-implemented": false,
+  "x-runtime-implemented": true,
   "paths": {
     "/v3/commands": {
       "post": {
@@ -401,5 +401,12 @@
     {
       "deviceSession": []
     }
+  ],
+  "x-supported-commands": [
+    "agent.save",
+    "conversation.create",
+    "conversation.send_message",
+    "conversation.update",
+    "conversation.delete"
   ]
 }
