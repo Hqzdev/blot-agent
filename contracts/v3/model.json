@@ -272,7 +272,8 @@
       "parentTaskId": "uuid?",
       "skillRevisionId": "uuid?",
       "budgetTokenLimit": "int?",
-      "executionMode": "ExecutionMode?"
+      "executionMode": "ExecutionMode?",
+      "authorizationJSON": "text?"
     },
     "TaskAttempt": {
       "metadata": "RecordMetadata",
@@ -368,7 +369,11 @@
       "accountName": "text",
       "scopes": "[text]",
       "state": "ConnectionState",
-      "deviceId": "uuid?"
+      "deviceId": "uuid?",
+      "pluginId": "text?",
+      "resourceIds": "[text]?",
+      "agentIds": "[uuid]?",
+      "allowedOperations": "[text]?"
     },
     "McpConnection": {
       "metadata": "RecordMetadata",

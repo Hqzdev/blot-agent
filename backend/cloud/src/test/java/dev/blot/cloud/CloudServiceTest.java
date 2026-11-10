@@ -84,6 +84,53 @@ final class CloudServiceTest {
   }
 
   @Test
+  void accountDeletionRequiresItsOwnCodeAndRemovesTheOwnerGraph() throws Exception {
+    Device source = bootstrap();
+    var owner = source.actor();
+    var token = accounts.login(EMAIL, PASSWORD);
+    UUID taskID = UUID.randomUUID();
+    var leases = new CloudLeases(db, clock, Duration.ofSeconds(30));
+    leases.register(owner, new CloudLeases.Registration(taskID, owner.deviceID(), null));
+    var blobs = new CloudEncryptedBlobs(db, tokens, clock);
+    blobs.put(owner, new CloudEncryptedBlobs.Chunk(UUID.randomUUID(), 0, 1, new byte[28]));
+    relay.upload(owner, packet(source, UUID.randomUUID(), 1, 1));
+    accounts.register("keep@example.org", PASSWORD, "Keep me");
+    var other = accounts.verify("keep@example.org", mail.code);
+    accounts.requestDeletion(owner);
+    String code = mail.code;
+    String wrong = (code.charAt(0) == '0' ? "1" : "0") + code.substring(1);
+    failCode("code_expired_or_invalid", () -> accounts.deleteAccount(owner, wrong));
+    assertEquals(EMAIL, accounts.me(owner).email());
+    accounts.deleteAccount(owner, code);
+    failCode("session_expired", () -> sessions.require("Bearer " + token.accessToken(), false));
+    failCode("session_expired", () -> accounts.me(owner));
+    assertEquals("keep@example.org", accounts.me(actor(other)).email());
+    long count =
+        db.transact(
+            tx ->
+                tx.one(
+                        "SELECT count(*) FROM accounts WHERE id = ?",
+                        r -> r.getLong(1),
+                        owner.ownerID())
+                    .orElseThrow());
+    assertEquals(0L, count);
+    for (String table :
+        new String[] {
+          "devices", "task_assignments", "encrypted_blobs", "relay_packets", "relay_receipts"
+        }) {
+      long remaining =
+          db.transact(
+              tx ->
+                  tx.one(
+                          "SELECT count(*) FROM " + table + " WHERE workspace_id = ?",
+                          r -> r.getLong(1),
+                          owner.workspaceID())
+                      .orElseThrow());
+      assertEquals(0L, remaining, table);
+    }
+  }
+
+  @Test
   void browserAuthorizationRequiresPKCEAndBindsOneNativeClient() throws Exception {
     accounts.register(EMAIL, PASSWORD, "Tester");
     var verified = accounts.verify(EMAIL, mail.code);
@@ -291,6 +338,7 @@ final class CloudServiceTest {
           tx.execute("DROP TABLE browser_authorizations");
           tx.execute("DROP INDEX accounts_google_subject");
           tx.execute("ALTER TABLE accounts DROP COLUMN google_subject");
+          tx.execute("ALTER TABLE accounts DROP COLUMN avatar_url");
           tx.execute("PRAGMA user_version = 1");
           return null;
         });

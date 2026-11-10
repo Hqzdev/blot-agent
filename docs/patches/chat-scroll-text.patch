@@ -1,0 +1,100 @@
+diff --git a/apps/shared/WorkspaceV3/WorkspaceMessageText.swift b/apps/shared/WorkspaceV3/WorkspaceMessageText.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceMessageText.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceMessageText.swift
+@@ -28,7 +28,8 @@
+         let targets = peopleAndSkills + WorkspacePluginReference.all.filter { !reservedNames.contains($0.name.lowercased()) }.map(WorkspaceInlineMention.plugin)
+         let byID = Dictionary(uniqueKeysWithValues: targets.map { ($0.id, $0) })
+         guard !targets.isEmpty, let references = try? WorkspaceNamedReferences.find(plain, names: byID.mapValues(\.name)), !references.isEmpty else { return Text(content) }
+-        var result = Text("")
++        var result: [Text] = []
++        result.reserveCapacity(references.count * 4 + 1)
+         var cursor = content.startIndex
+         for reference in references {
+             guard let range = Range(NSRange(location: reference.startUTF16, length: reference.lengthUTF16), in: plain),
+@@ -38,28 +39,39 @@
+             let end = content.characters.index(start, offsetBy: plain.distance(from: range.lowerBound, to: range.upperBound))
+             // Keep code and existing links intact.
+             guard !content[start..<end].runs.contains(where: { $0.link != nil || $0.inlinePresentationIntent?.contains(.code) == true }) else { continue }
+-            let prefix = Text(AttributedString(content[cursor..<start]))
+-            let name = Text(target.displayName).foregroundColor(target.color).fontWeight(.semibold)
+-            let mention: Text
++            result.append(Text(AttributedString(content[cursor..<start])))
++            let name = Text(verbatim: target.displayName).foregroundColor(target.color).fontWeight(.semibold)
+             switch target {
+             case .agent(let agent):
+                 if let image = WorkspaceMentionAvatar.image(agent: agent, size: avatarSize, scale: displayScale, scheme: scheme) {
+                     let avatar = Text(image).baselineOffset(-2)
+-                    mention = Text("\(avatar)\u{202F}\(name)")
+-                } else { mention = name }
++                    result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
++                }
+             case .skill:
+                 let avatar = Text(Image(systemName: "shippingbox")).foregroundColor(target.color)
+-                mention = Text("\(avatar)\u{202F}\(name)")
++                result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
+             case .plugin(let plugin):
+                 if let image = WorkspaceMentionAvatar.image(plugin: plugin, size: avatarSize, scale: displayScale, scheme: scheme) {
+                     let logo = Text(image).baselineOffset(-2)
+-                    mention = Text("\(logo)\u{202F}\(name)")
+-                } else { mention = name }
++                    result.append(logo); result.append(Text(verbatim: "\u{202F}"))
++                }
+             }
+-            result = Text("\(result)\(prefix)\(mention)")
++            result.append(name)
+             cursor = end
+         }
+-        return Text("\(result)\(Text(AttributedString(content[cursor..<content.endIndex])))")
++        result.append(Text(AttributedString(content[cursor..<content.endIndex])))
++        return WorkspaceJoinedText.join(result[...])
++    }
++}
++
++/// A balanced native Text tree avoids recursively localizing the accumulated message.
++/// Text concatenation retains inline images and styles without a localized format at every mention.
++private enum WorkspaceJoinedText {
++    static func join(_ parts: ArraySlice<Text>) -> Text {
++        guard !parts.isEmpty else { return Text(verbatim: "") }
++        if parts.count == 1 { return parts[parts.startIndex] }
++        let middle = parts.index(parts.startIndex, offsetBy: parts.count / 2)
++        return join(parts[..<middle]) + join(parts[middle...])
+     }
+ }
+ 
+diff --git a/scripts/check-chat-performance.sh b/scripts/check-chat-performance.sh
+--- a/scripts/check-chat-performance.sh
++++ b/scripts/check-chat-performance.sh
+@@ -9,6 +9,7 @@
+ for source in "${sources[@]}"; do arguments+=("apps/shared/WorkspaceV3/$source.swift"); done
+ text_root="$PWD"
+ if [[ "${1:-}" == --baseline ]]; then text_root="$PWD/.build/chat-performance-baseline"; fi
++if [[ "${1:-}" == --scroll-baseline ]]; then text_root="$PWD/.build/chat-scroll-baseline"; fi
+ arguments+=("$text_root/apps/shared/WorkspaceV3/WorkspacePluginReference.swift" "$text_root/apps/shared/WorkspaceV3/WorkspaceMessageText.swift")
+ xcrun swiftc -parse-as-library -swift-version 5 -default-isolation MainActor -module-cache-path "$checks/cache" \
+     -I "$products" -I packages/BlotWorkspace/Sources/CSQLite \
+diff --git a/scripts/verify-chat-performance.swift b/scripts/verify-chat-performance.swift
+--- a/scripts/verify-chat-performance.swift
++++ b/scripts/verify-chat-performance.swift
+@@ -88,7 +88,13 @@
+         for _ in 0..<400 { precondition(content.plugins(for: plain).count == 1) }
+         print("BADGE BENCHMARK: 400 lookups with a 16 KB tool log; uncached=\(uncachedBadges), cached=\(cachedStart.duration(to: badgeClock.now))")
+ 
+-        let sample = Array(snapshot.messages.suffix(40))
++        let dense = ProcessInfo.processInfo.environment["BLOT_CHAT_DENSE"] == "1"
++        let sample = try snapshot.messages.suffix(40).map { message in
++            guard dense else { return message }
++            return try BlotV3.Message(metadata: message.metadata, conversationId: conversation, role: message.role,
++                content: String(repeating: "**Result** from @Architect and @Reviewer; use @Mail. Unicode 👋. ", count: 12),
++                delivery: message.delivery, commandId: message.commandId, artifactIds: [])
++        }
+         let clock = ContinuousClock()
+         let start = clock.now
+         for _ in 0..<8 {
+@@ -102,6 +108,6 @@
+                 guard renderer.cgImage != nil else { throw CocoaError(.coderInvalidValue) }
+             }
+         }
+-        print("RENDER BENCHMARK: 40 rich messages × 8 actual SwiftUI image renders: \(start.duration(to: clock.now))")
++        print("RENDER BENCHMARK: 40 \(dense ? "mention-heavy" : "rich") messages × 8 actual SwiftUI image renders: \(start.duration(to: clock.now))")
+     }
+ }

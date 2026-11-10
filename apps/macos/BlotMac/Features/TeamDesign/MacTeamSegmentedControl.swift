@@ -43,6 +43,6 @@ struct MacTeamSegmentedControl: View {
         .kAnimation(KMotion.standard, value: selection)
         .kAnimation(KMotion.quick, value: hoveredTab)
         .accessibilityElement(children: .contain)
-        .accessibilityLabel(title)
+        .accessibilityLabel(Text(LocalizedStringKey(title)))
     }
 }

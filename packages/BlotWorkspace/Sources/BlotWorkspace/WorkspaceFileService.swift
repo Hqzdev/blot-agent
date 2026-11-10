@@ -1,10 +1,9 @@
 import BlotDomain
 import CryptoKit
 import Foundation
-import PDFKit
 
 public enum WorkspaceFileError: Error, Equatable, Sendable {
-    case unsupportedType, tooLarge, invalidText, missingFile, integrityMismatch, unsafePath, unreadablePDF
+    case unsupportedType, tooLarge, invalidText, missingFile, integrityMismatch, unsafePath, unreadablePDF, unreadableImage, recognitionFailed, noRecognizableText
 }
 
 /// Content-addressed files are durable before metadata commits; source paths never enter replication.
@@ -13,10 +12,12 @@ public actor WorkspaceFileService {
     private let identity: WorkspaceIdentity
     private let directory: URL
     private let maximumBytes: Int
-    private static let textExtensions: Set<String> = ["txt", "md", "markdown", "csv", "tsv", "json", "swift", "java", "py", "js", "ts", "tsx", "jsx", "html", "css", "c", "cpp", "h", "rs", "go", "sh", "yaml", "yml", "sql", "kt", "rb", "toml", "xml", "log"]
+    private let extractor: WorkspaceFileTextExtractor
 
-    public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, directory: URL, maximumBytes: Int = 32 * 1024 * 1024) {
-        self.repository = repository; self.identity = identity; self.directory = directory; self.maximumBytes = maximumBytes
+    public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, directory: URL, maximumBytes: Int = 32 * 1024 * 1024,
+                recognizer: any WorkspaceTextRecognizing = WorkspaceVisionTextRecognizer()) {
+        self.repository = repository; self.identity = identity; self.directory = directory; self.maximumBytes = max(0, maximumBytes)
+        extractor = WorkspaceFileTextExtractor(recognizer: recognizer)
     }
 
     public nonisolated static func attachmentCommandID(sendCommandID: UUID, index: Int) -> UUID {
@@ -24,24 +25,19 @@ public actor WorkspaceFileService {
     }
 
     public func importFile(commandID: UUID, source: URL) async throws -> UUID {
-        let ext = source.pathExtension.lowercased()
-        guard ext == "pdf" || Self.textExtensions.contains(ext) else { throw WorkspaceFileError.unsupportedType }
-        let handle = try FileHandle(forReadingFrom: source)
-        defer { try? handle.close() }
-        var data = Data()
-        while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
-            guard data.count <= maximumBytes - chunk.count else { throw WorkspaceFileError.tooLarge }
-            data.append(chunk)
-        }
-        if ext != "pdf", String(data: data, encoding: .utf8) == nil { throw WorkspaceFileError.invalidText }
-        if ext == "pdf" { _ = try Self.pdfText(data, maximumCharacters: 1) }
-        return try await store(commandID: commandID, name: source.lastPathComponent, mediaType: Self.mediaType(ext), data: data)
+        let mediaType = try WorkspaceFileFormat.mediaType(forExtension: source.pathExtension)
+        let data = try boundedData(at: source)
+        try extractor.validate(data, mediaType: mediaType)
+        return try await store(commandID: commandID, name: source.lastPathComponent, mediaType: mediaType, data: data)
     }
 
     public func store(commandID: UUID, name: String, mediaType: String, data: Data, taskID: UUID? = nil) async throws -> UUID {
-        guard !name.isEmpty, !name.contains(where: { $0.isNewline }), data.count <= maximumBytes else { throw WorkspaceFileError.tooLarge }
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 800,
+              !name.contains(where: { $0.isNewline || $0 == "/" || $0 == "\\" || $0 == "\0" }) else { throw WorkspaceStorageError.invalidParameters }
+        guard data.count <= maximumBytes else { throw WorkspaceFileError.tooLarge }
+        try _Concurrency.Task.checkCancellation()
         let hash = Self.digest(data)
-        let relativePath = String(hash.prefix(2)) + "/" + hash + "." + Self.fileExtension(mediaType)
+        let relativePath = String(hash.prefix(2)) + "/" + hash + "." + WorkspaceFileFormat.fileExtension(mediaType)
         let destination = try safeURL(relativePath)
         try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         if FileManager.default.fileExists(atPath: destination.path) {
@@ -60,7 +56,7 @@ public actor WorkspaceFileService {
     }
 
     public func url(for artifactID: UUID) async throws -> URL {
-        guard let artifact = try await repository.record(BlotV3.Artifact.self, id: artifactID, workspaceID: identity.workspaceID) else {
+        guard let artifact = try await repository.record(BlotV3.Artifact.self, id: artifactID, workspaceID: identity.workspaceID), artifact.metadata.ownerId == identity.ownerID else {
             throw WorkspaceStorageError.missingRecord
         }
         let url = try safeURL(artifact.relativePath)
@@ -71,12 +67,31 @@ public actor WorkspaceFileService {
     }
 
     public func text(for artifactID: UUID, maximumCharacters: Int = 48_000) async throws -> String {
-        guard maximumCharacters > 0 else { throw WorkspaceStorageError.invalidParameters }
-        let url = try await url(for: artifactID)
-        let data = try boundedData(at: url)
-        if url.pathExtension == "pdf" { return try Self.pdfText(data, maximumCharacters: maximumCharacters) }
-        guard let text = String(data: data, encoding: .utf8) else { throw WorkspaceFileError.invalidText }
-        return text.count > maximumCharacters ? String(text.prefix(maximumCharacters)) + "\n[Truncated]" : text
+        let result = try await read(artifactID, maximumCharacters: maximumCharacters)
+        return result.content + (result.truncated ? "\n[Truncated]" : "")
+    }
+
+    public func read(_ artifactID: UUID, startPage: Int = 1, pageCount: Int = 20, maximumCharacters: Int = 48_000) async throws -> WorkspaceExtractedText {
+        guard (1...1_000).contains(startPage), (1...20).contains(pageCount), (1...48_000).contains(maximumCharacters) else { throw WorkspaceStorageError.invalidParameters }
+        guard let artifact = try await repository.record(BlotV3.Artifact.self, id: artifactID, workspaceID: identity.workspaceID),
+              artifact.metadata.ownerId == identity.ownerID else { throw WorkspaceStorageError.missingRecord }
+        // Validate the original on every read, including cache hits and restored replicas.
+        let data = try await self.data(for: artifactID)
+        try _Concurrency.Task.checkCancellation()
+        let key = Self.digest(Data((artifact.hash + "|" + artifact.mediaType + "|" + String(startPage) + "|" + String(pageCount)).utf8))
+        let cacheURL = try safeURL("ExtractedText/v1/" + key + ".json")
+        if let cached = try? boundedData(at: cacheURL, limit: 1024 * 1024),
+           let result = try? WorkspaceCoding.decode(WorkspaceExtractedText.self, from: cached), result.startPage == startPage,
+           (startPage...1_000).contains(result.totalPages), result.content.count <= 48_000,
+           result.nextPage.map({ $0 > startPage && $0 <= result.totalPages }) ?? true {
+            return try result.limited(to: maximumCharacters)
+        }
+        let result = try extractor.extract(data, mediaType: artifact.mediaType, startPage: startPage, pageCount: pageCount)
+        try _Concurrency.Task.checkCancellation()
+        // Cache is disposable. Failing to cache must not make a readable file unavailable.
+        try? FileManager.default.createDirectory(at: cacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if let encoded = try? WorkspaceCoding.encode(result) { try? encoded.write(to: cacheURL, options: .atomic) }
+        return try result.limited(to: maximumCharacters)
     }
 
     public func data(for artifactID: UUID) async throws -> Data {
@@ -113,12 +128,14 @@ public actor WorkspaceFileService {
         return artifact
     }
 
-    private func boundedData(at url: URL) throws -> Data {
+    private func boundedData(at url: URL, limit: Int? = nil) throws -> Data {
+        guard FileManager.default.fileExists(atPath: url.path) else { throw WorkspaceFileError.missingFile }
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
         var data = Data()
         while let chunk = try handle.read(upToCount: 64 * 1024), !chunk.isEmpty {
-            guard data.count <= maximumBytes - chunk.count else { throw WorkspaceFileError.tooLarge }
+            try _Concurrency.Task.checkCancellation()
+            guard data.count <= (limit ?? maximumBytes) - chunk.count else { throw WorkspaceFileError.tooLarge }
             data.append(chunk)
         }
         return data
@@ -133,35 +150,5 @@ public actor WorkspaceFileService {
         return candidate
     }
 
-    private static func pdfText(_ data: Data, maximumCharacters: Int) throws -> String {
-        guard let document = PDFDocument(data: data), !document.isLocked, document.pageCount <= 1_000 else { throw WorkspaceFileError.unreadablePDF }
-        var result = ""
-        for index in 0..<document.pageCount {
-            guard let text = document.page(at: index)?.string, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { continue }
-            result += "[Page \(index + 1)]\n" + text + "\n"
-            if result.count >= maximumCharacters { return String(result.prefix(maximumCharacters)) + "\n[Truncated]" }
-        }
-        guard !result.isEmpty else { throw WorkspaceFileError.unreadablePDF }
-        return result
-    }
-
     private static func digest(_ data: Data) -> String { SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined() }
-    private static func mediaType(_ ext: String) -> String {
-        switch ext {
-        case "pdf": "application/pdf"
-        case "json": "application/json"
-        case "csv", "tsv": "text/csv"
-        case "md", "markdown": "text/markdown"
-        default: "text/plain"
-        }
-    }
-    private static func fileExtension(_ mediaType: String) -> String {
-        switch mediaType {
-        case "application/pdf": "pdf"
-        case "application/json": "json"
-        case "text/csv": "csv"
-        case "text/markdown": "md"
-        default: "txt"
-        }
-    }
 }

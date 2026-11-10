@@ -5,6 +5,21 @@
 - Follow OOP principles strictly: single responsibility, encapsulation, composition over inheritance.
 - Write clean, minimal, intentional code. No dead code or placeholders.
 
+## Application launch and test devices
+
+- Install, launch, and debug applications only on the user's own physical devices: the current Mac or Windows computer for desktop apps, and the user's connected physical iPhone or Android device for mobile apps.
+- Do not create, download, install, boot, or use simulators, emulators, or their runtime images unless the user explicitly requests them for the current task. Builds and automated checks must not implicitly download or start them.
+- Verify that the selected run destination is the intended physical device before launching. Never automatically fall back to a simulator or emulator.
+- If the required physical device is unavailable or blocked by pairing, signing, or permissions, continue checks that do not require it and report which on-device validation could not run.
+
+## Build storage and cleanup
+
+- Before a large build or toolchain download, check free disk space. Keep at least 20 GiB free; below this threshold, reclaim the current task's disposable outputs before proceeding, and report if sufficient space cannot be recovered safely.
+- Reuse stable build directories in the current project, such as `.build/ios`, `.build/macos`, and `.build/swift`, across sequential checks. Do not create a new DerivedData, Swift scratch directory, or compiler cache in `/tmp` for every check. Concurrent builds need separate directories; remove those temporary outputs when their checks finish.
+- Reuse installed toolchains and shared package-manager caches. Do not duplicate dependency caches or download runtimes for each task unless isolation is required.
+- Validate changes in the current project before preparing the focused task branch. Keep branch-preparation worktrees free of generated outputs; repeat a build there only when differences in source or configuration require validation. Apply the current project's device and storage rules in secondary worktrees too.
+- After validation, remove disposable build directories created only for that task, retaining one reusable incremental build per active platform. Preserve required deliverables and concise validation results. Before deletion, verify that no active build uses the path and that it contains no tracked files, working copies, source backups, or user data. Never delete an entire worktree or `/tmp` as build cleanup.
+
 ## Platform branches
 
 This repository is developed on two computers: macOS for Mac/iPhone, and Windows for Windows/Android. Android is written in Java.
@@ -23,6 +38,28 @@ This repository is developed on two computers: macOS for Mac/iPhone, and Windows
 - Push explicitly to the matching remote branch, for example `git push -u origin ios/auth`. Never push iOS work to `mac/*`, Android work to `windows/*`, or vice versa. These names replace the earlier `codex/*` and `work/*` conventions.
 - Platform bases receive reviewed task changes through pull requests. `main` remains the shared integration/default branch; integrate platform changes into `main` through a reviewed pull request. Fetch and merge updated `origin/main` into a platform base before starting work that needs those updates. Never force-push shared branches.
 - Work spanning both Apple clients goes into one owning platform task branch (for example, `mac/shared-auth`), then reaches the other platform through `main`. Do not independently duplicate shared changes in several branches.
+
+## Transferring core updates between computers
+
+Branches and computers do not synchronize automatically. Transfer shared core changes through Git and `main`; do not copy source files manually between computers.
+
+1. On the source computer, implement the core update in an owning platform task branch, for example `mac/core-update`. Keep shared changes focused, update contracts/generated models together, and run the relevant checks.
+2. Describe changed API methods, fields, states, storage/sync formats, compatibility, and required migrations in the pull request. Merge the task into its platform base through review, then integrate that base into `main` through a reviewed pull request.
+3. On the receiving computer, inspect the working tree and fetch `origin`. Create `<platform>/adapt-core` from the current remote platform base, or use a unique task suffix if that name is already occupied. Merge `origin/main` into this task branch. For Android, the sequence in a clean working tree is:
+
+   ```sh
+   git fetch --prune origin
+   git switch -c android/adapt-core origin/android/main
+   git merge origin/main
+   ```
+
+4. Resolve conflicts by checking both implementations and the shared contract. Adapt the client's models, API calls, state/error handling, and local storage migrations as required. Preserve existing user data. Do not replace conflicting files wholesale with one side.
+5. Build the receiving application and verify the affected scenarios against the updated core. Check shared fixtures/contracts where applicable. Report any checks that could not run; do not treat a successful merge as successful adaptation.
+6. Commit only the adaptation changes and push explicitly to the matching task branch, for example `git push -u origin android/adapt-core`. Open a pull request into `android/main`; merge only after review and validation. Integrate resulting changes into `main` through a reviewed pull request when ready. Apply the same workflow to `windows/`, `ios/`, and `mac/`.
+
+Keep the receiving platform base on its previous working version until its adaptation is validated. If a core change cannot remain compatible with older clients, coordinate its rollout and versioning before replacing a shared deployed service.
+
+Distinguish shared Java backend/contracts from the Apple-local Swift core in `packages/BlotWorkspace`. Git transfers Swift source, but does not make it executable in the Java Android/Windows applications. Implement the corresponding behavior in Java or expose it through an agreed API; use common contracts and fixtures to verify parity.
 
 ## Shared code and compatibility
 

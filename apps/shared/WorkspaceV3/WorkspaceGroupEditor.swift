@@ -10,6 +10,9 @@ struct WorkspaceGroupEditor: View {
     @State private var query = ""
     @State private var saveError: String?
     @FocusState private var nameFocused: Bool
+    #if os(macOS)
+    @Environment(\.macSheetSize) private var sheetSize
+    #endif
 
     init(conversation: BlotV3.Conversation? = nil, participants: [BlotV3.ConversationParticipant] = []) {
         conversationID = conversation?.metadata.id
@@ -31,9 +34,11 @@ struct WorkspaceGroupEditor: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-            Divider().opacity(0.5)
             #if os(macOS)
-            editorContent
+            Divider().opacity(0.5)
+            if sheetSize.height < 560 {
+                ScrollView { editorContent.frame(height: 420) }
+            } else { editorContent }
             #else
             ScrollView { editorContent }.scrollDismissesKeyboard(.interactively)
             #endif
@@ -42,7 +47,7 @@ struct WorkspaceGroupEditor: View {
         }
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
         #if os(macOS)
-        .frame(width: 720, height: 650)
+        .frame(width: sheetSize.width, height: sheetSize.height)
         #else
         .presentationDetents([.large]).presentationDragIndicator(.visible)
         #endif
@@ -57,7 +62,7 @@ struct WorkspaceGroupEditor: View {
     }
 
     private var editorContent: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: sectionSpacing) {
             nameField
             #if os(macOS)
             HStack(alignment: .top, spacing: 24) {
@@ -72,7 +77,23 @@ struct WorkspaceGroupEditor: View {
                 Label(saveError, systemImage: "exclamationmark.triangle")
                     .font(.callout).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
             }
-        }.padding(24).disabled(store.busy)
+        }.padding(pageInset).disabled(store.busy)
+    }
+
+    private var pageInset: CGFloat {
+        #if os(iOS)
+        PhonePageLayout.inset
+        #else
+        24
+        #endif
+    }
+
+    private var sectionSpacing: CGFloat {
+        #if os(iOS)
+        PhonePageLayout.sectionSpacing
+        #else
+        20
+        #endif
     }
 
     private var controlSize: CGFloat {
@@ -84,6 +105,10 @@ struct WorkspaceGroupEditor: View {
     }
 
     private var header: some View {
+        #if os(iOS)
+        PhonePageHeader(title: store.t(conversationID == nil ? "New group" : "Group members"), back: { dismiss() })
+            .disabled(store.busy)
+        #else
         HStack(spacing: 14) {
             Image(systemName: "person.2.fill").font(.system(size: 20, weight: .medium))
                 .frame(width: 44, height: 44).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 14))
@@ -99,6 +124,7 @@ struct WorkspaceGroupEditor: View {
                     .frame(width: controlSize, height: controlSize).contentShape(Circle())
             }.buttonStyle(.plain).accessibilityLabel(store.t("Close")).disabled(store.busy)
         }.padding(24)
+        #endif
     }
 
     private var nameField: some View {
@@ -258,7 +284,7 @@ struct WorkspaceGroupEditor: View {
                 }.buttonStyle(WorkspaceButtonStyle()).keyboardShortcut(.defaultAction)
                     .disabled(store.busy || !draft.canSave)
             }
-        }.padding(.horizontal, 24).padding(.vertical, 18)
+        }.padding(.horizontal, pageInset).padding(.vertical, 18)
     }
 
     private var footerHint: some View {

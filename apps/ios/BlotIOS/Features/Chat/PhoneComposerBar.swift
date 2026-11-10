@@ -10,6 +10,7 @@ struct PhoneComposerBar: View {
     @FocusState.Binding var focused: Bool
     let send: () -> Void
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.colorScheme) private var colorScheme
     @Environment(\.blotReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -19,12 +20,13 @@ struct PhoneComposerBar: View {
                 withKAnimation(reduceMotion, KMotion.panel) { menu.open() }
             } label: {
                 BlotIcon(.plus, size: 26).frame(width: 44, height: 48)
+                    .foregroundStyle(colorScheme == .dark ? Color.white : WorkspaceStyle.ink)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain).disabled(store.busy || loadingAttachments)
             .accessibilityLabel(store.t("Add attachment"))
 
-            TextField(store.t("Ask") + " " + agentName, text: $store.form.composer.draft, axis: .vertical)
+            TextField(store.currentConversation?.kind == .group ? store.t("Message group") + " «" + (store.currentConversation?.title ?? "") + "»" : store.t("Ask") + " " + agentName, text: $store.form.composer.draft, axis: .vertical)
                 .font(.body).textFieldStyle(.plain).lineLimit(1...5)
                 .focused($focused).disabled(store.busy)
                 .padding(.vertical, 14).padding(.leading, 2)
@@ -71,15 +73,14 @@ struct PhoneComposerBar: View {
         } else {
             Button {
                 if store.isReplying { store.stopReply() }
-                else { send() }
+                else if canSend && !store.busy { send() }
             } label: {
                 BlotIcon(symbol: store.isReplying ? "stop.fill" : "arrow.up", size: store.isReplying ? 13 : 18)
-                    .foregroundStyle(BlotColor.onInverse.opacity(canSend || store.isReplying ? 1 : 0.45))
+                    .foregroundStyle(BlotColor.onInverse)
                     .frame(width: 34, height: 34).background(BlotColor.inverse, in: Circle())
                     .frame(width: 44, height: 48).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!store.isReplying && (!canSend || store.busy))
             .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
         }
     }

@@ -86,7 +86,7 @@ final class WorkspaceReplicaStore {
             return try state(kind: kind, id: id)
         }
         return WorkspaceReplicaSnapshot(id: UUID(), workspaceID: identity.workspaceID, ownerID: identity.ownerID,
-            watermark: try clock(), relayCursor: cursor, records: records)
+            watermark: try clock(), relayCursor: cursor, records: records, messagePins: try WorkspaceMessagePinStore(database: database).states())
     }
 
     func install(_ snapshot: WorkspaceReplicaSnapshot, identity: WorkspaceIdentity) throws {
@@ -100,6 +100,7 @@ final class WorkspaceReplicaStore {
             guard let id = UUID(uuidString: origin) else { throw WorkspaceSyncError.invalidSnapshot }
             try advanceClock(id, to: sequence)
         }
+        try WorkspaceMessagePinStore(database: database).merge(snapshot.messagePins ?? [], identity: identity)
         // Keep the local nonce/sequence monotonic if this device's own history is part of the snapshot.
         let ownSequence = snapshot.watermark.sequence(for: identity.deviceID)
         let stored = try database.query("SELECT seq FROM sqlite_sequence WHERE name = 'outbox'", row: { sqlite3_column_int64($0, 0) }).first
@@ -243,6 +244,7 @@ final class WorkspaceReplicaStore {
             vector: vector, fields: record.fields, origin: record.origin, sequence: record.sequence)
     }
     private static func removed(kind: String, object: [String: Any]) -> Bool {
+        if kind == "ApprovalGrant", object["operationClass"] as? String == WorkspaceSkillAccess.operation { return object["revoked"] as? Bool == true }
         if kind == "MemoryEntry" { return object["state"] as? String == "DELETED" }
         if kind == "ContextSummary" { return object["valid"] as? Bool == false }
         return object["removed"] as? Bool == true

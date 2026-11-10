@@ -71,6 +71,16 @@ private actor LoopModel: ChatModel {
     #expect(try await repository.record(BlotV3.ModelStep.self, id: firstStep.metadata.id, workspaceID: identity.workspaceID)?.metadata.version == firstStep.metadata.version)
     #expect(saved.messages.first { $0.metadata.id == responseID }?.content == "Result")
     #expect(saved.messages.first { $0.metadata.id == responseID }?.delivery == .completed)
+    let restrictedID = UUID(), restrictedModel = LoopModel()
+    _ = try await WorkspaceResponseRecorder(repository: repository, identity: identity).begin(id: restrictedID, replyingTo: source, agentID: agentID)
+    await #expect(throws: WorkspaceToolError.unknownTool) {
+        try await runtime.generate(source: source, responseID: restrictedID,
+            request: .init(messages: [.init(role: "user", content: "Another member owns that tool")], maximumOutputTokens: 64),
+            model: restrictedModel, modelID: "gigachat", configuration: configuration, budgetTokenLimit: 10000,
+            executionToolIDs: [], emit: { _ in })
+    }
+    #expect(await counter.count == 1)
+    #expect(await restrictedModel.requests.first?.tools.isEmpty == true)
 }
 
 @Test func toolValidationRejectsUnknownFieldsAndTypesBeforeExecution() async throws {

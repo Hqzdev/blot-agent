@@ -29,6 +29,7 @@ struct MacTeamPlugin: Identifiable, Hashable {
     let category: String
     let summary: String
     var accounts: [String] = []
+    var connectionStatus: String? = nil
 }
 
 enum MacTeamDestination: String, Hashable {

@@ -260,3 +260,31 @@ private struct SyncPair {
     try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
     #expect(try await pair.b.projection(identity: pair.identityB).messages.count == 3)
 }
+
+@Test func skillAssignmentsConvergeWithRevocationAndCanBeReassignedCausally() async throws {
+    let pair = try await SyncPair(); defer { pair.clean() }
+    let agent = try await WorkspaceAgentService(repository: pair.a, identity: pair.identityA).save(commandID: UUID(), draft: .init(name: "Worker", instructions: "Work"))
+    let skill = try await WorkspaceSkillService(repository: pair.a, identity: pair.identityA).save(commandID: UUID(), name: "Brief", instructions: "Summarize", parameters: [], toolIDs: [])
+    let a = WorkspaceSkillAssignmentService(repository: pair.a, identity: pair.identityA)
+    let b = WorkspaceSkillAssignmentService(repository: pair.b, identity: pair.identityB)
+    try await a.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: 0)
+    try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    try await a.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: false, expectedVersion: 1)
+    try await b.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: 1)
+    try await pair.engineB.synchronize(); try await pair.engineA.synchronize(); try await pair.engineB.synchronize()
+    let projectionA = try await pair.a.projection(identity: pair.identityA)
+    let projectionB = try await pair.b.projection(identity: pair.identityB)
+    #expect(WorkspaceSkillAccess.assignments(projectionA.grants).first?.assigned == false)
+    #expect(WorkspaceSkillAccess.assignments(projectionB.grants).first?.assigned == false)
+    let version = try #require(WorkspaceSkillAccess.assignments(projectionB.grants).first?.version)
+    try await b.set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: version)
+    try await pair.engineB.synchronize(); try await pair.engineA.synchronize()
+    #expect(WorkspaceSkillAccess.assignments(try await pair.a.projection(identity: pair.identityA).grants).first?.assigned == true)
+    let snapshot = try await pair.a.replicaSnapshot(identity: pair.identityA)
+    let restored = try await workspaceTestRepository(url: pair.directory.appendingPathComponent("restored.sqlite"))
+    let identity = try await restored.joinWorkspace(ownerID: pair.identityA.ownerID, workspaceID: pair.identityA.workspaceID)
+    try await restored.installReplicaSnapshot(snapshot, identity: identity)
+    let final = try await restored.projection(identity: identity)
+    #expect(final.skills.count == 1 && final.skillRevisions.count == 1)
+    #expect(WorkspaceSkillAccess.assignments(final.grants).first?.assigned == true)
+}

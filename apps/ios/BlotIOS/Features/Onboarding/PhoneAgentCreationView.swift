@@ -3,7 +3,6 @@ import SwiftUI
 
 struct PhoneAgentCreationView: View {
     var isEditing = false
-    @State private var appearanceExpanded = false
     @Environment(WorkspaceStore.self) private var store
     @FocusState private var roleFocused: Bool
 
@@ -12,41 +11,29 @@ struct PhoneAgentCreationView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
-                    HStack(spacing: 12) {
-                        Button { close() } label: {
-                            BlotIcon(symbol: "xmark").font(.body)
-                                .frame(width: 32, height: 32)
-                                .background(WorkspaceStyle.secondary.opacity(0.08), in: Circle())
-                        }.buttonStyle(.plain).accessibilityLabel(store.t("Close"))
-                        Text(store.t(isEditing ? "Edit agent" : "Create new agent")).font(.subheadline.weight(.semibold))
-                        Spacer()
-                    }.padding(.bottom, 42)
                     TextField(store.t("Give your agent a role"), text: $store.form.agent.name)
                         .font(.body.weight(.medium)).multilineTextAlignment(.center)
                         .textFieldStyle(.plain).textInputAutocapitalization(.words)
                         .focused($roleFocused)
                         .padding(.horizontal, 16).frame(minHeight: 44)
-                        .background(WorkspaceStyle.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 22))
+                        .background(WorkspaceStyle.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: PhonePageLayout.radius))
                         .accessibilityLabel(store.t("Agent role"))
-                        .padding(.bottom, 38)
-                    DisclosureGroup(store.t("Agent look"), isExpanded: $appearanceExpanded) {
-                        VStack(spacing: 24) {
-                            PhoneAgentPreview(shape: .init(rawValue: store.form.agent.shape) ?? .cloud,
-                                              color: store.form.agent.color, size: 112)
-                            shapePicker
-                            colorPicker
-                        }.padding(.top, 24)
-                    }
+                        .padding(.bottom, PhonePageLayout.sectionSpacing)
+                    VStack(spacing: PhonePageLayout.sectionSpacing) {
+                        PhoneAgentPreview(shape: .init(rawValue: store.form.agent.shape) ?? .cloud,
+                                          color: store.form.agent.color, size: 112)
+                        shapePicker
+                        colorPicker
+                    }.accessibilityElement(children: .contain).accessibilityLabel(store.t("Agent look"))
                     if isEditing {
                         TextField(store.t("What it does"), text: $store.form.agent.instructions, axis: .vertical)
                             .lineLimit(3...8).textFieldStyle(.plain).padding(.top, 24)
                             .accessibilityLabel(store.t("What it does"))
                     }
-                    WorkspaceAgentRuntimeOptions().padding(.top, 24)
                     WorkspaceFeedback().padding(.top, 12)
                     Spacer(minLength: 32)
                 }
-                .padding(.horizontal, 30).padding(.top, 20)
+                .padding(PhonePageLayout.inset)
                 .frame(maxWidth: .infinity, minHeight: max(0, geometry.size.height - 80), alignment: .top)
             }.scrollDismissesKeyboard(.interactively).scrollBounceBehavior(.basedOnSize)
         }
@@ -54,10 +41,14 @@ struct PhoneAgentCreationView: View {
             Button { create() } label: {
                 Text(store.t(isEditing ? "Save" : "Create")).font(.headline).frame(maxWidth: .infinity, minHeight: 24)
             }.buttonStyle(WorkspaceButtonStyle()).disabled(store.busy)
-                .padding(.horizontal, 30).padding(.top, 10).padding(.bottom, 20)
+                .padding(.horizontal, PhonePageLayout.inset).padding(.vertical, 12)
         }
-        .background(WorkspaceStyle.surface.ignoresSafeArea())
-        .task { if isEditing { appearanceExpanded = true } else { roleFocused = true } }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            PhonePageHeader(title: store.t(isEditing ? "Edit agent" : "Create new agent"), back: close)
+        }
+        .environment(\.phonePageTitle, store.t(isEditing ? "Edit agent" : "Create new agent"))
+        .background(WorkspaceStyle.canvas.ignoresSafeArea())
+        .task { if !isEditing { roleFocused = true } }
         .sensoryFeedback(.selection, trigger: store.form.agent.shape)
         .sensoryFeedback(.selection, trigger: store.form.agent.color)
     }

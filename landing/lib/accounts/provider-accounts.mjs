@@ -27,6 +27,7 @@ export class ProviderAccounts {
           VALUES ($1, $2, $3, $4, $5, true) RETURNING *`,
         [randomUUID(), randomUUID(), identity.email, identity.name, identity.subject])).rows[0];
       }
+      await tx.query("UPDATE blot_accounts SET avatar_url = $1 WHERE id = $2", [identity.avatarURL ?? null, account.id]);
       return this.#sessions.create(tx, account);
     });
   }

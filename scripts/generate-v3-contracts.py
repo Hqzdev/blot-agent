@@ -35,7 +35,8 @@ for name,values in spec['enums'].items():
     swift_parts.append(f'extension BlotV3 {{\n    public enum {name}: String, Codable, CaseIterable, Sendable {{\n{cases}\n    }}\n}}')
 for name,fields in spec['models'].items():
     props={k:describe(t)[2] for k,t in fields.items()}
-    defs[name]={'type':'object','additionalProperties':False,'required':list(fields),'properties':props}
+    optional_fields = {'Task': {'authorizationJSON'}, 'Connection': {'pluginId', 'resourceIds', 'agentIds', 'allowedOperations'}}
+    defs[name]={'type':'object','additionalProperties':False,'required':[k for k in fields if k not in optional_fields.get(name, set())],'properties':props}
     declarations=',\n    '.join(describe(t)[0]+' '+k for k,t in fields.items())
     checks=[]
     for k,t in fields.items():
@@ -43,7 +44,16 @@ for name,fields in spec['models'].items():
         if t=='int': checks.append(f'    if ({k} < 0) throw new IllegalArgumentException("{k} must be nonnegative");')
         elif not t.endswith('?') and t!='bool': checks.append(f'    Objects.requireNonNull({k}, "{k}");')
         if t.startswith('['): checks.append(f'    {k} = ' + (f'{k} == null ? null : ' if t.endswith('?') else '') + f'List.copyOf({k});')
-    code=f'package dev.blot.core.v3;\n\nimport java.time.Instant;\nimport java.util.List;\nimport java.util.Objects;\nimport java.util.UUID;\n\npublic record {name}(\n    {declarations}) {{\n  public {name} {{\n'+ '\n'.join(checks)+'\n  }\n}\n'
+    compatibility = ''
+    if name == 'Connection':
+        legacy = {k: v for k, v in fields.items() if k not in ['pluginId', 'resourceIds', 'agentIds', 'allowedOperations']}
+        parameters = ', '.join(f'{describe(t)[0]} {k}' for k, t in legacy.items())
+        compatibility = f"  public Connection({parameters}) {{\n    this({', '.join(legacy)}, null, null, null, null);\n  }}\n"
+    if name == 'Task':
+        legacy = {k: v for k, v in fields.items() if k != 'authorizationJSON'}
+        parameters = ', '.join(f'{describe(t)[0]} {k}' for k, t in legacy.items())
+        compatibility = f"  public Task({parameters}) {{\n    this({', '.join(legacy)}, null);\n  }}\n"
+    code=f'package dev.blot.core.v3;\n\nimport java.time.Instant;\nimport java.util.List;\nimport java.util.Objects;\nimport java.util.UUID;\n\npublic record {name}(\n    {declarations}) {{\n  public {name} {{\n'+ '\n'.join(checks)+'\n  }\n'+compatibility+'}\n'
     (java/f'{name}.java').write_text(code)
     declarations='\n'.join('        public let '+k+': '+describe(t)[1] for k,t in fields.items())
     params=', '.join(k+': '+describe(t)[1] + (' = nil' if t.endswith('?') else '') for k,t in fields.items())
@@ -52,7 +62,7 @@ for name,fields in spec['models'].items():
     # Custom decoding goes through the validated initializer; no invalid numeric states can enter via JSON.
     keys=', '.join(fields)
     decode=',\n                '.join(f'{k}: try c.decode{ "IfPresent" if t.endswith("?") else ""}({describe(t)[1].removesuffix("?")}.self, forKey: .{k})' for k,t in fields.items())
-    encode='\n'.join(f'            try c.encode({k}, forKey: .{k})' for k in fields)
+    encode='\n'.join(f'            try c.{"encodeIfPresent" if name == "Task" and k == "authorizationJSON" else "encode"}({k}, forKey: .{k})' for k in fields)
     conformance = 'BlotWorkspaceRecord' if 'metadata' in fields else 'Codable, Equatable, Sendable'
     kind = f'        public static let recordKind = "{name}"\n' if 'metadata' in fields else ''
     swift_parts.append(f'extension BlotV3 {{\n    public struct {name}: {conformance} {{\n{kind}{declarations}\n        public init({params}) throws {{\n{checks}\n{assigns}\n        }}\n        public func encode(to encoder: Encoder) throws {{\n            var c = encoder.container(keyedBy: CodingKeys.self)\n{encode}\n        }}\n        private enum CodingKeys: String, CodingKey {{ case {keys} }}\n        public init(from decoder: Decoder) throws {{\n            let c = try decoder.container(keyedBy: CodingKeys.self)\n            try self.init(\n                {decode})\n        }}\n    }}\n}}')

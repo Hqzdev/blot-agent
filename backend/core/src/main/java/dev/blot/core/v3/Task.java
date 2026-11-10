@@ -16,7 +16,8 @@ public record Task(
     UUID parentTaskId,
     UUID skillRevisionId,
     Long budgetTokenLimit,
-    ExecutionMode executionMode) {
+    ExecutionMode executionMode,
+    String authorizationJSON) {
   public Task {
     Objects.requireNonNull(metadata, "metadata");
     Objects.requireNonNull(execution, "execution");
@@ -27,5 +28,34 @@ public record Task(
     plan = List.copyOf(plan);
     if (budgetTokenLimit != null && budgetTokenLimit < 0)
       throw new IllegalArgumentException("budgetTokenLimit must be nonnegative");
+  }
+
+  public Task(
+      RecordMetadata metadata,
+      ExecutionContext execution,
+      UUID projectId,
+      UUID conversationId,
+      String goal,
+      TaskState state,
+      List<String> plan,
+      UUID configurationId,
+      UUID parentTaskId,
+      UUID skillRevisionId,
+      Long budgetTokenLimit,
+      ExecutionMode executionMode) {
+    this(
+        metadata,
+        execution,
+        projectId,
+        conversationId,
+        goal,
+        state,
+        plan,
+        configurationId,
+        parentTaskId,
+        skillRevisionId,
+        budgetTokenLimit,
+        executionMode,
+        null);
   }
 }

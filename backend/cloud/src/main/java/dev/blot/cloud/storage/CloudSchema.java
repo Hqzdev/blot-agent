@@ -5,7 +5,7 @@ import dev.blot.cloud.CloudFailure;
 final class CloudSchema {
   static void migrate(CloudTransaction tx) {
     int version = tx.one("PRAGMA user_version", r -> r.getInt(1)).orElse(0);
-    if (version > 4) throw new CloudFailure(503, "schema_incompatible");
+    if (version > 5) throw new CloudFailure(503, "schema_incompatible");
     if (version == 0)
       for (String sql :
           new String[] {
@@ -48,6 +48,10 @@ final class CloudSchema {
       tx.execute("ALTER TABLE accounts ADD COLUMN google_subject TEXT");
       tx.execute("CREATE UNIQUE INDEX accounts_google_subject ON accounts(google_subject)");
       tx.execute("PRAGMA user_version = 4");
+    }
+    if (version < 5) {
+      tx.execute("ALTER TABLE accounts ADD COLUMN avatar_url TEXT");
+      tx.execute("PRAGMA user_version = 5");
     }
   }
 }

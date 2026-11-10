@@ -1,72 +1,79 @@
+import BlotDomain
 import BlotDesign
-import Foundation
 import SwiftUI
-import UIKit
 import UserNotifications
 
 struct PhoneNotificationSettingsView: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.scenePhase) private var scenePhase
     @State private var requesting = false
-    @State private var denied = false
-
+    @State private var status: UNAuthorizationStatus = .notDetermined
+    private var allowed: Bool { [.authorized, .provisional, .ephemeral].contains(status) }
     var body: some View {
         @Bindable var store = store
-        ScrollView {
-            VStack(spacing: 28) {
-                PhoneSettingsGroup(title: "Notifications") {
-                    Toggle(store.t("Allow notifications"), isOn: enabled)
-                        .padding(.horizontal, 18).frame(minHeight: 54).disabled(requesting)
-                }
-                PhoneSettingsGroup(title: "Notify me about") {
-                    option("Agent replies", detail: "When an agent finishes replying", selection: $store.notificationPreferences.agentReplies)
-                    PhoneSettingsDivider()
-                    option("Completed tasks", detail: "When an agent finishes a task", selection: $store.notificationPreferences.taskCompletion)
-                    PhoneSettingsDivider()
-                    option("Approval requests", detail: "When an action needs your confirmation", selection: $store.notificationPreferences.approvalRequests)
-                    PhoneSettingsDivider()
-                    option("Scheduled tasks", detail: "Reminders and scheduled task updates", selection: $store.notificationPreferences.schedules)
-                    PhoneSettingsDivider()
-                    option("Connection changes", detail: "When a computer or service needs attention", selection: $store.notificationPreferences.connections)
-                }.disabled(!store.notificationPreferences.enabled)
-                if denied {
-                    Text(store.t("Notifications are disabled in iOS Settings."))
-                        .font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
-                    Button(store.t("Open iOS Settings")) {
-                        if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
-                    }.buttonStyle(.plain)
-                }
-                WorkspaceFeedback()
-            }.padding(20)
-        }
-        .background(PhoneSettingsStyle.canvas.ignoresSafeArea())
-        .task { denied = await store.notifications.authorizationStatus() == .denied }
-        .onChange(of: scenePhase) { _, phase in
-            if phase == .active {
-                _Concurrency.Task { denied = await store.notifications.authorizationStatus() == .denied }
+        PhoneSettingsPage {
+            PhoneSettingsGroup(title: "System notifications", detail: "iOS permission for application notifications.") {
+                PhoneSettingsRow(title: "Notifications", value: store.settingsText(allowed ? "Allowed" : "Not allowed"), showsChevron: false)
+                PhoneSettingsDivider()
+                Button {
+                    if status == .notDetermined {
+                        requesting = true
+                        _Concurrency.Task {
+                            store.notificationPreferences.enabled = await store.notifications.requestAccess()
+                            status = await store.notifications.authorizationStatus()
+                            requesting = false
+                        }
+                    } else { PhoneSystemSettings.open() }
+                } label: {
+                    PhoneSettingsRow(title: "Notification settings", detail: "Sounds, banners and Lock Screen display.")
+                }.buttonStyle(.plain).disabled(requesting)
             }
+            PhoneSettingsGroup(title: "Notifications") {
+                PhoneSettingsToggle(title: "Allow notifications", isOn: enabled).disabled(requesting)
+            }
+            PhoneSettingsGroup(title: "Notify me about") {
+                PhoneSettingsToggle(title: "Agent replies", detail: "When an agent finishes replying", isOn: $store.notificationPreferences.agentReplies)
+                PhoneSettingsDivider()
+                PhoneSettingsToggle(title: "Completed tasks", detail: "When an agent finishes a task", isOn: $store.notificationPreferences.taskCompletion)
+                PhoneSettingsDivider()
+                PhoneSettingsToggle(title: "Approval requests", detail: "When an action needs your confirmation", isOn: $store.notificationPreferences.approvalRequests)
+                PhoneSettingsDivider()
+                PhoneSettingsToggle(title: "Scheduled tasks", detail: "Reminders and scheduled task updates", isOn: $store.notificationPreferences.schedules)
+                PhoneSettingsDivider()
+                PhoneSettingsToggle(title: "Connection changes", detail: "When a computer or service needs attention", isOn: $store.notificationPreferences.connections)
+            }.disabled(!store.notificationPreferences.enabled)
+            PhoneSettingsGroup(title: "Team chats", detail: "Choose which conversations notify you about new messages.") {
+                if store.snapshot.conversations.isEmpty {
+                    PhoneSettingsRow(title: "No conversations yet", showsChevron: false)
+                }
+                ForEach(Array(store.snapshot.conversations.enumerated()), id: \.element.metadata.id) { index, chat in
+                    if index > 0 { PhoneSettingsDivider() }
+                    PhoneSettingsValueRow(title: chat.title) {
+                        Picker(chat.title, selection: Binding(get: { !store.chatInteractions.isMuted(chat.metadata.id) }, set: { enabled in
+                            if enabled == store.chatInteractions.isMuted(chat.metadata.id) { store.toggleChatMute(chat.metadata.id) }
+                        })) {
+                            Text(store.settingsText("Enabled")).tag(true)
+                            Text(store.settingsText("Silent")).tag(false)
+                        }.labelsHidden()
+                    }
+                }
+            }
+            WorkspaceFeedback()
+        }
+        .task { status = await store.notifications.authorizationStatus() }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { _Concurrency.Task { status = await store.notifications.authorizationStatus() } }
         }
     }
-
     private var enabled: Binding<Bool> {
         Binding(get: { store.notificationPreferences.enabled }, set: { value in
             if !value { store.notificationPreferences.enabled = false; return }
             requesting = true
             _Concurrency.Task {
-                let allowed = await store.notifications.requestAccess()
-                store.notificationPreferences.enabled = allowed
-                denied = !allowed
+                store.notificationPreferences.enabled = await store.notifications.requestAccess()
+                status = await store.notifications.authorizationStatus()
                 requesting = false
             }
         })
-    }
-
-    private func option(_ title: String, detail: String, selection: Binding<Bool>) -> some View {
-        Toggle(isOn: selection) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(store.t(title)).font(.body)
-                Text(store.t(detail)).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
-            }
-        }.padding(.horizontal, 18).padding(.vertical, 12).frame(minHeight: 64)
     }
 }

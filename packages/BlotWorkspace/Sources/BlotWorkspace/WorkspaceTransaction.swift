@@ -15,6 +15,10 @@ public final class WorkspaceTransaction {
         self.commandID = commandID
     }
 
+    func executionAdmitted(_ task: BlotV3.Task) throws -> Bool {
+        try checkActive(); return try store.executionAdmitted(task, identity: identity)
+    }
+
     public func records<T: BlotWorkspaceRecord>(_ type: T.Type) throws -> [T] {
         try checkActive()
         return try store.records(type, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }

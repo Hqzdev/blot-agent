@@ -1,3 +1,4 @@
+import { yandexAvatarURL } from "./profile-avatar.mjs";
 import { AuthError } from "../auth/errors.mjs";
 import { OAuthHTTPClient } from "../auth/oauth-http.mjs";
 import { emailAddress } from "./security.mjs";
@@ -17,7 +18,7 @@ export class YandexAccountIdentity {
       if (profile.client_id !== this.#audience || typeof profile.id !== "string" || !profile.id || profile.id.length > 255) throw new Error();
       const email = emailAddress(profile.default_email);
       const name = typeof profile.real_name === "string" && profile.real_name.trim() ? profile.real_name.trim().slice(0, 200) : email;
-      return { subject: profile.id, email, name };
+      return { subject: profile.id, email, name, avatarURL: yandexAvatarURL(profile) };
     } catch { throw new AuthError("yandex_identity_invalid", 401); }
   }
 }

@@ -54,6 +54,7 @@ export const currentProductDocuments = Object.freeze([
   document("blot-product-plan", "product/blot-product-plan.md", "План Blot для четырёх платформ", "Требования от 1 ноября: блоки, архитектура, инфраструктура, сроки и оценка кода.", null),
   document("blot-technical-specification", "product/blot-technical-specification.md", "Техническое задание Blot", "Четыре платформы, CEO и агенты, локальные данные, инструменты, интеграции и приёмка.", null),
   document("mcp-developer-guide", "integrations/mcp-developer-guide.md", "Подключение MCP серверов", "Целевой контракт внешних инструментов: transports, авторизация, разрешения и проверка совместимости.", null),
+  document("native-terminal-git", "status/native-terminal-git.md", "Нативный терминал и Git", "Архитектура исполнителя на Mac, границы доступа и результаты проверки.", null),
 ]);
 export const documents = Object.freeze([...currentProductDocuments, ...architectureDocuments, documentationIndex, documentationReview, implementationPlan, ...agentDocuments, ...futureDocuments]);
 

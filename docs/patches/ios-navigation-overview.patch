@@ -1,0 +1,2325 @@
+diff --git a/apps/ios/BlotIOS/Features/Chat/PhoneChatsView.swift b/apps/ios/BlotIOS/Features/Chat/PhoneChatsView.swift
+--- a/apps/ios/BlotIOS/Features/Chat/PhoneChatsView.swift
++++ b/apps/ios/BlotIOS/Features/Chat/PhoneChatsView.swift
+@@ -18,6 +18,9 @@
+             }
+         }
+     }
++    private enum Creation { case agent, group }
++    @State private var creationMenuVisible = false
++    @State private var pendingCreation: Creation?
+     var showsAgents = false
+     var showsArchive = false
+     @Environment(WorkspaceStore.self) private var store
+@@ -128,6 +131,11 @@
+         }
+         .overlay(alignment: .top) { header.padding(.horizontal, 18).padding(.top, 6) }
+         .workspaceGlassContainer()
++        .sheet(isPresented: $creationMenuVisible, onDismiss: presentCreation) {
++            PhoneCreationMenu(createAgent: { pendingCreation = .agent; creationMenuVisible = false },
++                              createGroup: { pendingCreation = .group; creationMenuVisible = false })
++                .environment(store)
++        }
+     }
+ 
+     private var header: some View {
+@@ -150,8 +158,8 @@
+             }
+             Spacer()
+             PhoneGlassCircleButton(symbol: "magnifyingglass", title: store.t("Search")) { store.navigate(.search) }
+-            if store.mode == .live && !store.snapshot.agents.isEmpty && !showsArchive && !showsAgents {
+-                PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("New group")) { store.groupCreationVisible = true }
++            if !showsArchive && !showsAgents {
++                PhoneGlassCircleButton(symbol: "square.and.pencil", title: store.t("Create")) { creationMenuVisible = true }
+             }
+             if showsAgents {
+                 Button { store.beginAgentCreation() } label: {
+@@ -160,6 +168,15 @@
+                         .glassEffect(.regular.interactive(), in: .capsule)
+                 }.buttonStyle(.plain).accessibilityLabel(store.t("Create agent"))
+             }
++        }
++    }
++
++    private func presentCreation() {
++        guard let creation = pendingCreation else { return }
++        pendingCreation = nil
++        switch creation {
++        case .agent: store.beginAgentCreation()
++        case .group: store.groupCreationVisible = true
+         }
+     }
+ 
+diff --git a/apps/ios/BlotIOS/Features/Chat/PhoneCreationMenu.swift b/apps/ios/BlotIOS/Features/Chat/PhoneCreationMenu.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Chat/PhoneCreationMenu.swift
+@@ -0,0 +1,29 @@
++import BlotDesign
++import SwiftUI
++
++struct PhoneCreationMenu: View {
++    @Environment(WorkspaceStore.self) private var store
++    @Environment(\.dismiss) private var dismiss
++    let createAgent: () -> Void
++    let createGroup: () -> Void
++
++    var body: some View {
++        PhonePage {
++            PhoneSettingsGroup(title: "") {
++                Button(action: createAgent) {
++                    PhoneSettingsRow(title: "Create agent", symbol: "person.badge.plus",
++                                     detail: "A specialist for your tasks.")
++                }.buttonStyle(.plain).accessibilityIdentifier("workspace.create.agent")
++                PhoneSettingsDivider()
++                Button(action: createGroup) {
++                    PhoneSettingsRow(title: "Create group", symbol: "person.2",
++                                     detail: "Bring agents together for a shared task.")
++                }.buttonStyle(.plain).accessibilityIdentifier("workspace.create.group")
++            }
++        }
++        .safeAreaInset(edge: .top, spacing: 0) {
++            PhonePageHeader(title: store.t("Create"), back: { dismiss() })
++        }
++        .presentationDetents([.medium]).presentationDragIndicator(.visible)
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Files/PhoneFilesContent.swift b/apps/ios/BlotIOS/Features/Files/PhoneFilesContent.swift
+--- a/apps/ios/BlotIOS/Features/Files/PhoneFilesContent.swift
++++ b/apps/ios/BlotIOS/Features/Files/PhoneFilesContent.swift
+@@ -45,18 +45,6 @@
+ 
+     private var search: some View {
+         @Bindable var navigation = store.navigation
+-        return HStack(spacing: 10) {
+-            BlotIcon(symbol: "magnifyingglass").foregroundStyle(WorkspaceStyle.secondary)
+-            TextField(store.t("Search files"), text: $navigation.filesQuery)
+-                .textFieldStyle(.plain).autocorrectionDisabled().textInputAutocapitalization(.never)
+-                .submitLabel(.search).accessibilityLabel(store.t("Search files"))
+-            if !store.navigation.filesQuery.isEmpty {
+-                Button { store.navigation.filesQuery = "" } label: {
+-                    BlotIcon(symbol: "xmark.circle.fill", size: 17).foregroundStyle(WorkspaceStyle.secondary)
+-                }.buttonStyle(.plain).accessibilityLabel(store.t("Clear search"))
+-            }
+-        }
+-        .padding(.horizontal, 16).frame(minHeight: 48)
+-        .glassEffect(.regular.interactive(), in: .capsule)
++        return PhonePageSearchField(placeholder: store.t("Search files"), text: $navigation.filesQuery)
+     }
+ }
+diff --git a/apps/ios/BlotIOS/Features/Files/PhoneWorkspaceFileView.swift b/apps/ios/BlotIOS/Features/Files/PhoneWorkspaceFileView.swift
+--- a/apps/ios/BlotIOS/Features/Files/PhoneWorkspaceFileView.swift
++++ b/apps/ios/BlotIOS/Features/Files/PhoneWorkspaceFileView.swift
+@@ -33,11 +33,10 @@
+             }
+         }
+         .frame(maxWidth: .infinity, maxHeight: .infinity)
+-        .toolbar {
++        .safeAreaInset(edge: .bottom, spacing: 0) {
+             if let url {
+-                ToolbarItem(placement: .topBarTrailing) {
+-                    ShareLink(item: url) { BlotIcon(.share) }.accessibilityLabel(store.t("Share"))
+-                }
++                ShareLink(item: url) { BlotLabel(store.t("Share"), symbol: "square.and.arrow.up") }
++                    .buttonStyle(WorkspaceButtonStyle(.secondary)).padding(PhonePageLayout.inset)
+             }
+         }
+         .task(id: store.selectedFile?.metadata.id) { await load() }
+diff --git a/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentCreationView.swift b/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentCreationView.swift
+--- a/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentCreationView.swift
++++ b/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentCreationView.swift
+@@ -3,7 +3,6 @@
+ 
+ struct PhoneAgentCreationView: View {
+     var isEditing = false
+-    @State private var appearanceExpanded = false
+     @Environment(WorkspaceStore.self) private var store
+     @FocusState private var roleFocused: Bool
+ 
+@@ -12,41 +11,29 @@
+         GeometryReader { geometry in
+             ScrollView {
+                 VStack(spacing: 0) {
+-                    HStack(spacing: 12) {
+-                        Button { close() } label: {
+-                            BlotIcon(symbol: "xmark").font(.body)
+-                                .frame(width: 32, height: 32)
+-                                .background(WorkspaceStyle.secondary.opacity(0.08), in: Circle())
+-                        }.buttonStyle(.plain).accessibilityLabel(store.t("Close"))
+-                        Text(store.t(isEditing ? "Edit agent" : "Create new agent")).font(.subheadline.weight(.semibold))
+-                        Spacer()
+-                    }.padding(.bottom, 42)
+                     TextField(store.t("Give your agent a role"), text: $store.form.agent.name)
+                         .font(.body.weight(.medium)).multilineTextAlignment(.center)
+                         .textFieldStyle(.plain).textInputAutocapitalization(.words)
+                         .focused($roleFocused)
+                         .padding(.horizontal, 16).frame(minHeight: 44)
+-                        .background(WorkspaceStyle.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: 22))
++                        .background(WorkspaceStyle.secondary.opacity(0.08), in: RoundedRectangle(cornerRadius: PhonePageLayout.radius))
+                         .accessibilityLabel(store.t("Agent role"))
+-                        .padding(.bottom, 38)
+-                    DisclosureGroup(store.t("Agent look"), isExpanded: $appearanceExpanded) {
+-                        VStack(spacing: 24) {
+-                            PhoneAgentPreview(shape: .init(rawValue: store.form.agent.shape) ?? .cloud,
+-                                              color: store.form.agent.color, size: 112)
+-                            shapePicker
+-                            colorPicker
+-                        }.padding(.top, 24)
+-                    }
++                        .padding(.bottom, PhonePageLayout.sectionSpacing)
++                    VStack(spacing: PhonePageLayout.sectionSpacing) {
++                        PhoneAgentPreview(shape: .init(rawValue: store.form.agent.shape) ?? .cloud,
++                                          color: store.form.agent.color, size: 112)
++                        shapePicker
++                        colorPicker
++                    }.accessibilityElement(children: .contain).accessibilityLabel(store.t("Agent look"))
+                     if isEditing {
+                         TextField(store.t("What it does"), text: $store.form.agent.instructions, axis: .vertical)
+                             .lineLimit(3...8).textFieldStyle(.plain).padding(.top, 24)
+                             .accessibilityLabel(store.t("What it does"))
+                     }
+-                    WorkspaceAgentRuntimeOptions().padding(.top, 24)
+                     WorkspaceFeedback().padding(.top, 12)
+                     Spacer(minLength: 32)
+                 }
+-                .padding(.horizontal, 30).padding(.top, 20)
++                .padding(PhonePageLayout.inset)
+                 .frame(maxWidth: .infinity, minHeight: max(0, geometry.size.height - 80), alignment: .top)
+             }.scrollDismissesKeyboard(.interactively).scrollBounceBehavior(.basedOnSize)
+         }
+@@ -54,10 +41,14 @@
+             Button { create() } label: {
+                 Text(store.t(isEditing ? "Save" : "Create")).font(.headline).frame(maxWidth: .infinity, minHeight: 24)
+             }.buttonStyle(WorkspaceButtonStyle()).disabled(store.busy)
+-                .padding(.horizontal, 30).padding(.top, 10).padding(.bottom, 20)
++                .padding(.horizontal, PhonePageLayout.inset).padding(.vertical, 12)
+         }
+-        .background(WorkspaceStyle.surface.ignoresSafeArea())
+-        .task { if isEditing { appearanceExpanded = true } else { roleFocused = true } }
++        .safeAreaInset(edge: .top, spacing: 0) {
++            PhonePageHeader(title: store.t(isEditing ? "Edit agent" : "Create new agent"), back: close)
++        }
++        .environment(\.phonePageTitle, store.t(isEditing ? "Edit agent" : "Create new agent"))
++        .background(WorkspaceStyle.canvas.ignoresSafeArea())
++        .task { if !isEditing { roleFocused = true } }
+         .sensoryFeedback(.selection, trigger: store.form.agent.shape)
+         .sensoryFeedback(.selection, trigger: store.form.agent.color)
+     }
+diff --git a/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentDefaults.swift b/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentDefaults.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Onboarding/PhoneAgentDefaults.swift
+@@ -0,0 +1,7 @@
++enum PhoneAgentDefaults {
++    static let tools = ["file_read", "document_create", "memory_candidate"]
++
++    static func includingBuiltInTools(_ tools: [String]) -> [String] {
++        Array(Set(tools).union(Self.tools)).sorted()
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Onboarding/PhoneFirstAgentView.swift b/apps/ios/BlotIOS/Features/Onboarding/PhoneFirstAgentView.swift
+--- a/apps/ios/BlotIOS/Features/Onboarding/PhoneFirstAgentView.swift
++++ b/apps/ios/BlotIOS/Features/Onboarding/PhoneFirstAgentView.swift
+@@ -28,10 +28,6 @@
+         GeometryReader { geometry in
+             ScrollView {
+                 VStack(spacing: 22) {
+-                    Text(store.t("Meet your first agent"))
+-                        .font(.system(size: 26, weight: .semibold))
+-                        .multilineTextAlignment(.center).accessibilityAddTraits(.isHeader)
+-                        .padding(.horizontal, 24).padding(.top, 84)
+                     TabView(selection: $selectedIndex) {
+                         ForEach(Array(PhoneFirstAgentTemplate.all.enumerated()), id: \.element.id) { index, template in
+                             VStack(spacing: 18) {
+@@ -49,7 +45,10 @@
+                         .frame(height: max(390, geometry.size.height - 140))
+                 }.frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .top)
+             }.scrollBounceBehavior(.basedOnSize)
+-                .overlay(alignment: .topTrailing) { menu.padding(.trailing, 18).padding(.top, 6) }
++
++        }
++        .safeAreaInset(edge: .top, spacing: 0) {
++            PhonePageHeader(title: store.t("Your first agent")) { menu }
+         }
+         .safeAreaInset(edge: .bottom, spacing: 0) { footer }
+         .sensoryFeedback(.selection, trigger: selectedIndex)
+diff --git a/apps/ios/BlotIOS/Features/Overview/PhoneOverviewContent.swift b/apps/ios/BlotIOS/Features/Overview/PhoneOverviewContent.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Overview/PhoneOverviewContent.swift
+@@ -0,0 +1,31 @@
++import BlotDomain
++import BlotWorkspace
++import Foundation
++
++struct PhoneOverviewContent {
++    struct Upcoming: Identifiable {
++        let schedule: BlotV3.Automation
++        let date: Date
++        var id: UUID { schedule.metadata.id }
++    }
++
++    let attention: [BlotV3.Task]
++    let active: [BlotV3.Task]
++    let completed: [BlotV3.Task]
++    let upcoming: [Upcoming]
++    let files: [BlotV3.Artifact]
++
++    init(snapshot: WorkspaceSnapshot, now: Date) {
++        let tasks = (snapshot.tasks ?? []).sorted { $0.metadata.updatedAt > $1.metadata.updatedAt }
++        let attentionStates: Set<BlotV3.TaskState> = [.waiting_approval, .waiting_user, .interrupted, .failed]
++        attention = tasks.filter { attentionStates.contains($0.state) }
++        active = tasks.filter { [.planning, .queued, .running, .paused, .draft].contains($0.state) }
++        completed = Array(tasks.filter { $0.state == .completed }.prefix(3))
++        let calculator = WorkspaceScheduleCalculator()
++        upcoming = Array(snapshot.schedules.compactMap { schedule in
++            guard let date = try? calculator.nextRun(for: schedule, after: now) else { return nil }
++            return Upcoming(schedule: schedule, date: date)
++        }.sorted { $0.date < $1.date }.prefix(3))
++        files = Array(snapshot.artifacts.sorted { $0.metadata.updatedAt > $1.metadata.updatedAt }.prefix(3))
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Overview/PhoneOverviewView.swift b/apps/ios/BlotIOS/Features/Overview/PhoneOverviewView.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Overview/PhoneOverviewView.swift
+@@ -0,0 +1,89 @@
++import BlotDesign
++import BlotDomain
++import SwiftUI
++
++struct PhoneOverviewView: View {
++    @Environment(WorkspaceStore.self) private var store
++    @Environment(\.locale) private var locale
++
++    var body: some View {
++        TimelineView(.periodic(from: .now, by: 30)) { context in
++            let content = PhoneOverviewContent(snapshot: store.snapshot, now: context.date)
++            PhonePage {
++                if !content.attention.isEmpty {
++                    taskSection("Needs your attention", tasks: content.attention)
++                }
++                PhoneSettingsGroup(title: "In progress") {
++                    if content.active.isEmpty {
++                        PhoneSettingsRow(title: "No tasks in progress", detail: "Start a task in any chat.", showsChevron: false)
++                    } else { taskRows(content.active) }
++                }
++                PhoneSettingsGroup(title: "Upcoming") {
++                    if content.upcoming.isEmpty {
++                        PhoneSettingsRow(title: "No upcoming runs", showsChevron: false)
++                    }
++                    ForEach(Array(content.upcoming.enumerated()), id: \.element.id) { index, item in
++                        if index > 0 { PhoneSettingsDivider() }
++                        Button {
++                            store.selectTab(.schedules)
++                            store.navigation.scheduleDate = item.date
++                        } label: {
++                            PhoneSettingsRow(title: store.t(item.schedule.name), symbol: "calendar",
++                                             detail: dateText(item.date))
++                        }.buttonStyle(.plain)
++                    }
++                    PhoneSettingsDivider()
++                    Button { store.navigate(.createSchedule) } label: {
++                        PhoneSettingsRow(title: "New schedule", symbol: "plus")
++                    }.buttonStyle(.plain)
++                }
++                PhoneSettingsGroup(title: "Recent results") {
++                    if content.completed.isEmpty && content.files.isEmpty {
++                        PhoneSettingsRow(title: "No results yet", detail: "Completed tasks and saved files will appear here.", showsChevron: false)
++                    }
++                    taskRows(content.completed)
++                    ForEach(Array(content.files.enumerated()), id: \.element.metadata.id) { index, file in
++                        if index > 0 || !content.completed.isEmpty { PhoneSettingsDivider() }
++                        Button { store.selectedRecordID = file.metadata.id; store.navigate(.file) } label: {
++                            PhoneSettingsRow(title: file.name, symbol: "doc",
++                                             detail: dateText(file.metadata.updatedAt))
++                        }.buttonStyle(.plain)
++                    }
++                    PhoneSettingsDivider()
++                    Button { store.navigate(.files) } label: {
++                        PhoneSettingsRow(title: "All files", symbol: "folder")
++                    }.buttonStyle(.plain)
++                }
++                WorkspaceFeedback()
++            }
++            .refreshable { await store.synchronizeAccount() }
++        }
++    }
++
++    private func taskSection(_ title: String, tasks: [BlotV3.Task]) -> some View {
++        PhoneSettingsGroup(title: title) { taskRows(tasks) }
++    }
++
++    private func dateText(_ date: Date) -> String {
++        date.formatted(.dateTime.day().month(.abbreviated).hour().minute().locale(locale))
++    }
++
++    private func taskRows(_ tasks: [BlotV3.Task]) -> some View {
++        ForEach(Array(tasks.enumerated()), id: \.element.metadata.id) { index, task in
++            if index > 0 { PhoneSettingsDivider() }
++            Button {
++                store.openConversation(task.conversationId)
++                store.selectedRecordID = task.metadata.id
++                store.navigate(.running)
++            } label: {
++                HStack(spacing: 12) {
++                    VStack(alignment: .leading, spacing: 6) {
++                        Text(task.goal).font(.subheadline).lineLimit(2)
++                        WorkspaceTaskStateLabel(state: task.state).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
++                    }.frame(maxWidth: .infinity, alignment: .leading)
++                    BlotIcon(.chevronRight, size: 11).foregroundStyle(WorkspaceStyle.secondary)
++                }.padding(PhonePageLayout.rowInset).frame(minHeight: 56).contentShape(Rectangle())
++            }.buttonStyle(.plain)
++        }
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Plugins/PhonePluginConnectionView.swift b/apps/ios/BlotIOS/Features/Plugins/PhonePluginConnectionView.swift
+--- a/apps/ios/BlotIOS/Features/Plugins/PhonePluginConnectionView.swift
++++ b/apps/ios/BlotIOS/Features/Plugins/PhonePluginConnectionView.swift
+@@ -6,6 +6,7 @@
+ struct PhonePluginConnectionView: View {
+     let plugin: PhonePlugin
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.dismiss) private var dismiss
+     @State private var confirmingDisconnect = false
+     @State private var disconnecting = false
+ 
+@@ -16,8 +17,14 @@
+     private var busy: Bool { store.busy || disconnecting }
+ 
+     var body: some View {
+-        if let apple = plugin.appleID { ApplePluginConnectionView(plugin: apple) }
+-        else { externalBody }
++        Group {
++            if let apple = plugin.appleID { ApplePluginConnectionView(plugin: apple) }
++            else { externalBody }
++        }
++        .safeAreaInset(edge: .top, spacing: 0) {
++            PhonePageHeader(title: store.t(plugin.name), back: { dismiss() }).disabled(busy)
++        }
++        .environment(\.phonePageTitle, store.t(plugin.name))
+     }
+ 
+     private var externalBody: some View {
+@@ -25,7 +32,6 @@
+             VStack(spacing: 24) {
+                 Image(plugin.asset).resizable().scaledToFit().frame(width: 64, height: 64)
+                     .accessibilityHidden(true)
+-                WorkspaceLocalizedText(plugin.name).font(.title2.bold())
+                 Text(store.t(plugin.description)).foregroundStyle(WorkspaceStyle.secondary)
+                 ForEach(accounts, id: \.metadata.id) { account in
+                     Text(account.accountName).font(.callout).foregroundStyle(WorkspaceStyle.secondary)
+@@ -37,7 +43,7 @@
+                         .font(.callout).foregroundStyle(WorkspaceStyle.secondary)
+                 }
+                 WorkspaceFeedback()
+-            }.multilineTextAlignment(.center).frame(maxWidth: .infinity).padding(30)
++            }.multilineTextAlignment(.center).frame(maxWidth: 640).padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
+         }
+         .safeAreaInset(edge: .bottom) {
+             Button(store.t(connected ? "Connected" : "Connect")) { confirmingDisconnect = true }
+diff --git a/apps/ios/BlotIOS/Features/Plugins/PhonePluginsView.swift b/apps/ios/BlotIOS/Features/Plugins/PhonePluginsView.swift
+--- a/apps/ios/BlotIOS/Features/Plugins/PhonePluginsView.swift
++++ b/apps/ios/BlotIOS/Features/Plugins/PhonePluginsView.swift
+@@ -14,13 +14,13 @@
+ 
+     var body: some View {
+         ScrollView {
+-            VStack(alignment: .leading, spacing: 28) {
++            VStack(alignment: .leading, spacing: PhonePageLayout.sectionSpacing) {
+                 search
+                 ForEach(PhonePlugin.Section.allCases, id: \.self) { group in
+                     if section == nil || section == group {
+                         VStack(spacing: 20) {
+                             HStack {
+-                                Text(store.t(group.rawValue)).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
++                                Text(store.t(group.rawValue)).font(.subheadline.weight(.medium)).foregroundStyle(WorkspaceStyle.secondary)
+                                 Spacer()
+                                 Button(store.t(section == group ? "Show all" : "View all")) { section = section == group ? nil : group }
+                                     .font(.caption).foregroundStyle(WorkspaceStyle.secondary).buttonStyle(.plain)
+@@ -34,21 +34,17 @@
+                         .frame(maxWidth: .infinity).padding(.vertical, 40)
+                 }
+                 WorkspaceFeedback()
+-            }.padding(.horizontal, 24).padding(.top, 78).padding(.bottom, 28)
++            }.frame(maxWidth: 640).padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
+         }
+         .sheet(item: $managedPlugin) { plugin in
+             PhonePluginConnectionView(plugin: plugin).environment(store)
+                 .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+         }
+         .scrollDismissesKeyboard(.interactively)
+-        .overlay(alignment: .top) {
+-            HStack(spacing: 12) {
+-                PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) {
+-                    if store.pluginCatalogVisible { store.pluginCatalogVisible = false } else { store.back() }
+-                }
+-                Text(store.t("Plugins")).font(.headline)
+-                Spacer()
+-            }.padding(.horizontal, 18).padding(.top, 16)
++        .safeAreaInset(edge: .top, spacing: 0) {
++            PhonePageHeader(title: store.settingsText("Applications"), back: {
++                if store.pluginCatalogVisible { store.pluginCatalogVisible = false } else { store.back() }
++            })
+         }
+         .background(WorkspaceStyle.canvas.ignoresSafeArea())
+         .workspaceGlassContainer()
+@@ -60,19 +56,14 @@
+ 
+     private var search: some View {
+         HStack(spacing: 8) {
+-            HStack(spacing: 8) {
+-                BlotIcon(symbol: "magnifyingglass").foregroundStyle(WorkspaceStyle.secondary)
+-                TextField(store.t("Search plugins"), text: $query).font(.subheadline).textFieldStyle(.plain)
+-                    .autocorrectionDisabled().textInputAutocapitalization(.never)
+-                    .accessibilityLabel(store.t("Search plugins"))
+-            }.padding(.horizontal, 14).frame(minHeight: 40).glassEffect(.regular.interactive(), in: .capsule)
++            PhonePageSearchField(placeholder: store.t("Search plugins"), text: $query)
+             Menu {
+                 Picker(store.t("Filter"), selection: $filter) {
+                     ForEach(Filter.allCases, id: \.self) { Text(store.t($0.rawValue)).tag($0) }
+                 }
+             } label: {
+                 BlotIcon(symbol: "line.3.horizontal.decrease").font(.body)
+-                    .frame(width: 40, height: 40).glassEffect(.regular.interactive(), in: .circle)
++                    .frame(width: 44, height: 44).glassEffect(.regular.interactive(), in: .circle)
+             }.accessibilityLabel(store.t("Filter"))
+         }
+     }
+diff --git a/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift b/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
+--- a/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
++++ b/apps/ios/BlotIOS/Features/Root/PhoneTabBar.swift
+@@ -11,8 +11,8 @@
+ 
+     private static let items: [Item] = [
+         .init(route: .chats, title: "Chats", symbol: "bubble.left.and.bubble.right"),
+-        .init(route: .agents, title: "Agents", symbol: "person.2"),
+-        .init(route: .files, title: "Files", symbol: "folder"),
++        .init(route: .schedules, title: "Schedules", symbol: "calendar"),
++        .init(route: .overview, title: "Overview", symbol: "square.grid.2x2"),
+         .init(route: .settings, title: "Settings", symbol: "slider.horizontal.3")
+     ]
+ 
+@@ -47,8 +47,9 @@
+ 
+     private var bar: some View {
+         VStack(spacing: 6) {
+-            HStack(spacing: 4) {
+-                ForEach(Self.items) { item in tab(item) }
++            ViewThatFits(in: .horizontal) {
++                tabs(showsTitles: true)
++                tabs(showsTitles: false)
+             }
+             if dynamicTypeSize.isAccessibilitySize,
+                let selected = Self.items.first(where: { $0.route == store.tab }) {
+@@ -61,15 +62,21 @@
+         .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: store.tab)
+     }
+ 
+-    private func tab(_ item: Item) -> some View {
++    private func tabs(showsTitles: Bool) -> some View {
++        HStack(spacing: 4) {
++            ForEach(Self.items) { item in tab(item, showsTitles: showsTitles) }
++        }
++    }
++
++    private func tab(_ item: Item, showsTitles: Bool) -> some View {
+         let selected = store.tab == item.route
+-        let showsTitle = selected && !dynamicTypeSize.isAccessibilitySize
++        let showsTitle = showsTitles && selected && !dynamicTypeSize.isAccessibilitySize
+         return Button { store.selectTab(item.route) } label: {
+             HStack(spacing: 9) {
+                 BlotIcon(symbol: item.symbol, size: 22)
+                 if showsTitle {
+                     Text(store.t(item.title)).font(.subheadline.weight(.medium))
+-                        .lineLimit(1).minimumScaleFactor(0.8).transition(.opacity)
++                        .lineLimit(1).fixedSize(horizontal: true, vertical: false).transition(.opacity)
+                 }
+             }
+             .padding(.horizontal, showsTitle ? 14 : 0)
+diff --git a/apps/ios/BlotIOS/Features/Root/PhoneWorkspacePageHeader.swift b/apps/ios/BlotIOS/Features/Root/PhoneWorkspacePageHeader.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Root/PhoneWorkspacePageHeader.swift
+@@ -0,0 +1,47 @@
++import BlotDomain
++import BlotDesign
++import SwiftUI
++
++struct PhoneWorkspacePageHeader: View {
++    let route: WorkspaceRoute
++    @Environment(WorkspaceStore.self) private var store
++
++    static func isUsed(on route: WorkspaceRoute) -> Bool {
++        !route.isAuthentication && ![WorkspaceRoute.chats, .archivedChats, .agents, .chat, .search,
++                                     .newChat, .createAgent, .editAgent, .connections].contains(route)
++    }
++
++    static func title(for route: WorkspaceRoute, store: WorkspaceStore) -> String {
++        switch route {
++        case .settings: store.t("Settings")
++        case .file: store.selectedFile?.name ?? store.t("Files")
++        case .running: store.t("Tasks")
++        case .approval: store.t("Review prepared action")
++        case .result: store.t("Result")
++        case .offline: store.t("Computer offline")
++        default: PhoneSettingsCatalog.title(for: route).map { store.settingsText($0) } ?? store.t(route.title)
++        }
++    }
++
++    var body: some View {
++        PhonePageHeader(title: Self.title(for: route, store: store),
++                        back: store.history.isEmpty ? nil : { store.back() }) {
++            if route == .settings {
++                Button { store.navigate(.settingsProfile) } label: {
++                    PhoneProfileAvatar(data: store.profile.avatar, size: 36).frame(width: 44, height: 44)
++                }.buttonStyle(.plain).accessibilityLabel(store.settingsText("Profile"))
++            } else if route == .schedules {
++                PhoneGlassCircleButton(symbol: "plus", title: store.t("New schedule")) { store.navigate(.createSchedule) }
++            } else if [.running, .result].contains(route) {
++                Menu {
++                    Button(store.t("Task details")) { store.navigate(.running) }
++                    Button(store.t("Review prepared action")) { store.navigate(.approval) }
++                    Button(store.t("Result")) { store.navigate(.result) }
++                    Button(store.t("View browser")) { store.navigate(.browser) }
++                } label: {
++                    BlotIcon(symbol: "ellipsis").frame(width: 44, height: 44)
++                }.accessibilityLabel(store.t("More options"))
++            }
++        }
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Root/PhoneWorkspaceScreen.swift b/apps/ios/BlotIOS/Features/Root/PhoneWorkspaceScreen.swift
+--- a/apps/ios/BlotIOS/Features/Root/PhoneWorkspaceScreen.swift
++++ b/apps/ios/BlotIOS/Features/Root/PhoneWorkspaceScreen.swift
+@@ -27,6 +27,8 @@
+                 case .search: PhoneSearchView()
+                 case .newChat: PhoneNewChatView()
+                 case .settings: PhoneSettingsMenuView()
++                case .overview: PhoneOverviewView()
++                case .schedules: PhoneSchedulesView()
+                 case .appSettings, .language: PhoneGeneralSettingsView()
+                 case .appearance: PhoneAppearanceSettingsView()
+                 case .settingsProfile, .account, .usage: PhoneSettingsProfileView()
+diff --git a/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleCalendar.swift b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleCalendar.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleCalendar.swift
+@@ -0,0 +1,59 @@
++import BlotDesign
++import SwiftUI
++
++struct PhoneScheduleCalendar: View {
++    @Binding var selectedDate: Date
++    let calendar: Calendar
++    @Environment(WorkspaceStore.self) private var store
++    @ScaledMetric(relativeTo: .body) private var dayHeight: CGFloat = 72
++
++    private var days: [Date] {
++        guard let week = calendar.dateInterval(of: .weekOfYear, for: selectedDate) else { return [] }
++        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: week.start) }
++    }
++
++    var body: some View {
++        VStack(spacing: 12) {
++            HStack {
++                weekButton("chevron.left", title: "Previous week", offset: -1)
++                DatePicker(store.t("Date"), selection: $selectedDate, displayedComponents: .date)
++                    .labelsHidden().datePickerStyle(.compact).frame(maxWidth: .infinity)
++                weekButton("chevron.right", title: "Next week", offset: 1)
++            }
++            GeometryReader { geometry in
++                ScrollView(.horizontal) {
++                    HStack(spacing: 4) {
++                        ForEach(days, id: \.self) { date in day(date) }
++                    }.frame(minWidth: geometry.size.width)
++                }.scrollIndicators(.hidden)
++            }.frame(height: dayHeight)
++        }
++    }
++
++    private func day(_ date: Date) -> some View {
++        let selected = calendar.isDate(date, inSameDayAs: selectedDate)
++        return Button { selectedDate = date } label: {
++            VStack(spacing: 8) {
++                Text(date, format: .dateTime.weekday(.narrow)).font(.caption)
++                Text(date, format: .dateTime.day()).font(.body.weight(.medium))
++                Circle().fill(calendar.isDateInToday(date) ? (selected ? BlotColor.onInverse : WorkspaceStyle.ink) : .clear)
++                    .frame(width: 4, height: 4)
++            }
++            .frame(minWidth: 44, maxWidth: .infinity, minHeight: dayHeight)
++            .foregroundStyle(selected ? BlotColor.onInverse : WorkspaceStyle.ink)
++            .background(selected ? BlotColor.inverse : PhoneSettingsStyle.row,
++                        in: RoundedRectangle(cornerRadius: PhonePageLayout.radius))
++            .contentShape(Rectangle())
++        }.buttonStyle(.plain)
++            .accessibilityLabel(date.formatted(.dateTime.weekday(.wide).day().month().locale(calendar.locale ?? .current)))
++            .accessibilityAddTraits(selected ? .isSelected : [])
++            .accessibilityIdentifier("workspace.schedule.day.\(calendar.component(.weekday, from: date))")
++    }
++
++    private func weekButton(_ symbol: String, title: String, offset: Int) -> some View {
++        Button {
++            if let date = calendar.date(byAdding: .weekOfYear, value: offset, to: selectedDate) { selectedDate = date }
++        } label: { BlotIcon(symbol: symbol, size: 18).frame(width: 44, height: 44) }
++            .buttonStyle(.plain).accessibilityLabel(store.t(title))
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleDayContent.swift b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleDayContent.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleDayContent.swift
+@@ -0,0 +1,32 @@
++import BlotDomain
++import BlotWorkspace
++import Foundation
++
++struct PhoneScheduleDayContent {
++    struct Run: Identifiable {
++        let schedule: BlotV3.Automation
++        let date: Date
++        var id: UUID { schedule.metadata.id }
++    }
++
++    let runs: [Run]
++
++    init(schedules: [BlotV3.Automation], day: Date, calendar: Calendar) {
++        let start = calendar.startOfDay(for: day)
++        let end = calendar.date(byAdding: .day, value: 1, to: start) ?? start
++        let calculator = WorkspaceScheduleCalculator()
++        runs = schedules.compactMap { schedule in
++            // Paused schedules remain visible on their scheduled day.
++            let display = try? BlotV3.Automation(metadata: schedule.metadata, kind: schedule.kind,
++                executorDeviceId: schedule.executorDeviceId, agentId: schedule.agentId,
++                name: schedule.name, goal: schedule.goal, timezone: schedule.timezone,
++                localTime: schedule.localTime, weekdays: schedule.weekdays,
++                missedRunPolicy: schedule.missedRunPolicy, enabled: true,
++                skillRevisionId: schedule.skillRevisionId, scheduledAt: schedule.scheduledAt,
++                maxCatchUpRuns: schedule.maxCatchUpRuns)
++            guard let display, let date = try? calculator.nextRun(for: display, after: start.addingTimeInterval(-0.001)),
++                  date < end else { return nil }
++            return Run(schedule: schedule, date: date)
++        }.sorted { $0.date < $1.date }
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleEditor.swift b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleEditor.swift
+--- a/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleEditor.swift
++++ b/apps/ios/BlotIOS/Features/Schedules/PhoneScheduleEditor.swift
+@@ -8,66 +8,74 @@
+ 
+     var body: some View {
+         @Bindable var store = store
+-        Form {
+-            Section(store.t("What to do")) {
+-                TextField(store.t("Name"), text: $store.form.schedule.name)
+-                TextField(store.t("What to do"), text: $store.form.schedule.goal, axis: .vertical).lineLimit(3...8)
++        PhoneSettingsPage {
++            PhoneSettingsGroup(title: "What to do") {
++                VStack(alignment: .leading, spacing: 16) {
++                    TextField(store.t("Name"), text: $store.form.schedule.name)
++                    TextField(store.t("What to do"), text: $store.form.schedule.goal, axis: .vertical).lineLimit(3...8)
++                }.padding(PhonePageLayout.rowInset)
+             }
+-            Section(store.t("Schedules")) {
+-                if store.mode == .live { Toggle(store.t("One-time"), isOn: $store.form.schedule.oneTime) }
+-                DatePicker(store.t("Run time"), selection: $store.form.schedule.time,
+-                    displayedComponents: store.form.schedule.oneTime ? [.date, .hourAndMinute] : .hourAndMinute)
+-                    .environment(\.timeZone, TimeZone(identifier: store.form.schedule.timezone) ?? .current)
+-                HStack(spacing: 4) {
+-                    ForEach(1...7, id: \.self) { weekday in
+-                        Button {
+-                            if store.form.schedule.weekdays.contains(weekday) { store.form.schedule.weekdays.remove(weekday) }
+-                            else { store.form.schedule.weekdays.insert(weekday) }
+-                        } label: {
+-                            Text(dayName(weekday)).font(.caption.weight(.medium))
+-                                .frame(maxWidth: .infinity, minHeight: 44)
+-                                .foregroundStyle(store.form.schedule.weekdays.contains(weekday) ? BlotColor.onInverse : WorkspaceStyle.ink)
+-                                .background(store.form.schedule.weekdays.contains(weekday) ? BlotColor.inverse : WorkspaceStyle.surface, in: Capsule())
+-                        }.buttonStyle(.plain)
+-                            .accessibilityAddTraits(store.form.schedule.weekdays.contains(weekday) ? .isSelected : [])
++            PhoneSettingsGroup(title: "Schedules") {
++                VStack(alignment: .leading, spacing: 16) {
++                    if store.mode == .live { Toggle(store.t("One-time"), isOn: $store.form.schedule.oneTime) }
++                    DatePicker(store.t("Run time"), selection: $store.form.schedule.time,
++                        displayedComponents: store.form.schedule.oneTime ? [.date, .hourAndMinute] : .hourAndMinute)
++                        .environment(\.timeZone, TimeZone(identifier: store.form.schedule.timezone) ?? .current)
++                    HStack(spacing: 4) {
++                        ForEach(1...7, id: \.self) { weekday in
++                            Button {
++                                if store.form.schedule.weekdays.contains(weekday) { store.form.schedule.weekdays.remove(weekday) }
++                                else { store.form.schedule.weekdays.insert(weekday) }
++                            } label: {
++                                Text(dayName(weekday)).font(.caption.weight(.medium))
++                                    .frame(maxWidth: .infinity, minHeight: 44)
++                                    .foregroundStyle(store.form.schedule.weekdays.contains(weekday) ? BlotColor.onInverse : WorkspaceStyle.ink)
++                                    .background(store.form.schedule.weekdays.contains(weekday) ? BlotColor.inverse : WorkspaceStyle.surface, in: Capsule())
++                            }.buttonStyle(.plain)
++                                .accessibilityAddTraits(store.form.schedule.weekdays.contains(weekday) ? .isSelected : [])
++                        }
+                     }
+-                }
+-                if store.mode == .live {
+-                    TextField(store.t("Time zone"), text: $store.form.schedule.timezone).autocorrectionDisabled().textInputAutocapitalization(.never)
+-                    Picker(store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy) {
+-                        ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in WorkspaceSchedulePolicyLabel(policy: policy).tag(policy) }
++                    if store.mode == .live {
++                        TextField(store.t("Time zone"), text: $store.form.schedule.timezone).autocorrectionDisabled().textInputAutocapitalization(.never)
++                        Picker(store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy) {
++                            ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in WorkspaceSchedulePolicyLabel(policy: policy).tag(policy) }
++                        }
++                        if store.form.schedule.missedRunPolicy == .catch_up {
++                            Stepper(store.t("Maximum catch-up runs") + ": \(store.form.schedule.maximumCatchUpRuns)", value: $store.form.schedule.maximumCatchUpRuns, in: 1...100)
++                        }
++                    } else { Text(TimeZone.current.identifier).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
++                }.padding(PhonePageLayout.rowInset)
++            }
++            PhoneSettingsGroup(title: "Agent") {
++                VStack(alignment: .leading, spacing: 16) {
++                    Picker(store.t("Agent"), selection: $store.form.schedule.agentID) {
++                        Text(store.t("Just chat with AI")).tag(nil as UUID?)
++                        ForEach(store.snapshot.agents, id: \.metadata.id) { agent in
++                            Text(agent.name).tag(Optional(agent.metadata.id))
++                        }
+                     }
+-                    if store.form.schedule.missedRunPolicy == .catch_up {
+-                        Stepper(store.t("Maximum catch-up runs") + ": \(store.form.schedule.maximumCatchUpRuns)", value: $store.form.schedule.maximumCatchUpRuns, in: 1...100)
++                    Picker(store.t("Computer"), selection: $store.form.schedule.deviceID) {
++                        Text(store.t("Not selected")).tag(nil as UUID?)
++                        if store.mode == .live, let id = store.snapshot.localDeviceID { Text(store.t("This iPhone")).tag(Optional(id)) }
++                        ForEach(store.snapshot.devices.filter { $0.kind == .desktop }, id: \.metadata.id) { device in
++                            Text(device.name).tag(Optional(device.metadata.id))
++                        }
+                     }
+-                } else { Text(TimeZone.current.identifier).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
++                    if store.mode != .live && store.snapshot.devices.allSatisfy({ $0.kind != .desktop }) {
++                        Button(store.t("Connect computer")) { store.navigate(.pair) }
++                    }
++                }.padding(PhonePageLayout.rowInset)
+             }
+-            Section(store.t("Agent")) {
+-                Picker(store.t("Agent"), selection: $store.form.schedule.agentID) {
+-                    Text(store.t("Just chat with AI")).tag(nil as UUID?)
+-                    ForEach(store.snapshot.agents, id: \.metadata.id) { agent in
+-                        Text(agent.name).tag(Optional(agent.metadata.id))
+-                    }
+-                }
+-                Picker(store.t("Computer"), selection: $store.form.schedule.deviceID) {
+-                    Text(store.t("Not selected")).tag(nil as UUID?)
+-                    if store.mode == .live, let id = store.snapshot.localDeviceID { Text(store.t("This iPhone")).tag(Optional(id)) }
+-                    ForEach(store.snapshot.devices.filter { $0.kind == .desktop }, id: \.metadata.id) { device in
+-                        Text(device.name).tag(Optional(device.metadata.id))
+-                    }
+-                }
+-                if store.mode != .live && store.snapshot.devices.allSatisfy({ $0.kind != .desktop }) {
+-                    Button(store.t("Connect computer")) { store.navigate(.pair) }
+-                }
+-            }
+-            Section {
+-                Button(store.t("Create schedule")) { _Concurrency.Task { await store.saveSchedule() } }
++            VStack(alignment: .leading, spacing: 16) {
++                Button { _Concurrency.Task { await store.saveSchedule() } } label: {
++                    Text(store.t("Create schedule")).frame(maxWidth: .infinity)
++                }.buttonStyle(WorkspaceButtonStyle())
+                     .disabled(store.busy || store.form.schedule.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                               || store.form.schedule.goal.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                               || (!store.form.schedule.oneTime && store.form.schedule.weekdays.isEmpty))
+                 WorkspaceFeedback()
+             }
+-        }.scrollDismissesKeyboard(.interactively)
++        }.textFieldStyle(.roundedBorder)
+     }
+ 
+     private func dayName(_ weekday: Int) -> String {
+diff --git a/apps/ios/BlotIOS/Features/Schedules/PhoneSchedulesView.swift b/apps/ios/BlotIOS/Features/Schedules/PhoneSchedulesView.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Schedules/PhoneSchedulesView.swift
+@@ -0,0 +1,73 @@
++import BlotDesign
++import BlotDomain
++import SwiftUI
++
++struct PhoneSchedulesView: View {
++    @Environment(WorkspaceStore.self) private var store
++    @Environment(\.locale) private var locale
++    @Environment(\.timeZone) private var timeZone
++    private var selectedDate: Date { store.navigation.scheduleDate }
++
++    private var calendar: Calendar {
++        var calendar = Calendar(identifier: .gregorian)
++        calendar.locale = locale
++        calendar.timeZone = timeZone
++        calendar.firstWeekday = 2
++        return calendar
++    }
++
++    var body: some View {
++        @Bindable var navigation = store.navigation
++        let content = PhoneScheduleDayContent(schedules: store.snapshot.schedules, day: selectedDate, calendar: calendar)
++        return PhonePage {
++            PhoneScheduleCalendar(selectedDate: $navigation.scheduleDate, calendar: calendar)
++            PhoneSettingsGroup(title: selectedDate.formatted(.dateTime.day().month(.wide).locale(locale))) {
++                if content.runs.isEmpty {
++                    PhoneSettingsRow(title: "No runs on this day", detail: "Choose another day or create a schedule.", showsChevron: false)
++                }
++                ForEach(Array(content.runs.enumerated()), id: \.element.id) { index, run in
++                    if index > 0 { PhoneSettingsDivider() }
++                    schedule(run)
++                }
++            }
++            Button { store.navigate(.createSchedule) } label: {
++                BlotLabel(store.t("New schedule"), symbol: "plus").frame(maxWidth: .infinity)
++            }.buttonStyle(WorkspaceButtonStyle(.secondary))
++            WorkspaceFeedback()
++            if store.mode == .live {
++                Text(store.t("Schedules run on the selected device. Exact background execution is not guaranteed on iPhone."))
++                    .font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
++            }
++        }
++        .refreshable { await store.synchronizeAccount() }
++    }
++
++    private func schedule(_ run: PhoneScheduleDayContent.Run) -> some View {
++        let schedule = run.schedule
++        return VStack(alignment: .leading, spacing: 12) {
++            HStack(spacing: 16) {
++                VStack(alignment: .leading, spacing: 6) {
++                    Text(store.t(schedule.name)).font(.subheadline.weight(.medium))
++                    Text(run.date, format: .dateTime.hour().minute()).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
++                }.frame(maxWidth: .infinity, alignment: .leading)
++                Toggle(store.t("Enabled"), isOn: Binding(get: { schedule.enabled }, set: { _ in
++                    store.selectedRecordID = schedule.metadata.id
++                    _Concurrency.Task { await store.perform(.updateSchedule) }
++                })).labelsHidden().disabled(store.busy).accessibilityLabel(store.t(schedule.name))
++            }
++            Text(store.t(schedule.goal)).font(.subheadline).foregroundStyle(WorkspaceStyle.secondary)
++            BlotLabel(executorName(schedule), symbol: schedule.executorDeviceId == store.snapshot.localDeviceID ? "iphone" : "desktopcomputer")
++                .font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
++            if store.mode == .live {
++                WorkspaceScheduleRunSummary(schedule: schedule)
++                Button(store.t("Run now")) { store.runScheduleManually(schedule.metadata.id) }
++                    .buttonStyle(.bordered).disabled(store.busy)
++            }
++        }.padding(PhonePageLayout.rowInset)
++    }
++
++    private func executorName(_ schedule: BlotV3.Automation) -> String {
++        if schedule.executorDeviceId == store.snapshot.localDeviceID { return store.t("This device") }
++        return store.snapshot.devices.first { $0.metadata.id == schedule.executorDeviceId }?.name ?? store.t("Selected computer")
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneEmailEditor.swift b/apps/ios/BlotIOS/Features/Settings/PhoneEmailEditor.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneEmailEditor.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneEmailEditor.swift
+@@ -12,22 +12,23 @@
+ 
+     var body: some View {
+         NavigationStack {
+-            Form {
+-                Section(store.t("Email")) {
++            PhoneSettingsPage {
++                PhoneSettingsGroup(title: "Email") {
++                    VStack(alignment: .leading, spacing: 12) {
+                     TextField(store.t("Your email address"), text: $email)
+                         .keyboardType(.emailAddress).textInputAutocapitalization(.never)
+                         .textContentType(.emailAddress).autocorrectionDisabled().focused($focused)
+                     if invalid { Text(store.t("Enter a valid email address.")).font(.footnote).foregroundStyle(.red) }
++                    }.padding(PhonePageLayout.rowInset)
+                 }
+                 WorkspaceFeedback()
+             }
+-            .navigationTitle(store.t("Email")).navigationBarTitleDisplayMode(.inline)
+-            .toolbar {
+-                ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(saving) }
+-                ToolbarItem(placement: .confirmationAction) {
+-                    Button(store.t("Save")) { save() }.disabled(saving)
++            .safeAreaInset(edge: .top, spacing: 0) {
++                PhonePageHeader(title: store.t("Email"), back: { dismiss() }) {
++                    Button(store.t("Save")) { save() }.frame(minWidth: 44, minHeight: 44)
+                 }
+-            }
++                .disabled(saving)
++            }.toolbar(.hidden, for: .navigationBar)
+         }.interactiveDismissDisabled(saving)
+         .onAppear { email = store.profile.contactEmail ?? store.form.account.email; store.error = nil; focused = true }
+     }
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhonePasswordEditor.swift b/apps/ios/BlotIOS/Features/Settings/PhonePasswordEditor.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhonePasswordEditor.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhonePasswordEditor.swift
+@@ -32,8 +32,10 @@
+                 }
+                 WorkspaceFeedback()
+             }.disabled(submitting)
+-            .navigationTitle(store.settingsText("Change password")).navigationBarTitleDisplayMode(.inline)
+-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(submitting) } }
++            .safeAreaInset(edge: .top, spacing: 0) {
++                PhonePageHeader(title: store.settingsText("Change password"), back: { dismiss() }).disabled(submitting)
++            }
++            .toolbar(.hidden, for: .navigationBar)
+         }.interactiveDismissDisabled(submitting)
+     }
+     private func requestCode() {
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
+@@ -9,17 +9,17 @@
+         let group: String
+         var id: WorkspaceRoute { route }
+     }
+-    static let groups = ["Personal", "Workspace", "Integrations"]
++    static let groups = ["Workspace", "Personal", "Integrations"]
+     static let items: [Item] = [
++        .init(route: .files, title: "Files", detail: "Workspace files, attachments and agent results.", symbol: "folder", group: "Workspace"),
+         .init(route: .appSettings, title: "General", detail: "App language and permissions.", symbol: "gearshape", group: "Personal"),
+         .init(route: .notifications, title: "Notifications", detail: "Events your agents notify you about.", symbol: "bell", group: "Personal"),
+         .init(route: .settingsProfile, title: "Profile", detail: "Your profile, token activity and account actions.", symbol: "person.crop.circle", group: "Personal"),
+         .init(route: .appearance, title: "Appearance", detail: "Theme, motion and interface density.", symbol: "sun.max", group: "Personal"),
+         .init(route: .personalization, title: "Personalization", detail: "Response preferences and defaults for new agents.", symbol: "slider.horizontal.3", group: "Personal"),
+         .init(route: .memory, title: "Agent memory", detail: "Shared context and memories of individual agents.", symbol: "brain", group: "Workspace"),
+-        .init(route: .settingsStorage, title: "Files and data", detail: "Local documents and conversations.", symbol: "folder", group: "Workspace"),
++        .init(route: .settingsStorage, title: "Files and data", detail: "Local documents and conversations.", symbol: "internaldrive", group: "Workspace"),
+         .init(route: .permissions, title: "Data and privacy", detail: "Data storage and agent permissions.", symbol: "checkmark.shield", group: "Workspace"),
+-        .init(route: .schedules, title: "Schedules", detail: "Scheduled tasks for your team.", symbol: "calendar", group: "Workspace"),
+         .init(route: .devices, title: "Computers", detail: "Devices connected to your workspace.", symbol: "desktopcomputer", group: "Workspace"),
+         .init(route: .connections, title: "Applications", detail: "Your services and accounts for the team.", symbol: "puzzlepiece.extension", group: "Integrations"),
+         .init(route: .mcp, title: "MCP servers", detail: "External tools for your agents.", symbol: "network", group: "Integrations"),
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsGroup.swift b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsGroup.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsGroup.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsGroup.swift
+@@ -2,22 +2,17 @@
+ import SwiftUI
+ 
+ enum PhoneSettingsStyle {
+-    static var canvas: Color { BlotColor.dynamic(.init(light: 0xFCFCFCFF, dark: 0x101010FF)) }
++    static var canvas: Color { WorkspaceStyle.canvas }
+     static var row: Color { BlotColor.dynamic(.init(light: 0xFFFFFFFF, dark: 0x191919FF)) }
+     static var edge: Color { BlotColor.dynamic(.init(light: 0xE7E7E5FF, dark: 0x2B2B2BFF)) }
+     static let accent = Color(red: 0.43, green: 0.41, blue: 0.88)
+-    static let radius: CGFloat = 16
++    static let radius = PhonePageLayout.radius
+ }
+ 
+ struct PhoneSettingsPage<Content: View>: View {
+     @ViewBuilder let content: Content
+     var body: some View {
+-        ScrollView {
+-            VStack(alignment: .leading, spacing: 32) { content }
+-                .frame(maxWidth: 640).padding(20).frame(maxWidth: .infinity)
+-        }
+-        .scrollDismissesKeyboard(.interactively)
+-        .background(PhoneSettingsStyle.canvas.ignoresSafeArea())
++        PhonePage { content }
+         .tint(PhoneSettingsStyle.accent)
+     }
+ }
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsMenuView.swift b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsMenuView.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsMenuView.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsMenuView.swift
+@@ -12,22 +12,8 @@
+     }
+     var body: some View {
+         PhoneSettingsPage {
+-            HStack {
+-                Text(store.t("Settings")).font(.title2.weight(.semibold)).accessibilityAddTraits(.isHeader)
+-                Spacer()
+-                Button { store.navigate(.settingsProfile) } label: { PhoneProfileAvatar(data: store.profile.avatar, size: 36) }
+-                    .buttonStyle(.plain).accessibilityLabel(store.settingsText("Profile"))
+-            }
+-            HStack(spacing: 9) {
+-                BlotIcon(.search, size: 17).foregroundStyle(WorkspaceStyle.secondary)
+-                TextField(store.settingsText("Search settings"), text: $query).font(.subheadline).textFieldStyle(.plain)
+-                    .autocorrectionDisabled().accessibilityIdentifier("workspace.settings.search")
+-                if !query.isEmpty {
+-                    Button { query = "" } label: { BlotIcon(symbol: "xmark.circle.fill", size: 16) }
+-                        .buttonStyle(.plain).accessibilityLabel(store.t("Clear search"))
+-                }
+-            }.padding(.horizontal, 14).frame(minHeight: 44)
+-                .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12))
++            PhonePageSearchField(placeholder: store.settingsText("Search settings"), text: $query)
++                .accessibilityIdentifier("workspace.settings.search")
+             if !store.unresolvedConflicts.isEmpty {
+                 Button { store.conflictsVisible = true } label: {
+                     PhoneSettingsRow(title: "Review conflicting changes", symbol: "arrow.triangle.branch")
+@@ -55,14 +41,6 @@
+             Text("Blot · " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"))
+                 .font(.footnote).foregroundStyle(WorkspaceStyle.secondary).frame(maxWidth: .infinity)
+         }
+-        .safeAreaInset(edge: .top, spacing: 0) {
+-            if !store.history.isEmpty {
+-                HStack {
+-                    PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { store.back() }
+-                    Spacer()
+-                }.padding(.horizontal, 18).padding(.top, 6)
+-            }
+-        }
+         .scrollPosition(store.navigation.position(for: .settings))
+         .onAppear { store.navigation.restorePosition(for: .settings) }
+         .onScrollGeometryChange(for: CGFloat.self) { max(0, $0.contentOffset.y + $0.contentInsets.top) } action: { old, new in
+diff --git a/apps/ios/BlotIOS/Features/Shared/PhonePageLayout.swift b/apps/ios/BlotIOS/Features/Shared/PhonePageLayout.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Shared/PhonePageLayout.swift
+@@ -0,0 +1,57 @@
++import BlotDesign
++import SwiftUI
++
++enum PhonePageLayout {
++    static let inset: CGFloat = 20
++    static let sectionSpacing: CGFloat = 24
++    static let rowInset: CGFloat = 16
++    static let radius: CGFloat = 16
++}
++
++extension EnvironmentValues {
++    @Entry var phonePageTitle: String? = nil
++}
++
++struct PhonePageHeader<Actions: View>: View {
++    let title: String
++    var back: (() -> Void)? = nil
++    @ViewBuilder var actions: Actions
++    @Environment(WorkspaceStore.self) private var store
++
++    var body: some View {
++        HStack(spacing: 12) {
++            if let back {
++                PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back"), action: back)
++            }
++            Text(title).font(.title2.weight(.semibold)).lineLimit(1).truncationMode(.tail)
++                .accessibilityAddTraits(.isHeader)
++                .frame(maxWidth: .infinity, alignment: .leading)
++            actions
++        }
++        .frame(minHeight: 44)
++        .padding(.horizontal, PhonePageLayout.inset).padding(.vertical, 8)
++        .background(WorkspaceStyle.canvas)
++    }
++}
++
++extension PhonePageHeader where Actions == EmptyView {
++    init(title: String, back: (() -> Void)? = nil) {
++        self.title = title
++        self.back = back
++        self.actions = EmptyView()
++    }
++}
++
++struct PhonePage<Content: View>: View {
++    @ViewBuilder var content: Content
++
++    var body: some View {
++        ScrollView {
++            VStack(alignment: .leading, spacing: PhonePageLayout.sectionSpacing) { content }
++                .frame(maxWidth: 640, alignment: .leading)
++                .padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
++        }
++        .scrollDismissesKeyboard(.interactively)
++        .background(WorkspaceStyle.canvas.ignoresSafeArea())
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Shared/PhonePageSearchField.swift b/apps/ios/BlotIOS/Features/Shared/PhonePageSearchField.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/ios/BlotIOS/Features/Shared/PhonePageSearchField.swift
+@@ -0,0 +1,26 @@
++import BlotDesign
++import SwiftUI
++
++struct PhonePageSearchField: View {
++    let placeholder: String
++    @Binding var text: String
++    @Environment(WorkspaceStore.self) private var store
++
++    var body: some View {
++        HStack(spacing: 10) {
++            BlotIcon(.search, size: 18).foregroundStyle(WorkspaceStyle.secondary)
++            TextField(placeholder, text: $text).font(.subheadline).textFieldStyle(.plain)
++                .autocorrectionDisabled().textInputAutocapitalization(.never)
++                .submitLabel(.search).accessibilityLabel(placeholder)
++            if !text.isEmpty {
++                Button { text = "" } label: {
++                    BlotIcon(symbol: "xmark.circle.fill", size: 18)
++                        .frame(width: 44, height: 44).foregroundStyle(WorkspaceStyle.secondary)
++                }.buttonStyle(.plain).accessibilityLabel(store.t("Clear search"))
++            }
++        }
++        .padding(.leading, 16).padding(.trailing, text.isEmpty ? 16 : 2).frame(minHeight: 48)
++        .background(PhoneSettingsStyle.row, in: RoundedRectangle(cornerRadius: PhonePageLayout.radius))
++        .overlay(RoundedRectangle(cornerRadius: PhonePageLayout.radius).strokeBorder(PhoneSettingsStyle.edge))
++    }
++}
+diff --git a/apps/ios/BlotIOS/Features/Widgets/PhoneWidgetNavigation.swift b/apps/ios/BlotIOS/Features/Widgets/PhoneWidgetNavigation.swift
+--- a/apps/ios/BlotIOS/Features/Widgets/PhoneWidgetNavigation.swift
++++ b/apps/ios/BlotIOS/Features/Widgets/PhoneWidgetNavigation.swift
+@@ -13,18 +13,18 @@
+             case .compose:
+                 await startNewChat()
+             case .agents:
+-                selectTab(.agents)
++                selectTab(.chats); navigate(.agents)
+             case .schedules:
+-                selectTab(.chats); navigate(.schedules)
++                selectTab(.schedules)
+             case .overview:
+-                selectTab(.chats)
++                selectTab(.overview)
+             case .conversation(let id):
+                 guard snapshot.conversations.contains(where: { $0.metadata.id == id && !$0.archived }) else {
+                     selectTab(.chats); return
+                 }
+                 openConversation(id)
+             case .agent(let id):
+-                guard snapshot.agents.contains(where: { $0.metadata.id == id }) else { selectTab(.agents); return }
++                guard snapshot.agents.contains(where: { $0.metadata.id == id }) else { selectTab(.chats); navigate(.agents); return }
+                 await openAgentChat(id)
+             }
+         }
+diff --git a/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift b/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift
+--- a/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift
++++ b/apps/ios/BlotIOS/Services/PhoneWorkspaceNavigation.swift
+@@ -5,6 +5,7 @@
+ @MainActor @Observable
+ final class PhoneWorkspaceNavigation {
+     var filesQuery = ""
++    var scheduleDate = Date()
+     private var positions: [WorkspaceRoute: ScrollPosition] = [:]
+     private var offsets: [WorkspaceRoute: CGFloat] = [:]
+ 
+@@ -22,5 +23,5 @@
+         positions[route] = position
+     }
+ 
+-    func reset() { positions = [:]; offsets = [:]; filesQuery = "" }
++    func reset() { positions = [:]; offsets = [:]; filesQuery = ""; scheduleDate = Date() }
+ }
+diff --git a/apps/shared/Resources/Localizable.xcstrings b/apps/shared/Resources/Localizable.xcstrings
+--- a/apps/shared/Resources/Localizable.xcstrings
++++ b/apps/shared/Resources/Localizable.xcstrings
+@@ -1137,6 +1137,23 @@
+         }
+       }
+     },
++    "A specialist for your tasks." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "A specialist for your tasks."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Специалист для ваших задач."
++          }
++        }
++      }
++    },
+     "A week without “what’s for dinner?”" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -2605,6 +2622,23 @@
+         }
+       }
+     },
++    "All files" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "All files"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Все файлы"
++          }
++        }
++      }
++    },
+     "All memories" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -4530,6 +4564,23 @@
+         }
+       }
+     },
++    "Bring agents together for a shared task." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Bring agents together for a shared task."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Объедините агентов для общей задачи."
++          }
++        }
++      }
++    },
+     "Bring chats, notes and materials together for one task." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -5835,6 +5886,23 @@
+           "stringUnit" : {
+             "state" : "translated",
+             "value" : "Выберите направление или опишите свою задачу в сообщении."
++          }
++        }
++      }
++    },
++    "Choose another day or create a schedule." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Choose another day or create a schedule."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Выберите другой день или создайте расписание."
+           }
+         }
+       }
+@@ -6675,6 +6743,23 @@
+         }
+       }
+     },
++    "Completed tasks and saved files will appear here." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Completed tasks and saved files will appear here."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Здесь появятся выполненные задачи и сохранённые файлы."
++          }
++        }
++      }
++    },
+     "Composer hints" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -12340,6 +12425,9 @@
+         }
+       }
+     },
++    "Import files" : {
++
++    },
+     "Imports instructions, memories, skills and schedules." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -12370,6 +12458,23 @@
+           "stringUnit" : {
+             "state" : "translated",
+             "value" : "В демо-корзине"
++          }
++        }
++      }
++    },
++    "In progress" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "In progress"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "В работе"
+           }
+         }
+       }
+@@ -14973,6 +15078,23 @@
+         }
+       }
+     },
++    "Needs your attention" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Needs your attention"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Требуют внимания"
++          }
++        }
++      }
++    },
+     "Never remembered" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -15316,6 +15438,23 @@
+     "Next run:" : {
+ 
+     },
++    "Next week" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Next week"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Следующая неделя"
++          }
++        }
++      }
++    },
+     "Nickname" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -15690,6 +15829,23 @@
+         }
+       }
+     },
++    "No results yet" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "No results yet"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Результатов пока нет"
++          }
++        }
++      }
++    },
+     "No routines yet" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -15707,6 +15863,23 @@
+         }
+       }
+     },
++    "No runs on this day" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "No runs on this day"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "В этот день запусков нет"
++          }
++        }
++      }
++    },
+     "No runs yet" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -15843,6 +16016,23 @@
+         }
+       }
+     },
++    "No tasks in progress" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "No tasks in progress"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Нет текущих задач"
++          }
++        }
++      }
++    },
+     "No tasks or files match “%@”" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -15873,6 +16063,23 @@
+           "stringUnit" : {
+             "state" : "translated",
+             "value" : "Без данных о токенах"
++          }
++        }
++      }
++    },
++    "No upcoming runs" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "No upcoming runs"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Нет запланированных запусков"
+           }
+         }
+       }
+@@ -17266,6 +17473,9 @@
+         }
+       }
+     },
++    "Part of the text is shown. Open the original for the full content." : {
++
++    },
+     "Participant profile" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -18571,6 +18781,23 @@
+           "stringUnit" : {
+             "state" : "translated",
+             "value" : "Предыдущий"
++          }
++        }
++      }
++    },
++    "Previous week" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Previous week"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Предыдущая неделя"
+           }
+         }
+       }
+@@ -19173,6 +19400,9 @@
+         }
+       }
+     },
++    "Reading and recognizing…" : {
++
++    },
+     "README.md" : {
+ 
+     },
+@@ -19329,6 +19559,23 @@
+         }
+       }
+     },
++    "Recent results" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Recent results"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Последние результаты"
++          }
++        }
++      }
++    },
+     "Recents" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -21500,6 +21747,23 @@
+         }
+       }
+     },
++    "Schedules run on the selected device. Exact background execution is not guaranteed on iPhone." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Schedules run on the selected device. Exact background execution is not guaranteed on iPhone."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Расписания выполняются на выбранном устройстве. Точный запуск в фоне на iPhone не гарантируется."
++          }
++        }
++      }
++    },
+     "Screen catalog" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -23869,6 +24133,23 @@
+         }
+       }
+     },
++    "Start a task in any chat." : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Start a task in any chat."
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Поставьте задачу в любом чате."
++          }
++        }
++      }
++    },
+     "Start chat" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -24912,6 +25193,9 @@
+         }
+       }
+     },
++    "Text recognized on this device" : {
++
++    },
+     "Text, Markdown, JSON or a searchable PDF up to 1 MB. You can also write a note here." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -26298,6 +26582,9 @@
+         }
+       }
+     },
++    "Total: %lld" : {
++
++    },
+     "Transactions, invoices and financial reports." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -26838,6 +27125,23 @@
+           "stringUnit" : {
+             "state" : "translated",
+             "value" : "Переписка без названия"
++          }
++        }
++      }
++    },
++    "Upcoming" : {
++      "extractionState" : "manual",
++      "localizations" : {
++        "en" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Upcoming"
++          }
++        },
++        "ru" : {
++          "stringUnit" : {
++            "state" : "translated",
++            "value" : "Ближайшие запуски"
+           }
+         }
+       }
+@@ -31895,6 +32199,9 @@
+         }
+       }
+     },
++    "Всего: %lld" : {
++
++    },
+     "Вставьте код с Mac" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -36438,6 +36745,9 @@
+         }
+       }
+     },
++    "Импортировать файлы" : {
++
++    },
+     "Импортирует инструкции, память, навыки и расписания." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -46960,6 +47270,9 @@
+         }
+       }
+     },
++    "Показана часть текста. Полное содержимое доступно в оригинале файла." : {
++
++    },
+     "Показать %@" : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -53248,6 +53561,9 @@
+         }
+       }
+     },
++    "Текст распознан на устройстве" : {
++
++    },
+     "Текст, Markdown, JSON или PDF с текстовым слоем, до 1 МБ. Можно написать заметку прямо здесь." : {
+       "extractionState" : "manual",
+       "localizations" : {
+@@ -55355,6 +55671,9 @@
+           }
+         }
+       }
++    },
++    "Чтение и распознавание…" : {
++
+     },
+     "Чтение календаря" : {
+       "extractionState" : "manual",
+diff --git a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+--- a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
++++ b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+@@ -12,6 +12,9 @@
+     @Environment(\.macSheetSize) private var sheetSize
+     #endif
+     @Environment(\.scenePhase) private var scenePhase
++    #if os(iOS)
++    @Environment(\.phonePageTitle) private var pageTitle
++    #endif
+     @State private var hasAccess = false
+     @State private var checking = true
+     @State private var working = false
+@@ -33,7 +36,11 @@
+         ScrollView {
+             VStack(spacing: 24) {
+                 ApplePluginIcon(plugin: plugin, size: 64)
++                #if os(macOS)
+                 WorkspaceLocalizedText(plugin.name).font(.title2.bold())
++                #else
++                if pageTitle != store.t(plugin.name) { WorkspaceLocalizedText(plugin.name).font(.title3.weight(.semibold)) }
++                #endif
+                 WorkspaceLocalizedText(plugin.summary).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                 if !connected {
+                     Text("Доступ получат все текущие агенты команды. Результаты запросов могут передаваться выбранной вами модели. Отправка и удаление требуют отдельного подтверждения.")
+@@ -63,7 +70,11 @@
+                 .help(connected ? "Отключить приложение" : "Разрешить доступ и подключить приложение")
+                 .accessibilityIdentifier("apple.connection.toggle")
+             }
++            #if os(iOS)
++            .frame(maxWidth: 640).padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
++            #else
+             .padding(32).frame(maxWidth: .infinity)
++            #endif
+         }
+         .scrollBounceBehavior(.basedOnSize)
+         #if os(macOS)
+diff --git a/apps/shared/WorkspaceV3/WorkspaceComponents.swift b/apps/shared/WorkspaceV3/WorkspaceComponents.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceComponents.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceComponents.swift
+@@ -3,16 +3,33 @@
+ import SwiftUI
+ 
+ struct WorkspaceCard<Content: View>: View {
++    #if os(iOS)
++    @Environment(\.phonePageTitle) private var pageTitle
++    #endif
+     var padding: CGFloat = 20
+     var isButtonLabel = false
+     @ViewBuilder let content: Content
+     var body: some View {
+         VStack(alignment: .leading, spacing: 16) { content }.frame(maxWidth: .infinity, alignment: .leading).padding(padding)
+-            .background(background, in: RoundedRectangle(cornerRadius: WorkspaceStyle.radius))
++            .background(background, in: RoundedRectangle(cornerRadius: radius))
++            .overlay {
++                #if os(iOS)
++                if pageTitle != nil {
++                    RoundedRectangle(cornerRadius: radius).strokeBorder(PhoneSettingsStyle.edge)
++                }
++                #endif
++            }
++    }
++    private var radius: CGFloat {
++        #if os(iOS)
++        pageTitle != nil ? PhonePageLayout.radius : WorkspaceStyle.radius
++        #else
++        WorkspaceStyle.radius
++        #endif
+     }
+     private var background: Color {
+         #if os(iOS)
+-        isButtonLabel ? .clear : WorkspaceStyle.surface
++        pageTitle != nil ? PhoneSettingsStyle.row : isButtonLabel ? .clear : WorkspaceStyle.surface
+         #else
+         WorkspaceStyle.surface
+         #endif
+@@ -23,12 +40,18 @@
+     let title: String
+     var subtitle: String = ""
+     @Environment(WorkspaceStore.self) private var store
++    #if os(iOS)
++    @Environment(\.phonePageTitle) private var pageTitle
++    #endif
+     var body: some View {
+         VStack(alignment: .leading, spacing: 10) {
+             #if os(macOS)
+             Text(store.t(title)).font(.system(size: 24, weight: .medium)).accessibilityAddTraits(.isHeader)
+             #else
+-            Text(store.t(title)).font(.largeTitle).accessibilityAddTraits(.isHeader)
++            if pageTitle != store.t(title) {
++                Text(store.t(title)).font(pageTitle == nil ? .largeTitle : .title3.weight(.semibold))
++                    .accessibilityAddTraits(.isHeader)
++            }
+             #endif
+             if !subtitle.isEmpty { Text(store.t(subtitle)).foregroundStyle(WorkspaceStyle.secondary).fixedSize(horizontal: false, vertical: true) }
+         }.frame(maxWidth: .infinity, alignment: .leading)
+diff --git a/apps/shared/WorkspaceV3/WorkspaceForms.swift b/apps/shared/WorkspaceV3/WorkspaceForms.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceForms.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceForms.swift
+@@ -13,7 +13,11 @@
+     var name = ""
+     var instructions = ""
+     var modelID = "gigachat"
++    #if os(iOS)
++    var toolIDs: [String] = PhoneAgentDefaults.tools
++    #else
+     var toolIDs: [String] = []
++    #endif
+     var remember = true
+     var shape = "round"
+     var color = "orange"
+diff --git a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+@@ -34,8 +34,8 @@
+     var body: some View {
+         VStack(spacing: 0) {
+             header
++            #if os(macOS)
+             Divider().opacity(0.5)
+-            #if os(macOS)
+             if sheetSize.height < 560 {
+                 ScrollView { editorContent.frame(height: 420) }
+             } else { editorContent }
+@@ -62,7 +62,7 @@
+     }
+ 
+     private var editorContent: some View {
+-        VStack(alignment: .leading, spacing: 20) {
++        VStack(alignment: .leading, spacing: sectionSpacing) {
+             nameField
+             #if os(macOS)
+             HStack(alignment: .top, spacing: 24) {
+@@ -77,7 +77,23 @@
+                 Label(saveError, systemImage: "exclamationmark.triangle")
+                     .font(.callout).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
+             }
+-        }.padding(24).disabled(store.busy)
++        }.padding(pageInset).disabled(store.busy)
++    }
++
++    private var pageInset: CGFloat {
++        #if os(iOS)
++        PhonePageLayout.inset
++        #else
++        24
++        #endif
++    }
++
++    private var sectionSpacing: CGFloat {
++        #if os(iOS)
++        PhonePageLayout.sectionSpacing
++        #else
++        20
++        #endif
+     }
+ 
+     private var controlSize: CGFloat {
+@@ -89,6 +105,10 @@
+     }
+ 
+     private var header: some View {
++        #if os(iOS)
++        PhonePageHeader(title: store.t(conversationID == nil ? "New group" : "Group members"), back: { dismiss() })
++            .disabled(store.busy)
++        #else
+         HStack(spacing: 14) {
+             Image(systemName: "person.2.fill").font(.system(size: 20, weight: .medium))
+                 .frame(width: 44, height: 44).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 14))
+@@ -104,6 +124,7 @@
+                     .frame(width: controlSize, height: controlSize).contentShape(Circle())
+             }.buttonStyle(.plain).accessibilityLabel(store.t("Close")).disabled(store.busy)
+         }.padding(24)
++        #endif
+     }
+ 
+     private var nameField: some View {
+@@ -263,7 +284,7 @@
+                 }.buttonStyle(WorkspaceButtonStyle()).keyboardShortcut(.defaultAction)
+                     .disabled(store.busy || !draft.canSave)
+             }
+-        }.padding(.horizontal, 24).padding(.vertical, 18)
++        }.padding(.horizontal, pageInset).padding(.vertical, 18)
+     }
+ 
+     private var footerHint: some View {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+@@ -18,7 +18,9 @@
+     var body: some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 20) {
++                #if os(macOS)
+                 Text(store.selectedFile?.name ?? store.t("Files")).font(.title2).textSelection(.enabled)
++                #endif
+                 if let url {
+                     HStack {
+                         Button(store.t("Open file")) { preview = url }
+@@ -39,7 +41,12 @@
+                     }
+                 } else if let failure { Text(failure).foregroundStyle(WorkspaceStyle.secondary) }
+                 else { ProgressView(ru ? "Чтение и распознавание…" : "Reading and recognizing…") }
+-            }.padding(24)
++            }
++            #if os(iOS)
++            .frame(maxWidth: 640, alignment: .leading).padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
++            #else
++            .padding(24)
++            #endif
+         }
+         .quickLookPreview($preview)
+         .onChange(of: store.selectedFile?.metadata.id) { _, _ in page = 1; preview = nil }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceRootView.swift b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceRootView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+@@ -50,6 +50,25 @@
+         }
+     }
+     private func scrollingPage(height: CGFloat) -> some View {
++        scrollingContent(height: height)
++        #if os(iOS)
++        .scrollDismissesKeyboard(.interactively)
++        .scrollPosition(store.navigation.position(for: route))
++        .onAppear { store.navigation.restorePosition(for: route) }
++        .onScrollGeometryChange(for: CGFloat.self) { max(0, $0.contentOffset.y + $0.contentInsets.top) } action: { old, new in
++            if abs(old - new) > 0.5 { store.navigation.recordOffset(new, for: route) }
++        }
++        #endif
++    }
++    @ViewBuilder private func scrollingContent(height: CGFloat) -> some View {
++        #if os(iOS)
++        if PhoneWorkspacePageHeader.isUsed(on: route) { PhonePage { content } }
++        else { legacyScrollingContent(height: height) }
++        #else
++        legacyScrollingContent(height: height)
++        #endif
++    }
++    private func legacyScrollingContent(height: CGFloat) -> some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 24) { content }
+                 .padding(pagePadding)
+@@ -59,14 +78,6 @@
+                 .frame(minHeight: route == .home ? max(0, height - 1) : nil, alignment: .top)
+                 .frame(maxWidth: WorkspaceStyle.contentWidth).frame(maxWidth: .infinity, alignment: .top)
+         }
+-        #if os(iOS)
+-        .scrollDismissesKeyboard(.interactively)
+-        .scrollPosition(store.navigation.position(for: route))
+-        .onAppear { store.navigation.restorePosition(for: route) }
+-        .onScrollGeometryChange(for: CGFloat.self) { max(0, $0.contentOffset.y + $0.contentInsets.top) } action: { old, new in
+-            if abs(old - new) > 0.5 { store.navigation.recordOffset(new, for: route) }
+-        }
+-        #endif
+     }
+     private var pagePadding: CGFloat {
+         #if os(macOS)
+@@ -268,32 +279,20 @@
+         .sensoryFeedback(.error, trigger: store.error) { _, error in error != nil }
+     }
+     private func phonePage(_ route: WorkspaceRoute) -> some View {
+-        let floating = PhoneWorkspaceScreen.usesFloatingControls(route) && store.screenState == .normal
++        let unified = PhoneWorkspacePageHeader.isUsed(on: route)
++        let floating = unified || PhoneWorkspaceScreen.usesFloatingControls(route) && store.screenState == .normal
+         return PhoneWorkspaceScreen(route: route)
+             .id(route)
+             .modifier(PhoneComposerMenuOverlay())
+-            .navigationTitle(floating ? "" : (route == .file ? store.selectedFile?.name ?? store.t("Files") : PhoneSettingsCatalog.title(for: route).map { store.settingsText($0) } ?? store.t(route == .settings ? "Settings" : route.title)))
++            .environment(\.phonePageTitle, unified ? PhoneWorkspacePageHeader.title(for: route, store: store) : nil)
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if unified { PhoneWorkspacePageHeader(route: route) }
++            }
++            .navigationTitle(floating ? "" : store.t(route.title))
+             .toolbar(floating ? .hidden : .visible, for: .navigationBar)
+             .navigationBarBackButtonHidden(floating)
+-            .navigationBarTitleDisplayMode([.chats, .agents, .schedules, .settings].contains(route) ? .large : .inline)
++            .navigationBarTitleDisplayMode(!unified && [.chats, .agents, .schedules, .settings].contains(route) ? .large : .inline)
+             .toolbarBackground(.automatic, for: .navigationBar)
+-            .toolbar {
+-                ToolbarItemGroup(placement: .topBarTrailing) {
+-                    if !floating && [.agents, .schedules].contains(route) {
+-                        BlotIconButton(store.t("Create"), symbol: "plus") {
+-                            if route == .agents { store.beginAgentCreation() }
+-                            else { store.navigate(.createSchedule) }
+-                        }.labelStyle(.iconOnly)
+-                    } else if !floating && [.running, .result].contains(route) {
+-                        Menu {
+-                            Button(store.t("Task details")) { store.navigate(.running) }
+-                            Button(store.t("Review prepared action")) { store.navigate(.approval) }
+-                            Button(store.t("Result")) { store.navigate(.result) }
+-                            Button(store.t("View browser")) { store.navigate(.browser) }
+-                        } label: { BlotIcon(symbol: "ellipsis") }
+-                    }
+-                }
+-            }
+     }
+     #endif
+ }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceRoute.swift b/apps/shared/WorkspaceV3/WorkspaceRoute.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceRoute.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceRoute.swift
+@@ -4,6 +4,9 @@
+     case welcome, signIn, createAccount, verifyEmail, firstRun, firstAgent, createAgent
+     case home, chats, archivedChats, search, newChat, chat, running, approval, result, file, review
+     case skills, agents, agentProfile, editAgent, files, schedules, createSchedule
++    #if os(iOS)
++    case overview
++    #endif
+     case usage, personalization, settingsProfile, settingsStorage, settingsUpdates
+     #if os(macOS)
+     case marketplace
+@@ -36,6 +39,9 @@
+         case .files: "Files"
+         case .schedules: "Schedules"
+         case .createSchedule: "New schedule"
++        #if os(iOS)
++        case .overview: "Overview"
++        #endif
+         case .settings: "General"
+         case .appSettings: "App settings"
+         case .account: "Account"
+@@ -131,6 +137,13 @@
+         .init(platform: .ios, number: 22, file: "22-connections", route: .connections),
+         .init(platform: .ios, number: 23, file: "23-settings", route: .settings),
+         .init(platform: .ios, number: 24, file: "24-ai-models", route: .models),
+-        .init(platform: .ios, number: 25, file: "25-browser-view", route: .browser)
+-    ]
++        .init(platform: .ios, number: 25, file: "25-browser-view", route: .browser),
++    ] + phoneOverview
++    private static var phoneOverview: [Self] {
++        #if os(iOS)
++        [.init(platform: .ios, number: 26, file: "26-overview", route: .overview)]
++        #else
++        []
++        #endif
++    }
+ }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -189,9 +189,14 @@
+         self.inspectorVisible = mode == .preview
+         self.route = route ?? .welcome
+         self.rootRoute = route ?? .welcome
+-        if let route, [.chats, .agents, .files, .settings].contains(route) { self.tab = route }
+-        #if os(iOS)
+-        if mode == .preview, let route, ![WorkspaceRoute.welcome, .chats, .agents, .files, .settings].contains(route) {
++        #if os(iOS)
++        let initialTabs: [WorkspaceRoute] = [.chats, .schedules, .overview, .settings]
++        #else
++        let initialTabs: [WorkspaceRoute] = [.chats, .agents, .files, .settings]
++        #endif
++        if let route, initialTabs.contains(route) { self.tab = route }
++        #if os(iOS)
++        if mode == .preview, let route, route != .welcome && !initialTabs.contains(route) {
+             self.rootRoute = route.isAuthentication ? .welcome : .chats
+             self.history = [route]
+         }
+@@ -556,6 +561,11 @@
+         let submittedConversationID = selectedConversationID
+         let submittedComposer = form.composer
+         var input = form.requestInput(for: action)
++        #if os(iOS)
++        if [.createAgent, .saveAgent].contains(action) {
++            input.agent.toolIDs = PhoneAgentDefaults.includingBuiltInTools(input.agent.toolIDs)
++        }
++        #endif
+         if action == .send {
+             input.messageContext = currentMessageContext
+             #if os(macOS)
+@@ -607,8 +617,13 @@
+             persistChatState()
+             if mode == .preview, action == .pause { previewTaskPaused.toggle() }
+             if let next, next != route {
++                #if os(iOS)
++                if [.chats, .schedules, .overview, .settings].contains(next) { selectTab(next) }
++                else { navigate(next) }
++                #else
+                 if [.chats, .home, .agents, .schedules, .files].contains(next) { selectTab(next) }
+                 else { navigate(next) }
++                #endif
+             }
+         } catch {
+             if action == .send, let submittedConversationID { failedSends[submittedConversationID] = submittedComposer }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+@@ -6,8 +6,12 @@
+     @Environment(WorkspaceStore.self) private var store
+     @State private var goal = ""
+     private var tasks: [BlotV3.Task] {
+-        (store.snapshot.tasks ?? []).filter { $0.conversationId == store.selectedConversationID }
++        let tasks = (store.snapshot.tasks ?? []).filter { $0.conversationId == store.selectedConversationID }
+             .sorted { $0.metadata.createdAt > $1.metadata.createdAt }
++        #if os(iOS)
++        if let selected = tasks.first(where: { $0.metadata.id == store.selectedRecordID }) { return [selected] }
++        #endif
++        return tasks
+     }
+     var body: some View {
+         VStack(alignment: .leading, spacing: 18) {
+diff --git a/apps/verification/WorkspacePresentationTests/PhoneAgentDefaultsTests.swift b/apps/verification/WorkspacePresentationTests/PhoneAgentDefaultsTests.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/verification/WorkspacePresentationTests/PhoneAgentDefaultsTests.swift
+@@ -0,0 +1,29 @@
++import Foundation
++import XCTest
++
++@MainActor
++final class PhoneAgentDefaultsTests: XCTestCase {
++    func testAgentSavesBuiltInToolsAndKeepsConnectedAppTools() async throws {
++        let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
++        let service = try LocalWorkspaceService(databaseURL: directory.appendingPathComponent("workspace.sqlite"))
++        let store = WorkspaceStore(mode: .live, service: service)
++        await store.loadWorkspace()
++        store.beginAgentCreation()
++        store.form.agent.name = "Researcher"
++        store.form.agent.instructions = "Prepare reports"
++        store.form.agent.toolIDs = ["apple_calendar_read"]
++        await store.perform(.createAgent)
++        XCTAssertNil(store.error)
++        let agentID = try XCTUnwrap(store.selectedAgentID)
++        let revision = try XCTUnwrap(store.snapshot.configurations?.first { $0.agentId == agentID })
++        XCTAssertEqual(Set(revision.toolIds), ["file_read", "document_create", "memory_candidate", "apple_calendar_read"])
++        store.selectAgent(agentID, destination: .editAgent)
++        store.form.agent.name = "Updated researcher"
++        await store.perform(.saveAgent)
++        XCTAssertNil(store.error)
++        let updated = try XCTUnwrap(store.snapshot.configurations?.filter { $0.agentId == agentID }.max { $0.revision < $1.revision })
++        XCTAssertEqual(Set(updated.toolIds), Set(revision.toolIds))
++        try await service.close()
++        try FileManager.default.removeItem(at: directory)
++    }
++}
+diff --git a/apps/verification/WorkspacePresentationTests/PhoneOverviewContentTests.swift b/apps/verification/WorkspacePresentationTests/PhoneOverviewContentTests.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/verification/WorkspacePresentationTests/PhoneOverviewContentTests.swift
+@@ -0,0 +1,47 @@
++import BlotDomain
++import Foundation
++import XCTest
++
++@MainActor
++final class PhoneOverviewContentTests: XCTestCase {
++    func testWorkFromDifferentChatsAppearsAndCanceledWorkStaysOut() throws {
++        let tasks = try BlotV3.TaskState.allCases.map { state in
++            let id = UUID()
++            return try BlotV3.Task(metadata: metadata(id: id),
++                execution: .init(executorDeviceId: UUID(), originDeviceId: UUID(), taskId: id, revision: 1),
++                conversationId: UUID(), goal: state.rawValue, state: state, plan: [])
++        }
++        var snapshot = WorkspaceSnapshot()
++        snapshot.tasks = tasks
++        let content = PhoneOverviewContent(snapshot: snapshot, now: .now)
++        XCTAssertEqual(Set(content.attention.map(\.state)), [.waiting_approval, .waiting_user, .interrupted, .failed])
++        XCTAssertEqual(Set(content.active.map(\.state)), [.draft, .planning, .queued, .running, .paused])
++        XCTAssertEqual(content.completed.map(\.state), [.completed])
++        XCTAssertEqual(Set((content.attention + content.active + content.completed).map(\.conversationId)).count, tasks.count - 1)
++    }
++
++    func testUpcomingRunsRespectTimeZonesAndSkipDisabledOrPastSchedules() throws {
++        let now = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-07T06:00:00Z"))
++        var snapshot = WorkspaceSnapshot()
++        snapshot.schedules = [
++            try schedule("Later", time: "12:00", timezone: "Asia/Yekaterinburg"),
++            try schedule("Sooner", time: "09:30", timezone: "Europe/Moscow"),
++            try schedule("Disabled", time: "11:15", timezone: "Asia/Yekaterinburg", enabled: false),
++            try schedule("Past", time: "11:00", timezone: "Asia/Yekaterinburg", scheduledAt: now.addingTimeInterval(-60))
++        ]
++        let content = PhoneOverviewContent(snapshot: snapshot, now: now)
++        XCTAssertEqual(content.upcoming.map(\.schedule.name), ["Sooner", "Later"])
++        XCTAssertEqual(content.upcoming.map { $0.date.timeIntervalSince(now) }, [1800, 3600])
++    }
++
++    private func metadata(id: UUID = UUID()) throws -> BlotV3.RecordMetadata {
++        try .init(id: id, ownerId: UUID(), version: 1, createdAt: .now, updatedAt: .now)
++    }
++
++    private func schedule(_ name: String, time: String, timezone: String, enabled: Bool = true,
++                          scheduledAt: Date? = nil) throws -> BlotV3.Automation {
++        try .init(metadata: metadata(), kind: .task, name: name, goal: "Prepare report", timezone: timezone,
++                  localTime: time, weekdays: [1, 2, 3, 4, 5, 6, 7], missedRunPolicy: .coalesce,
++                  enabled: enabled, scheduledAt: scheduledAt)
++    }
++}
+diff --git a/apps/verification/WorkspacePresentationTests/PhonePageRenderingTests.swift b/apps/verification/WorkspacePresentationTests/PhonePageRenderingTests.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/verification/WorkspacePresentationTests/PhonePageRenderingTests.swift
+@@ -0,0 +1,38 @@
++import SwiftUI
++import UIKit
++import XCTest
++
++@MainActor
++final class PhonePageRenderingTests: XCTestCase {
++    func testRenderWorkspacePagesOnPhysicalDevice() async throws {
++        let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
++        let previous = scene.windows.first(where: \.isKeyWindow)
++        let window = UIWindow(windowScene: scene)
++        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
++        let samples: [(WorkspaceRoute, Bool, Int)] = [
++            (.overview, false, 0), (.schedules, false, 0), (.settings, false, 0),
++            (.settingsProfile, false, 0), (.files, false, 0), (.createSchedule, false, 0),
++            (.createAgent, false, 0), (.schedules, false, 1), (.overview, true, 0)
++        ]
++        for (route, accessibility, dayOffset) in samples {
++            let store = WorkspaceStore(mode: .preview, route: route)
++            store.language = "ru"
++            store.navigation.scheduleDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: .now) ?? .now
++            let host = UIHostingController(rootView: WorkspaceRootView(store: store)
++                .preferredColorScheme(accessibility ? .dark : .light)
++                .environment(\.dynamicTypeSize, accessibility ? .accessibility1 : .large))
++            window.rootViewController = host
++            window.makeKeyAndVisible()
++            try await _Concurrency.Task.sleep(for: .milliseconds(350))
++            host.view.layoutIfNeeded()
++            XCTAssertFalse(host.view.bounds.isEmpty)
++            let image = UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
++                window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
++            }
++            let attachment = XCTAttachment(image: image)
++            attachment.name = "iPhone-\(route.rawValue)-\(dayOffset)" + (accessibility ? "-large-dark" : "")
++            attachment.lifetime = .keepAlways
++            add(attachment)
++        }
++    }
++}
+diff --git a/apps/verification/WorkspacePresentationTests/PhoneScheduleDayContentTests.swift b/apps/verification/WorkspacePresentationTests/PhoneScheduleDayContentTests.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/verification/WorkspacePresentationTests/PhoneScheduleDayContentTests.swift
+@@ -0,0 +1,36 @@
++import BlotDomain
++import Foundation
++import XCTest
++
++@MainActor
++final class PhoneScheduleDayContentTests: XCTestCase {
++    func testSelectingAnotherDayChangesRunsAndKeepsPausedSchedulesVisible() throws {
++        var calendar = Calendar(identifier: .gregorian)
++        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Yekaterinburg"))
++        let monday = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-09T06:00:00Z"))
++        let tuesday = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: monday))
++        let schedules = try [schedule("Monday", weekdays: [1]), schedule("Tuesday", weekdays: [2], enabled: false)]
++        let first = PhoneScheduleDayContent(schedules: schedules, day: monday, calendar: calendar)
++        let second = PhoneScheduleDayContent(schedules: schedules, day: tuesday, calendar: calendar)
++        XCTAssertEqual(first.runs.map(\.schedule.name), ["Monday"])
++        XCTAssertEqual(second.runs.map(\.schedule.name), ["Tuesday"])
++        XCTAssertFalse(try XCTUnwrap(second.runs.first).schedule.enabled)
++    }
++
++    func testRunBelongsToTheVisibleDayAcrossTimeZones() throws {
++        var calendar = Calendar(identifier: .gregorian)
++        calendar.timeZone = try XCTUnwrap(TimeZone(identifier: "Asia/Yekaterinburg"))
++        let monday = try XCTUnwrap(ISO8601DateFormatter().date(from: "2026-11-09T06:00:00Z"))
++        let tuesday = try XCTUnwrap(calendar.date(byAdding: .day, value: 1, to: monday))
++        let late = try schedule("Late Moscow run", weekdays: [1], time: "23:30", timezone: "Europe/Moscow")
++        XCTAssertTrue(PhoneScheduleDayContent(schedules: [late], day: monday, calendar: calendar).runs.isEmpty)
++        XCTAssertEqual(PhoneScheduleDayContent(schedules: [late], day: tuesday, calendar: calendar).runs.count, 1)
++    }
++
++    private func schedule(_ name: String, weekdays: [Int], enabled: Bool = true, time: String = "08:30",
++                          timezone: String = "Asia/Yekaterinburg") throws -> BlotV3.Automation {
++        try .init(metadata: .init(id: UUID(), ownerId: UUID(), version: 1, createdAt: .now, updatedAt: .now),
++                  kind: .task, name: name, goal: "Report", timezone: timezone, localTime: time,
++                  weekdays: weekdays, missedRunPolicy: .coalesce, enabled: enabled)
++    }
++}
+diff --git a/apps/verification/WorkspacePresentationTests/PhoneTabNavigationTests.swift b/apps/verification/WorkspacePresentationTests/PhoneTabNavigationTests.swift
+--- a/apps/verification/WorkspacePresentationTests/PhoneTabNavigationTests.swift
++++ b/apps/verification/WorkspacePresentationTests/PhoneTabNavigationTests.swift
+@@ -6,7 +6,7 @@
+     func testReturningToEachSectionOpensItsRoot() {
+         let store = WorkspaceStore(mode: .preview, route: .chats)
+         let destinations: [(WorkspaceRoute, WorkspaceRoute)] = [
+-            (.settings, .notifications), (.files, .file), (.agents, .agentProfile)
++            (.settings, .notifications), (.schedules, .createSchedule), (.overview, .files)
+         ]
+         for (tab, detail) in destinations {
+             store.selectTab(tab)
+@@ -45,7 +45,7 @@
+         let count = store.snapshot.conversations.count
+         store.openConversation(id)
+         store.form.composer.draft = "Keep this unsent message"
+-        store.selectTab(.files)
++        store.selectTab(.overview)
+         XCTAssertNil(store.selectedConversationID)
+         store.selectTab(.chats)
+         XCTAssertEqual(store.route, .chats)
+@@ -53,4 +53,27 @@
+         store.openConversation(id)
+         XCTAssertEqual(store.form.composer.draft, "Keep this unsent message")
+     }
++
++    func testFilesReturnToTheirEntrySection() {
++        let store = WorkspaceStore(mode: .preview, route: .chats)
++        for tab in [WorkspaceRoute.settings, .overview] {
++            store.selectTab(tab)
++            store.navigate(.files)
++            store.navigate(.file)
++            store.back()
++            XCTAssertEqual(store.route, .files)
++            store.back()
++            XCTAssertEqual(store.route, tab)
++            XCTAssertEqual(store.tab, tab)
++        }
++    }
++
++    func testPreviewStartsAtTheNewTabRoots() {
++        for route in [WorkspaceRoute.schedules, .overview] {
++            let store = WorkspaceStore(mode: .preview, route: route)
++            XCTAssertEqual(store.rootRoute, route)
++            XCTAssertEqual(store.tab, route)
++            XCTAssertTrue(store.history.isEmpty)
++        }
++    }
+ }

@@ -8,7 +8,7 @@ import java.time.*;
 import java.util.*;
 
 public final class CloudAccounts {
-  public record Account(UUID id, String email, String name, boolean verified) {}
+  public record Account(UUID id, String email, String name, boolean verified, String avatarURL) {}
 
   private record Credentials(UUID id, String hash, boolean verified) {}
 
@@ -50,7 +50,8 @@ public final class CloudAccounts {
               if (existing.isPresent()) return existing.get();
               UUID id = UUID.randomUUID();
               tx.execute(
-                  "INSERT INTO accounts(id, email, password_hash, name, created_at) VALUES (?, ?, ?, ?, ?)",
+                  "INSERT INTO accounts(id, email, password_hash, name, created_at) VALUES (?, ?,"
+                      + " ?, ?, ?)",
                   id,
                   email,
                   hash,
@@ -85,7 +86,8 @@ public final class CloudAccounts {
           if (first) {
             var registration =
                 tx.one(
-                        "SELECT registration_hash, registration_name FROM email_challenges WHERE owner_id = ? AND purpose = 'verify'",
+                        "SELECT registration_hash, registration_name FROM email_challenges WHERE"
+                            + " owner_id = ? AND purpose = 'verify'",
                         r -> new String[] {r.getString(1), r.getString(2)},
                         owner)
                     .orElseThrow(() -> new CloudFailure(400, "code_expired_or_invalid"));
@@ -166,17 +168,44 @@ public final class CloudAccounts {
         });
   }
 
+  public void requestDeletion(CloudActor actor) {
+    Account account = me(actor);
+    challenges.send(actor.ownerID(), account.email(), "delete");
+  }
+
+  public void deleteAccount(CloudActor actor, String code) {
+    challenges.consume(
+        actor.ownerID(),
+        "delete",
+        code,
+        tx -> {
+          boolean authorized =
+              tx.one(
+                      "SELECT id FROM sessions WHERE id = ? AND owner_id = ? AND revoked = 0 AND"
+                          + " access_expires > ?",
+                      r -> r.getString(1),
+                      actor.sessionID(),
+                      actor.ownerID(),
+                      clock.instant())
+                  .isPresent();
+          if (!authorized) throw new CloudFailure(401, "session_expired");
+          CloudAccountRemoval.remove(tx, actor);
+          return Boolean.TRUE;
+        });
+  }
+
   public Account me(CloudActor actor) {
     return database.transact(
         tx ->
             tx.one(
-                    "SELECT id, email, name, verified FROM accounts WHERE id = ?",
+                    "SELECT id, email, name, verified, avatar_url FROM accounts WHERE id = ?",
                     r ->
                         new Account(
                             UUID.fromString(r.getString(1)),
                             r.getString(2),
                             r.getString(3),
-                            r.getInt(4) != 0),
+                            r.getInt(4) != 0,
+                            r.getString(5)),
                     actor.ownerID())
                 .orElseThrow(() -> new CloudFailure(401, "session_expired")));
   }

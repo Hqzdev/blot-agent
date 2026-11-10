@@ -168,7 +168,7 @@ struct MacTeamItemEditor: View {
             Divider()
             VStack(alignment: .leading, spacing: 18) {
                 if kind == .skills { TextField("Название навыка", text: $title) }
-                Text(kind == .memory ? "Что нужно запомнить?" : "Инструкции и шаги").fontWeight(.medium)
+                WorkspaceLocalizedText(kind == .memory ? "Что нужно запомнить?" : "Инструкции и шаги").fontWeight(.medium)
                 TextEditor(text: $text).font(.system(size: 13)).frame(height: 180).scrollContentBackground(.hidden)
                     .padding(10).background(MacTeamStyle.field, in: RoundedRectangle(cornerRadius: 14))
                 MacTeamSelect(

@@ -15,6 +15,7 @@ struct PhoneFilesContent: View {
         let visibleFiles = files
         VStack(alignment: .leading, spacing: 20) {
             WorkspaceHeading(title: "Files", subtitle: "Workspace results and documents")
+            WorkspaceFilesImportButton()
             search
             if visibleFiles.isEmpty {
                 if query.isEmpty { WorkspaceDataState(state: .empty) }
@@ -44,18 +45,6 @@ struct PhoneFilesContent: View {
 
     private var search: some View {
         @Bindable var navigation = store.navigation
-        return HStack(spacing: 10) {
-            BlotIcon(symbol: "magnifyingglass").foregroundStyle(WorkspaceStyle.secondary)
-            TextField(store.t("Search files"), text: $navigation.filesQuery)
-                .textFieldStyle(.plain).autocorrectionDisabled().textInputAutocapitalization(.never)
-                .submitLabel(.search).accessibilityLabel(store.t("Search files"))
-            if !store.navigation.filesQuery.isEmpty {
-                Button { store.navigation.filesQuery = "" } label: {
-                    BlotIcon(symbol: "xmark.circle.fill", size: 17).foregroundStyle(WorkspaceStyle.secondary)
-                }.buttonStyle(.plain).accessibilityLabel(store.t("Clear search"))
-            }
-        }
-        .padding(.horizontal, 16).frame(minHeight: 48)
-        .glassEffect(.regular.interactive(), in: .capsule)
+        return PhonePageSearchField(placeholder: store.t("Search files"), text: $navigation.filesQuery)
     }
 }

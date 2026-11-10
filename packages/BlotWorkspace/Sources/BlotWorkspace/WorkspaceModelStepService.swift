@@ -28,7 +28,7 @@ public struct WorkspaceModelStepService: Sendable {
                       let executionMode = task.executionMode else { throw WorkspaceStorageError.permissionDenied }
                 mode = executionMode
                 // Delegated work must acquire and fence a server lease before a runtime can run it.
-                guard mode == .local_owned, task.execution.originDeviceId == tx.identity.deviceID else { throw WorkspaceStorageError.permissionDenied }
+                guard (mode == .local_owned && task.execution.originDeviceId == tx.identity.deviceID) || (mode == .delegated && task.authorizationJSON != nil) else { throw WorkspaceStorageError.permissionDenied }
             }
             let step = try BlotV3.ModelStep(metadata: tx.metadata(id: id, now: now), conversationId: saved.conversationId,
                 sourceMessageId: saved.metadata.id, responseMessageId: responseID, taskId: taskID,

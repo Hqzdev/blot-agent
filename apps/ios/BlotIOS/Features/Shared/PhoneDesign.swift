@@ -100,6 +100,6 @@ struct PhoneSectionHeader: View {
     let title: String
     init(_ title: String) { self.title = title }
     var body: some View {
-        Text(title).blotFont(.caption, weight: .medium).foregroundStyle(BlotColor.textSecondary).textCase(nil)
+        WorkspaceLocalizedText(title).blotFont(.caption, weight: .medium).foregroundStyle(BlotColor.textSecondary).textCase(nil)
     }
 }

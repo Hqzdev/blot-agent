@@ -130,7 +130,7 @@ struct MacTeamAgentEditor: View {
     }
     private func field<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(title).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
+            WorkspaceLocalizedText(title).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
             content()
         }.textFieldStyle(MacTeamTextFieldStyle())
     }

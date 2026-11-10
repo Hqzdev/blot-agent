@@ -7,7 +7,7 @@ struct MacTeamInspector: View {
         @Bindable var presentation = presentation
         VStack(spacing: 0) {
             HStack {
-                Text(presentation.group == nil ? "Об агенте" : "О группе").font(.system(size: 12, weight: .medium))
+                WorkspaceLocalizedText(presentation.group == nil ? "Об агенте" : "О группе").font(.system(size: 12, weight: .medium))
                     .foregroundStyle(.secondary)
                 Spacer()
             }.padding(.horizontal, 16).frame(height: 52)
@@ -72,7 +72,7 @@ struct MacTeamInspector: View {
                                 .foregroundStyle(WorkspaceStyle.ink)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(routine.title).font(.system(size: 12, weight: .medium))
-                                Text(routine.enabled ? routine.schedule : "Приостановлено").font(.system(size: 10))
+                                WorkspaceLocalizedText(routine.enabled ? routine.schedule : "Приостановлено").font(.system(size: 10))
                                     .foregroundStyle(.secondary)
                             }
                             Spacer(minLength: 0)

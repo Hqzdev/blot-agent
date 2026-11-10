@@ -80,7 +80,7 @@ struct MacTeamCreateMenu: View {
         MacTeamNavigationButton { create(sheet) } label: {
             HStack(spacing: 6) {
                 BlotIcon(glyph, size: BlotIconSize.control)
-                Text(title).font(.system(size: 12, weight: .medium))
+                WorkspaceLocalizedText(title).font(.system(size: 12, weight: .medium))
             }
         }.accessibilityLabel(title == "Агент" ? "Новый агент" : "Новый групповой чат")
     }

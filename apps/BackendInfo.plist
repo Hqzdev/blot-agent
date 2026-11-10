@@ -5,6 +5,7 @@
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_blot._tcp</string>
+		<string>_blot-pair._tcp</string>
 	</array>
 	<key>CFBundleURLTypes</key>
 	<array>

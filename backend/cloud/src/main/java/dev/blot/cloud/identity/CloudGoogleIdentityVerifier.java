@@ -13,7 +13,7 @@ import java.util.*;
 
 /** Google signs the identity; email text supplied by the browser never identifies an account. */
 public final class CloudGoogleIdentityVerifier {
-  public record Identity(String subject, String email, String name) {}
+  public record Identity(String subject, String email, String name, String avatarURL) {}
 
   @FunctionalInterface
   public interface SigningKeys {
@@ -84,7 +84,11 @@ public final class CloudGoogleIdentityVerifier {
           claims.get("name") instanceof String value && !value.isBlank() && value.length() <= 200
               ? value
               : email;
-      return new Identity(subject, CloudTokens.email(email), name);
+      return new Identity(
+          subject,
+          CloudTokens.email(email),
+          name,
+          CloudProfileAvatar.google(claims.get("picture")));
     } catch (CloudFailure failure) {
       throw failure;
     } catch (Exception failure) {

@@ -1,13 +1,24 @@
 import BlotDomain
+import BlotWorkspace
 import Foundation
 
-struct WorkspaceSnapshot: Codable, Equatable {
+struct WorkspaceSnapshot: Codable, Equatable, Sendable {
+    var projects: [BlotV3.Project]?
+    var pairedDevices: [WorkspacePairedDevice]?
+    var messagePins: [WorkspaceMessagePin]?
+    var pinnedGroupPlans: [UUID: UUID]?
+    var toolInvocations: [BlotV3.ToolInvocation]?
+    var tasks: [BlotV3.Task]?
+    var automationRuns: [BlotV3.AutomationRun]?
+    var scheduleFailures: [UUID]?
+    var preparedActions: [BlotV3.PreparedAction]?
     var modelSteps: [BlotV3.ModelStep]?
     var ownerID: UUID?
     var localDeviceID: UUID?
     var participants: [BlotV3.ConversationParticipant]?
     var reactions: [BlotV3.MessageReaction]?
     var readPositions: [BlotV3.ConversationReadPosition]?
+    var skillAssignments: [WorkspaceSkillAssignment]?
     var skills: [BlotV3.Skill]?
     var skillRevisions: [BlotV3.SkillRevision]?
     var configurations: [BlotV3.AgentConfigurationRevision]?
