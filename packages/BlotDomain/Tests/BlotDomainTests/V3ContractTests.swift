@@ -13,7 +13,14 @@ private func checkRecord<T: Codable & Equatable>(_ type: T.Type, name: String) t
     let value = try decoder.decode(type, from: data)
     let encoded = try encoder.encode(value)
     #expect(try decoder.decode(type, from: encoded) == value)
-    #expect(try (JSONSerialization.jsonObject(with: data) as! NSDictionary) == (JSONSerialization.jsonObject(with: encoded) as! NSDictionary))
+    var original = try JSONSerialization.jsonObject(with: data) as! [String: Any]
+    var serialized = try JSONSerialization.jsonObject(with: encoded) as! [String: Any]
+    // The additive delegation proof may be absent or null in legacy task records.
+    if name == "Task" {
+        if original["authorizationJSON"] is NSNull { original.removeValue(forKey: "authorizationJSON") }
+        if serialized["authorizationJSON"] is NSNull { serialized.removeValue(forKey: "authorizationJSON") }
+    }
+    #expect((original as NSDictionary) == (serialized as NSDictionary))
 }
 @Test func v3PublicRecordsShareTheWireShape() throws {
     try checkRecord(BlotV3.Project.self, name: "Project")

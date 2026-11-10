@@ -23,5 +23,6 @@
   "parentTaskId": null,
   "skillRevisionId": null,
   "budgetTokenLimit": null,
-  "executionMode": null
+  "executionMode": null,
+  "authorizationJSON": null
 }

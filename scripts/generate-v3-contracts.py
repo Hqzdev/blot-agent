@@ -73,8 +73,6 @@ for name,fields in spec['models'].items():
         fixture['metadata']['workspaceId'] = None if name in ['Account','Device','TrustedPair'] else ids['Workspace']
         if isinstance(fixture.get('execution'), dict):
             fixture['execution'].update(executorDeviceId=ids['Device'],originDeviceId=ids['Device'],taskId=ids['Task'])
-        if name == 'Task' and fixture.get('authorizationJSON') is None:
-            fixture.pop('authorizationJSON', None)
         (ROOT/f'fixtures/v3/{name}.json').write_text(json.dumps(fixture,indent=2)+'\n')
 swift_parts.append('extension BlotV3 {\n    public enum ValidationError: Error { case negative(String) }\n}')
 (swift/'Models.swift').write_text('\n\n'.join(swift_parts)+'\n')
