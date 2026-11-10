@@ -1,0 +1,22 @@
+name: Windows client
+on:
+  push:
+    branches: ['windows/**']
+    paths: ['apps/windows/**', 'backend/client/**', 'backend/core/src/main/java/dev/blot/core/v3/**', 'fixtures/v3/**', '.github/workflows/windows-client.yml']
+  pull_request:
+    paths: ['apps/windows/**', 'backend/client/**', 'backend/core/src/main/java/dev/blot/core/v3/**', 'fixtures/v3/**', '.github/workflows/windows-client.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-2025
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+      - name: Test shared records and build distribution
+        working-directory: apps/windows/Blot
+        run: ./gradlew.bat --no-daemon test installDist
