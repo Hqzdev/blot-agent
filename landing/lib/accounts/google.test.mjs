@@ -15,6 +15,11 @@ test("Google identities require a trusted signature, audience, issuer, nonce, ex
       exp: Math.floor(Date.now() / 1000) + 300, ...overrides }).setProtectedHeader({ alg: "RS256", kid: "test" }).sign(signingKey);
   }
   assert.equal((await verifier.verify(await token(), nonce)).subject, "google-person");
+  const picture = "https://lh3.googleusercontent.com/profile-photo";
+  assert.equal((await verifier.verify(await token({ picture }), nonce)).avatarURL, picture);
+  for (const picture of ["http://lh3.googleusercontent.com/photo", "https://localhost/photo", "https://lh3.googleusercontent.com.attacker.org/photo"]) {
+    assert.equal((await verifier.verify(await token({ picture }), nonce)).avatarURL, null);
+  }
   for (const claims of [{ aud: "another-client" }, { iss: "https://attacker.org" }, { nonce: randomToken() },
     { exp: 1 }, { email_verified: false }, { email: "invalid" }]) {
     await assert.rejects(verifier.verify(await token(claims), nonce), error => error.code === "google_identity_invalid");

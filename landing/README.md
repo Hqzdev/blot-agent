@@ -16,6 +16,16 @@ npm run start
 
 Open `http://localhost:3000`.
 
+For local accounts and passwordless email sign-in:
+
+```sh
+npm run dev:local
+```
+
+Open `http://127.0.0.1:3000/login`. Accounts and the local session secret persist in ignored `.build/` storage. SMTP settings are loaded from the repository’s `.env`; `node scripts/verify-email.mjs` checks TLS and authentication without sending mail. Google requires this local callback to be allowed in its OAuth client: `http://127.0.0.1:3000/auth/google/callback`. Yandex requires its client ID, client secret, callback, and PostgreSQL configuration. Unconfigured providers explain the problem and offer email sign-in.
+
+Email registration asks for a name and email, then a six-digit code. Sign-in asks for email and a code. Codes expire after 10 minutes, allow five guesses, can be used once, and have a 60-second resend cooldown. Existing native password endpoints remain supported. The website supports Russian and English and follows device appearance by default, with explicit System, Light, and Dark choices.
+
 ## Landing structure
 
 - `app/page.jsx` owns the page metadata and route.

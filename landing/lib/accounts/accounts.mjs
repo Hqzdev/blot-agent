@@ -67,5 +67,5 @@ export class Accounts {
     });
   }
 
-  profile(account) { return { id: account.id, email: account.email, name: account.name, verified: account.verified }; }
+  profile(account) { return { id: account.id, email: account.email, name: account.name, verified: account.verified, avatarURL: account.avatar_url ?? null }; }
 }

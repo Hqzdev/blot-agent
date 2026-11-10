@@ -1,4 +1,5 @@
 import { createRemoteJWKSet, jwtVerify } from "jose";
+import { providerAvatarURL } from "./profile-avatar.mjs";
 import { AuthError } from "../auth/errors.mjs";
 import { emailAddress, equal, validToken } from "./security.mjs";
 
@@ -17,7 +18,7 @@ export class GoogleAccountIdentity {
           || typeof payload.sub !== "string" || !payload.sub || payload.sub.length > 255) throw new Error();
       const email = emailAddress(payload.email);
       const name = typeof payload.name === "string" && payload.name.trim() ? payload.name.trim().slice(0, 200) : email;
-      return { subject: payload.sub, email, name };
+      return { subject: payload.sub, email, name, avatarURL: providerAvatarURL(payload.picture, "google") };
     } catch (error) {
       if (error.code === "ERR_JWKS_TIMEOUT" || error instanceof TypeError && error.message === "fetch failed") throw new AuthError("google_unavailable", 503);
       throw new AuthError("google_identity_invalid", 401);

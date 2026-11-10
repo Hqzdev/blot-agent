@@ -47,6 +47,11 @@ export function yandexConfiguration() {
 }
 
 export async function accountRequest(path, { body, accessToken, method = "POST", clientIP } = {}) {
+  if (process.env.NODE_ENV === "development" && process.env.BLOT_LOCAL_ACCOUNTS === "1") {
+    const { developmentDatabase } = await import("../accounts/development-database.mjs");
+    const { localAccountService } = await import("../accounts/service.mjs");
+    return localAccountService(developmentDatabase()).request(path, { body, accessToken, method, clientIP });
+  }
   if (process.env.DATABASE_URL) {
     const { localAccountService } = await import("../accounts/service.mjs");
     return localAccountService().request(path, { body, accessToken, method, clientIP });

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS blot_accounts (
 );
 ALTER TABLE blot_accounts ADD COLUMN IF NOT EXISTS yandex_subject text;
 CREATE UNIQUE INDEX IF NOT EXISTS blot_accounts_yandex_subject ON blot_accounts(yandex_subject);
+ALTER TABLE blot_accounts ADD COLUMN IF NOT EXISTS avatar_url text;
 CREATE TABLE IF NOT EXISTS blot_sessions (
   id uuid PRIMARY KEY,
   owner_id uuid NOT NULL REFERENCES blot_accounts(id) ON DELETE CASCADE,
@@ -23,7 +24,7 @@ CREATE INDEX IF NOT EXISTS blot_sessions_owner ON blot_sessions(owner_id);
 CREATE TABLE IF NOT EXISTS blot_email_challenges (
   id uuid PRIMARY KEY,
   owner_id uuid NOT NULL REFERENCES blot_accounts(id) ON DELETE CASCADE,
-  purpose text NOT NULL CHECK (purpose IN ('verify', 'reset')),
+  purpose text NOT NULL CHECK (purpose IN ('verify', 'reset', 'delete', 'signin')),
   code_hash text NOT NULL,
   expires_at timestamptz NOT NULL,
   attempts integer NOT NULL DEFAULT 0,
@@ -62,3 +63,6 @@ CREATE TABLE IF NOT EXISTS blot_workspace_backup_parts (
   payload bytea NOT NULL CHECK (octet_length(payload) BETWEEN 1 AND 524288),
   PRIMARY KEY(snapshot_id, part)
 );
+
+ALTER TABLE blot_email_challenges DROP CONSTRAINT IF EXISTS blot_email_challenges_purpose_check;
+ALTER TABLE blot_email_challenges ADD CONSTRAINT blot_email_challenges_purpose_check CHECK (purpose IN ('verify', 'reset', 'delete', 'signin'));

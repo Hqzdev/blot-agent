@@ -1,42 +1,34 @@
 "use client";
 
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { readThemePreference, THEME_STORAGE_KEY } from "@/lib/landing/theme";
 
 export function useTheme() {
-  const [dark, setDark] = useState(false);
-  const preference = useRef(null);
-
+  const [theme, setTheme] = useState("system");
   useLayoutEffect(() => {
-    const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
-    const syncTheme = () => {
-      const theme = preference.current ?? (systemTheme.matches ? "dark" : "light");
-      document.documentElement.dataset.theme = theme;
-      setDark(theme === "dark");
+    const system = window.matchMedia("(prefers-color-scheme: dark)");
+    const sync = () => {
+      const preference = readThemePreference();
+      document.documentElement.dataset.theme = preference === "system" ? system.matches ? "dark" : "light" : preference;
+      setTheme(preference);
     };
-    const syncStorage = event => {
-      if (event.key !== THEME_STORAGE_KEY && event.key !== null) return;
-      preference.current = readThemePreference();
-      syncTheme();
-    };
-
-    preference.current = readThemePreference();
-    syncTheme();
-    systemTheme.addEventListener("change", syncTheme);
-    window.addEventListener("storage", syncStorage);
+    const storage = event => { if (event.key === THEME_STORAGE_KEY || event.key === null) sync(); };
+    sync();
+    system.addEventListener("change", sync);
+    window.addEventListener("storage", storage);
+    window.addEventListener("blot-theme-change", sync);
     return () => {
-      systemTheme.removeEventListener("change", syncTheme);
-      window.removeEventListener("storage", syncStorage);
+      system.removeEventListener("change", sync);
+      window.removeEventListener("storage", storage);
+      window.removeEventListener("blot-theme-change", sync);
     };
   }, []);
 
-  function toggleTheme() {
-    const theme = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
-    preference.current = theme;
-    document.documentElement.dataset.theme = theme;
-    setDark(theme === "dark");
-    try { localStorage.setItem(THEME_STORAGE_KEY, theme); } catch {}
+  function changeTheme(value) {
+    try { localStorage.setItem(THEME_STORAGE_KEY, value); } catch {}
+    document.documentElement.dataset.theme = value === "system" ? window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light" : value;
+    setTheme(value);
+    window.dispatchEvent(new Event("blot-theme-change"));
   }
-
-  return { dark, toggleTheme };
+  return { theme, changeTheme };
 }

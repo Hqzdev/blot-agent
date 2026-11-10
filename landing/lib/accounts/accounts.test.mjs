@@ -273,3 +273,117 @@ test("Yandex schema upgrade is repeatable and preserves existing accounts and se
       VALUES ($1, $2, $3, $4, $5)`, [randomUUID(), randomUUID(), "other@example.org", "Other", "unique-yandex"]), error => error.code === "23505");
   } finally { await legacyPool.close(); }
 });
+
+test("Provider portraits are returned by me and refreshed for an existing Google or Yandex identity", async () => {
+  for (const provider of ["google", "yandex"]) {
+    const identity = { subject: randomUUID(), email: `${randomUUID()}@example.org`, name: "Avatar owner", avatarURL: "https://lh3.googleusercontent.com/photo-a" };
+    const accounts = new AccountService({ database, email: {}, challengeSecret: randomToken(),
+      [provider + "Identity"]: { async verify() { return identity; } } });
+    const first = await accounts.request(provider + "/login");
+    const me = () => accounts.request("me", { method: "GET", accessToken: first.accessToken });
+    assert.equal((await me()).avatarURL, identity.avatarURL);
+    identity.avatarURL = provider === "google" ? "https://lh3.googleusercontent.com/photo-b" : "https://avatars.yandex.net/get-yapic/123/islands-200";
+    const second = await accounts.request(provider + "/login");
+    assert.equal(second.ownerID, first.ownerID);
+    assert.equal((await me()).avatarURL, identity.avatarURL);
+    identity.avatarURL = null;
+    await accounts.request(provider + "/login");
+    assert.equal((await me()).avatarURL, null);
+  }
+});
+
+test("Avatar schema upgrade preserves existing accounts and sessions and can run twice", async () => {
+  const legacyPool = new TestPostgresPool();
+  try {
+    const legacyDatabase = new AccountDatabase(legacyPool);
+    const options = { database: legacyDatabase, email: {}, challengeSecret: randomToken(),
+      googleIdentity: { async verify() { return { subject: "avatar-migration", email: "avatar-migration@example.org", name: "Existing" }; } } };
+    const original = new AccountService(options);
+    const session = await original.request("google/login");
+    await legacyPool.query("ALTER TABLE blot_accounts DROP COLUMN avatar_url");
+    const upgraded = new AccountService({ ...options, database: new AccountDatabase(legacyPool) });
+    const value = await upgraded.request("me", { method: "GET", accessToken: session.accessToken });
+    assert.equal(value.name, "Existing");
+    assert.equal(value.avatarURL, null);
+    await new AccountDatabase(legacyPool).initialize();
+    assert.equal((await upgraded.request("me", { method: "GET", accessToken: session.accessToken })).id, value.id);
+  } finally { await legacyPool.close(); }
+});
+
+test("account deletion requires its own email code and cascades sessions, backups and parts only for its owner", async () => {
+  const owner = await registered(), other = await registered();
+  const account = await service.authenticate(owner.tokens.accessToken);
+  const backups = new WorkspaceBackups(database), snapshotID = randomUUID();
+  const bytes = Buffer.from(JSON.stringify({ id: snapshotID, workspaceID: owner.tokens.workspaceID, ownerID: owner.tokens.ownerID,
+    watermark: {}, relayCursor: 0, records: [] }));
+  await backups.begin(account, { snapshotID, deviceID: randomUUID(), digest: digest(bytes), byteCount: bytes.length, chunkCount: 1 });
+  await backups.putPart(account, snapshotID, 0, { data: bytes.toString("base64") });
+  await backups.commit(account, snapshotID);
+  await assert.rejects(service.request("account/delete/request"), rejectCode("session_required"));
+  await service.request("account/delete/request", { accessToken: owner.tokens.accessToken });
+  const code = messages.findLast(m => m.email === owner.email && m.purpose === "delete").code;
+  const wrong = (code[0] === "0" ? "1" : "0") + code.slice(1);
+  await assert.rejects(service.request("account/delete", { accessToken: owner.tokens.accessToken, body: { code: wrong } }), rejectCode("code_expired_or_invalid"));
+  assert.equal((await backups.list(account)).length, 1);
+  await assert.rejects(service.request("account/delete", { accessToken: other.tokens.accessToken, body: { code } }), rejectCode("code_expired_or_invalid"));
+  await service.request("account/delete", { accessToken: owner.tokens.accessToken, body: { code, email: other.email } });
+  assert.equal((await database.query("SELECT id FROM blot_accounts WHERE id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT id FROM blot_sessions WHERE owner_id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT id FROM blot_workspace_backups WHERE owner_id = $1", [owner.tokens.ownerID])).rows.length, 0);
+  assert.equal((await database.query("SELECT snapshot_id FROM blot_workspace_backup_parts WHERE snapshot_id = $1", [snapshotID])).rows.length, 0);
+  await assert.rejects(service.authenticate(owner.tokens.accessToken), rejectCode("session_expired"));
+  await assert.rejects(service.request("refresh", { body: { refreshToken: owner.tokens.refreshToken } }), rejectCode("session_expired"));
+  assert.equal((await service.authenticate(other.tokens.accessToken)).email, other.email);
+});
+
+test("passwordless registration activates only after a code; sign-in preserves identity and rejects replay", async () => {
+  const email = `${randomUUID()}@example.org`;
+  await service.request("email/request", { body: { email, name: "Code account", intent: "register" } });
+  const accountBefore = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  assert.equal(accountBefore.verified, false);
+  assert.equal(accountBefore.password_hash, null);
+  const code = messages.findLast(m => m.email === email && m.purpose === "signin").code;
+  await assert.rejects(service.request("verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
+  await assert.rejects(service.request("email/verify", { body: { email, code: code === "000000" ? "111111" : "000000" } }), rejectCode("code_expired_or_invalid"));
+  const tokens = await service.request("email/verify", { body: { email, code } });
+  const me = await service.request("me", { method: "GET", accessToken: tokens.accessToken });
+  assert.equal(me.name, "Code account");
+  assert.equal(me.verified, true);
+  await assert.rejects(service.request("email/verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
+
+  await database.query("DELETE FROM blot_auth_rates");
+  await service.request("email/request", { body: { email, intent: "login" } });
+  const next = messages.findLast(m => m.email === email).code;
+  const repeat = await service.request("email/verify", { body: { email, code: next } });
+  assert.equal(repeat.ownerID, tokens.ownerID);
+});
+
+test("email codes cannot rename verified accounts, replace passwords, or reveal unknown sign-ins", async () => {
+  const { email } = await registered();
+  const before = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  await service.request("email/request", { body: { email, intent: "register", name: "Someone else" } });
+  const code = messages.findLast(m => m.email === email).code;
+  await service.request("email/verify", { body: { email, code } });
+  const after = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];
+  assert.equal(after.name, before.name);
+  assert.equal(after.password_hash, before.password_hash);
+  assert.equal(after.workspace_id, before.workspace_id);
+  const count = messages.length;
+  const unknown = `${randomUUID()}@example.org`;
+  assert.equal(await service.request("email/request", { body: { email: unknown, intent: "login" } }), null);
+  assert.equal(messages.length, count);
+  assert.equal((await database.query("SELECT * FROM blot_accounts WHERE email = $1", [unknown])).rows.length, 0);
+  await assert.rejects(service.request("email/request", { body: { email: unknown, intent: "register", name: " " } }), rejectCode("invalid_name"));
+  await assert.rejects(service.request("email/request", { body: { email: unknown, intent: "other" } }), rejectCode("invalid_request"));
+});
+
+test("passwordless email challenges share cooldown and spend all five invalid attempts", async () => {
+  const email = `${randomUUID()}@example.org`;
+  const body = { email, intent: "register", name: "Limited account" };
+  await service.request("email/request", { body });
+  const code = messages.findLast(m => m.email === email).code;
+  await assert.rejects(service.request("email/request", { body }), rejectCode("challenge_cooldown"));
+  const wrong = code === "000000" ? "111111" : "000000";
+  for (let i = 0; i < 5; i++) await assert.rejects(service.request("email/verify", { body: { email, code: wrong } }), rejectCode("code_expired_or_invalid"));
+  await assert.rejects(service.request("email/verify", { body: { email, code } }), rejectCode("code_expired_or_invalid"));
+});

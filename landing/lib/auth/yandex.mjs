@@ -12,7 +12,7 @@ export class YandexAuthorization {
     const state = randomToken(), verifier = randomToken();
     const url = new URL("https://oauth.yandex.ru/authorize");
     url.search = new URLSearchParams({ client_id: this.#config.clientID, redirect_uri: this.#config.redirectURI,
-      response_type: "code", scope: "login:info login:email", state, force_confirm: "yes",
+      response_type: "code", scope: "login:info login:email login:avatar", state, force_confirm: "yes",
       code_challenge: createHash("sha256").update(verifier).digest("base64url"), code_challenge_method: "S256" }).toString();
     return { url, saved: { provider: "yandex", state, verifier, attempt } };
   }
