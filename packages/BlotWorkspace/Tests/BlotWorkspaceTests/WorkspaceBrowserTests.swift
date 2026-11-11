@@ -140,3 +140,15 @@ private struct BrowserFixture {
     #expect(tools.contains { $0.name == "browser_snapshot" })
     await automatic.suspend(); await f.service.suspend()
 }
+
+@Test func browserAuthorizationRoutesDirectAndGroupCommandsToTheirOwnSession() async throws {
+    let f = try await BrowserFixture(); defer { cleanupWorkspaceTestStorage(f.folder) }
+    let direct = try await f.service.authorize("browser_tabs", context: f.context)
+    #expect(direct.sessionKey == .agent(f.agent))
+    let other = try await WorkspaceAgentService(repository: f.repository, identity: f.identity).save(commandID: UUID(), draft: .init(name: "Colleague", instructions: "Help"))
+    let group = try await WorkspaceGroupService(repository: f.repository, identity: f.identity).create(commandID: UUID(), title: "Group", agentIDs: [f.agent, other])
+    let source = try await WorkspaceChatService(repository: f.repository, identity: f.identity).sendMessage(commandID: UUID(), conversationID: group, content: "Inspect the website")
+    let grouped = try await f.service.authorize("browser_tabs", context: .init(sourceMessageID: source, taskID: nil, allowedToolIDs: Set(WorkspaceBrowserCatalog.toolIDs), agentID: f.agent))
+    #expect(grouped.sessionKey == .group(group))
+    #expect(grouped.scope.agentID == direct.scope.agentID)
+}

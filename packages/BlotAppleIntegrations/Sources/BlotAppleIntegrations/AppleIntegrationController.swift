@@ -62,6 +62,7 @@ public final class AppleIntegrationController: AppleIntegrationExecuting {
         case .shortcuts: return shortcuts.resources
         case .mail, .notes:
             #if os(macOS)
+            try automation.requireRunning(plugin)
             guard await automation.authorized(plugin, request: true) else { throw AppleIntegrationError.permissionDenied }
             return try await automation.resources(plugin)
             #else
@@ -82,9 +83,14 @@ public final class AppleIntegrationController: AppleIntegrationExecuting {
             if contacts.limited { return "Доступ ограничен" }
             authorized = contacts.authorized
         case .files: authorized = folders.accessible(resources)
-        case .shortcuts: return shortcuts.contains(resources) ? "Подключено" : "Нужна настройка"
+        case .shortcuts:
+            #if os(macOS)
+            if !automation.isRunning(plugin) { return "Приложение закрыто" }
+            #endif
+            return shortcuts.contains(resources) ? "Подключено" : "Нужна настройка"
         case .mail, .notes:
             #if os(macOS)
+            if !automation.isRunning(plugin) { return "Приложение закрыто" }
             authorized = await automation.authorized(plugin)
             #else
             authorized = plugin == .mail && MFMailComposeViewController.canSendMail()

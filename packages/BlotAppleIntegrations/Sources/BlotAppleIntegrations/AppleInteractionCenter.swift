@@ -45,6 +45,9 @@ public final class AppleInteractionCenter {
             fields: ["recipient": try a.required("recipient"), "subject": a["subject"] ?? "", "body": a["body"] ?? ""]))
     }
     func runShortcut(name: String, input: String) async throws -> ChatJSON {
+        #if os(macOS)
+        try AppleAutomation().requireRunning(.shortcuts)
+        #endif
         let token = UUID()
         #if os(macOS)
         let scheme = "blot-agent-macos"

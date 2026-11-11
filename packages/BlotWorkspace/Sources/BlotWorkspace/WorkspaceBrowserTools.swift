@@ -23,8 +23,8 @@ public struct WorkspaceBrowserTools: WorkspaceToolExecuting {
     }
     private func perform(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
         let authorized = try await service.authorize(call.name, context: context)
-        let actionID = WorkspaceLogicalID.make(kind: "BrowserAction", workspaceID: identity.workspaceID, parts: [context.sourceMessageID.uuidString, call.id])
-        let command = WorkspaceBrowserCommand(id: actionID, name: call.name, arguments: call.arguments, scope: authorized.scope, origins: authorized.origins)
+        let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id, scope: .browser)
+        let command = WorkspaceBrowserCommand(id: actionID, name: call.name, arguments: call.arguments, scope: authorized.scope, origins: authorized.origins, sessionKey: authorized.sessionKey)
         if !WorkspaceBrowserCatalog.requiresConfirmation(call.name) {
             let binding = try await service.prepare(command)
             return try await result(service.perform(command, binding: binding), call: call, context: context)

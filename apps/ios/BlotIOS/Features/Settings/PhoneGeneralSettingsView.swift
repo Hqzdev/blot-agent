@@ -27,6 +27,7 @@ struct PhoneGeneralSettingsView: View {
                     }.labelsHidden()
                 }
             }
+            WorkspaceVoiceSettingsView()
         }
     }
 }

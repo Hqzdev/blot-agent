@@ -508,7 +508,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -553,7 +555,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
@@ -592,7 +596,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -645,7 +651,9 @@
 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;

@@ -20,7 +20,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "BlotIOS"
+            "value" : "Blot"
           }
         }
       }
@@ -191,6 +191,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Blot управляет напоминаниями в подключённых списках."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Blot transcribes your speech into chat messages during a voice conversation."
           }
         }
       }

@@ -5,6 +5,7 @@ import SwiftUI
 struct WorkspaceScheduleRunSummary: View {
     let schedule: BlotV3.Automation
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     private var latest: BlotV3.AutomationRun? {
         (store.snapshot.automationRuns ?? []).filter { $0.automationId == schedule.metadata.id }
             .max { $0.metadata.createdAt < $1.metadata.createdAt }
@@ -27,9 +28,14 @@ struct WorkspaceScheduleRunSummary: View {
                 }.environment(\.timeZone, TimeZone(identifier: schedule.timezone) ?? .current)
                 if let task = (store.snapshot.tasks ?? []).first(where: { $0.metadata.id == run.execution.taskId }) {
                     Button(store.t("Task details")) {
-                        store.openConversation(task.conversationId)
-                        store.selectedRecordID = task.metadata.id
-                        store.navigate(.running)
+                        if let panelNavigation {
+                            panelNavigation.taskID = task.metadata.id
+                            panelNavigation.open(.running)
+                        } else {
+                            store.openConversation(task.conversationId)
+                            store.selectedRecordID = task.metadata.id
+                            store.navigate(.running)
+                        }
                     }.buttonStyle(.plain)
                 }
             }

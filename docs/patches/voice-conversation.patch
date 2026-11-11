@@ -1,0 +1,1210 @@
+diff --git a/apps/Blot.xcodeproj/project.pbxproj b/apps/Blot.xcodeproj/project.pbxproj
+--- a/apps/Blot.xcodeproj/project.pbxproj
++++ b/apps/Blot.xcodeproj/project.pbxproj
+@@ -507,6 +507,8 @@
+ 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+ 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
+ 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+ 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+ 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+@@ -552,6 +554,8 @@
+ 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+ 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
+ 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+ 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+ 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+@@ -591,6 +595,8 @@
+ 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+ 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
+ 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+ 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+@@ -644,6 +650,8 @@
+ 				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+ 				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
+ 				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
++				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
++				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+ 				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
+ 				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
+ 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+diff --git a/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift b/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
+--- a/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
++++ b/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
+@@ -129,7 +129,10 @@
+             }.padding(.horizontal, 18).padding(.top, 6).padding(.bottom, 8)
+         }
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+-            PhoneConversationComposer().padding(.horizontal, 30).padding(.vertical, 10)
++            VStack(spacing: 8) {
++                WorkspaceVoicePanel().padding(.horizontal, 18)
++                PhoneConversationComposer().padding(.horizontal, 30)
++            }.padding(.vertical, 10)
+         }
+         .workspaceGlassContainer()
+         .sheet(isPresented: $showsPinnedMessages) {
+@@ -203,6 +206,7 @@
+             PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { store.back() }
+             PhoneConversationTitle(identity: identity)
+             Spacer(minLength: 0)
++            WorkspaceVoiceButton()
+             Menu {
+                 Button { store.showBrowser() } label: { Label(store.language == "ru" ? "Браузер" : "Browser", systemImage: "globe") }
+                 BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
+diff --git a/apps/macos/BlotMac/BlotMac.entitlements b/apps/macos/BlotMac/BlotMac.entitlements
+--- a/apps/macos/BlotMac/BlotMac.entitlements
++++ b/apps/macos/BlotMac/BlotMac.entitlements
+@@ -2,6 +2,7 @@
+ <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+ <plist version="1.0"><dict>
+ <key>com.apple.security.app-sandbox</key><true/>
++<key>com.apple.security.device.audio-input</key><true/>
+ <key>com.apple.security.virtualization</key><true/>
+ <key>com.apple.security.network.client</key><true/>
+ <key>com.apple.security.network.server</key><true/>
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
+@@ -144,6 +144,7 @@
+         .safeAreaInset(edge: .top, spacing: 0) { WorkspacePinnedGroupPlan().padding(.horizontal, 24).padding(.top, 6) }
+         .safeAreaInset(edge: .bottom, spacing: 0) {
+             VStack(spacing: 8) {
++                WorkspaceVoicePanel()
+                 WorkspaceFeedback()
+                 MacWorkspaceComposer(teamLayout: true, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
+             }.frame(maxWidth: 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+@@ -130,6 +130,7 @@
+                             }.frame(width: 36, height: 36)
+                         }
+                     Spacer()
++                    if isConversation { WorkspaceVoiceButton() }
+                     Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
+                         .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
+                         .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
+diff --git a/apps/shared/WorkspaceV3/WorkspaceRootView.swift b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceRootView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceRootView.swift
+@@ -124,6 +124,7 @@
+             #endif
+         }
+         .modifier(WorkspaceBrowserHost())
++        .modifier(WorkspaceVoiceLifecycle())
+         .environment(store)
+         .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
+             store.languagePreferences.refreshSystemLanguage()
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -14,6 +14,7 @@
+     private let service: any WorkspaceService
+     var serviceForBrowser: (any WorkspaceCommandService)? { commands }
+     let guestBrowser = WorkspaceBrowserState()
++    let voice: VoiceConversationSession
+     var nativeCommands: (any WorkspaceNativeProviding)? { service as? any WorkspaceNativeProviding }
+     var mcpCommands: (any WorkspaceMCPProviding)? { service as? any WorkspaceMCPProviding }
+     func refreshMCP() async throws {
+@@ -84,7 +85,7 @@
+     @ObservationIgnored private let authenticationLog = Logger(subsystem: "dev.blot.authentication", category: "BrowserHandoff")
+     private(set) var snapshot = WorkspaceSnapshot() {
+         didSet {
+-            if snapshot.ownerID != oldValue.ownerID { guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
++            if snapshot.ownerID != oldValue.ownerID { voice.end(); guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
+             chatContent.update(snapshot, previous: oldValue)
+             if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
+             if mode == .live {
+@@ -109,7 +110,7 @@
+     private(set) var busy = false
+     private(set) var isRestoringSession: Bool
+     private(set) var history: [WorkspaceRoute] = []
+-    var route: WorkspaceRoute
++    var route: WorkspaceRoute { didSet { if route != oldValue { voice.end() } } }
+     var rootRoute: WorkspaceRoute
+     var settingsRoute: WorkspaceRoute?
+     var tab: WorkspaceRoute = .chats
+@@ -135,6 +136,7 @@
+         }
+         didSet {
+             if oldValue != selectedConversationID {
++                voice.end()
+                 restoringComposer = true
+                 form.composer = selectedConversationID.flatMap { conversationDrafts[$0] } ?? WorkspaceComposerForm()
+                 restoringComposer = false
+@@ -225,7 +227,8 @@
+     }
+     var isPreview: Bool { mode != .live }
+ 
+-    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil) {
++    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil, voice: VoiceConversationSession? = nil) {
++        self.voice = voice ?? VoiceConversationSession()
+         self.mode = mode
+         self.isRestoringSession = mode == .live
+         self.inspectorVisible = mode == .preview
+@@ -609,6 +612,7 @@
+             error = "Дождитесь ответа или остановите его перед новым сообщением."
+             return
+         }
++        if action == .send { voice.end() }
+         error = nil; notice = nil; invalidField = nil
+         guard validate(action) else { return }
+         busy = true
+@@ -874,6 +878,48 @@
+         }
+     }
+ 
++    func beginVoiceConversation() {
++        guard mode == .live, !busy, !isReplying, let id = selectedConversationID, route == .chat else { return }
++        let generation = sessionGeneration
++        voice.begin(conversationID: id, locale: Locale(identifier: language == "ru" ? "ru-RU" : "en-US")) { [weak self] text in
++            guard let self, self.sessionGeneration == generation else { throw CancellationError() }
++            return try await self.sendVoiceTurn(text, in: id)
++        }
++    }
++
++    /// Uses the normal durable send and tool loop without replacing the user's typed draft.
++    private func sendVoiceTurn(_ text: String, in conversationID: UUID) async throws -> String {
++        guard !busy, selectedConversationID == conversationID, !isReplying, let commands else { throw VoiceFailure.emptyResponse }
++        try _Concurrency.Task.checkCancellation()
++        let generation = sessionGeneration
++        var input = WorkspaceForm()
++        input.composer.draft = text
++        input.composer.projectID = form.composer.projectID
++        input.messageContext = currentMessageContext
++        #if os(macOS)
++        input.messageContext.agentActivity = desktopContent.context(in: conversationID, snapshot: snapshot)
++        #endif
++        let request = WorkspaceRequest(action: .send, form: input, selectedAgentID: currentConversation?.agentId,
++            selectedConversationID: conversationID, selectedRecordID: nil)
++        busy = true
++        do {
++            let result = try await service.execute(request, snapshot: snapshot)
++            guard generation == sessionGeneration else { throw CancellationError() }
++            snapshot = result; busy = false
++        } catch { if generation == sessionGeneration { busy = false }; throw error }
++        try _Concurrency.Task.checkCancellation()
++        guard let sent = snapshot.messages.first(where: { $0.role == .user && $0.commandId == request.commandID }) else { throw VoiceFailure.emptyResponse }
++        enqueueLiveResponse(to: sent)
++        await liveResponses[conversationID]?.value
++        try _Concurrency.Task.checkCancellation()
++        guard generation == sessionGeneration else { throw CancellationError() }
++        let fresh = try await commands.currentSnapshot()
++        snapshot = fresh
++        let replies = fresh.messages.filter { $0.role == .assistant && $0.commandId == request.commandID }
++        guard let reply = replies.max(by: { $0.metadata.createdAt < $1.metadata.createdAt }), reply.delivery == .completed else { throw VoiceFailure.emptyResponse }
++        return reply.content
++    }
++
+     func retryResponse(to messageID: UUID) {
+         guard mode == .live, let message = snapshot.messages.first(where: { $0.metadata.id == messageID }),
+               message.role == .user, liveResponses[message.conversationId] == nil else { return }
+@@ -1187,6 +1233,7 @@
+ 
+     func signOut(deletingLocalData: Bool = false) {
+         guard !busy else { return }
++        voice.end()
+         persistChatState(immediately: true)
+         busy = true
+         sessionGeneration = UUID()
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceInterfaces.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceInterfaces.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceInterfaces.swift
+@@ -0,0 +1,69 @@
++import Foundation
++
++public enum VoiceFailure: Error, LocalizedError, Equatable {
++    case microphoneDenied, languageUnavailable, voiceUnavailable, audioUnavailable, audioOverrun, interrupted, emptyResponse
++    public var errorDescription: String? {
++        switch self {
++        case .microphoneDenied: "Разрешите микрофон для Blot в системных настройках."
++        case .languageUnavailable: "Локальное распознавание этого языка недоступно на устройстве."
++        case .voiceUnavailable: "На устройстве нет голоса для выбранного языка."
++        case .audioUnavailable: "Не удалось включить аудиоустройство. Проверьте микрофон и наушники."
++        case .audioOverrun: "Устройство не успевает распознавать звук. Начните разговор заново."
++        case .interrupted: "Аудиоустройство изменилось или разговор был прерван. Начните разговор заново."
++        case .emptyResponse: "Ответ не завершён. Проверьте результат в чате перед повтором запроса."
++        }
++    }
++}
++
++@MainActor public protocol VoiceRecognizing: AnyObject {
++    func prepare(locale: Locale) async throws
++    func start(update: @escaping @MainActor (String) -> Void, activity: @escaping @MainActor () -> Void,
++               failure: @escaping @MainActor (Error) -> Void) async throws
++    func finish() async throws -> String
++    func stop() async
++}
++@MainActor public protocol VoiceSpeaking: AnyObject {
++    func prepare(locale: Locale) throws
++    func speak(_ text: String) async throws
++    func stop()
++}
++
++/// Speech modules may revise an overlapping interval before finalizing it.
++public struct VoiceTranscript: Sendable {
++    private struct Segment: Sendable { let start: Double; let end: Double; let text: String }
++    private var segments: [Segment] = []
++    public init() {}
++    public mutating func replace(start: Double, end: Double, text: String) {
++        guard start.isFinite, end.isFinite, end >= start else { return }
++        segments.removeAll { abs($0.start - start) < 0.001 || ($0.start < end && $0.end > start) }
++        let text = String(text.prefix(10_000)).trimmingCharacters(in: .whitespacesAndNewlines)
++        if !text.isEmpty { segments.append(.init(start: start, end: end, text: text)) }
++        segments.sort { $0.start < $1.start }
++        if segments.count > 128 { segments.removeFirst(segments.count - 128) }
++    }
++    public var text: String { String(segments.map(\.text).joined(separator: " ").prefix(10_000)) }
++}
++
++public enum VoiceSpokenText {
++    /// Keep long code, tables and links on screen instead of reading their syntax aloud.
++    public static func prepare(_ text: String, russian: Bool) -> String {
++        var inCode = false
++        let lines = text.components(separatedBy: .newlines).compactMap { line -> String? in
++            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") { inCode.toggle(); return nil }
++            guard !inCode, !line.trimmingCharacters(in: .whitespaces).hasPrefix("|") else { return nil }
++            return line
++        }
++        var value = lines.joined(separator: " ")
++        value = value.replacingOccurrences(of: #"\[([^\]]+)\]\([^\)]+\)"#, with: "$1", options: .regularExpression)
++        value = value.replacingOccurrences(of: #"https?://\S+"#, with: "", options: .regularExpression)
++        value = value.replacingOccurrences(of: #"[*#`_>]"#, with: "", options: .regularExpression)
++        value = value.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression).trimmingCharacters(in: .whitespacesAndNewlines)
++        if value.isEmpty { return russian ? "Результат показан в чате." : "The result is shown in the chat." }
++        if value.count > 1800 {
++            value = String(value.prefix(1600))
++            if let last = value.lastIndex(where: { ".!?".contains($0) }) { value = String(value[...last]) }
++            value += russian ? " Полный ответ — в чате." : " The full reply is in the chat."
++        }
++        return value
++    }
++}
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift
+@@ -0,0 +1,122 @@
++import AVFoundation
++import Foundation
++import Speech
++
++@MainActor public final class AppleVoiceInput: VoiceRecognizing {
++    private enum Kind { case speech, dictation }
++    private var kind: Kind?
++    private var locale = Locale(identifier: "ru-RU")
++    private var engine: AVAudioEngine?
++    private var capture: VoiceAudioCapture?
++    private var analyzer: SpeechAnalyzer?
++    private var results: Task<Void, Error>?
++    private var transcript = VoiceTranscript()
++    public init() {}
++    public func prepare(locale: Locale) async throws {
++        self.locale = locale
++        if SpeechTranscriber.isAvailable, let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale) {
++            kind = .speech; self.locale = supported
++        } else if let supported = await DictationTranscriber.supportedLocale(equivalentTo: locale) {
++            kind = .dictation; self.locale = supported
++        } else { throw VoiceFailure.languageUnavailable }
++        let module = try module()
++        if let request = try await AssetInventory.assetInstallationRequest(supporting: [module]) { try await request.downloadAndInstall() }
++        try Task.checkCancellation()
++        let allowed: Bool
++        switch AVCaptureDevice.authorizationStatus(for: .audio) {
++        case .authorized: allowed = true
++        case .notDetermined: allowed = await AVCaptureDevice.requestAccess(for: .audio)
++        default: allowed = false
++        }
++        guard allowed else { throw VoiceFailure.microphoneDenied }
++    }
++    private func module() throws -> any SpeechModule {
++        switch kind {
++        case .speech: SpeechTranscriber(locale: locale, preset: .progressiveTranscription)
++        case .dictation: DictationTranscriber(locale: locale, preset: .progressiveLongDictation)
++        case nil: throw VoiceFailure.languageUnavailable
++        }
++    }
++    public func start(update: @escaping @MainActor (String) -> Void, activity: @escaping @MainActor () -> Void,
++                      failure: @escaping @MainActor (Error) -> Void) async throws {
++        await stop()
++        try Task.checkCancellation()
++        try Self.activateAudio()
++        let module = try module()
++        guard let format = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: [module]) else { throw VoiceFailure.audioUnavailable }
++        let analyzer = SpeechAnalyzer(modules: [module]); self.analyzer = analyzer
++        transcript = VoiceTranscript()
++        if let speech = module as? SpeechTranscriber {
++            results = Task { [weak self] in
++                do {
++                    for try await result in speech.results {
++                        try Task.checkCancellation()
++                        self?.accept(String(result.text.characters), start: result.range.start.seconds, end: result.range.end.seconds, update: update)
++                    }
++                } catch { if !Task.isCancelled { failure(error) }; throw error }
++            }
++        } else if let dictation = module as? DictationTranscriber {
++            results = Task { [weak self] in
++                do {
++                    for try await result in dictation.results {
++                        try Task.checkCancellation()
++                        self?.accept(String(result.text.characters), start: result.range.start.seconds, end: result.range.end.seconds, update: update)
++                    }
++                } catch { if !Task.isCancelled { failure(error) }; throw error }
++            }
++        }
++        do {
++            let stream = AsyncThrowingStream<AnalyzerInput, Error>.makeStream(bufferingPolicy: .bufferingNewest(16))
++            let engine = AVAudioEngine(); self.engine = engine
++            let input = engine.inputNode
++            let natural = input.outputFormat(forBus: 0)
++            guard natural.sampleRate > 0, natural.channelCount > 0 else { throw VoiceFailure.audioUnavailable }
++            let capture = try VoiceAudioCapture(source: natural, destination: format, continuation: stream.continuation,
++                activity: { Task { @MainActor in activity() } })
++            self.capture = capture
++            input.installTap(onBus: 0, bufferSize: 2048, format: natural, block: capture.tapBlock())
++            try await analyzer.prepareToAnalyze(in: format)
++            try await analyzer.start(inputSequence: stream.stream)
++            try Task.checkCancellation()
++            engine.prepare(); try engine.start()
++        } catch { await stop(); throw error }
++    }
++    private func accept(_ text: String, start: Double, end: Double, update: (String) -> Void) {
++        transcript.replace(start: start, end: end, text: text); update(transcript.text)
++    }
++    private func stopCapture() {
++        if let engine { engine.stop(); engine.inputNode.removeTap(onBus: 0) }
++        engine = nil; capture?.finish(); capture = nil
++    }
++    public func finish() async throws -> String {
++        stopCapture()
++        guard let analyzer else { return transcript.text }
++        do {
++            try await withThrowingTaskGroup(of: Void.self) { group in
++                group.addTask { try await analyzer.finalizeAndFinishThroughEndOfInput() }
++                group.addTask { try await Task.sleep(for: .seconds(4)); await analyzer.cancelAndFinishNow(); throw VoiceFailure.interrupted }
++                _ = try await group.next(); group.cancelAll()
++            }
++            try await results?.value
++            self.analyzer = nil; results = nil
++            return transcript.text
++        } catch { await stop(); throw error }
++    }
++    public func stop() async {
++        stopCapture()
++        results?.cancel(); let old = analyzer; analyzer = nil
++        await old?.cancelAndFinishNow()
++        if let results { _ = try? await results.value }
++        results = nil
++        #if os(iOS)
++        try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
++        #endif
++    }
++    static func activateAudio() throws {
++        #if os(iOS)
++        let session = AVAudioSession.sharedInstance()
++        try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.defaultToSpeaker, .allowBluetoothHFP])
++        try session.setActive(true)
++        #endif
++    }
++}
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceOutput.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceOutput.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceOutput.swift
+@@ -0,0 +1,54 @@
++import AVFoundation
++import Foundation
++
++@MainActor public final class AppleVoiceOutput: NSObject, VoiceSpeaking, AVSpeechSynthesizerDelegate {
++    private let synthesizer = AVSpeechSynthesizer()
++    private var voice: AVSpeechSynthesisVoice?
++    private var completion: CheckedContinuation<Void, Error>?
++    private var utterance: AVSpeechUtterance?
++    private var watchdog: Task<Void, Never>?
++    public override init() { super.init(); synthesizer.delegate = self }
++    public func prepare(locale: Locale) throws {
++        voice = AVSpeechSynthesisVoice(language: locale.identifier.replacingOccurrences(of: "_", with: "-"))
++        guard voice != nil else { throw VoiceFailure.voiceUnavailable }
++    }
++    public func speak(_ text: String) async throws {
++        try Task.checkCancellation()
++        guard let voice else { throw VoiceFailure.voiceUnavailable }
++        stop()
++        try AppleVoiceInput.activateAudio()
++        let item = AVSpeechUtterance(string: text); item.voice = voice
++        item.rate = AVSpeechUtteranceDefaultSpeechRate
++        try await withTaskCancellationHandler {
++            try await withCheckedThrowingContinuation { continuation in
++                utterance = item; completion = continuation; synthesizer.speak(item)
++                watchdog = Task { [weak self] in
++                    do { try await Task.sleep(for: .seconds(15 + Double(text.count) / 4)) } catch { return }
++                    guard let self, self.utterance === item else { return }
++                    self.utterance = nil; let reply = self.completion; self.completion = nil
++                    self.synthesizer.stopSpeaking(at: .immediate); reply?.resume(throwing: VoiceFailure.audioUnavailable)
++                }
++            }
++        } onCancel: { Task { @MainActor [weak self] in self?.stop() } }
++    }
++    public func stop() {
++        watchdog?.cancel(); watchdog = nil
++        utterance = nil
++        let reply = completion; completion = nil
++        synthesizer.stopSpeaking(at: .immediate)
++        reply?.resume(throwing: CancellationError())
++    }
++    nonisolated public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
++        let id = ObjectIdentifier(utterance)
++        Task { @MainActor [weak self] in self?.finished(id) }
++    }
++    nonisolated public func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
++        let id = ObjectIdentifier(utterance)
++        Task { @MainActor [weak self] in self?.finished(id) }
++    }
++    private func finished(_ id: ObjectIdentifier) {
++        guard utterance.map(ObjectIdentifier.init) == id else { return }
++        watchdog?.cancel(); watchdog = nil
++        utterance = nil; let reply = completion; completion = nil; reply?.resume()
++    }
++}
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceAudioCapture.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceAudioCapture.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceAudioCapture.swift
+@@ -0,0 +1,49 @@
++import AVFoundation
++import Foundation
++import Speech
++
++/// The audio callback owns conversion. No audio buffer is queued on the main actor.
++/// The lock protects the bounded stream and converter against stop from the UI thread.
++final class VoiceAudioCapture: @unchecked Sendable {
++    private let lock = NSLock()
++    private let continuation: AsyncThrowingStream<AnalyzerInput, Error>.Continuation
++    private let converter: AVAudioConverter
++    private let format: AVAudioFormat
++    private let activity: @Sendable () -> Void
++    private var closed = false
++    private var lastActivity: TimeInterval = 0
++    init(source: AVAudioFormat, destination: AVAudioFormat,
++         continuation: AsyncThrowingStream<AnalyzerInput, Error>.Continuation, activity: @escaping @Sendable () -> Void) throws {
++        guard let converter = AVAudioConverter(from: source, to: destination) else { throw VoiceFailure.audioUnavailable }
++        self.converter = converter; self.format = destination; self.continuation = continuation; self.activity = activity
++    }
++    nonisolated func tapBlock() -> @Sendable (AVAudioPCMBuffer, AVAudioTime) -> Void {
++        { [self] buffer, _ in append(buffer) }
++    }
++    func append(_ buffer: AVAudioPCMBuffer) {
++        lock.lock(); defer { lock.unlock() }
++        guard !closed else { return }
++        let capacity = AVAudioFrameCount(ceil(Double(buffer.frameLength) * format.sampleRate / buffer.format.sampleRate)) + 32
++        guard capacity <= 16384, let converted = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: capacity) else { fail(VoiceFailure.audioUnavailable); return }
++        var provided = false
++        var error: NSError?
++        let status = converter.convert(to: converted, error: &error) { _, state in
++            if provided { state.pointee = .noDataNow; return nil }
++            provided = true; state.pointee = .haveData; return buffer
++        }
++        guard status != .error, error == nil else { fail(VoiceFailure.audioUnavailable); return }
++        if converted.frameLength > 0 {
++            if case .dropped = continuation.yield(AnalyzerInput(buffer: converted)) { fail(VoiceFailure.audioOverrun) }
++        }
++        if let channel = buffer.floatChannelData?[0], buffer.frameLength > 0 {
++            var energy: Float = 0
++            for index in 0..<Int(buffer.frameLength) { energy += channel[index] * channel[index] }
++            let now = ProcessInfo.processInfo.systemUptime
++            if sqrt(energy / Float(buffer.frameLength)) > 0.012, now - lastActivity >= 0.1 {
++                lastActivity = now; activity()
++            }
++        }
++    }
++    private func fail(_ error: Error) { closed = true; continuation.finish(throwing: error) }
++    func finish() { lock.lock(); defer { lock.unlock() }; closed = true; continuation.finish() }
++}
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift
+@@ -0,0 +1,141 @@
++import Foundation
++import Observation
++
++/// Owns one foreground conversation. Capture and playback never run together in this prototype.
++@MainActor @Observable public final class VoiceConversationSession {
++    public enum Phase: Equatable { case idle, preparing, listening, finishing, thinking, speaking, muted, failed }
++    public private(set) var phase: Phase = .idle
++    public private(set) var conversationID: UUID?
++    public private(set) var transcript = ""
++    public private(set) var failureDescription: String?
++    public private(set) var microphoneMuted = false
++    public var isActive: Bool { phase != .idle && phase != .failed }
++    @ObservationIgnored private let input: any VoiceRecognizing
++    @ObservationIgnored private let output: any VoiceSpeaking
++    @ObservationIgnored private var operation: Task<Void, Never>?
++    @ObservationIgnored private var silence: Task<Void, Never>?
++    @ObservationIgnored private var generation = UUID()
++    @ObservationIgnored private var lastActivity = Date()
++    @ObservationIgnored private var listeningSince = Date()
++    @ObservationIgnored private var send: (@MainActor (String) async throws -> String)?
++    @ObservationIgnored private var locale = Locale(identifier: "ru-RU")
++    public init(input: any VoiceRecognizing = AppleVoiceInput(), output: any VoiceSpeaking = AppleVoiceOutput()) {
++        self.input = input; self.output = output
++    }
++    public func begin(conversationID: UUID, locale: Locale, send: @escaping @MainActor (String) async throws -> String) {
++        guard !isActive else { return }
++        let previous = operation
++        generation = UUID(); let token = generation
++        self.conversationID = conversationID; self.locale = locale; self.send = send
++        failureDescription = nil; transcript = ""; microphoneMuted = false; phase = .preparing
++        operation = Task { [weak self] in
++            await previous?.value
++            guard let self, self.valid(token) else { return }
++            do {
++                try self.output.prepare(locale: locale)
++                try await self.input.prepare(locale: locale)
++                guard self.valid(token) else { await self.input.stop(); return }
++                try await self.listen(token)
++            } catch { await self.fail(error, token: token) }
++        }
++    }
++    private func valid(_ token: UUID) -> Bool { generation == token && !Task.isCancelled }
++    private func listen(_ token: UUID) async throws {
++        guard valid(token) else { return }
++        if microphoneMuted { phase = .muted; return }
++        transcript = ""; phase = .preparing
++        try await input.start(update: { [weak self] text in
++            guard let self, self.valid(token), self.phase == .listening else { return }
++            if text != self.transcript { self.transcript = text; self.lastActivity = Date() }
++        }, activity: { [weak self] in
++            guard let self, self.valid(token), self.phase == .listening else { return }; self.lastActivity = Date()
++        }, failure: { [weak self] error in
++            guard let self, self.generation == token else { return }
++            self.operation?.cancel(); self.silence?.cancel(); self.output.stop(); self.phase = .failed
++            self.failureDescription = (error as? VoiceFailure)?.localizedDescription ?? VoiceFailure.interrupted.localizedDescription
++            self.operation = Task { await self.input.stop() }
++        })
++        guard valid(token) else { await input.stop(); return }
++        lastActivity = Date(); listeningSince = Date(); phase = .listening
++        silence?.cancel()
++        silence = Task { [weak self] in
++            while !Task.isCancelled {
++                do { try await Task.sleep(for: .milliseconds(100)) } catch { return }
++                guard let self, self.valid(token), self.phase == .listening else { return }
++                if !self.transcript.isEmpty, Date().timeIntervalSince(self.lastActivity) >= 0.9 { self.submit(); return }
++                if Date().timeIntervalSince(self.listeningSince) >= 60 {
++                    if self.transcript.isEmpty { self.toggleMute() } else { self.submit() }
++                    return
++                }
++            }
++        }
++    }
++    public func submit() {
++        guard phase == .listening else { return }
++        silence?.cancel(); silence = nil
++        phase = .finishing
++        let token = generation; let previous = operation
++        operation = Task { [weak self] in
++            await previous?.value
++            guard let self, self.valid(token) else { return }
++            do {
++                let text = try await self.input.finish().trimmingCharacters(in: .whitespacesAndNewlines)
++                guard self.valid(token) else { return }
++                self.transcript = text
++                if text.isEmpty { try await self.listen(token); return }
++                guard let send = self.send else { throw VoiceFailure.emptyResponse }
++                self.phase = .thinking
++                let reply = try await send(text)
++                guard self.valid(token) else { return }
++                self.phase = .speaking
++                try await self.output.speak(VoiceSpokenText.prepare(reply, russian: self.locale.language.languageCode?.identifier == "ru"))
++                guard self.valid(token) else { return }
++                try await Task.sleep(for: .milliseconds(300))
++                try await self.listen(token)
++            } catch { await self.fail(error, token: token) }
++        }
++    }
++    public func toggleMute() {
++        guard isActive, phase != .preparing, phase != .finishing else { return }
++        microphoneMuted.toggle()
++        if phase == .listening {
++            silence?.cancel(); phase = .muted
++            let previous = operation; previous?.cancel()
++            operation = Task { [input] in await previous?.value; await input.stop() }
++        } else if phase == .muted, !microphoneMuted {
++            let previous = operation; let token = generation
++            operation = Task { [weak self] in
++                await previous?.value
++                guard let self, self.valid(token) else { return }
++                do { try await self.listen(token) } catch { await self.fail(error, token: token) }
++            }
++        }
++    }
++    public func interrupt() {
++        guard phase == .speaking else { return }
++        let previous = operation; previous?.cancel(); output.stop()
++        generation = UUID(); let token = generation; microphoneMuted = false; phase = .preparing
++        operation = Task { [weak self] in
++            await previous?.value
++            guard let self, self.valid(token) else { return }
++            do { try await Task.sleep(for: .milliseconds(300)); try await self.listen(token) } catch { await self.fail(error, token: token) }
++        }
++    }
++    public func end() {
++        generation = UUID(); silence?.cancel(); silence = nil
++        let previous = operation; previous?.cancel(); output.stop()
++        send = nil; phase = .idle; conversationID = nil; transcript = ""; failureDescription = nil; microphoneMuted = false
++        operation = Task { [input] in await input.stop(); await previous?.value }
++    }
++    public func audioInterrupted() {
++        guard isActive else { return }
++        end(); failureDescription = VoiceFailure.interrupted.localizedDescription; phase = .failed
++    }
++    private func fail(_ error: Error, token: UUID) async {
++        guard generation == token, !Task.isCancelled else { return }
++        silence?.cancel(); silence = nil; output.stop(); await input.stop()
++        guard generation == token else { return }
++        failureDescription = (error as? VoiceFailure)?.localizedDescription ?? "Не удалось завершить голосовой запрос. Проверьте сообщения в чате."
++        phase = .failed
++    }
++}
+diff --git a/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/VoiceTests.swift b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/VoiceTests.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/VoiceTests.swift
+@@ -0,0 +1,151 @@
++import AVFoundation
++import Speech
++import Foundation
++import Testing
++@testable import BlotAppleIntegrations
++
++@Test func voiceTranscriptRevisionsDoNotDuplicateWords() {
++    var value = VoiceTranscript()
++    value.replace(start: 0, end: 1, text: "Первая")
++    value.replace(start: 0, end: 2, text: "Первая проверка.")
++    value.replace(start: 2, end: 3, text: "Вторая фраза.")
++    #expect(value.text == "Первая проверка. Вторая фраза.")
++    value.replace(start: .nan, end: 3, text: "invalid")
++    #expect(!value.text.contains("invalid"))
++    value.replace(start: 0, end: 2, text: "Исправление.")
++    #expect(value.text == "Исправление. Вторая фраза.")
++}
++@Test func voiceOutputKeepsCodeAndLongAnswersOnScreen() {
++    let text = "Создан [документ](https://example.com/a).\n```swift\nprint(123)\n```\n| column | value |\nГотово."
++    let spoken = VoiceSpokenText.prepare(text, russian: true)
++    #expect(spoken == "Создан документ. Готово.")
++    #expect(VoiceSpokenText.prepare("```\ncode\n```", russian: true) == "Результат показан в чате.")
++    #expect(VoiceSpokenText.prepare(String(repeating: "Ответ. ", count: 500), russian: true).count < 1800)
++}
++
++@MainActor private final class VoiceInputFixture: VoiceRecognizing {
++    var capturing = false
++    var prepared = 0
++    var startCount = 0
++    var stopCount = 0
++    var text = "Проверь сайт"
++    var prepareError: VoiceFailure?
++    var update: ((String) -> Void)?
++    func prepare(locale: Locale) async throws { prepared += 1; if let prepareError { throw prepareError } }
++    func start(update: @escaping @MainActor (String) -> Void, activity: @escaping @MainActor () -> Void, failure: @escaping @MainActor (Error) -> Void) async throws {
++        capturing = true; startCount += 1; self.update = update
++    }
++    func finish() async throws -> String { capturing = false; return text }
++    func stop() async { capturing = false; stopCount += 1; update = nil }
++}
++@MainActor private final class VoiceOutputFixture: VoiceSpeaking {
++    var spoken: [String] = []
++    var continuation: CheckedContinuation<Void, Error>?
++    func prepare(locale: Locale) throws {}
++    func speak(_ text: String) async throws {
++        spoken.append(text)
++        try await withTaskCancellationHandler {
++            try await withCheckedThrowingContinuation { continuation = $0 }
++        } onCancel: { Task { @MainActor in self.stop() } }
++    }
++    func complete() { let old = continuation; continuation = nil; old?.resume() }
++    func stop() { let old = continuation; continuation = nil; old?.resume(throwing: CancellationError()) }
++}
++@MainActor private func waitUntil(_ check: () -> Bool) async throws {
++    for _ in 0..<200 {
++        if check() { return }
++        try await Task.sleep(for: .milliseconds(5))
++    }
++    Issue.record("Voice state did not settle")
++}
++
++@Suite(.serialized) @MainActor struct VoiceSessionTests {
++    @Test func sendsOneFinalTranscriptAndNeverCapturesItsOwnAnswer() async throws {
++        let input = VoiceInputFixture(), output = VoiceOutputFixture()
++        let session = VoiceConversationSession(input: input, output: output)
++        var sent: [String] = []
++        session.begin(conversationID: UUID(), locale: .init(identifier: "ru-RU")) { text in sent.append(text); return "Ответ готов." }
++        try await waitUntil { session.phase == .listening }
++        input.update?("Промежуточный текст")
++        session.submit(); session.submit()
++        try await waitUntil { session.phase == .speaking }
++        #expect(sent == [input.text] && !input.capturing && output.spoken == ["Ответ готов."])
++        output.complete()
++        try await waitUntil { session.phase == .listening }
++        #expect(input.capturing && input.startCount == 2)
++        session.end()
++        try await waitUntil { !input.capturing }
++        #expect(session.phase == .idle)
++    }
++    @Test func endingWhileModelWorksDiscardsLateReplyAndDoesNotRetry() async throws {
++        let input = VoiceInputFixture(), output = VoiceOutputFixture()
++        let session = VoiceConversationSession(input: input, output: output)
++        var response: CheckedContinuation<String, Error>?
++        var calls = 0
++        session.begin(conversationID: UUID(), locale: .init(identifier: "ru-RU")) { _ in
++            calls += 1
++            return try await withCheckedThrowingContinuation { response = $0 }
++        }
++        try await waitUntil { session.phase == .listening }
++        session.submit()
++        try await waitUntil { response != nil }
++        session.end(); response?.resume(returning: "Запоздавший ответ")
++        try await Task.sleep(for: .milliseconds(30))
++        #expect(session.phase == .idle && !input.capturing && output.spoken.isEmpty && calls == 1)
++    }
++    @Test func interruptionDropsPlaybackAndRestartsListeningOnce() async throws {
++        let input = VoiceInputFixture(), output = VoiceOutputFixture()
++        let session = VoiceConversationSession(input: input, output: output)
++        session.begin(conversationID: UUID(), locale: .init(identifier: "ru-RU")) { _ in "Ответ" }
++        try await waitUntil { session.phase == .listening }; session.submit()
++        try await waitUntil { session.phase == .speaking }; session.interrupt()
++        try await waitUntil { session.phase == .listening }
++        #expect(output.continuation == nil && output.spoken.count == 1 && input.startCount == 2)
++        session.end()
++    }
++    @Test func muteDuringResponseIsRespectedAfterPlayback() async throws {
++        let input = VoiceInputFixture(), output = VoiceOutputFixture()
++        let session = VoiceConversationSession(input: input, output: output)
++        session.begin(conversationID: UUID(), locale: .init(identifier: "ru-RU")) { _ in "Ответ" }
++        try await waitUntil { session.phase == .listening }; session.submit()
++        try await waitUntil { session.phase == .speaking }
++        session.toggleMute(); output.complete()
++        try await waitUntil { session.phase == .muted }
++        #expect(!input.capturing && session.microphoneMuted)
++        session.toggleMute(); try await waitUntil { session.phase == .listening }
++        session.audioInterrupted(); try await waitUntil { !input.capturing }
++        #expect(session.phase == .failed && session.failureDescription != nil)
++        session.end()
++    }
++    @Test func deniedMicrophoneDoesNotLoopOrStartCapture() async throws {
++        let input = VoiceInputFixture(), output = VoiceOutputFixture()
++        input.prepareError = .microphoneDenied
++        let session = VoiceConversationSession(input: input, output: output)
++        session.begin(conversationID: UUID(), locale: .init(identifier: "ru-RU")) { _ in Issue.record("Unexpected send"); return "" }
++        try await waitUntil { session.phase == .failed }
++        #expect(input.prepared == 1 && input.startCount == 0 && output.spoken.isEmpty)
++        session.end()
++    }
++}
++
++@Test @MainActor func audioTapCanRunOffTheMainActorAndRejectsBufferOverflow() async throws {
++    let stream = AsyncThrowingStream<AnalyzerInput, Error>.makeStream(bufferingPolicy: .bufferingNewest(1))
++    let format = try #require(AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: true))
++    let capture = try VoiceAudioCapture(source: format, destination: format, continuation: stream.continuation, activity: {})
++    // This callback is constructed by the production factory while called from MainActor.
++    let callback = capture.tapBlock()
++    try await Task.detached {
++        let format = try #require(AVAudioFormat(commonFormat: .pcmFormatInt16, sampleRate: 16000, channels: 1, interleaved: true))
++        for _ in 0..<5 {
++            let buffer = try #require(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 1024))
++            buffer.frameLength = 1024
++            memset(buffer.int16ChannelData![0], 0, 1024 * MemoryLayout<Int16>.size)
++            callback(buffer, AVAudioTime(sampleTime: 0, atRate: 16000))
++        }
++    }.value
++    do {
++        for try await _ in stream.stream {}
++        Issue.record("A dropped audio frame must fail instead of silently losing speech")
++    } catch { #expect(error as? VoiceFailure == .audioOverrun) }
++    capture.finish()
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceVoiceView.swift b/apps/shared/WorkspaceV3/WorkspaceVoiceView.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceVoiceView.swift
+@@ -0,0 +1,93 @@
++import AVFoundation
++import BlotAppleIntegrations
++import BlotDesign
++import SwiftUI
++
++struct WorkspaceVoiceButton: View {
++    @Environment(WorkspaceStore.self) private var store
++    var body: some View {
++        Button {
++            if store.voice.isActive { store.voice.end() } else { store.beginVoiceConversation() }
++        } label: {
++            Image(systemName: store.voice.isActive ? "phone.down.fill" : "phone")
++                .foregroundStyle(store.voice.isActive ? Color.red : WorkspaceStyle.ink)
++                .frame(width: 36, height: 36)
++        }
++        .buttonStyle(.plain)
++        .glassEffect(.regular.interactive(), in: .circle)
++        .accessibilityLabel(store.language == "ru" ? (store.voice.isActive ? "Завершить разговор" : "Позвонить агенту") : (store.voice.isActive ? "End voice conversation" : "Call agent"))
++        .disabled(!store.voice.isActive && (store.mode != .live || store.selectedConversationID == nil || store.isReplying || store.busy || store.route != .chat))
++    }
++}
++
++struct WorkspaceVoicePanel: View {
++    @Environment(WorkspaceStore.self) private var store
++    private var voice: VoiceConversationSession { store.voice }
++    private var russian: Bool { store.language == "ru" }
++    private var title: String {
++        if store.appleIntegrations?.interactions.pending != nil, voice.phase == .thinking { return russian ? "Нужно подтверждение на экране" : "Confirm on screen" }
++        switch voice.phase {
++        case .idle: return ""
++        case .preparing: return russian ? "Подготовка микрофона и языка…" : "Preparing microphone and language…"
++        case .listening: return russian ? "Слушаю" : "Listening"
++        case .finishing: return russian ? "Завершаю распознавание…" : "Finishing transcription…"
++        case .thinking: return russian ? "Агент работает…" : "Agent is working…"
++        case .speaking: return russian ? "Говорю — микрофон выключен" : "Speaking — microphone is off"
++        case .muted: return russian ? "Микрофон выключен" : "Microphone is off"
++        case .failed: return russian ? "Разговор остановлен" : "Conversation stopped"
++        }
++    }
++    var body: some View {
++        if voice.phase != .idle {
++            VStack(alignment: .leading, spacing: 8) {
++                HStack(spacing: 8) {
++                    Image(systemName: voice.phase == .listening ? "mic.fill" : "waveform")
++                        .foregroundStyle(voice.phase == .listening ? Color.green : WorkspaceStyle.secondary)
++                    Text(title).font(.callout.weight(.medium))
++                    Spacer(minLength: 4)
++                    if voice.phase == .preparing || voice.phase == .finishing || voice.phase == .thinking { ProgressView().controlSize(.small) }
++                    Button { voice.end() } label: { Image(systemName: "xmark").frame(width: 28, height: 28) }
++                        .buttonStyle(.plain).accessibilityLabel(russian ? "Закрыть голосовой режим" : "Close voice mode")
++                }
++                if let failure = voice.failureDescription { Text(failure).font(.callout).foregroundStyle(WorkspaceStyle.secondary) }
++                else if !voice.transcript.isEmpty { Text(voice.transcript).font(.callout).lineLimit(3).textSelection(.enabled) }
++                if voice.isActive {
++                    HStack(spacing: 12) {
++                        Button { voice.toggleMute() } label: {
++                            Label(russian ? (voice.microphoneMuted ? "Включить" : "Микрофон") : (voice.microphoneMuted ? "Unmute" : "Microphone"), systemImage: voice.microphoneMuted ? "mic.slash" : "mic")
++                        }.disabled(voice.phase == .preparing || voice.phase == .finishing)
++                        if voice.phase == .listening {
++                            Button(russian ? "Отправить фразу" : "Send phrase") { voice.submit() }
++                        }
++                        if voice.phase == .speaking { Button(russian ? "Перебить" : "Interrupt") { voice.interrupt() } }
++                        Spacer(minLength: 0)
++                        Button(role: .destructive) { voice.end() } label: { Image(systemName: "phone.down.fill") }
++                            .accessibilityLabel(russian ? "Завершить разговор" : "End conversation")
++                    }.font(.callout).buttonStyle(.bordered)
++                }
++            }
++            .padding(12).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 18))
++            .accessibilityElement(children: .contain)
++        }
++    }
++}
++
++struct WorkspaceVoiceLifecycle: ViewModifier {
++    @Environment(WorkspaceStore.self) private var store
++    @Environment(\.scenePhase) private var phase
++    func body(content: Content) -> some View {
++        content
++            .onChange(of: phase) { _, value in if value == .background { store.voice.end() } }
++            .onDisappear { store.voice.end() }
++            .onReceive(NotificationCenter.default.publisher(for: AVCaptureDevice.wasDisconnectedNotification)) { _ in store.voice.audioInterrupted() }
++            #if os(iOS)
++            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.interruptionNotification)) { note in
++                if (note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt) == AVAudioSession.InterruptionType.began.rawValue { store.voice.audioInterrupted() }
++            }
++            .onReceive(NotificationCenter.default.publisher(for: AVAudioSession.routeChangeNotification)) { note in
++                let reason = note.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
++                if reason == AVAudioSession.RouteChangeReason.oldDeviceUnavailable.rawValue || reason == AVAudioSession.RouteChangeReason.newDeviceAvailable.rawValue { store.voice.audioInterrupted() }
++            }
++            #endif
++    }
++}
+diff --git a/scripts/check-voice.sh b/scripts/check-voice.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/check-voice.sh
+@@ -0,0 +1,42 @@
++#!/bin/bash
++set -euo pipefail
++cd "$(dirname "$0")/.."
++products="$PWD/.build/xcode/Build/Products/Debug"
++checks="$PWD/.build/voice"
++app="$checks/VoiceVerification.app"
++mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources" "$checks/cache"
++/usr/bin/say -v Milena -o "$app/Contents/Resources/RussianFixture.aiff" "Привет. Это проверка голосового режима. Создай папку для отчёта."
++xcrun swiftc -parse-as-library -swift-version 6 -module-cache-path "$checks/cache" \
++    -I "$products" -I packages/BlotWorkspace/Sources/CSQLite \
++    "$products/BlotDomain.o" "$products/BlotWorkspace.o" "$products/BlotAppleIntegrations.o" -lsqlite3 \
++    scripts/verify-voice.swift -o "$checks/VoiceVerification.new"
++mv "$checks/VoiceVerification.new" "$app/Contents/MacOS/VoiceVerification"
++cat > "$app/Contents/Info.plist" <<'PLIST'
++<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict>
++<key>CFBundleIdentifier</key><string>dev.blot.voice-verification</string>
++<key>CFBundleExecutable</key><string>VoiceVerification</string><key>CFBundlePackageType</key><string>APPL</string>
++<key>CFBundleName</key><string>Blot Voice Verification</string><key>CFBundleVersion</key><string>1</string>
++<key>NSPrincipalClass</key><string>NSApplication</string>
++<key>NSMicrophoneUsageDescription</key><string>Проверка голосового разговора Blot по вашему запросу.</string>
++<key>NSSpeechRecognitionUsageDescription</key><string>Проверка локального распознавания речи для Blot.</string>
++</dict></plist>
++PLIST
++cat > "$checks/Voice.entitlements" <<'PLIST'
++<?xml version="1.0" encoding="UTF-8"?><plist version="1.0"><dict>
++<key>com.apple.security.app-sandbox</key><true/>
++<key>com.apple.security.device.audio-input</key><true/>
++</dict></plist>
++PLIST
++scripts/sign-native.sh --entitlements "$checks/Voice.entitlements" "$app"
++codesign --verify --strict "$app"
++mode="${1:---self-test}"
++if [[ "$mode" == --interactive ]]; then
++    /usr/bin/open -n "$app"
++else
++    log="$checks/${mode#--}.log"
++    /usr/bin/open -n -W "$app" --args "$mode"
++    cp "$HOME/Library/Containers/dev.blot.voice-verification/Data/Library/Caches/VoiceVerification.log" "$log"
++    cat "$log"
++    if [[ "$mode" == --capture-smoke ]]; then rg -q '^PASS: real microphone verification completed$' "$log"
++    else rg -q '^PASS: native voice round trip completed$' "$log"; fi
++fi
+diff --git a/scripts/verify-voice.swift b/scripts/verify-voice.swift
+new file mode 100644
+--- /dev/null
++++ b/scripts/verify-voice.swift
+@@ -0,0 +1,118 @@
++import AppKit
++import AVFoundation
++import BlotAppleIntegrations
++import Foundation
++import Speech
++import SwiftUI
++
++@MainActor private func diagnostic(_ value: String) {
++    print(value)
++    let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
++    try? FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
++    let url = cache.appendingPathComponent("VoiceVerification.log")
++    var data = (try? Data(contentsOf: url)) ?? Data()
++    if data.count > 64 * 1024 { data = Data() }
++    data.append(Data((value + "\n").utf8)); try? data.write(to: url, options: .atomic)
++}
++
++@MainActor private func roundTrip() async throws {
++    diagnostic("CHECK: Russian locale and voice")
++    let locale = Locale(identifier: "ru-RU")
++    guard let supported = await DictationTranscriber.supportedLocale(equivalentTo: locale),
++          AVSpeechSynthesisVoice(language: "ru-RU") != nil else { throw VoiceFailure.languageUnavailable }
++    let transcriber = DictationTranscriber(locale: supported, preset: .longDictation)
++    // Verification never downloads a model implicitly.
++    guard await DictationTranscriber.installedLocales.contains(supported) else { throw VoiceFailure.languageUnavailable }
++    guard let url = Bundle.main.url(forResource: "RussianFixture", withExtension: "aiff") else { throw VoiceFailure.audioUnavailable }
++    diagnostic("CHECK: recognize generated system-voice fixture")
++    let input = try AVAudioFile(forReading: url)
++    let analyzer = SpeechAnalyzer(modules: [transcriber])
++    let transcript = Task { @MainActor in
++        var value = VoiceTranscript()
++        for try await result in transcriber.results {
++            value.replace(start: result.range.start.seconds, end: result.range.end.seconds, text: String(result.text.characters))
++        }
++        return value.text
++    }
++    do {
++        try await analyzer.start(inputAudioFile: input, finishAfterFile: true)
++        let text = try await transcript.value
++        guard text.localizedCaseInsensitiveContains("проверка"), text.localizedCaseInsensitiveContains("папку") else { throw VoiceFailure.emptyResponse }
++        diagnostic("PASS: actual Russian system voice → PCM file → local DictationTranscriber: \(text)")
++        let output = AppleVoiceOutput(); try output.prepare(locale: locale)
++        try await output.speak("Проверка завершена. Голосовой режим работает.")
++        diagnostic("PASS: production AppleVoiceOutput playback completed")
++    } catch { await analyzer.cancelAndFinishNow(); transcript.cancel(); throw error }
++}
++
++@MainActor private func captureSmoke() async throws {
++    guard AVCaptureDevice.authorizationStatus(for: .audio) == .authorized else { throw VoiceFailure.microphoneDenied }
++    let input = AppleVoiceInput()
++    try await input.prepare(locale: Locale(identifier: "ru-RU"))
++    for cycle in 1...3 {
++        try await input.start(update: { _ in }, activity: {}, failure: { error in diagnostic("FAIL: capture callback: \(error)") })
++        try await Task.sleep(for: .seconds(2))
++        await input.stop()
++        diagnostic("PASS: real microphone start/stop cycle \(cycle)")
++    }
++}
++
++private struct VoiceProbeView: View {
++    @State private var voice = VoiceConversationSession()
++    @State private var replies = 0
++    private let id = UUID()
++    var body: some View {
++        VStack(alignment: .leading, spacing: 18) {
++            Text("Blot — проверка голоса").font(.title2.bold())
++            Text("Изолированная проверка микрофона и русского голоса. Произнесённый текст не отправляется в ИИ и не записывается в аккаунт.")
++                .foregroundStyle(.secondary)
++            Text(String(describing: voice.phase)).font(.headline)
++            Text(voice.failureDescription ?? (voice.transcript.isEmpty ? "Нажмите «Начать» и произнесите короткую фразу." : voice.transcript))
++                .frame(maxWidth: .infinity, minHeight: 65, alignment: .leading).textSelection(.enabled)
++            HStack {
++                Button("Начать") {
++                    voice.begin(conversationID: id, locale: Locale(identifier: "ru-RU")) { text in
++                        replies += 1
++                        diagnostic("PASS: microphone → finalized transcript (characters=\(text.count)), turn=\(replies)")
++                        return "Я услышал: \(text)"
++                    }
++                }.disabled(voice.isActive)
++                Button("Отправить фразу") { voice.submit() }.disabled(voice.phase != .listening)
++                Button("Перебить") { voice.interrupt() }.disabled(voice.phase != .speaking)
++                Button("Завершить") { voice.end(); diagnostic("STOP: voice conversation ended by owner") }
++            }.buttonStyle(.bordered)
++            Text("После ответа микрофон включится снова. Во время озвучки он выключен.").font(.caption).foregroundStyle(.secondary)
++        }.padding(24).frame(width: 640)
++            .onDisappear { voice.end() }
++    }
++}
++
++@MainActor @main private enum VoiceVerification {
++    private static var window: NSWindow?
++    static func main() {
++        setbuf(stdout, nil)
++        let cache = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
++        try? FileManager.default.removeItem(at: cache.appendingPathComponent("VoiceVerification.log"))
++        let application = NSApplication.shared
++        let smoke = CommandLine.arguments.contains("--capture-smoke")
++        let automated = smoke || CommandLine.arguments.contains("--self-test")
++        application.setActivationPolicy(automated ? .accessory : .regular)
++        if automated {
++            Task {
++                do {
++                    if smoke { try await captureSmoke(); diagnostic("PASS: real microphone verification completed") }
++                    else { try await roundTrip(); diagnostic("PASS: native voice round trip completed") }
++                    exit(0)
++                }
++                catch { diagnostic("FAIL: \(error)"); exit(1) }
++            }
++            Task { try? await Task.sleep(for: .seconds(35)); diagnostic("FAIL: native voice verification timed out"); exit(2) }
++        } else {
++            let value = NSWindow(contentRect: CGRect(x: 200, y: 200, width: 640, height: 360), styleMask: [.titled, .closable, .miniaturizable], backing: .buffered, defer: false)
++            value.title = "Blot — проверка голоса"
++            value.contentView = NSHostingView(rootView: VoiceProbeView())
++            window = value; value.makeKeyAndOrderFront(nil); application.activate(ignoringOtherApps: true)
++        }
++        application.run()
++    }
++}
+diff --git a/scripts/check-voice-chat.sh b/scripts/check-voice-chat.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/check-voice-chat.sh
+@@ -0,0 +1,19 @@
++#!/bin/bash
++set -euo pipefail
++cd "$(dirname "$0")/.."
++products="$PWD/.build/xcode/Build/Products/Debug"
++checks="$PWD/.build/voice/chat"
++mkdir -p "$checks/cache"
++# Reuse the exact compiled app implementation, excluding only its @main entry.
++python3 - <<'PY'
++from pathlib import Path
++objects=Path('.build/xcode/Build/Intermediates.noindex/Blot.build/Debug/Blot.build/Objects-normal/arm64')
++items=sorted(p.resolve() for p in objects.glob('*.o') if p.name != 'BlotMacApp.o')
++assert items and all('"' not in str(p) for p in items)
++Path('.build/voice/chat/objects.txt').write_text('\n'.join('"'+str(p)+'"' for p in items)+'\n')
++PY
++xcrun swiftc -parse-as-library -swift-version 5 -default-isolation MainActor -module-cache-path "$checks/cache" \
++    -I "$products" -I packages/BlotWorkspace/Sources/CSQLite \
++    "$products/BlotDomain.o" "$products/BlotWorkspace.o" "$products/BlotAppleIntegrations.o" "$products/BlotDesign.o" "$products/BlotAPI.o" \
++    @"$checks/objects.txt" -lsqlite3 scripts/verify-voice-chat.swift -o "$checks/verify"
++"$checks/verify"
+diff --git a/scripts/verify-voice-chat.swift b/scripts/verify-voice-chat.swift
+new file mode 100644
+--- /dev/null
++++ b/scripts/verify-voice-chat.swift
+@@ -0,0 +1,79 @@
++import AppKit
++import BlotAppleIntegrations
++import BlotDomain
++import BlotWorkspace
++import Foundation
++@testable import Blot
++
++@MainActor private final class ChatVoiceInput: VoiceRecognizing {
++    var active = false
++    var phrase = "Привет"
++    func prepare(locale: Locale) async throws {}
++    func start(update: @escaping @MainActor (String) -> Void, activity: @escaping @MainActor () -> Void, failure: @escaping @MainActor (Error) -> Void) async throws { active = true }
++    func finish() async throws -> String { active = false; return phrase }
++    func stop() async { active = false }
++}
++@MainActor private final class ChatVoiceOutput: VoiceSpeaking {
++    var spoken: [String] = []
++    func prepare(locale: Locale) throws {}
++    func speak(_ text: String) async throws { spoken.append(text) }
++    func stop() {}
++}
++private struct ChatVoiceModel: ChatModel {
++    func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
++        AsyncThrowingStream { continuation in
++            continuation.yield(.text("Проверка голосового чата завершена."))
++            continuation.yield(.finished(.stop)); continuation.finish()
++        }
++    }
++}
++@MainActor private func waitUntil(_ condition: () -> Bool) async throws {
++    for _ in 0..<300 {
++        if condition() { return }
++        try await _Concurrency.Task.sleep(for: .milliseconds(20))
++    }
++    throw VoiceFailure.emptyResponse
++}
++
++@MainActor @main private enum VoiceChatVerification {
++    static func main() async throws {
++        let root = FileManager.default.temporaryDirectory.appendingPathComponent("blot-voice-chat-" + UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: root) }
++        let local = try LocalWorkspaceService(databaseURL: root.appendingPathComponent("workspace.sqlite"), makeModel: { _ in ChatVoiceModel() })
++        let input = ChatVoiceInput(), output = ChatVoiceOutput()
++        let voice = VoiceConversationSession(input: input, output: output)
++        let store = WorkspaceStore(mode: .live, service: local, voice: voice)
++        await store.loadWorkspace()
++        store.form.agent = WorkspaceAgentForm(name: "Voice fixture", instructions: "Answer briefly")
++        await store.perform(.createAgent)
++        guard let agentID = store.selectedAgentID else { throw VoiceFailure.emptyResponse }
++        await store.newChat(with: agentID)
++        guard let directID = store.selectedConversationID else { throw VoiceFailure.emptyResponse }
++        try await checkTurn(store: store, input: input, output: output, conversationID: directID)
++        print("PASS: voice → actual WorkspaceStore → durable personal chat → model → speech, typed draft preserved")
++        let created = await store.createGroup(title: "Voice group fixture", agentIDs: [agentID])
++        guard created, let groupID = store.selectedConversationID else { throw VoiceFailure.emptyResponse }
++        try await checkTurn(store: store, input: input, output: output, conversationID: groupID)
++        print("PASS: voice → actual group conversation routing → final reply → one speech output")
++        store.beginVoiceConversation()
++        try await waitUntil { voice.phase == .listening }
++        store.navigate(.files)
++        try await waitUntil { !input.active }
++        guard voice.phase == .idle else { throw VoiceFailure.interrupted }
++        print("PASS: leaving the chat releases voice input")
++        try await local.close()
++    }
++    private static func checkTurn(store: WorkspaceStore, input: ChatVoiceInput, output: ChatVoiceOutput, conversationID: UUID) async throws {
++        store.form.composer.draft = "Unsent keyboard draft"
++        let before = output.spoken.count
++        store.beginVoiceConversation()
++        try await waitUntil { store.voice.phase == .listening }
++        store.voice.submit(); store.voice.submit()
++        try await waitUntil { output.spoken.count == before + 1 && store.voice.phase == .listening }
++        guard output.spoken.last == "Проверка голосового чата завершена.",
++              store.form.composer.draft == "Unsent keyboard draft",
++              store.snapshot.messages.filter({ $0.conversationId == conversationID && $0.role == .user }).count == 1,
++              store.snapshot.messages.contains(where: { $0.conversationId == conversationID && $0.role == .assistant && $0.delivery == .completed && $0.content == output.spoken.last }) else { throw VoiceFailure.emptyResponse }
++        store.voice.end(); try await waitUntil { !input.active }
++    }
++}

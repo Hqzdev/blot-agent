@@ -5,7 +5,8 @@ import SwiftUI
 struct WorkspaceSkillRunner: View {
     let skill: BlotV3.Skill
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var revisionID: UUID?
     @State private var agentID: UUID?
     @State private var values: [String: String] = [:]
@@ -21,16 +22,13 @@ struct WorkspaceSkillRunner: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkspacePanelForm {
                 Section {
-                    Picker(ru ? "Версия" : "Revision", selection: $revisionID) {
-                        ForEach(revisions, id: \.metadata.id) { version in
-                            Text(version.metadata.createdAt, format: .dateTime.day().month().hour().minute().second()).tag(Optional(version.metadata.id))
-                        }
-                    }.onChange(of: revisionID) { _, _ in values = [:] }
-                    Picker(ru ? "Агент" : "Agent", selection: $agentID) {
-                        ForEach(agents, id: \.metadata.id) { agent in Text(agent.name).tag(Optional(agent.metadata.id)) }
-                    }
+                    WorkspaceChoice(title: ru ? "Версия" : "Revision", selection: $revisionID,
+                        options: revisions.map { .init(Optional($0.metadata.id), $0.metadata.createdAt.formatted(.dateTime.day().month().hour().minute().second().locale(Locale(identifier: store.language)))) })
+                        .onChange(of: revisionID) { _, _ in values = [:] }
+                    WorkspaceChoice(title: ru ? "Агент" : "Agent", selection: $agentID,
+                        options: agents.map { .init(Optional($0.metadata.id), $0.name) })
                     if agents.isEmpty { Text(ru ? "Назначьте навык агенту в настройках навыка." : "Assign the skill to an agent in its settings.").foregroundStyle(.secondary) }
                 }
                 if let revision { Section(ru ? "Инструкция" : "Instructions") { Text(revision.instructions).textSelection(.enabled) } }
@@ -45,12 +43,15 @@ struct WorkspaceSkillRunner: View {
                     Text(ru ? "Выбранная версия и параметры сохранятся в задаче." : "The selected revision and parameters are saved with the task.").font(.caption).foregroundStyle(.secondary)
                 }.disabled(agentID == nil || revision == nil)
                 if let failure { Text(failure).foregroundStyle(.red) }
-            }.formStyle(.grouped).disabled(busy)
+            }.disabled(busy)
             .navigationTitle(skill.name)
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if panelNavigation != nil { WorkspacePanelFormHeader(title: skill.name) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
+            }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } } }
         }.interactiveDismissDisabled(busy)
         #if os(macOS)
-        .frame(width: 560, height: 620)
+        .frame(width: panelNavigation == nil ? 560 : nil, height: panelNavigation == nil ? 620 : nil)
         #endif
         .onAppear {
             revisionID = skill.activeRevisionId
@@ -66,7 +67,8 @@ struct WorkspaceSkillRunner: View {
                 if schedule {
                     let goal = try await commands.renderSkill(revision.metadata.id, values: values)
                     try await store.refreshSkills()
-                    dismiss(); store.navigate(.createSchedule)
+                    dismiss()
+                    if let panelNavigation { panelNavigation.open(.createSchedule) } else { store.navigate(.createSchedule) }
                     store.form.schedule = WorkspaceScheduleForm()
                     store.form.schedule.name = skill.name; store.form.schedule.goal = goal
                     store.form.schedule.skillRevisionID = revision.metadata.id; store.form.schedule.agentID = agentID
@@ -76,7 +78,10 @@ struct WorkspaceSkillRunner: View {
                     let isMember = store.snapshot.participants?.contains { $0.conversationId == chat?.metadata.id && $0.kind == .agent && $0.participantId == agentID && !$0.removed } ?? false
                     let chatID = (chat?.kind == .group ? isMember : chat?.agentId == agentID) ? chat?.metadata.id : nil
                     let id = try await commands.runSkill(skill.metadata.id, revisionID: revision.metadata.id, agentID: agentID, values: values, conversationID: chatID)
-                    try await store.refreshSkills(taskID: id); dismiss()
+                    if let panelNavigation {
+                        try await store.refreshSkills()
+                        dismiss(); panelNavigation.taskID = id; panelNavigation.open(.running)
+                    } else { try await store.refreshSkills(taskID: id); dismiss() }
                 }
             } catch { failure = WorkspaceSkillFailure.text(error, russian: ru) }
         }

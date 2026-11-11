@@ -1,107 +1,107 @@
 <p align="center">
-  <img src="assets/readme/hero.svg" width="100%" alt="Blot — ИИ-помощник с командой агентов для Mac и iPhone">
+  <img src="assets/readme/hero.svg" width="100%" alt="Blot — an AI assistant with a team of agents for Mac and iPhone">
 </p>
 
 <p align="center">
-  <a href="#скриншоты">Интерфейс</a> ·
-  <a href="#быстрый-старт">Быстрый старт</a> ·
-  <a href="#архитектура">Архитектура</a> ·
-  <a href="#проверки">Проверки</a> ·
-  <a href="docs/README.md">Документация</a>
+  <a href="#screenshots">Interface</a> ·
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#architecture">Architecture</a> ·
+  <a href="#checks">Checks</a> ·
+  <a href="docs/README.md">Documentation</a>
 </p>
 
 # Blot
 
-**Одна задача. Команда агентов. Результат в вашем рабочем пространстве.**
+**One task. A team of agents. Results in your workspace.**
 
-Blot — разрабатываемый ИИ-помощник с нативными приложениями для Mac и iPhone. Идея продукта: вы ставите задачу в чате, координатор подключает агентов с нужными ролями, а планы, файлы и действия собираются в одном месте. Здесь находятся исходники приложений, локальных сервисов, сайта и контрактов.
+Blot is an AI assistant in development, with native apps for Mac and iPhone. You describe a task in chat, a coordinator brings in agents with the right roles, and plans, files, and actions come together in one place. This repository contains the apps, local services, website, and contracts.
 
 <p align="center">
-  <img src="docs/status/verification/mac-team-demo/workspace.jpg" width="100%" alt="Blot на macOS: команда обсуждает счета и готовит черновик письма; справа открыты участники, расписания и подключения">
+  <img src="docs/status/verification/mac-team-demo/workspace.jpg" width="100%" alt="Blot on macOS: a team discusses invoices and drafts an email, with participants, schedules, and connections open on the right">
 </p>
 
-<p align="center"><sub>Командный чат на macOS. Снимок локального демо: внешние сервисы и действия воспроизводятся на тестовых данных.</sub></p>
+<p align="center"><sub>Team chat on macOS. This screenshot is from the local demo, where external services and actions use test data.</sub></p>
 
-## Что внутри
+## What's inside
 
-| Область | Назначение |
+| Area | Purpose |
 | --- | --- |
-| **Команда агентов** | Координатор и специалисты со своими именами, ролями, инструкциями и образами. |
-| **Чаты и группы** | Личные разговоры, обсуждение задачи несколькими агентами и просмотр результатов. |
-| **Файлы и контекст** | Вложения, документы, память и навыки рядом с перепиской. |
-| **Согласование действий** | Просмотр подготовленного действия до выполнения; модели разрешений и правил. |
-| **Расписания** | Интерфейсы повторяющихся задач, напоминаний и выбора исполнителя. |
-| **Подключения** | Интерфейсы сервисов и MCP, конфигурация моделей и учётных записей. |
+| **Agent team** | A coordinator and specialists with their own names, roles, instructions, and appearances. |
+| **Chats and groups** | Direct conversations, discussions between multiple agents, and task results. |
+| **Files and context** | Attachments, documents, memory, and skills alongside your conversations. |
+| **Action approval** | Review prepared actions before execution, with permission modes and rules. |
+| **Schedules** | Interfaces for recurring tasks, reminders, and executor selection. |
+| **Connections** | Service and MCP interfaces, model configuration, and accounts. |
 
-Это карта возможностей проекта. Готовность конкретного сценария зависит от подключённого сервиса и режима запуска.
+This is an overview of the project's capabilities. Availability of a particular workflow depends on the connected service and launch mode.
 
-## Скриншоты
+## Screenshots
 
-### iPhone · задача, команда, расписание
+### iPhone · tasks, team, and schedules
 
 <p align="center">
-  <img src="docs/status/verification/apple-v3/ios/10-chat-with-ceo-light.png" width="30%" alt="iPhone: обсуждение задачи с Blot CEO и план работы">
-  <img src="docs/status/verification/apple-v3/ios/15-my-agents-light.png" width="30%" alt="iPhone: каталог агентов с ролями и персональными аватарами">
-  <img src="docs/status/verification/apple-v3/ios/17-schedules-light.png" width="30%" alt="iPhone: расписания утреннего обзора и недельного меню">
+  <img src="docs/status/verification/apple-v3/ios/10-chat-with-ceo-light.png" width="30%" alt="iPhone: discussing a task and reviewing a plan with Blot CEO">
+  <img src="docs/status/verification/apple-v3/ios/15-my-agents-light.png" width="30%" alt="iPhone: an agent catalog with roles and individual avatars">
+  <img src="docs/status/verification/apple-v3/ios/17-schedules-light.png" width="30%" alt="iPhone: schedules for a morning digest and weekly meal plan">
 </p>
 
-<p align="center"><sub>Снимки каталога Apple v3 с тестовыми данными. Экраны показывают интерфейс; функциональная приёмка проводится отдельно.</sub></p>
+<p align="center"><sub>Apple v3 screen catalog screenshots with test data. These show the interface; functional acceptance is checked separately.</sub></p>
 
 <details>
-<summary><strong>Ещё скриншоты: каталог агентов, тёмная тема и сайт</strong></summary>
+<summary><strong>More screenshots: agent catalog, dark mode, and website</strong></summary>
 
-### macOS · агенты и подключения
+### macOS · agents and connections
 
-<img src="docs/status/verification/mac-team-demo/marketplace.jpg" width="100%" alt="macOS: каталог шаблонов агентов и подключаемых сервисов в локальном демо">
+<img src="docs/status/verification/mac-team-demo/marketplace.jpg" width="100%" alt="macOS: agent templates and service connections in the local demo">
 
-### macOS · настройки в тёмной теме
+### macOS · settings in dark mode
 
-<img src="docs/status/verification/mac-settings-page/general-dark.jpg" width="100%" alt="macOS: страница общих настроек Blot в тёмной теме">
+<img src="docs/status/verification/mac-settings-page/general-dark.jpg" width="100%" alt="macOS: Blot's general settings page in dark mode">
 
-### Веб · лендинг Blot
+### Web · Blot landing page
 
-<img src="landing/design-evidence/implementation-desktop-hero.png" width="100%" alt="Первый экран сайта Blot: описание помощника, навигация и демонстрация продукта">
+<img src="landing/design-evidence/implementation-desktop-hero.png" width="100%" alt="Blot's website hero: an introduction to the assistant, navigation, and product preview">
 
 </details>
 
-Исходные макеты — в [`screens/`](screens/) и [`agent.pen`](agent.pen). Снимки запущенных интерфейсов и отчёты проверок — в [`docs/status/verification/`](docs/status/verification/).
+Source designs are in [`screens/`](screens/) and [`agent.pen`](agent.pen). Screenshots of running interfaces and verification reports are in [`docs/status/verification/`](docs/status/verification/).
 
-## Статус разработки
+## Development status
 
-Проект находится в активной разработке. В репозитории есть SwiftUI-клиенты, Swift-пакет рабочего пространства с SQLite, Java backend и сервис аккаунтов, а также сайт Next.js с кодом авторизации. Демо команды на Mac работает отдельно от обычного режима приложения.
+The project is under active development. The repository includes SwiftUI clients, a SQLite-backed Swift workspace package, a Java backend and account service, and a Next.js website with authentication code. The Mac team demo runs separately from the app's regular mode.
 
-| Часть | Состояние в репозитории |
+| Component | Repository status |
 | --- | --- |
-| **macOS и iOS** | Исходники нативных приложений, общий интерфейс v3 и каталог предпросмотра в Debug. |
-| **Рабочее пространство** | Сервисы чатов, агентов, файлов, задач, разрешений, памяти и синхронизации; компонентные тесты. |
-| **Backend и аккаунты** | Модули локального Java-сервера, отдельный `cloud`, веб-авторизация и передача сессии в приложение. |
-| **Сайт** | Лендинг, страницы продукта, документация и проектный `/workspace`. |
-| **Android и Windows** | Целевые платформы в ТЗ и макетах; нативных приложений в этом репозитории пока нет. |
-| **Выпуск** | Инструкции ниже предназначены для разработки из исходников; готовность релиза оценивается по матрице приёмки. |
+| **macOS and iOS** | Native app sources, a shared v3 interface, and a Debug preview catalog. |
+| **Workspace** | Chat, agent, file, task, permission, memory, and sync services, with component tests. |
+| **Backend and accounts** | Local Java server modules, a separate `cloud` module, web authentication, and session handoff to the app. |
+| **Website** | Landing page, product pages, documentation, and a project `/workspace`. |
+| **Android and Windows** | Target platforms in the specification and designs; native apps are not yet included in this repository. |
+| **Release** | The instructions below are for development from source. Release readiness is assessed against the acceptance matrix. |
 
-Готовность экранов, успешная сборка и тесты компонентов проверяют разные части продукта. Полный сценарий с реальной моделью, почтой, подключениями и физическим iPhone требует отдельной проверки. Основные требования и BLOT-01…30 описаны в [ТЗ от 1 ноября 2026](docs/product/blot-technical-specification.md); история проверок — в [`docs/status/`](docs/status/).
+Screen reviews, successful builds, and component tests cover different parts of the product. A complete workflow with a real model, email, connections, and a physical iPhone requires separate verification. The main requirements and BLOT-01…30 are described in the [November 1, 2026 specification](docs/product/blot-technical-specification.md); verification history is in [`docs/status/`](docs/status/).
 
-## Быстрый старт
+## Quick start
 
-### Получить исходники
+### Get the source
 
 ```bash
 git clone https://github.com/Hqzdev/kiln-agent.git
 cd kiln-agent
 ```
 
-### Окружение
+### Requirements
 
-| Компонент | Что потребуется |
+| Component | Requirements |
 | --- | --- |
-| Сайт | Node.js 24 и npm, как в CI. |
-| Приложения Apple | macOS, Xcode с SDK macOS/iOS 26 и Swift 6.2 или новее. Для упаковки Java backend нужен JDK 25. |
-| Backend / сервис аккаунтов | JDK 25; Gradle Wrapper находится в репозитории. |
-| Проверки схем | Python 3 и `jsonschema==4.26.0`. |
+| Website | Node.js 24 and npm, matching CI. |
+| Apple apps | macOS, Xcode with macOS/iOS 26 SDKs, and Swift 6.2 or later. Packaging the Java backend requires JDK 25. |
+| Backend / account service | JDK 25; the Gradle Wrapper is included. |
+| Schema checks | Python 3 and `jsonschema==4.26.0`. |
 
-При первой установке зависимостей нужна сеть. Приложения рассчитаны на **macOS 26+** и **iOS 26+**.
+The first dependency installation requires network access. The apps target **macOS 26+** and **iOS 26+**.
 
-### Сайт и документация
+### Website and documentation
 
 ```bash
 cd landing
@@ -109,90 +109,90 @@ npm ci
 npm run dev
 ```
 
-Откройте [localhost:3000](http://localhost:3000). Главная страница показывает продукт, `/docs` — документацию, `/workspace` — план разработки. Проектный `/workspace` служит навигацией по задачам и ТЗ; запуск агентных задач находится в приложении.
+Open [localhost:3000](http://localhost:3000). The home page presents the product, `/docs` contains documentation, and `/workspace` shows the development plan. The website's `/workspace` provides navigation through tasks and the specification; agent tasks run in the app.
 
-`npm run build` обновляет скачиваемое ТЗ и копии документации, затем собирает Next.js. Для работы серверной авторизации нужны дополнительные параметры окружения.
+`npm run build` refreshes the downloadable specification and documentation copies, then builds Next.js. Server-side authentication requires additional environment configuration.
 
 ### Mac
 
-Откройте [`apps/Blot.xcodeproj`](apps/Blot.xcodeproj), выберите схему **BlotMac** и запустите приложение. Либо из корня репозитория:
+Open [`apps/Blot.xcodeproj`](apps/Blot.xcodeproj), select the **BlotMac** scheme, and run the app. Alternatively, from the repository root:
 
 ```bash
 ./script/build_and_run.sh
 ```
 
-Скрипт собирает приложение, проверяет наличие встроенного Java backend и запускает Blot. Доступны отдельные режимы:
+The script builds the app, checks for the embedded Java backend, and launches Blot. Additional modes are available:
 
 ```bash
-# Собрать без запуска
+# Build without launching
 ./script/build_and_run.sh --build-only
 
-# Запустить локальное демо команды на тестовых данных
+# Launch the local team demo with test data
 ./script/build_and_run.sh --design
 ```
 
-### iPhone и симулятор
+### iPhone
 
-В том же Xcode-проекте выберите схему **BlotIOS** и доступный симулятор iOS 26+. Для физического iPhone настройте команду подписи в Xcode.
+In the same Xcode project, select the **BlotIOS** scheme and your connected physical iPhone. Configure the signing team in Xcode. The repository's default verification workflow uses physical devices; simulators and their runtimes are only used when explicitly requested.
 
-Каталог экранов доступен в Debug. Для открытия конкретного экрана v3 добавьте в **Scheme → Run → Arguments**:
+The screen catalog is available in Debug. To open a specific v3 screen, add the following under **Scheme → Run → Arguments**:
 
 ```text
 --workspace-preview --screen 10-chat-with-ceo
 ```
 
-Имена экранов совпадают с файлами в [`screens/ios/`](screens/ios/); для Mac используйте [`screens/desktop/`](screens/desktop/), например `05-new-task`. Предпросмотр использует fixtures и не выполняет внешние действия.
+Screen names match the files in [`screens/ios/`](screens/ios/). For Mac, use [`screens/desktop/`](screens/desktop/), such as `05-new-task`. Previews use fixtures and do not perform external actions.
 
-### Java backend и аккаунты
+### Java backend and accounts
 
-Из корня репозитория:
+From the repository root:
 
 ```bash
-# Локальный API
+# Local API
 ./backend/gradlew -p backend :api:bootRun
 
-# Отдельный сервис аккаунтов для разработки
+# Separate account service for development
 ./scripts/run-cloud.sh
 ```
 
-Параметры SMTP, моделей, Google OAuth, базы и адресов сервисов собраны в [`.env.example`](.env.example). При необходимости создайте локальный `.env` и заполните параметры выбранного сценария. Не добавляйте ключи и локальные базы в Git. Для личных Debug-сборок настройки GigaChat могут включаться в `.app` — учитывайте это перед передачей сборки.
+SMTP, model, Google OAuth, database, and service URL settings are listed in [`.env.example`](.env.example). If needed, create a local `.env` and configure the workflow you want to run. Keep keys and local databases out of Git. Personal Debug builds may embed GigaChat configuration in the `.app`; account for this before sharing a build.
 
-Подробности: [backend](backend/README.md), [окружение](docs/status/installation-environment.md), [конфигурация Apple-сборок](scripts/apple_build_configuration.py).
+See the [backend guide](backend/README.md), [environment guide](docs/status/installation-environment.md), and [Apple build configuration](scripts/apple_build_configuration.py).
 
-## Архитектура
+## Architecture
 
-| Слой | Ответственность | Исходники |
+| Layer | Responsibility | Sources |
 | --- | --- | --- |
-| **Apple-клиенты** | Навигация, экраны, ввод пользователя и представление состояния. | [`apps/`](apps/) |
-| **Общие Swift-пакеты** | Домен, API, дизайн, граф и сервисы рабочего пространства. | [`packages/`](packages/) |
-| **Локальный backend** | Доменная логика Java, сценарии, системные адаптеры и HTTP API. | [`backend/`](backend/) |
-| **Аккаунты** | Java-модуль `cloud` и серверные модули веб-авторизации. | [`backend/cloud/`](backend/cloud/), [`landing/lib/auth/`](landing/lib/auth/), [`landing/lib/accounts/`](landing/lib/accounts/) |
-| **Контракты** | OpenAPI, JSON Schema и общие проверочные данные. | [`contracts/`](contracts/), [`fixtures/`](fixtures/) |
-| **Веб** | Next.js, React, сайт продукта и публикация документации. | [`landing/`](landing/) |
+| **Apple clients** | Navigation, screens, user input, and state presentation. | [`apps/`](apps/) |
+| **Shared Swift packages** | Domain, API, design, graph, and workspace services. | [`packages/`](packages/) |
+| **Local backend** | Java domain logic, use cases, system adapters, and HTTP API. | [`backend/`](backend/) |
+| **Accounts** | Java `cloud` module and server-side web authentication modules. | [`backend/cloud/`](backend/cloud/), [`landing/lib/auth/`](landing/lib/auth/), [`landing/lib/accounts/`](landing/lib/accounts/) |
+| **Contracts** | OpenAPI, JSON Schema, and shared verification data. | [`contracts/`](contracts/), [`fixtures/`](fixtures/) |
+| **Web** | Next.js, React, product website, and documentation publishing. | [`landing/`](landing/) |
 
-Java backend разделён на `core`, `application`, `infrastructure`, `api` и `cloud`. Общие Swift-пакеты: `BlotDomain`, `BlotAPI`, `BlotDesign`, `BlotGraph`, `BlotWorkspace`.
+The Java backend is split into `core`, `application`, `infrastructure`, `api`, and `cloud`. Shared Swift packages include `BlotDomain`, `BlotAPI`, `BlotDesign`, `BlotGraph`, and `BlotWorkspace`.
 
-Код следует принципам единственной ответственности, инкапсуляции и композиции. Распределение обязанностей и целевая архитектура описаны в [карте модулей](docs/architecture/module-map.md); версии сущностей и API — в [`contracts/v3/`](contracts/v3/).
+The code follows single responsibility, encapsulation, and composition principles. Component responsibilities and the target architecture are described in the [module map](docs/architecture/module-map.md); entity and API versions are in [`contracts/v3/`](contracts/v3/).
 
 ```text
-apps/           Mac/iPhone-клиенты и общий SwiftUI-интерфейс
-packages/       Переиспользуемые Swift-пакеты и их тесты
-backend/        Java-модули, Gradle Wrapper и серверные тесты
-landing/        Сайт, веб-авторизация и проектный workspace
-contracts/      Контракты API и схемы сущностей
-fixtures/       Общие тестовые данные
-docs/           ТЗ, архитектура, правила и отчёты проверок
-screens/        Макеты экранов по платформам
-scripts/        Проверки и подготовка окружения
-script/         Сборка и запуск Mac-приложения
+apps/           Mac/iPhone clients and shared SwiftUI interface
+packages/       Reusable Swift packages and their tests
+backend/        Java modules, Gradle Wrapper, and server tests
+landing/        Website, web authentication, and project workspace
+contracts/      API contracts and entity schemas
+fixtures/       Shared test data
+docs/           Specification, architecture, rules, and verification reports
+screens/        Screen designs by platform
+scripts/        Checks and environment preparation
+script/         Mac app build and launch
 ```
 
-## Проверки
+## Checks
 
-Команды запускаются из корня, если явно не указан переход в папку.
+Run commands from the repository root unless a directory change is shown.
 
 <details open>
-<summary><strong>Сайт: план, авторизация и сборка</strong></summary>
+<summary><strong>Website: plan, authentication, and build</strong></summary>
 
 ```bash
 cd landing
@@ -204,7 +204,7 @@ npm run build
 </details>
 
 <details>
-<summary><strong>Swift: домен, рабочее пространство и дизайн</strong></summary>
+<summary><strong>Swift: domain, workspace, and design</strong></summary>
 
 ```bash
 swift test --package-path packages/BlotDomain
@@ -213,7 +213,7 @@ swift test --package-path packages/BlotDesign
 swift test --package-path packages/BlotGraph
 ```
 
-`BlotAPI` использует HTTP-фикстуры из Java-проверок:
+`BlotAPI` uses HTTP fixtures from the Java checks:
 
 ```bash
 BLOT_HTTP_FIXTURES="$PWD/.build/http-fixtures" swift test --package-path packages/BlotAPI
@@ -222,18 +222,18 @@ BLOT_HTTP_FIXTURES="$PWD/.build/http-fixtures" swift test --package-path package
 </details>
 
 <details>
-<summary><strong>Java: форматирование, зависимости, тесты и JAR</strong></summary>
+<summary><strong>Java: formatting, dependencies, tests, and JAR</strong></summary>
 
 ```bash
 ./backend/gradlew --no-daemon -p backend --dependency-verification=strict spotlessCheck check :api:bootJar
 ```
 
-Java HTTP-тесты сохраняют данные для `BlotAPI` в `.build/http-fixtures`.
+Java HTTP tests write fixtures for `BlotAPI` to `.build/http-fixtures`.
 
 </details>
 
 <details>
-<summary><strong>Python: конфигурация Apple и схемы v3</strong></summary>
+<summary><strong>Python: Apple configuration and v3 schemas</strong></summary>
 
 ```bash
 python3 -m unittest discover -s scripts/tests
@@ -244,20 +244,20 @@ python3 -m venv .build/schema-venv
 
 </details>
 
-CI настроен в [`.github/workflows/ci.yml`](.github/workflows/ci.yml): сайт, Java, общие Swift-пакеты и Apple-сборки. Для задачи Apple нужен настроенный self-hosted runner. Результаты конкретного запуска доступны на вкладке [Actions](https://github.com/Hqzdev/kiln-agent/actions).
+CI is configured in [`.github/workflows/ci.yml`](.github/workflows/ci.yml) for the website, Java, shared Swift packages, and Apple builds. The Apple job requires a configured self-hosted runner. Results for each run are available under [Actions](https://github.com/Hqzdev/kiln-agent/actions).
 
-## Документация
+## Documentation
 
-| Начать с… | Для чего |
+| Start here | Purpose |
 | --- | --- |
-| [Путеводитель](docs/README.md) | Найти актуальный документ и отличить его от архивного. |
-| [Техническое задание](docs/product/blot-technical-specification.md) | Возможности продукта и матрица приёмки BLOT-01…30. |
-| [План разработки](docs/product/blot-product-plan.md) | Этапы и зависимости реализации. |
-| [Карта модулей](docs/architecture/module-map.md) | Обязанности компонентов и границы задач. |
-| [Модель данных](docs/architecture/domain-model.md) | Сущности, состояния и версии. |
-| [Контракты v3](contracts/v3/README.md) | Схемы команд, событий и публичных данных. |
-| [Разрешения](docs/rules/permission-policy.md) | Подготовка действий, подтверждения и доверенные области. |
-| [Руководство MCP](docs/integrations/mcp-developer-guide.md) | Контракт подключаемых инструментов. |
-| [Материалы проверок](docs/status/) | Команды, результаты, скриншоты и ограничения. |
+| [Documentation guide](docs/README.md) | Find the current document and distinguish it from archived material. |
+| [Technical specification](docs/product/blot-technical-specification.md) | Product capabilities and the BLOT-01…30 acceptance matrix. |
+| [Development plan](docs/product/blot-product-plan.md) | Implementation stages and dependencies. |
+| [Module map](docs/architecture/module-map.md) | Component responsibilities and task boundaries. |
+| [Domain model](docs/architecture/domain-model.md) | Entities, states, and versions. |
+| [v3 contracts](contracts/v3/README.md) | Schemas for commands, events, and public data. |
+| [Permissions](docs/rules/permission-policy.md) | Prepared actions, approvals, and trusted scopes. |
+| [MCP guide](docs/integrations/mcp-developer-guide.md) | The contract for connected tools. |
+| [Verification materials](docs/status/) | Commands, results, screenshots, and limitations. |
 
-При расхождениях с октябрьскими документами приоритет у ТЗ от **1 ноября 2026**. Проектные вопросы и ошибки можно описать в [GitHub Issues](https://github.com/Hqzdev/kiln-agent/issues), указав компонент, шаги воспроизведения и вывод команды без секретов.
+Where October documents differ, the **November 1, 2026** specification takes precedence. Report project questions and bugs in [GitHub Issues](https://github.com/Hqzdev/kiln-agent/issues), including the component, reproduction steps, and command output without secrets.

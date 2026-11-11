@@ -7,7 +7,8 @@ import UniformTypeIdentifiers
 struct ApplePluginConnectionView: View {
     let plugin: ApplePluginID
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     #if os(macOS)
     @Environment(\.macSheetSize) private var sheetSize
     #endif
@@ -46,7 +47,7 @@ struct ApplePluginConnectionView: View {
                     Text("Доступ получат все текущие агенты команды. Результаты запросов могут передаваться выбранной вами модели. Отправка и удаление требуют отдельного подтверждения.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     if plugin == .shortcuts {
-                        TextField("Название команды", text: $shortcutName).textFieldStyle(.roundedBorder)
+                        TextField("Название команды", text: $shortcutName).textFieldStyle(WorkspacePanelTextFieldStyle())
                         Text("При подключении команда выполнится один раз для проверки. Её действия могут изменить данные.")
                             .font(.caption).foregroundStyle(.secondary)
                     }
@@ -64,7 +65,7 @@ struct ApplePluginConnectionView: View {
                         WorkspaceLocalizedText(busy ? "Подождите…" : connected ? "Подключено" : "Подключить")
                     }.frame(minWidth: 150)
                 }
-                .buttonStyle(.borderedProminent).controlSize(.large)
+                .buttonStyle(WorkspaceButtonStyle()).controlSize(.large)
                 .tint(connected ? .green : WorkspaceStyle.ink)
                 .disabled(busy || !plugin.available || store.appleIntegrations == nil || (!connected && store.snapshot.agents.isEmpty))
                 .help(connected ? "Отключить приложение" : "Разрешить доступ и подключить приложение")
@@ -78,9 +79,14 @@ struct ApplePluginConnectionView: View {
         }
         .scrollBounceBehavior(.basedOnSize)
         #if os(macOS)
-        .frame(width: min(480, sheetSize.width), height: min(520, sheetSize.height))
+        .frame(width: panelNavigation == nil ? min(480, sheetSize.width) : nil, height: panelNavigation == nil ? min(520, sheetSize.height) : nil)
         #endif
         .background(WorkspaceStyle.canvas)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if panelNavigation != nil {
+                WorkspacePanelFormHeader(title: store.t(plugin.name)) { Button(store.t("Close")) { dismiss() }.disabled(busy) }
+            }
+        }
         .interactiveDismissDisabled(busy)
         #if os(macOS)
         .onExitCommand { if !busy { dismiss() } }

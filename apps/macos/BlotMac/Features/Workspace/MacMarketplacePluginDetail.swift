@@ -6,7 +6,8 @@ import SwiftUI
 struct MacMarketplacePluginDetail: View {
     let plugin: MacTeamPlugin
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @Environment(\.macSheetSize) private var sheetSize
     @State private var confirmingDisconnect = false
     @State private var disconnecting = false
@@ -54,12 +55,15 @@ struct MacMarketplacePluginDetail: View {
             HStack {
                 Spacer()
                 Button(accounts.isEmpty ? "Подключить" : "Подключено") { confirmingDisconnect = true }
-                    .buttonStyle(.borderedProminent).controlSize(.large)
+                    .buttonStyle(WorkspaceButtonStyle()).controlSize(.large)
                     .tint(accounts.isEmpty ? WorkspaceStyle.ink : .green)
                     .disabled(accounts.isEmpty || store.busy || disconnecting)
                 Spacer()
             }.padding(18)
-        }.frame(width: min(560, sheetSize.width), height: min(460, sheetSize.height)).background(WorkspaceStyle.canvas)
+        }.frame(width: panelNavigation == nil ? min(560, sheetSize.width) : nil, height: panelNavigation == nil ? min(460, sheetSize.height) : nil).background(WorkspaceStyle.canvas)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if panelNavigation != nil { WorkspacePanelFormHeader(title: store.t(plugin.name)) { Button(store.t("Close")) { dismiss() }.disabled(store.busy || disconnecting) } }
+            }
             .interactiveDismissDisabled(store.busy || disconnecting)
             .onExitCommand { if !store.busy && !disconnecting { dismiss() } }
             .confirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {

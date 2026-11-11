@@ -1,3 +1,4 @@
+import BlotDesign
 import BlotDomain
 import BlotWorkspace
 import SwiftUI
@@ -26,8 +27,8 @@ struct WorkspaceSkillsView: View {
                 Button { editor = .init(skill: nil) } label: { Label(ru ? "Создать" : "Create", systemImage: "plus") }
                     .disabled(store.skillCommands == nil)
             }
-            TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(.roundedBorder)
-            Toggle(ru ? "Архив" : "Archive", isOn: $archived).toggleStyle(.switch)
+            TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(WorkspacePanelTextFieldStyle())
+            Toggle(ru ? "Архив" : "Archive", isOn: $archived).toggleStyle(WorkspacePanelToggleStyle())
             if skills.isEmpty { Text(ru ? "Здесь появятся сохранённые инструкции с параметрами для ваших агентов." : "Saved instructions with parameters for your agents will appear here.").foregroundStyle(.secondary) }
             ForEach(skills, id: \.metadata.id) { skill in
                 WorkspaceCard {
@@ -38,12 +39,12 @@ struct WorkspaceSkillsView: View {
                     HStack {
                         Button(ru ? "Изменить" : "Edit") { editor = .init(skill: skill) }
                         if !skill.archived { Button(ru ? "Запустить" : "Run") { runner = .init(skill: skill) } }
-                    }.buttonStyle(.bordered)
+                    }.buttonStyle(WorkspaceButtonStyle(.secondary))
                 }
             }
         }
-        .sheet(item: $editor) { selection in WorkspaceSkillEditor(skill: selection.skill).environment(store) }
-        .sheet(item: $runner) { selection in
+        .workspacePanelSheet(item: $editor) { selection in WorkspaceSkillEditor(skill: selection.skill).environment(store) }
+        .workspacePanelSheet(item: $runner) { selection in
             if let skill = selection.skill { WorkspaceSkillRunner(skill: skill).environment(store) }
         }
     }
@@ -52,7 +53,8 @@ struct WorkspaceSkillsView: View {
 struct WorkspaceSkillEditor: View {
     let skill: BlotV3.Skill?
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var name = ""
     @State private var instructions = ""
     @State private var parameters: [SkillParameter] = []
@@ -68,18 +70,17 @@ struct WorkspaceSkillEditor: View {
     }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkspacePanelForm {
                 Section(ru ? "Инструкция" : "Instructions") {
                     TextField(ru ? "Название" : "Name", text: $name)
-                    TextEditor(text: $instructions).frame(minHeight: 150)
+                    TextEditor(text: $instructions).scrollContentBackground(.hidden).padding(10).frame(minHeight: 150).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12)).accessibilityLabel(ru ? "Инструкция" : "Instructions")
                     Text(ru ? "Для подстановки используйте {{parameter}}. Значения задаются при запуске." : "Use {{parameter}} for values supplied when running.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section(ru ? "Параметры" : "Parameters") {
                     ForEach(parameters.indices, id: \.self) { index in
-                        HStack {
-                            TextField("parameter", text: Binding(get: { parameters[index].name }, set: { parameters[index] = .init(name: $0, required: parameters[index].required) }))
-                            Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
-                            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                        ViewThatFits(in: .horizontal) {
+                            HStack(spacing: 12) { parameterField(index); parameterOptions(index).fixedSize() }
+                            VStack(alignment: .leading, spacing: 12) { parameterField(index); parameterOptions(index) }
                         }
                     }
                     Button(ru ? "Добавить параметр" : "Add parameter") { parameters.append(.init(name: "")) }.disabled(parameters.count >= 32)
@@ -116,20 +117,18 @@ struct WorkspaceSkillEditor: View {
                     }
                 }
                 if let failure { Text(failure).foregroundStyle(.red) }
-            }.formStyle(.grouped).disabled(busy)
+            }.disabled(busy)
             .navigationTitle(ru ? "Настройка навыка" : "Skill settings")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if panelNavigation != nil { WorkspacePanelFormHeader(title: ru ? "Настройка навыка" : "Skill settings") { cancelButton; saveButton } }
+            }
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(store.t("Save")) { perform { commands in
-                        _ = try await commands.saveSkill(id: skill?.metadata.id, version: skill?.metadata.version ?? 0, name: name,
-                            instructions: instructions, parameters: parameters, tools: tools.sorted())
-                    } }.disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }
+                ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { cancelButton } }
+                ToolbarItem(placement: .confirmationAction) { if panelNavigation == nil { saveButton } }
             }
         }.interactiveDismissDisabled(busy)
         #if os(macOS)
-        .frame(width: 620, height: 720)
+        .frame(width: panelNavigation == nil ? 620 : nil, height: panelNavigation == nil ? 720 : nil)
         #endif
         .onAppear {
             name = skill?.name ?? ""
@@ -137,6 +136,24 @@ struct WorkspaceSkillEditor: View {
                 instructions = revision.instructions; parameters = (try? WorkspaceSkillService.parameters(revision)) ?? []; tools = Set(revision.toolIds)
             }
         }
+    }
+    private func parameterField(_ index: Int) -> some View {
+        TextField("parameter", text: Binding(get: { parameters[index].name }, set: { parameters[index] = .init(name: $0, required: parameters[index].required) }))
+            .frame(minWidth: 110).accessibilityLabel(ru ? "Название параметра" : "Parameter name")
+    }
+    private func parameterOptions(_ index: Int) -> some View {
+        HStack(spacing: 12) {
+            Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
+            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }
+                .buttonStyle(.plain).accessibilityLabel(ru ? "Удалить параметр" : "Remove parameter")
+        }
+    }
+    private var cancelButton: some View { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
+    private var saveButton: some View {
+        Button(store.t("Save")) { perform { commands in
+            _ = try await commands.saveSkill(id: skill?.metadata.id, version: skill?.metadata.version ?? 0, name: name,
+                instructions: instructions, parameters: parameters, tools: tools.sorted())
+        } }.buttonStyle(WorkspaceButtonStyle()).disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
     }
     private func perform(close: Bool = true, _ action: @escaping @MainActor (any WorkspaceSkillCommands) async throws -> Void) {
         guard !busy, let commands = store.skillCommands else { return }

@@ -4,7 +4,7 @@ cd "$(dirname "$0")/.."
 products="$PWD/.build/xcode/Build/Products/Debug"
 checks="$PWD/.build/verify-chat-performance"
 mkdir -p "$checks/cache"
-sources=(WorkspaceSnapshot WorkspaceMessagePresentation WorkspaceMessageIndex WorkspaceTranscriptWindow WorkspaceChatPresentation WorkspaceMessagePluginAttribution ApplePluginIcon)
+sources=(WorkspaceSnapshot WorkspaceMessagePresentation WorkspaceMessageIndex WorkspaceTranscriptWindow WorkspaceChatPresentation WorkspaceMessagePluginAttribution WorkspaceToolActivity ApplePluginIcon)
 arguments=()
 for source in "${sources[@]}"; do arguments+=("apps/shared/WorkspaceV3/$source.swift"); done
 text_root="$PWD"

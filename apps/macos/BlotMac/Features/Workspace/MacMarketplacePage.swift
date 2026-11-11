@@ -47,7 +47,7 @@ struct MacMarketplacePage: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
-        .sheet(item: $detail) { item in
+        .workspacePanelSheet(item: $detail) { item in
             switch item {
             case .plugin(let plugin): MacMarketplacePluginDetail(plugin: plugin).environment(store)
             case .template(let template): MacMarketplaceTemplateDetail(template: template).environment(store)

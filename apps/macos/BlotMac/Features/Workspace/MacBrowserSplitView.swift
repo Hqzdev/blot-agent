@@ -4,11 +4,11 @@ import SwiftUI
 /// Bounds both panes, including when the window shrinks after a drag.
 struct MacBrowserSplitLayout {
     static let minimumWidth: CGFloat = 760
-    static let minimumChatWidth: CGFloat = 420
+    static let minimumChatWidth: CGFloat = 336
     static let dividerWidth: CGFloat = 8
     let width: CGFloat
     func browserWidth(_ requested: CGFloat) -> CGFloat {
-        let maximum = min(1000, max(0, width - Self.minimumChatWidth - Self.dividerWidth))
+        let maximum = max(0, width - Self.minimumChatWidth - Self.dividerWidth)
         return min(maximum, max(min(300, maximum), requested.isFinite ? requested : 500))
     }
 }

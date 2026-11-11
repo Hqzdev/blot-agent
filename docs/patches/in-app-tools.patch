@@ -1,0 +1,635 @@
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+@@ -7,11 +7,9 @@
+ struct MacLiveTeamWorkspace: View {
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.blotReduceMotion) private var reduceMotion
+-    @State private var inspectorVisible = true
+     @State private var settingsSearchFocusRequest = 0
+     @State private var creating = false
+     @State private var sidebarPopover = false
+-    @State private var inspectorPopover = false
+
+     private var isConversation: Bool { [.home, .newChat, .chat].contains(store.route) }
+     private var agent: BlotV3.AgentProfile? {
+@@ -51,7 +49,6 @@
+     private func workspace(layout: MacWorkspaceLayout) -> some View {
+         let showsBrowser = store.browser?.presented == true && isConversation
+         let showsSidebar = layout.supportsSidebar && store.sidebarVisible && !showsBrowser
+-        let showsInspector = inspectorVisible && isConversation && !showsBrowser && layout.supportsInspector(sidebarVisible: showsSidebar)
+         return HStack(spacing: 0) {
+             if showsSidebar {
+                 MacLiveTeamSidebar().frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.leading))
+@@ -63,17 +60,12 @@
+                     WorkspaceBrowserView(controller: browser, compact: true)
+                 }
+             } else { conversation(layout: layout, showsSidebar: showsSidebar) }
+-            if showsInspector {
+-                MacLiveTeamInspector().frame(width: layout.inspectorWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.trailing))
+-            }
+         }
+         .kAnimation(KMotion.sidebar, value: showsSidebar)
+-        .kAnimation(KMotion.sidebar, value: showsInspector)
+         .kAnimation(KMotion.panel, value: store.selectedConversationID)
+-        .onChange(of: store.route) { _, _ in sidebarPopover = false; inspectorPopover = false }
+-        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false; inspectorPopover = false }
++        .onChange(of: store.route) { _, _ in sidebarPopover = false }
++        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false }
+         .onChange(of: layout.supportsSidebar) { _, _ in sidebarPopover = false }
+-        .onChange(of: showsInspector) { _, _ in inspectorPopover = false }
+     }
+
+     private func conversation(layout: MacWorkspaceLayout, showsSidebar: Bool) -> some View {
+@@ -135,12 +127,9 @@
+                         .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
+                         .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
+                     if isConversation {
+-                        headerButton("Панель агента", glyph: .inspector) {
+-                            if layout.supportsInspector(sidebarVisible: showsSidebar) { inspectorVisible.toggle() }
+-                            else { inspectorPopover.toggle() }
+-                        }
+-                        .popover(isPresented: $inspectorPopover, arrowEdge: .top) {
+-                            MacLiveTeamInspector().frame(width: 306, height: layout.popoverHeight).environment(store)
++                        headerButton("Инструменты", glyph: .inspector) {
++                            if store.browser?.presented == true { store.browser?.presented = false }
++                            else { store.showTools() }
+                         }
+                     }
+                 }.padding(.leading, showsSidebar ? 18 : 108).padding(.trailing, 18)
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
+@@ -15,6 +15,14 @@
+     func showBrowser() {
+         presentBrowser(ensureBrowser())
+     }
++    func showTools() {
++        let controller = ensureBrowser()
++        do {
++            if let blank = controller.tabs.first(where: { $0.url == nil }) { try controller.select(blank.id) }
++            else { try controller.newTab() }
++            presentBrowser(controller)
++        } catch { self.error = error.localizedDescription }
++    }
+     func openBrowserURL(_ url: URL) {
+         let browser = ensureBrowser()
+         do { _ = try browser.open(url.absoluteString); presentBrowser(browser) }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+@@ -19,6 +19,7 @@
+     @State private var preview: URL?
+     @State private var pendingNavigation: (() throws -> Void)?
+     @State private var navigationTab: UUID?
++    @State private var toolNavigation = WorkspacePanelNavigation()
+     private var ru: Bool { store.language == "ru" }
+     private func text(_ ru: String, _ en: String) -> String { self.ru ? ru : en }
+     var body: some View {
+@@ -36,7 +37,8 @@
+                     }
+                 }.padding(12).background(.regularMaterial)
+             }
+-            if let tab = controller.selectedTab {
++            if !toolNavigation.path.isEmpty { WorkspaceBrowserToolPage(navigation: toolNavigation) }
++            else if let tab = controller.selectedTab {
+                 if tab.loading { ProgressView(value: tab.progress).progressViewStyle(.linear) }
+                 if let error = tab.error { Text(error).font(.caption).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity, alignment: .leading) }
+                 if tab.authenticationURL != nil {
+@@ -52,7 +54,7 @@
+         }
+         .background(WorkspaceStyle.canvas)
+         .task { if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } } }
+-        .onChange(of: controller.selectedID, initial: true) { _, _ in address = controller.selectedTab?.url?.absoluteString ?? "" }
++        .onChange(of: controller.selectedID, initial: true) { _, _ in toolNavigation.path.removeAll(); address = controller.selectedTab?.url?.absoluteString ?? "" }
+         .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
+         .sheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
+         .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
+@@ -80,15 +82,19 @@
+     }
+     private var toolbar: some View {
+         HStack(spacing: 8) {
+-            button("chevron.left", text("Назад", "Back"), disabled: controller.selectedTab?.canGoBack != true) { if let id = controller.selectedID { try controller.back(id) } }
+-            button("chevron.right", text("Вперёд", "Forward"), disabled: controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
+-            TextField(text("Адрес сайта", "Website address"), text: $address).textFieldStyle(.roundedBorder).onSubmit(openAddress)
++            button("chevron.left", text("Назад", "Back"), disabled: toolNavigation.path.isEmpty && controller.selectedTab?.canGoBack != true) {
++                if !toolNavigation.path.isEmpty { toolNavigation.path.removeLast() }
++                else if let id = controller.selectedID { try controller.back(id) }
++            }
++            button("chevron.right", text("Вперёд", "Forward"), disabled: !toolNavigation.path.isEmpty || controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
++            TextField(text("Поиск Google или адрес", "Search Google or enter a URL"), text: $address).textFieldStyle(.roundedBorder).onSubmit(openAddress)
+                 .accessibilityIdentifier("workspace.browser.address")
+             button(controller.selectedTab?.loading == true ? "xmark" : "arrow.clockwise", text("Обновить или остановить", "Reload or stop")) { if let id = controller.selectedID { try controller.reload(id) } }
+             Menu {
+                 Button(text("Новая вкладка", "New tab")) { work { try controller.newTab() }; address = "" }
++                Button(text("Все инструменты", "All tools")) { store.showTools(); toolNavigation.path.removeAll() }
+                 Button(text("Загрузки", "Downloads")) { showsDownloads = true }
+-                Button(text("Доступ агентов", "Agent access")) { controller.presented = false; store.navigate(.browserSettings) }
++                Button(text("Доступ агентов", "Agent access")) { toolNavigation.path = [.page(.browserSettings)] }
+                 if compact { Button(text("Развернуть", "Expand")) { controller.presented = false; store.navigate(.browser) } }
+             } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
+             button("xmark", text("Вернуться к чату", "Return to chat")) {
+@@ -108,12 +114,13 @@
+                         Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
+                     }.padding(.horizontal, 10).padding(.vertical, 7).background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 8))
+                 }
++                Button { work { try controller.newTab() } } label: { Image(systemName: "plus").frame(width: 28, height: 28) }
++                    .buttonStyle(.plain).accessibilityLabel(text("Новая вкладка", "New tab"))
+             }.padding(.horizontal, 10)
+         }.scrollIndicators(.hidden)
+     }
+     private var empty: some View {
+-        ContentUnavailableView(text("Браузер Blot", "Blot browser"), systemImage: "globe", description: Text(text("Введите адрес сайта. Страница откроется внутри приложения.", "Enter a website address to open it inside the app.")))
+-            .frame(maxWidth: .infinity, maxHeight: .infinity)
++        WorkspaceBrowserStartPage(controller: controller) { toolNavigation.path = [$0] }
+     }
+     private var downloads: some View {
+         VStack(alignment: .leading, spacing: 12) {
+@@ -136,8 +143,10 @@
+     }
+     private func openAddress() {
+         work {
+-            if let id = controller.selectedID { try controller.navigate(address, tabID: id) }
+-            else { _ = try controller.open(address) }
++            let url = try WorkspaceBrowserURL.userNavigation(address)
++            if let id = controller.selectedID { try controller.navigate(url.absoluteString, tabID: id) }
++            else { _ = try controller.open(url.absoluteString) }
++            toolNavigation.path.removeAll()
+         }
+     }
+     private func work(_ action: @escaping () throws -> Void) {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceComponents.swift b/apps/shared/WorkspaceV3/WorkspaceComponents.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceComponents.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceComponents.swift
+@@ -64,8 +64,14 @@
+     var next: WorkspaceRoute?
+     var kind: WorkspaceButtonStyle.Kind = .primary
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     var body: some View {
+-        Button { _Concurrency.Task { await store.perform(action, next: next) } } label: {
++        Button {
++            _Concurrency.Task {
++                await store.perform(action, next: panelNavigation == nil ? next : nil)
++                if store.error == nil, let next, let panelNavigation { panelNavigation.open(next) }
++            }
++        } label: {
+             HStack {
+                 if store.busy { ProgressView().controlSize(.small).tint(kind == .primary ? BlotColor.onInverse : WorkspaceStyle.ink) }
+                 Text(store.t(title)).frame(maxWidth: .infinity)
+@@ -79,8 +85,9 @@
+     let route: WorkspaceRoute
+     var symbol: String = "chevron.right"
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     var body: some View {
+-        Button { store.navigate(route) } label: {
++        Button { if let panelNavigation { panelNavigation.open(route) } else { store.navigate(route) } } label: {
+             HStack(spacing: 14) {
+                 Text(store.t(title)).multilineTextAlignment(.leading)
+                 Spacer(minLength: 4)
+diff --git a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+@@ -6,6 +6,7 @@
+ import SwiftUI
+
+ struct WorkspaceLocalFileView: View {
++    var artifactID: UUID? = nil
+     @Environment(WorkspaceStore.self) private var store
+     @State private var url: URL?
+     @State private var preview: URL?
+@@ -13,13 +14,17 @@
+     @State private var page = 1
+     @State private var failure: String?
+     private var ru: Bool { store.language == "ru" }
++    private var file: BlotV3.Artifact? {
++        if let artifactID { return store.snapshot.artifacts.first { $0.metadata.id == artifactID } }
++        return store.selectedFile
++    }
+     private struct ReadRequest: Hashable { let id: UUID?; let page: Int }
+
+     var body: some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 20) {
+                 #if os(macOS)
+-                Text(store.selectedFile?.name ?? store.t("Files")).font(.title2).textSelection(.enabled)
++                Text(file?.name ?? store.t("Files")).font(.title2).textSelection(.enabled)
+                 #endif
+                 if let url {
+                     HStack {
+@@ -27,7 +32,7 @@
+                         ShareLink(item: url) { Text(store.t("Share")) }
+                     }
+                 }
+-                if let file = store.selectedFile, file.mediaType == "application/pdf" || file.mediaType.hasPrefix("image/") {
++                if let file = file, file.mediaType == "application/pdf" || file.mediaType.hasPrefix("image/") {
+                     Stepper(value: $page, in: 1...(read?.totalPages ?? 1_000)) {
+                         Text(ru ? "Страница \(page)" : "Page \(page)")
+                         if let read { Text(ru ? "Всего: \(read.totalPages)" : "Total: \(read.totalPages)").font(.caption).foregroundStyle(.secondary) }
+@@ -49,10 +54,10 @@
+             #endif
+         }
+         .quickLookPreview($preview)
+-        .onChange(of: store.selectedFile?.metadata.id) { _, _ in page = 1; preview = nil }
+-        .task(id: ReadRequest(id: store.selectedFile?.metadata.id, page: page)) {
++        .onChange(of: file?.metadata.id) { _, _ in page = 1; preview = nil }
++        .task(id: ReadRequest(id: file?.metadata.id, page: page)) {
+             read = nil; failure = nil; url = nil
+-            guard let id = store.selectedFile?.metadata.id else { failure = store.t("File is unavailable"); return }
++            guard let id = file?.metadata.id else { failure = store.t("File is unavailable"); return }
+             do {
+                 let localURL = try await store.localFileURL(id)
+                 try _Concurrency.Task.checkCancellation()
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+@@ -5,6 +5,7 @@
+
+ struct WorkspaceTeamView: View {
+     let route: WorkspaceRoute
++    var openFile: ((UUID) -> Void)? = nil
+     @Environment(WorkspaceStore.self) private var store
+     var body: some View {
+         switch route {
+@@ -124,7 +125,10 @@
+             WorkspaceFilesImportButton()
+             WorkspaceField(title: "Search by name", text: $store.form.search.query)
+             ForEach(store.snapshot.artifacts.filter { store.form.search.query.isEmpty || $0.name.localizedCaseInsensitiveContains(store.form.search.query) }, id: \.metadata.id) { file in
+-                Button { store.selectedRecordID = file.metadata.id; store.navigate(.file) } label: {
++                Button {
++                    if let openFile { openFile(file.metadata.id) }
++                    else { store.selectedRecordID = file.metadata.id; store.navigate(.file) }
++                } label: {
+                     HStack { BlotIcon(symbol: "doc"); Text(file.name); Spacer(); BlotIcon(symbol: "chevron.right") }
+                 }.buttonStyle(WorkspaceRowButtonStyle())
+                 Divider()
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleAutomation.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleAutomation.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleAutomation.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleAutomation.swift
+@@ -6,11 +6,16 @@
+ /// NSAppleScript is main-thread-only. Model text is passed only as Apple event descriptors.
+ @MainActor
+ final class AppleAutomation {
++    private let running: (String) -> Bool
++    init(running: @escaping (String) -> Bool = { id in
++        NSRunningApplication.runningApplications(withBundleIdentifier: id).contains { !$0.isTerminated && $0.isFinishedLaunching }
++    }) { self.running = running }
++    func isRunning(_ plugin: ApplePluginID) -> Bool { running(plugin.bundleID) }
++    func requireRunning(_ plugin: ApplePluginID) throws {
++        guard isRunning(plugin) else { throw AppleIntegrationError.applicationRequired(plugin.name) }
++    }
+     func authorized(_ plugin: ApplePluginID, request: Bool = false) async -> Bool {
+-        guard [.mail, .notes].contains(plugin) else { return false }
+-        // Automation requires a ready process, not a window opened by the user.
+-        do { try await prepareApplication(plugin) }
+-        catch { return false }
++        guard [.mail, .notes].contains(plugin), isRunning(plugin) else { return false }
+         let bundleID = plugin.bundleID
+         // Consent can wait indefinitely. Never block the app's main thread.
+         return await _Concurrency.Task.detached {
+@@ -20,6 +25,7 @@
+     }
+     func resources(_ plugin: ApplePluginID) async throws -> [AppleResource] {
+         try _Concurrency.Task.checkCancellation()
++        try requireRunning(plugin)
+         guard await authorized(plugin) else { throw AppleIntegrationError.permissionDenied }
+         try _Concurrency.Task.checkCancellation()
+         let result = try run(plugin, values: ["resources"])
+@@ -30,6 +36,7 @@
+     }
+     func execute(_ tool: AppleTool, arguments a: AppleArguments, preview: Bool = false) async throws -> ChatJSON {
+         try _Concurrency.Task.checkCancellation()
++        try requireRunning(tool.plugin)
+         guard await authorized(tool.plugin) else { throw AppleIntegrationError.permissionDenied }
+         try _Concurrency.Task.checkCancellation()
+         var body = a["body"] ?? ""
+@@ -44,31 +51,15 @@
+         return objects.first ?? appleObject(["state": "succeeded"])
+     }
+     func compileScripts() throws {
++        try requireRunning(.notes); try requireRunning(.mail)
+         for source in [Self.notesScript, Self.mailScript] {
+             guard let script = NSAppleScript(source: source) else { throw AppleIntegrationError.unavailable }
+             var error: NSDictionary?
+             guard script.compileAndReturnError(&error) else { throw AppleIntegrationError.system(error?.description ?? "AppleScript compilation failed") }
+         }
+     }
+-    private func prepareApplication(_ plugin: ApplePluginID) async throws {
+-        let application: NSRunningApplication
+-        if let running = NSRunningApplication.runningApplications(withBundleIdentifier: plugin.bundleID).first(where: { !$0.isTerminated }) {
+-            application = running
+-        } else {
+-            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: plugin.bundleID) else { throw AppleIntegrationError.unavailable }
+-            let configuration = NSWorkspace.OpenConfiguration()
+-            configuration.activates = false
+-            configuration.hides = true
+-            application = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
+-        }
+-        let deadline = Date().addingTimeInterval(10)
+-        while !application.isFinishedLaunching {
+-            guard !application.isTerminated, Date() < deadline else { throw AppleIntegrationError.unavailable }
+-            try await _Concurrency.Task.sleep(for: .milliseconds(100))
+-        }
+-        guard !application.isTerminated else { throw AppleIntegrationError.unavailable }
+-    }
+     private func run(_ plugin: ApplePluginID, values: [String]) throws -> NSAppleEventDescriptor {
++        try requireRunning(plugin)
+         guard [.mail, .notes].contains(plugin), let script = NSAppleScript(source: plugin == .notes ? Self.notesScript : Self.mailScript) else { throw AppleIntegrationError.unavailable }
+         var error: NSDictionary?
+         guard script.compileAndReturnError(&error) else { throw AppleIntegrationError.system(error?.description ?? "AppleScript compilation failed") }
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleIntegrationController.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleIntegrationController.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleIntegrationController.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleIntegrationController.swift
+@@ -62,6 +62,7 @@
+         case .shortcuts: return shortcuts.resources
+         case .mail, .notes:
+             #if os(macOS)
++            try automation.requireRunning(plugin)
+             guard await automation.authorized(plugin, request: true) else { throw AppleIntegrationError.permissionDenied }
+             return try await automation.resources(plugin)
+             #else
+@@ -82,9 +83,14 @@
+             if contacts.limited { return "Доступ ограничен" }
+             authorized = contacts.authorized
+         case .files: authorized = folders.accessible(resources)
+-        case .shortcuts: return shortcuts.contains(resources) ? "Подключено" : "Нужна настройка"
++        case .shortcuts:
++            #if os(macOS)
++            if !automation.isRunning(plugin) { return "Приложение закрыто" }
++            #endif
++            return shortcuts.contains(resources) ? "Подключено" : "Нужна настройка"
+         case .mail, .notes:
+             #if os(macOS)
++            if !automation.isRunning(plugin) { return "Приложение закрыто" }
+             authorized = await automation.authorized(plugin)
+             #else
+             authorized = plugin == .mail && MFMailComposeViewController.canSendMail()
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleInteractionCenter.swift
+@@ -45,6 +45,9 @@
+             fields: ["recipient": try a.required("recipient"), "subject": a["subject"] ?? "", "body": a["body"] ?? ""]))
+     }
+     func runShortcut(name: String, input: String) async throws -> ChatJSON {
++        #if os(macOS)
++        try AppleAutomation().requireRunning(.shortcuts)
++        #endif
+         let token = UUID()
+         #if os(macOS)
+         let scheme = "blot-agent-macos"
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/PluginCatalog.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/PluginCatalog.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/PluginCatalog.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/PluginCatalog.swift
+@@ -136,10 +136,12 @@
+ }
+
+ public enum AppleIntegrationError: Error, LocalizedError, Sendable {
++    case applicationRequired(String)
+     case permissionDenied, unavailable, invalidArguments, missingResource, uncertainResult, canceled
+     case system(String)
+     public var errorDescription: String? {
+         switch self {
++        case .applicationRequired(let name): "Для этой операции требуется запущенное приложение «\(name)». Blot не запускает внешние приложения автоматически."
+         case .permissionDenied: "Нужно разрешение или подключение для этого агента."
+         case .unavailable: "Это действие недоступно на данном устройстве."
+         case .invalidArguments: "Проверьте параметры действия."
+diff --git a/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/AppleIntegrationTests.swift b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/AppleIntegrationTests.swift
+--- a/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/AppleIntegrationTests.swift
++++ b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/AppleIntegrationTests.swift
+@@ -201,7 +201,21 @@
+ }
+
+ #if os(macOS)
+-@Test func fixedAppleScriptsCompileWithoutExecutingOrRequestingAccess() async throws { try await AppleAutomation().compileScripts() }
++@MainActor @Test func automationDoesNotLaunchClosedAppsEvenWhenAccessIsRequested() async throws {
++    let automation = AppleAutomation(running: { _ in false })
++    #expect(throws: AppleIntegrationError.self) { try automation.requireRunning(.shortcuts) }
++    for plugin in [ApplePluginID.mail, .notes] {
++        #expect(await automation.authorized(plugin) == false)
++        #expect(await automation.authorized(plugin, request: true) == false)
++        await #expect(throws: AppleIntegrationError.self) { _ = try await automation.resources(plugin) }
++    }
++    #expect(throws: AppleIntegrationError.self) { try automation.compileScripts() }
++}
++@MainActor @Test func fixedAppleScriptsCompileOnlyIfBothAppsAreAlreadyRunning() throws {
++    let automation = AppleAutomation()
++    guard automation.isRunning(.notes), automation.isRunning(.mail) else { return }
++    try automation.compileScripts()
++}
+ #endif
+
+ @Test func legacyConnectionsDecodeWithoutAppleFields() throws {
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
+@@ -19,6 +19,22 @@
+ }
+
+ public enum WorkspaceBrowserURL {
++    /// Address-bar input only. Agent navigation continues to require an explicit, validated URL.
++    public static func userNavigation(_ input: String) throws -> URL {
++        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
++        guard !text.isEmpty, text.utf8.count <= 8192 else { throw WorkspaceBrowserError.invalidURL }
++        if text.contains("://") { return try validated(text) }
++        let host = text.components(separatedBy: "/").first ?? text
++        let local = host == "localhost" || host.hasPrefix("localhost:") || host.hasPrefix("127.0.0.1") || host.hasPrefix("[::1]")
++        if text.rangeOfCharacter(from: .whitespacesAndNewlines) == nil, local || host.contains(".") {
++            return try validated((local ? "http://" : "https://") + text)
++        }
++        guard text.range(of: "^[A-Za-z][A-Za-z0-9+.-]*:", options: .regularExpression) == nil else { throw WorkspaceBrowserError.invalidURL }
++        var search = URLComponents(string: "https://www.google.com/search")!
++        search.queryItems = [.init(name: "q", value: text)]
++        guard let url = search.url else { throw WorkspaceBrowserError.invalidURL }
++        return try validated(url.absoluteString)
++    }
+     public static func validated(_ text: String) throws -> URL {
+         guard text.utf8.count <= 8192, let parts = URLComponents(string: text), let scheme = parts.scheme?.lowercased(),
+               let host = parts.host?.lowercased(), !host.isEmpty, parts.user == nil, parts.password == nil,
+diff --git a/scripts/verify-browser-model.swift b/scripts/verify-browser-model.swift
+--- a/scripts/verify-browser-model.swift
++++ b/scripts/verify-browser-model.swift
+@@ -130,7 +130,7 @@
+             } else {
+                 precondition(systems.contains("A website tab is open in Blot") || systems.contains("Blot has a built-in browser"))
+                 if request.tools.contains(where: { $0.name == "browser_snapshot" }) {
+-                    if systems.contains("ordinary group conversation") { precondition(request.tools.allSatisfy { ["browser_snapshot", "browser_tabs"].contains($0.name) }) }
++                    if systems.contains("ordinary group conversation") { precondition(request.tools.contains { $0.name == "browser_tabs" }) }
+                     continuation.yield(.toolCall(.init(id: "selected", name: "browser_snapshot", arguments: .object([:])))); continuation.yield(.finished(.toolCalls))
+                 } else {
+                     continuation.yield(.text("Enable agent access to the current site.")); continuation.yield(.finished(.stop))
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+@@ -0,0 +1,145 @@
++import BlotAppleIntegrations
++import BlotDesign
++import BlotWorkspace
++import SwiftUI
++import Observation
++
++extension EnvironmentValues {
++    @Entry var workspacePanelNavigation: WorkspacePanelNavigation? = nil
++}
++
++@MainActor @Observable
++final class WorkspacePanelNavigation {
++    var path: [WorkspaceToolDestination] = []
++    var fileID: UUID?
++    func open(_ route: WorkspaceRoute) { path.append(.page(route)) }
++}
++
++enum WorkspaceToolDestination: Hashable {
++    case page(WorkspaceRoute), projects, details
++    var symbol: String {
++        switch self {
++        case .projects: "terminal"
++        case .details: "person.2"
++        case .page(let route):
++            switch route {
++            case .files, .file: "folder"
++            case .running: "checklist"
++            case .skills: "shippingbox"
++            case .memory: "brain"
++            case .schedules: "calendar"
++            case .mcp: "puzzlepiece.extension"
++            case .devices: "laptopcomputer.and.iphone"
++            default: "square.grid.2x2"
++            }
++        }
++    }
++    func title(russian: Bool) -> String {
++        switch self {
++        case .projects: russian ? "Терминал и Git" : "Terminal and Git"
++        case .details: russian ? "Об этом чате" : "About this chat"
++        case .page(let route):
++            switch route {
++            case .files, .file: russian ? "Файлы" : "Files"
++            case .running: russian ? "Задачи" : "Tasks"
++            case .skills: russian ? "Навыки" : "Skills"
++            case .memory: russian ? "Память" : "Memory"
++            case .schedules: russian ? "Расписания" : "Schedules"
++            case .mcp: "MCP"
++            case .devices: russian ? "Устройства" : "Devices"
++            case .browserSettings: russian ? "Доступ браузера" : "Browser access"
++            default: russian ? "Приложения" : "Apps"
++            }
++        }
++    }
++    static var tools: [Self] {
++        var values: [Self] = [.page(.files), .projects, .page(.running), .page(.skills), .page(.memory), .page(.schedules), .page(.mcp), .page(.devices), .page(.browserSettings)]
++        #if os(macOS)
++        values.insert(.page(.marketplace), at: 4)
++        values.append(.details)
++        #else
++        values.insert(.page(.connections), at: 4)
++        #endif
++        return values
++    }
++}
++
++/// No WebView, page requests or integration discovery are created for a blank tab.
++struct WorkspaceBrowserStartPage: View {
++    let controller: WorkspaceBrowserController
++    let select: (WorkspaceToolDestination) -> Void
++    @Environment(WorkspaceStore.self) private var store
++    private var ru: Bool { store.language == "ru" }
++    var body: some View {
++        ScrollView {
++            VStack(alignment: .leading, spacing: 28) {
++                Text(ru ? "Инструменты" : "Tools").font(.headline)
++                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 8)], spacing: 8) {
++                    ForEach(WorkspaceToolDestination.tools, id: \.self) { tool in
++                        Button { select(tool) } label: {
++                            Label(tool.title(russian: ru), systemImage: tool.symbol)
++                                .font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
++                                .padding(12).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12))
++                                .contentShape(RoundedRectangle(cornerRadius: 12))
++                        }.buttonStyle(.plain).accessibilityIdentifier("workspace.tools.\(tool.symbol)")
++                    }
++                }
++                if !controller.tabs.filter({ $0.url != nil }).isEmpty {
++                    Text(ru ? "Открытые сайты" : "Open websites").font(.headline)
++                    ForEach(Array(controller.tabs.filter { $0.url != nil }.suffix(6))) { tab in
++                        Button {
++                            do { try controller.select(tab.id) } catch { controller.error = error.localizedDescription }
++                        } label: {
++                            HStack(spacing: 10) {
++                                Image(systemName: "globe").foregroundStyle(.secondary)
++                                VStack(alignment: .leading, spacing: 3) {
++                                    Text(tab.title).lineLimit(1)
++                                    Text(tab.url?.host ?? "").font(.caption).foregroundStyle(.secondary).lineLimit(1)
++                                }
++                                Spacer(minLength: 0)
++                            }.padding(.vertical, 6).contentShape(Rectangle())
++                        }.buttonStyle(.plain)
++                    }
++                }
++                Text(ru ? "Введите адрес или запрос в строке сверху — результаты Google откроются здесь." : "Enter an address or search above — Google results open here.")
++                    .font(.callout).foregroundStyle(.secondary)
++            }.padding(24).frame(maxWidth: 900, alignment: .leading).frame(maxWidth: .infinity, alignment: .topLeading)
++        }.accessibilityIdentifier("workspace.browser.start")
++    }
++}
++
++struct WorkspaceBrowserToolPage: View {
++    let navigation: WorkspacePanelNavigation
++    @Environment(WorkspaceStore.self) private var store
++    private var ru: Bool { store.language == "ru" }
++    var body: some View {
++        VStack(spacing: 0) {
++            HStack {
++                Button { navigation.path.removeLast() } label: { Label(ru ? "Назад" : "Back", systemImage: "chevron.left") }.buttonStyle(.plain)
++                Spacer()
++                Text(navigation.path.last?.title(russian: ru) ?? "").font(.headline).lineLimit(1)
++                Spacer()
++                Button { navigation.path.removeAll() } label: { Image(systemName: "square.grid.2x2") }.buttonStyle(.plain).accessibilityLabel(ru ? "Все инструменты" : "All tools")
++            }.padding(14)
++            Divider()
++            if let destination = navigation.path.last { content(destination) }
++        }
++        .environment(\.workspacePanelNavigation, navigation)
++        .accessibilityIdentifier("workspace.browser.tool-page")
++    }
++    @ViewBuilder private func content(_ destination: WorkspaceToolDestination) -> some View {
++        switch destination {
++        case .projects: ScrollView { WorkspaceNativeProjectsView().padding(18) }
++        case .details:
++            #if os(macOS)
++            MacLiveTeamInspector()
++            #endif
++        case .page(.files):
++            ScrollView { WorkspaceTeamView(route: .files, openFile: { id in navigation.fileID = id; navigation.open(.file) }).padding(18) }
++        case .page(.file): WorkspaceLocalFileView(artifactID: navigation.fileID)
++        case .page(.running): ScrollView { WorkspaceTaskExecutionView().padding(18) }
++        default:
++            if case .page(let route) = destination { WorkspacePage(route: route) }
++        }
++    }
++}
+diff --git a/packages/BlotWorkspace/Tests/BlotWorkspaceTests/BrowserAddressTests.swift b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/BrowserAddressTests.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/BrowserAddressTests.swift
+@@ -0,0 +1,20 @@
++import Foundation
++import Testing
++@testable import BlotWorkspace
++
++@Test func browserAddressBarSearchesWordsAndKeepsAddressesInsideTheBrowser() throws {
++    for query in ["гитхаб", "github", "swift apple", "c++ & swift", "https documentation"] {
++        let url = try WorkspaceBrowserURL.userNavigation(query)
++        let parts = try #require(URLComponents(url: url, resolvingAgainstBaseURL: false))
++        #expect(parts.host == "www.google.com" && parts.path == "/search")
++        #expect(parts.queryItems?.first(where: { $0.name == "q" })?.value == query)
++    }
++    #expect(try WorkspaceBrowserURL.userNavigation(" github.com/openai ").absoluteString == "https://github.com/openai")
++    #expect(try WorkspaceBrowserURL.userNavigation("localhost:8080/test").absoluteString == "http://localhost:8080/test")
++    #expect(try WorkspaceBrowserURL.userNavigation("https://example.com/?q=hello").host == "example.com")
++    for invalid in ["", "  ", "javascript:alert(1)", "data:text/html,test", "file:///etc/passwd", "mailto:person@example.com", "https://name:secret@example.com", "http://example.com"] {
++        #expect(throws: WorkspaceBrowserError.self) { _ = try WorkspaceBrowserURL.userNavigation(invalid) }
++    }
++    // Search interpretation must not weaken the URL-only contract used by agents.
++    #expect(throws: WorkspaceBrowserError.self) { _ = try WorkspaceBrowserURL.validated("гитхаб") }
++}

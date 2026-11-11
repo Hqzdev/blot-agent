@@ -14,6 +14,9 @@ final class WorkspaceStore {
     private let service: any WorkspaceService
     var serviceForBrowser: (any WorkspaceCommandService)? { commands }
     let guestBrowser = WorkspaceBrowserState()
+    let panelNavigations = WorkspacePanelNavigationRegistry()
+    let voice: VoiceConversationSession
+    let voicePreferences: WorkspaceVoicePreferences
     var nativeCommands: (any WorkspaceNativeProviding)? { service as? any WorkspaceNativeProviding }
     var mcpCommands: (any WorkspaceMCPProviding)? { service as? any WorkspaceMCPProviding }
     func refreshMCP() async throws {
@@ -84,9 +87,12 @@ final class WorkspaceStore {
     @ObservationIgnored private let authenticationLog = Logger(subsystem: "dev.blot.authentication", category: "BrowserHandoff")
     private(set) var snapshot = WorkspaceSnapshot() {
         didSet {
-            if snapshot.ownerID != oldValue.ownerID { guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
+            if snapshot.ownerID != oldValue.ownerID { voice.end(); guestBrowser.controller?.shutdown(); guestBrowser.controller = nil; panelNavigations.clear() }
+            let previousActivityIDs = chatContent.activityMessageIDs
             chatContent.update(snapshot, previous: oldValue)
-            if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
+            if snapshot.messages != oldValue.messages || previousActivityIDs != chatContent.activityMessageIDs {
+                messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
+            }
             if mode == .live {
                 if let selectedConversationID, !snapshot.conversations.contains(where: { $0.metadata.id == selectedConversationID }),
                    let previous = oldValue.conversations.first(where: { $0.metadata.id == selectedConversationID }), previous.kind != .group {
@@ -109,7 +115,7 @@ final class WorkspaceStore {
     private(set) var busy = false
     private(set) var isRestoringSession: Bool
     private(set) var history: [WorkspaceRoute] = []
-    var route: WorkspaceRoute
+    var route: WorkspaceRoute { didSet { if route != oldValue { voice.end() } } }
     var rootRoute: WorkspaceRoute
     var settingsRoute: WorkspaceRoute?
     var tab: WorkspaceRoute = .chats
@@ -135,13 +141,17 @@ final class WorkspaceStore {
         }
         didSet {
             if oldValue != selectedConversationID {
+                voice.end()
                 restoringComposer = true
                 form.composer = selectedConversationID.flatMap { conversationDrafts[$0] } ?? WorkspaceComposerForm()
                 restoringComposer = false
+                browser?.activateSession(browserSessionKey)
             }
         }
     }
-    var selectedAgentID: UUID?
+    var selectedAgentID: UUID? {
+        didSet { if currentConversation == nil { browser?.activateSession(browserSessionKey) } }
+    }
     var selectedRecordID: UUID?
     var inspectorVisible = false
     var sidebarVisible = true
@@ -225,7 +235,9 @@ final class WorkspaceStore {
     }
     var isPreview: Bool { mode != .live }
 
-    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil) {
+    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil, voice: VoiceConversationSession? = nil, voicePreferences: WorkspaceVoicePreferences? = nil) {
+        self.voice = voice ?? VoiceConversationSession()
+        self.voicePreferences = voicePreferences ?? WorkspaceVoicePreferences(defaults: mode == .live ? .standard : nil)
         self.mode = mode
         self.isRestoringSession = mode == .live
         self.inspectorVisible = mode == .preview
@@ -276,7 +288,7 @@ final class WorkspaceStore {
         }
         #endif
         chatContent.update(snapshot, previous: WorkspaceSnapshot())
-        messageIndex = WorkspaceMessageIndex(snapshot.messages)
+        messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
     }
     var currentPinnedMessages: [BlotV3.Message] {
         selectedConversationID.flatMap { chatContent.pinnedMessages[$0] } ?? []
@@ -593,7 +605,7 @@ final class WorkspaceStore {
         tab = destination; rootRoute = destination; route = destination; history = []
         error = nil
     }
-    func selectAgent(_ id: UUID, destination: WorkspaceRoute = .agentProfile) {
+    func selectAgent(_ id: UUID, destination: WorkspaceRoute = .agentProfile, navigating: Bool = true) {
         selectedAgentID = id
         if let agent = snapshot.agents.first(where: { $0.metadata.id == id }) {
             form.agent.name = agent.name; form.agent.instructions = agent.instructions
@@ -601,7 +613,7 @@ final class WorkspaceStore {
             form.agent.modelID = agent.modelId
             form.agent.toolIDs = snapshot.configurations?.filter { $0.agentId == id }.max(by: { $0.revision < $1.revision })?.toolIds ?? []
         }
-        navigate(destination)
+        if navigating { navigate(destination) }
     }
     func perform(_ action: WorkspaceAction, next: WorkspaceRoute? = nil) async {
         guard !busy else { return }
@@ -609,6 +621,7 @@ final class WorkspaceStore {
             error = "Дождитесь ответа или остановите его перед новым сообщением."
             return
         }
+        if action == .send { voice.end() }
         error = nil; notice = nil; invalidField = nil
         guard validate(action) else { return }
         busy = true
@@ -826,6 +839,8 @@ final class WorkspaceStore {
         if let draft = chatActivity.drafts[id] { return draft }
         guard mode == .live,
               let source = messageIndex.lastUser(in: id) else { return nil }
+        if let latest = currentVisibleMessages.last, latest.commandId == source.commandId,
+           chatContent.activities(for: latest).contains(where: { $0.state == .running || $0.state == .approval }) { return nil }
         let responses = messageIndex.activeResponses(in: id)
         guard isReplying || !responses.isEmpty else { return nil }
         let activeIDs = Set(responses.compactMap(\.authorAgentId))
@@ -872,6 +887,49 @@ final class WorkspaceStore {
                 self.error = WorkspaceFailureCopy.message(error)
             }
         }
+    }
+
+    func beginVoiceConversation() {
+        guard mode == .live, !busy, !isReplying, let id = selectedConversationID, route == .chat else { return }
+        let generation = sessionGeneration
+        voice.begin(conversationID: id, locale: Locale(identifier: language == "ru" ? "ru-RU" : "en-US"),
+            recognitionLocale: voicePreferences.recognitionLocale(interfaceLanguage: language)) { [weak self] text in
+            guard let self, self.sessionGeneration == generation else { throw CancellationError() }
+            return try await self.sendVoiceTurn(text, in: id)
+        }
+    }
+
+    /// Uses the normal durable send and tool loop without replacing the user's typed draft.
+    private func sendVoiceTurn(_ text: String, in conversationID: UUID) async throws -> String {
+        guard !busy, selectedConversationID == conversationID, !isReplying, let commands else { throw VoiceFailure.emptyResponse }
+        try _Concurrency.Task.checkCancellation()
+        let generation = sessionGeneration
+        var input = WorkspaceForm()
+        input.composer.draft = text
+        input.composer.projectID = form.composer.projectID
+        input.messageContext = currentMessageContext
+        #if os(macOS)
+        input.messageContext.agentActivity = desktopContent.context(in: conversationID, snapshot: snapshot)
+        #endif
+        let request = WorkspaceRequest(action: .send, form: input, selectedAgentID: currentConversation?.agentId,
+            selectedConversationID: conversationID, selectedRecordID: nil)
+        busy = true
+        do {
+            let result = try await service.execute(request, snapshot: snapshot)
+            guard generation == sessionGeneration else { throw CancellationError() }
+            snapshot = result; busy = false
+        } catch { if generation == sessionGeneration { busy = false }; throw error }
+        try _Concurrency.Task.checkCancellation()
+        guard let sent = snapshot.messages.first(where: { $0.role == .user && $0.commandId == request.commandID }) else { throw VoiceFailure.emptyResponse }
+        enqueueLiveResponse(to: sent)
+        await liveResponses[conversationID]?.value
+        try _Concurrency.Task.checkCancellation()
+        guard generation == sessionGeneration else { throw CancellationError() }
+        let fresh = try await commands.currentSnapshot()
+        snapshot = fresh
+        let replies = fresh.messages.filter { $0.role == .assistant && $0.commandId == request.commandID }
+        guard let reply = replies.max(by: { $0.metadata.createdAt < $1.metadata.createdAt }), reply.delivery == .completed else { throw VoiceFailure.emptyResponse }
+        return reply.content
     }
 
     func retryResponse(to messageID: UUID) {
@@ -1187,6 +1245,7 @@ final class WorkspaceStore {
 
     func signOut(deletingLocalData: Bool = false) {
         guard !busy else { return }
+        voice.end()
         persistChatState(immediately: true)
         busy = true
         sessionGeneration = UUID()

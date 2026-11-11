@@ -1,0 +1,769 @@
+diff --git a/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift b/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
+--- a/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
++++ b/apps/ios/BlotIOS/Features/Chat/PhoneConversationView.swift
+@@ -26,3 +26,3 @@
+     var body: some View {
+-        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)))
++        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)), activityMessageIDs: store.chatContent.activityMessageIDs)
+         let ids = rows.map(\.id)
+@@ -169,3 +169,3 @@
+             } else {
+-                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery) { id in
++                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery, showsAuthor: row.showsAuthor) { id in
+                     store.messageNavigationTarget = id
+@@ -234,2 +234,3 @@
+     let showsDelivery: Bool
++    let showsAuthor: Bool
+     let showMessage: (UUID) -> Void
+@@ -247,5 +248,6 @@
+         VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
+-            if message.role == .assistant, store.currentConversation?.kind == .group {
++            if message.role == .assistant, showsAuthor {
+                 PhoneGroupMessageAuthor(message: message)
+             }
++            if !message.content.isEmpty || !message.artifactIds.isEmpty {
+             HStack(spacing: 0) {
+@@ -259,3 +261,3 @@
+                         .fixedSize(horizontal: false, vertical: true)
+-                    WorkspaceMessagePlugins(message: message)
++                    if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
+                 }
+@@ -268,2 +270,4 @@
+             }
++            }
++            WorkspaceToolActivityView(message: message).padding(.trailing, isUser ? 0 : 44)
+             if let reaction = metadata?.reaction {
+diff --git a/apps/ios/BlotIOS/Features/Chat/PhoneMessageTimeline.swift b/apps/ios/BlotIOS/Features/Chat/PhoneMessageTimeline.swift
+--- a/apps/ios/BlotIOS/Features/Chat/PhoneMessageTimeline.swift
++++ b/apps/ios/BlotIOS/Features/Chat/PhoneMessageTimeline.swift
+@@ -9,2 +9,3 @@
+         let showsDelivery: Bool
++        let showsAuthor: Bool
+         var id: UUID { message.metadata.id }
+@@ -12,4 +13,4 @@
+
+-    static func rows(in messages: [BlotV3.Message]) -> [Row] {
+-        let visible = messages.filter(WorkspaceMessagePresentation.isVisible)
++    static func rows(in messages: [BlotV3.Message], activityMessageIDs: Set<UUID> = []) -> [Row] {
++        let visible = messages.filter { WorkspaceMessagePresentation.isVisible($0) || activityMessageIDs.contains($0.metadata.id) }
+         return visible.enumerated().map { index, message in
+@@ -19,3 +20,4 @@
+             return Row(message: message, spacing: spacing(before: message, previous: previous),
+-                       showsDelivery: error || (message.role == .user && !consecutive(message, next)))
++                       showsDelivery: error || (message.role == .user && !consecutive(message, next)),
++                       showsAuthor: WorkspaceMessageSeries.starts(message, after: previous))
+         }
+@@ -25,2 +27,3 @@
+         guard let previous else { return 0 }
++        if message.role == .assistant, !WorkspaceMessageSeries.starts(message, after: previous) { return 12 }
+         if consecutive(previous, message) { return 4 }
+diff --git a/apps/macos/BlotMac/Features/Chat/MacMessageBubble.swift b/apps/macos/BlotMac/Features/Chat/MacMessageBubble.swift
+--- a/apps/macos/BlotMac/Features/Chat/MacMessageBubble.swift
++++ b/apps/macos/BlotMac/Features/Chat/MacMessageBubble.swift
+@@ -22,2 +22,3 @@
+                 }
++                if !message.content.isEmpty || !message.artifactIds.isEmpty {
+                 WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser,
+@@ -30,3 +31,5 @@
+                     .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
+-                WorkspaceMessagePlugins(message: message).padding(.horizontal, 12)
++                }
++                if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message).padding(.horizontal, 12) }
++                WorkspaceToolActivityView(message: message)
+                 if let reaction = metadata?.reaction {
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamConversation.swift
+@@ -40,2 +40,4 @@
+     var body: some View {
++        let visibleMessages = messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }
++        let authorIDs = WorkspaceMessageSeries.authorIDs(in: visibleMessages)
+         ScrollViewReader { proxy in
+@@ -67,3 +69,3 @@
+                     }
+-                    ForEach(messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
++                    ForEach(visibleMessages, id: \.metadata.id) { message in
+                         Group {
+@@ -73,3 +75,3 @@
+                                 MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
+-                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
++                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages, showsAuthor: authorIDs.contains(message.metadata.id))
+                             }
+@@ -163,2 +165,3 @@
+     let compact: Bool
++    let showsAuthor: Bool
+     @Environment(WorkspaceStore.self) private var store
+@@ -175,3 +178,3 @@
+             VStack(alignment: .leading, spacing: 12) {
+-                if !isUser {
++                if !isUser && showsAuthor {
+                     HStack(spacing: 9) {
+@@ -182,2 +185,3 @@
+                 }
++                if !message.content.isEmpty || !message.artifactIds.isEmpty {
+                 VStack(alignment: .leading, spacing: 10) {
+@@ -187,3 +191,3 @@
+                     WorkspaceMessageText(text: message.content, markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.system(size: 13)).lineSpacing(4)
+-                    WorkspaceMessagePlugins(message: message)
++                    if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
+                     ForEach(message.artifactIds, id: \.self) { id in
+@@ -222,2 +226,5 @@
+                     .modifier(MacTeamMessageEntrance(animated: arriving && isUser, outgoing: true, inputFrame: inputFrame))
++                    .padding(.leading, isUser ? 0 : 30)
++                }
++                WorkspaceToolActivityView(message: message).padding(.leading, 30)
+                 HStack(spacing: 5) {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceChatPresentation.swift b/apps/shared/WorkspaceV3/WorkspaceChatPresentation.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceChatPresentation.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceChatPresentation.swift
+@@ -19,2 +19,8 @@
+     private var toolRevision = 0
++    private(set) var activityMessageIDs: Set<UUID> = []
++    @ObservationIgnored private var actionRecords: [UUID: BlotV3.PreparedAction] = [:]
++    @ObservationIgnored private var invocationRecords: [UUID: BlotV3.ToolInvocation] = [:]
++    @ObservationIgnored private var mcpConnections: [BlotV3.McpConnection] = []
++    @ObservationIgnored private var callPresence: [UUID: (raw: String, present: Bool)] = [:]
++    @ObservationIgnored private let activityCache = NSCache<NSUUID, ActivityResult>()
+     @ObservationIgnored private var steps: [UUID: [BlotV3.ModelStep]] = [:]
+@@ -24,2 +30,3 @@
+     init() {
++        activityCache.countLimit = 128; activityCache.totalCostLimit = 4 * 1024 * 1024
+         plugins.countLimit = 128; plugins.totalCostLimit = 4 * 1024 * 1024
+@@ -50,4 +57,24 @@
+             steps = Dictionary(grouping: snapshot.modelSteps ?? [], by: \.responseMessageId)
+-            toolRevision += 1
++            var presence: [UUID: (raw: String, present: Bool)] = [:]
++            var ids: Set<UUID> = []
++            for step in snapshot.modelSteps ?? [] {
++                guard let raw = step.toolCallsJSON else { continue }
++                let present: Bool
++                if let cached = callPresence[step.metadata.id], cached.raw == raw { present = cached.present }
++                else { present = raw.utf8.count <= 4_194_304 && ((try? JSONDecoder().decode([ChatToolCall].self, from: Data(raw.utf8)))?.isEmpty == false) }
++                presence[step.metadata.id] = (raw, present)
++                if present { ids.insert(step.responseMessageId) }
++            }
++            callPresence = presence
++            if ids != activityMessageIDs { activityMessageIDs = ids }
+         }
++        if snapshot.preparedActions != previous.preparedActions {
++            actionRecords = Dictionary((snapshot.preparedActions ?? []).map { ($0.metadata.id, $0) }, uniquingKeysWith: { _, latest in latest })
++        }
++        if snapshot.toolInvocations != previous.toolInvocations {
++            invocationRecords = Dictionary((snapshot.toolInvocations ?? []).map { ($0.preparedActionId, $0) }, uniquingKeysWith: { _, latest in latest })
++        }
++        if snapshot.mcpConnections != previous.mcpConnections { mcpConnections = snapshot.mcpConnections }
++        if snapshot.modelSteps != previous.modelSteps || snapshot.preparedActions != previous.preparedActions
++            || snapshot.toolInvocations != previous.toolInvocations || snapshot.mcpConnections != previous.mcpConnections { toolRevision += 1 }
+         if snapshot.tasks != previous.tasks || snapshot.localDeviceID != previous.localDeviceID {
+@@ -83,2 +110,31 @@
+
++    func activities(for message: BlotV3.Message) -> [WorkspaceToolActivity] {
++        guard message.role == .assistant else { return [] }
++        _ = toolRevision
++        let matching = steps[message.metadata.id] ?? []
++        let key = message.metadata.id as NSUUID
++        if let cached = activityCache.object(forKey: key), cached.steps == matching, cached.connections == mcpConnections,
++           cached.dependencies.allSatisfy({ cached.actions[$0] == actionRecords[$0] && cached.invocations[$0] == invocationRecords[$0] }) { return cached.rows }
++        let result = WorkspaceToolActivityBuilder().build(steps: matching, actions: actionRecords, invocations: invocationRecords, connections: mcpConnections)
++        let cached = ActivityResult(steps: matching, result: result, actions: actionRecords, invocations: invocationRecords, connections: mcpConnections)
++        let stepCost = matching.reduce(0) { $0 + $1.requestJSON.utf8.count + ($1.toolCallsJSON?.utf8.count ?? 0) + ($1.toolResultsJSON?.utf8.count ?? 0) }
++        let cost = stepCost + result.rows.reduce(256) { $0 + $1.details.reduce(128) { $0 + $1.value.utf8.count * 2 } }
++        activityCache.setObject(cached, forKey: key, cost: cost)
++        return result.rows
++    }
++    private final class ActivityResult {
++        let steps: [BlotV3.ModelStep]
++        let rows: [WorkspaceToolActivity]
++        let dependencies: Set<UUID>
++        let actions: [UUID: BlotV3.PreparedAction]
++        let invocations: [UUID: BlotV3.ToolInvocation]
++        let connections: [BlotV3.McpConnection]
++        init(steps: [BlotV3.ModelStep], result: WorkspaceToolActivityBuilder.Result, actions: [UUID: BlotV3.PreparedAction],
++             invocations: [UUID: BlotV3.ToolInvocation], connections: [BlotV3.McpConnection]) {
++            self.steps = steps; self.rows = result.rows; self.dependencies = result.dependencies
++            self.actions = actions.filter { result.dependencies.contains($0.key) }
++            self.invocations = invocations.filter { result.dependencies.contains($0.key) }; self.connections = connections
++        }
++    }
++
+     private final class PluginResult {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceMessageIndex.swift b/apps/shared/WorkspaceV3/WorkspaceMessageIndex.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceMessageIndex.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceMessageIndex.swift
+@@ -13,5 +13,5 @@
+
+-    init(_ messages: [BlotV3.Message] = []) {
++    init(_ messages: [BlotV3.Message] = [], activityMessageIDs: Set<UUID> = []) {
+         conversations = Dictionary(grouping: messages, by: \.conversationId).mapValues(WorkspaceMessageOrder.ordered)
+-        visible = conversations.mapValues { $0.filter(WorkspaceMessagePresentation.isVisible) }
++        visible = conversations.mapValues { $0.filter { WorkspaceMessagePresentation.isVisible($0) || activityMessageIDs.contains($0.metadata.id) } }
+         byID = Dictionary(messages.map { ($0.metadata.id, $0) }, uniquingKeysWith: { _, latest in latest })
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -89,4 +89,7 @@
+             if snapshot.ownerID != oldValue.ownerID { voice.end(); guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
++            let previousActivityIDs = chatContent.activityMessageIDs
+             chatContent.update(snapshot, previous: oldValue)
+-            if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
++            if snapshot.messages != oldValue.messages || previousActivityIDs != chatContent.activityMessageIDs {
++                messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
++            }
+             if mode == .live {
+@@ -283,3 +286,3 @@
+         chatContent.update(snapshot, previous: WorkspaceSnapshot())
+-        messageIndex = WorkspaceMessageIndex(snapshot.messages)
++        messageIndex = WorkspaceMessageIndex(snapshot.messages, activityMessageIDs: chatContent.activityMessageIDs)
+     }
+@@ -834,2 +837,4 @@
+               let source = messageIndex.lastUser(in: id) else { return nil }
++        if let latest = currentVisibleMessages.last, latest.commandId == source.commandId,
++           chatContent.activities(for: latest).contains(where: { $0.state == .running || $0.state == .approval }) { return nil }
+         let responses = messageIndex.activeResponses(in: id)
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
+@@ -25,3 +25,3 @@
+         let authorized = try await service.authorize(call.name, context: context)
+-        let actionID = WorkspaceLogicalID.make(kind: "BrowserAction", workspaceID: identity.workspaceID, parts: [context.sourceMessageID.uuidString, call.id])
++        let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id, scope: .browser)
+         let command = WorkspaceBrowserCommand(id: actionID, name: call.name, arguments: call.arguments, scope: authorized.scope, origins: authorized.origins)
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceModelRuntime.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceModelRuntime.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceModelRuntime.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceModelRuntime.swift
+@@ -35,3 +35,3 @@
+                     "For quick tool actions, call the tool directly and report the result once. " +
+-                    "Give a short progress update only for longer work or required user interaction; do not repeat acknowledgements on each tool turn. " +
++                    "For multi-step work, give brief updates with tool calls as findings change, then verified results. No repeated names or logs. " +
+                     "Never claim an action succeeded before its tool result confirms success. " +
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSessionFileTools.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSessionFileTools.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSessionFileTools.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceSessionFileTools.swift
+@@ -23,3 +23,3 @@
+         let conversation = try await service.authorize(call.name, context: context)
+-        let actionID = WorkspaceLogicalID.make(kind: "SessionFileAction", workspaceID: identity.workspaceID, parts: [context.sourceMessageID.uuidString, call.id])
++        let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id, scope: .sessionFile)
+         if !WorkspaceSessionFileCatalog.writes(call.name) { return try await service.perform(call, context: context, actionID: actionID) }
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolCallIdentity.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolCallIdentity.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolCallIdentity.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceToolCallIdentity.swift
+@@ -5,3 +5,9 @@
+ public enum WorkspaceToolCallIdentity {
+-    public static func actionID(workspaceID: UUID, sourceID: UUID, callID: String) -> UUID {
++    public enum Scope: Sendable { case tool, browser, sessionFile }
++    public static func actionID(workspaceID: UUID, sourceID: UUID, callID: String, scope: Scope = .tool) -> UUID {
++        switch scope {
++        case .browser: return WorkspaceLogicalID.make(kind: "BrowserAction", workspaceID: workspaceID, parts: [sourceID.uuidString, callID])
++        case .sessionFile: return WorkspaceLogicalID.make(kind: "SessionFileAction", workspaceID: workspaceID, parts: [sourceID.uuidString, callID])
++        case .tool: break
++        }
+         var bytes = Array(SHA256.hash(data: Data((workspaceID.uuidString + ":" + sourceID.uuidString + ":" + callID).utf8)).prefix(16))
+diff --git a/scripts/check-chat-performance.sh b/scripts/check-chat-performance.sh
+--- a/scripts/check-chat-performance.sh
++++ b/scripts/check-chat-performance.sh
+@@ -6,3 +6,3 @@
+ mkdir -p "$checks/cache"
+-sources=(WorkspaceSnapshot WorkspaceMessagePresentation WorkspaceMessageIndex WorkspaceTranscriptWindow WorkspaceChatPresentation WorkspaceMessagePluginAttribution ApplePluginIcon)
++sources=(WorkspaceSnapshot WorkspaceMessagePresentation WorkspaceMessageIndex WorkspaceTranscriptWindow WorkspaceChatPresentation WorkspaceMessagePluginAttribution WorkspaceToolActivity ApplePluginIcon)
+ arguments=()
+diff --git a/apps/shared/WorkspaceV3/WorkspaceMessageSeries.swift b/apps/shared/WorkspaceV3/WorkspaceMessageSeries.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceMessageSeries.swift
+@@ -0,0 +1,19 @@
++import BlotDomain
++import Foundation
++
++/// A reply remains one author series across long tool calls, but never across another speaker or request.
++nonisolated enum WorkspaceMessageSeries {
++    static func starts(_ message: BlotV3.Message, after previous: BlotV3.Message?) -> Bool {
++        guard message.role == .assistant else { return false }
++        guard let previous else { return true }
++        return previous.role != .assistant || previous.authorAgentId != message.authorAgentId
++            || previous.commandId != message.commandId || previous.conversationId != message.conversationId
++    }
++    static func authorIDs(in messages: [BlotV3.Message]) -> Set<UUID> {
++        var previous: BlotV3.Message?
++        return Set(messages.compactMap { message in
++            defer { previous = message }
++            return starts(message, after: previous) ? message.metadata.id : nil
++        })
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceToolActivity.swift b/apps/shared/WorkspaceV3/WorkspaceToolActivity.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceToolActivity.swift
+@@ -0,0 +1,191 @@
++import BlotAppleIntegrations
++import BlotDomain
++import BlotWorkspace
++import Foundation
++
++struct WorkspaceToolActivity: Identifiable {
++    enum State { case queued, running, approval, succeeded, failed, denied, stopped, unknown }
++    struct Detail { let label: String; let value: String }
++    let id: String
++    let tool: String
++    let state: State
++    let symbol: String
++    let plugin: WorkspacePluginReference?
++    let provider: String?
++    let verb: (ru: String, en: String)
++    let details: [Detail]
++    let logArtifactID: UUID?
++    func title(russian: Bool) -> String { russian ? verb.ru : verb.en }
++    func status(russian: Bool) -> String {
++        switch state {
++        case .queued: return russian ? "Ожидает" : "Queued"
++        case .running: return russian ? "В работе" : "Running"
++        case .approval: return russian ? "Нужно разрешение" : "Needs approval"
++        case .succeeded: return russian ? "Готово" : "Done"
++        case .failed: return russian ? "Ошибка" : "Failed"
++        case .denied: return russian ? "Не разрешено" : "Denied"
++        case .stopped: return russian ? "Остановлено" : "Stopped"
++        case .unknown: return russian ? "Нужна сверка" : "Check outcome"
++        }
++    }
++}
++
++/// Uses only explicit calls/results, not model prose or prior requests embedded in requestJSON.
++struct WorkspaceToolActivityBuilder {
++    private typealias State = WorkspaceToolActivity.State
++    struct Result { var rows: [WorkspaceToolActivity]; let dependencies: Set<UUID> }
++    func build(steps: [BlotV3.ModelStep], actions: [UUID: BlotV3.PreparedAction], invocations: [UUID: BlotV3.ToolInvocation],
++               connections: [BlotV3.McpConnection]) -> Result {
++        var rows: [WorkspaceToolActivity] = [], dependencies: Set<UUID> = []
++        var positions: [String: Int] = [:]
++        for step in steps.sorted(by: { $0.stepIndex < $1.stepIndex }) {
++            guard let calls: [ChatToolCall] = decode(step.toolCallsJSON) else { continue }
++            let results: [String: ChatJSON] = decode(step.toolResultsJSON) ?? [:]
++            var awaiting = false
++            for call in calls {
++                let ids = actionIDs(step, call: call); dependencies.formUnion(ids)
++                let action = ids.compactMap { actions[$0] }.first { $0.toolId == call.name }
++                let invocation = action.flatMap { invocations[$0.metadata.id] }
++                let result = invocation?.result.flatMap { decode($0) as ChatJSON? } ?? results[call.id]
++                let state = state(step: step, result: result, action: action, invocation: invocation, queued: awaiting)
++                if results[call.id] == nil { awaiting = true }
++                let plugin = WorkspacePluginReference.plugin(forTool: call.name)
++                    ?? connections.first { $0.toolIds.contains(call.name) }.flatMap { connection in
++                        PluginCatalog.all.first { $0.name.caseInsensitiveCompare(connection.name) == .orderedSame }
++                            .map { WorkspacePluginReference(entry: $0, name: $0.name) }
++                    }
++                let provider = plugin?.name ?? connections.first { $0.toolIds.contains(call.name) }?.name
++                let presentation = presentation(call.name, state: state)
++                let detail = details(call, result: result)
++                let processID = fields(call.arguments)["process_id"].flatMap(string)
++                let key = call.name == "process_status" ? "process-status:" + (processID ?? call.id) : step.metadata.id.uuidString + ":" + call.id
++                let row = WorkspaceToolActivity(id: key, tool: call.name, state: state, symbol: presentation.symbol, plugin: plugin,
++                    provider: provider, verb: presentation.verb, details: detail,
++                    logArtifactID: fields(result)["log_artifact_id"].flatMap(string).flatMap(UUID.init(uuidString:)))
++                if let index = positions[key] { rows[index] = row }
++                else { positions[key] = rows.count; rows.append(row) }
++            }
++        }
++        return Result(rows: Array(rows.suffix(64)), dependencies: dependencies)
++    }
++    private func actionIDs(_ step: BlotV3.ModelStep, call: ChatToolCall) -> [UUID] {
++        guard let workspace = step.metadata.workspaceId else { return [] }
++        return [WorkspaceToolCallIdentity.actionID(workspaceID: workspace, sourceID: step.sourceMessageId, callID: call.id),
++                WorkspaceToolCallIdentity.actionID(workspaceID: workspace, sourceID: step.sourceMessageId, callID: call.id, scope: .browser),
++                WorkspaceToolCallIdentity.actionID(workspaceID: workspace, sourceID: step.sourceMessageId, callID: call.id, scope: .sessionFile)]
++    }
++    private func state(step: BlotV3.ModelStep, result: ChatJSON?, action: BlotV3.PreparedAction?, invocation: BlotV3.ToolInvocation?, queued: Bool) -> State {
++        switch invocation?.state ?? action?.state {
++        case .unknown: return .unknown
++        case .denied, .expired: return .denied
++        case .failed: return .failed
++        case .running: return .running
++        case .succeeded: break
++        case .prepared, .waiting_approval: return .approval
++        default: break
++        }
++        if let result {
++            let values = fields(result)
++            if let processState = values["process_state"].flatMap(string)?.lowercased(), ["canceled", "cancelled", "stopped"].contains(processState) { return .stopped }
++            if case .number(let code) = values["exitCode"], code != 0 { return .failed }
++            switch values["state"].flatMap(string)?.lowercased() {
++            case "unknown": return .unknown
++            case "running", "queued", "pending": return .running
++            case "canceled", "cancelled", "stopped": return .stopped
++            case "denied", "expired": return .denied
++            default: break
++            }
++            if values["isError"] == .bool(true) || WorkspaceGroupExecutionEvidence.containsFailure(result) { return .failed }
++            return .succeeded
++        }
++        if invocation?.state == .succeeded || action?.state == .succeeded { return .succeeded }
++        switch step.state {
++        case .canceled: return .stopped
++        case .interrupted: return .unknown
++        case .failed: return .failed
++        case .completed: return .unknown
++        default: return queued ? .queued : .running
++        }
++    }
++    private func presentation(_ tool: String, state: State) -> (symbol: String, verb: (ru: String, en: String)) {
++        let done = state == .succeeded
++        if state != .running && !done {
++            if tool.hasPrefix("browser_") { return ("globe", ("Действие браузера", "Browser action")) }
++            if tool.hasPrefix("process_") { return ("terminal", ("Команда", "Command")) }
++            if tool.hasPrefix("git_") { return ("arrow.triangle.branch", ("Действие Git", "Git action")) }
++            if tool.hasPrefix("workspace_") || tool.hasPrefix("project_") || tool == "file_read" || tool == "document_create" { return ("doc.text", ("Работа с файлами", "File operation")) }
++            return ("puzzlepiece.extension", ("Действие инструмента", "Tool action"))
++        }
++        let entries: [String: (String, String, String, String, String)] = [
++            "browser_tabs": ("globe", "Смотрит открытые вкладки", "Посмотрел открытые вкладки", "Inspecting open tabs", "Inspected open tabs"),
++            "browser_open": ("globe", "Открывает сайт", "Открыл сайт", "Opening website", "Opened website"),
++            "browser_snapshot": ("globe", "Читает страницу", "Прочитал страницу", "Reading page", "Read page"),
++            "browser_click": ("cursorarrow.click", "Нажимает на странице", "Нажал на странице", "Clicking on page", "Clicked on page"),
++            "browser_type": ("keyboard", "Заполняет поле", "Заполнил поле", "Filling field", "Filled field"),
++            "browser_screenshot": ("photo", "Сохраняет снимок страницы", "Сохранил снимок страницы", "Saving page image", "Saved page image"),
++            "process_run": ("terminal", "Выполняет команду", "Выполнил команду", "Running command", "Ran command"),
++            "process_status": ("terminal", "Проверяет команду", "Проверил команду", "Checking command", "Checked command"),
++            "process_stop": ("stop.circle", "Останавливает команду", "Остановил команду", "Stopping command", "Stopped command"),
++            "document_create": ("doc", "Создаёт документ", "Создал документ", "Creating document", "Created document"),
++            "file_read": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
++            "workspace_directory": ("folder", "Открывает рабочую папку", "Открыл рабочую папку", "Opening workspace folder", "Opened workspace folder"),
++            "workspace_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
++            "project_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
++            "project_search": ("magnifyingglass", "Ищет в проекте", "Проверил файлы проекта", "Searching project", "Searched project"),
++            "workspace_list_files": ("folder", "Просматривает файлы", "Просмотрел файлы", "Listing files", "Listed files"),
++            "workspace_write_file": ("doc.badge.plus", "Сохраняет файл", "Сохранил файл", "Saving file", "Saved file"),
++            "project_write_file": ("doc.badge.plus", "Изменяет файл", "Изменил файл", "Editing file", "Edited file"),
++            "workspace_create_directory": ("folder.badge.plus", "Создаёт папку", "Создал папку", "Creating folder", "Created folder"),
++            "workspace_request_directory": ("folder", "Запрашивает доступ к папке", "Получил доступ к папке", "Requesting folder access", "Obtained folder access"),
++            "git_status": ("arrow.triangle.branch", "Проверяет Git", "Проверил Git", "Checking Git", "Checked Git"),
++            "git_diff": ("arrow.triangle.branch", "Смотрит изменения", "Посмотрел изменения", "Inspecting changes", "Inspected changes"),
++            "git_commit": ("arrow.triangle.branch", "Создаёт коммит", "Создал коммит", "Creating commit", "Created commit"),
++            "git_push": ("arrow.up", "Отправляет коммит", "Отправил коммит", "Pushing commit", "Pushed commit")
++        ]
++        if let entry = entries[tool] { return (entry.0, (done ? entry.2 : entry.1, done ? entry.4 : entry.3)) }
++        if let apple = AppleToolCatalog.all.first(where: { $0.definition.name == tool }) {
++            let nouns: [ApplePluginID: (String, String)] = [.mail: ("письмо", "email"), .calendar: ("событие", "event"), .reminders: ("напоминание", "reminder"), .notes: ("заметку", "note"), .contacts: ("контакт", "contact"), .files: ("файл", "file"), .shortcuts: ("команду", "shortcut")]
++            let noun = nouns[apple.plugin] ?? ("запись", "item")
++            let verbs: [String: (String, String, String, String)] = [
++                "create": ("Создаёт " + noun.0, "Создал " + noun.0, "Creating " + noun.1, "Created " + noun.1),
++                "update": ("Изменяет " + noun.0, "Изменил " + noun.0, "Updating " + noun.1, "Updated " + noun.1),
++                "delete": ("Удаляет " + noun.0, "Удалил " + noun.0, "Deleting " + noun.1, "Deleted " + noun.1),
++                "send": ("Отправляет письмо", "Отправил письмо", "Sending email", "Sent email"),
++                "run": ("Запускает команду", "Запустил команду", "Running shortcut", "Ran shortcut")]
++            let entry = verbs[apple.operation] ?? ("Читает данные", "Прочитал данные", "Reading data", "Read data")
++            return ("app.connected.to.app.below.fill", (done ? entry.1 : entry.0, done ? entry.3 : entry.2))
++        }
++        if tool.hasPrefix("browser_") { return ("globe", (done ? "Действие браузера выполнено" : "Работает в браузере", done ? "Browser action completed" : "Using browser")) }
++        if tool.hasPrefix("git_") { return ("arrow.triangle.branch", (done ? "Действие Git выполнено" : "Работает с Git", done ? "Git action completed" : "Using Git")) }
++        return ("puzzlepiece.extension", (done ? "Вызов инструмента завершён" : "Использует инструмент", done ? "Tool call completed" : "Using tool"))
++    }
++    private func details(_ call: ChatToolCall, result: ChatJSON?) -> [WorkspaceToolActivity.Detail] {
++        let arguments = fields(call.arguments), output = fields(result)
++        var items: [WorkspaceToolActivity.Detail] = []
++        var truncated = false
++        if let path = arguments["path"].flatMap(string) { items.append(.init(label: "Файл / File", value: clean(path, maximum: 240))) }
++        if let url = arguments["url"].flatMap(string).flatMap(URL.init(string:)), let host = url.host { items.append(.init(label: "Сайт / Site", value: clean(host))) }
++        if let executable = arguments["executable"].flatMap(string) { items.append(.init(label: "Программа / Program", value: (executable as NSString).lastPathComponent)) }
++        // Never echo arbitrary parameters, page text, environment variables or opaque plugin output.
++        for (key, title) in [("title", "Название / Title"), ("name", "Название / Name"), ("exitCode", "Код выхода / Exit code"), ("stdout", "stdout"), ("stderr", "stderr")] {
++            guard let value = output[key] else { continue }
++            let text: String
++            if let value = string(value) { text = value }
++            else if case .number(let value) = value { text = String(value) }
++            else { continue }
++            truncated = truncated || text.count > 3000
++            if !text.isEmpty { items.append(.init(label: title, value: clean(text, maximum: 3000))) }
++        }
++        if output["truncated"] == .bool(true) || truncated { items.append(.init(label: "Журнал / Log", value: "Показан фрагмент / Output truncated")) }
++        return items
++    }
++    private func clean(_ value: String, maximum: Int = 160) -> String {
++        String(String(value.unicodeScalars.filter { !CharacterSet.controlCharacters.contains($0) || $0 == "\n" || $0 == "\t" }).prefix(maximum))
++    }
++    private func fields(_ value: ChatJSON?) -> [String: ChatJSON] { if case .object(let values) = value { return values }; return [:] }
++    private func string(_ value: ChatJSON) -> String? { if case .string(let text) = value { return text }; return nil }
++    private func decode<T: Decodable>(_ raw: String?) -> T? {
++        guard let raw, raw.utf8.count <= 4_194_304 else { return nil }
++        return try? JSONDecoder().decode(T.self, from: Data(raw.utf8))
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceToolActivityView.swift b/apps/shared/WorkspaceV3/WorkspaceToolActivityView.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceToolActivityView.swift
+@@ -0,0 +1,85 @@
++import BlotDesign
++import BlotDomain
++import SwiftUI
++
++struct WorkspaceToolActivityView: View {
++    let message: BlotV3.Message
++    @Environment(WorkspaceStore.self) private var store
++    @State private var showsAll = false
++    private var russian: Bool { store.language == "ru" }
++    var body: some View {
++        let rows = store.chatContent.activities(for: message)
++        if !rows.isEmpty {
++            VStack(alignment: .leading, spacing: 3) {
++                ForEach(showsAll ? rows : Array(rows.suffix(4))) { row in
++                    WorkspaceToolActivityRow(row: row, russian: russian)
++                }
++                if rows.count > 4 {
++                    Button(showsAll ? (russian ? "Свернуть действия" : "Show fewer actions") : (russian ? "Все действия (\(rows.count))" : "All actions (\(rows.count))")) { showsAll.toggle() }
++                        .font(.caption).buttonStyle(.plain).foregroundStyle(.secondary).padding(.leading, 27).padding(.vertical, 5)
++                }
++                if rows.count == 64 { Text(russian ? "Показаны последние 64 действия" : "Showing the latest 64 actions").font(.caption2).foregroundStyle(.secondary) }
++            }.accessibilityIdentifier("workspace.chat.tool-activity.\(message.metadata.id)")
++        }
++    }
++}
++
++private struct WorkspaceToolActivityRow: View {
++    let row: WorkspaceToolActivity
++    let russian: Bool
++    @Environment(WorkspaceStore.self) private var store
++    @State private var expanded = false
++    private var minimumHeight: CGFloat {
++        #if os(iOS)
++        44
++        #else
++        30
++        #endif
++    }
++    private var terminalFailure: Bool { row.state == .failed || row.state == .denied || row.state == .unknown }
++    var body: some View {
++        VStack(alignment: .leading, spacing: 6) {
++            Button { expanded.toggle() } label: {
++                HStack(alignment: .center, spacing: 8) {
++                    if let plugin = row.plugin { WorkspacePluginLogo(plugin: plugin, size: 20).clipShape(RoundedRectangle(cornerRadius: 4)) }
++                    else { Image(systemName: row.symbol).frame(width: 20, height: 20).accessibilityHidden(true) }
++                    ViewThatFits(in: .horizontal) {
++                        HStack(spacing: 5) { name; provider }
++                        VStack(alignment: .leading, spacing: 2) { name; provider }
++                    }.frame(maxWidth: .infinity, alignment: .leading)
++                    if row.state == .running { ProgressView().controlSize(.mini).accessibilityLabel(row.status(russian: russian)) }
++                    else if row.state != .succeeded { Text(row.status(russian: russian)).font(.caption2).foregroundStyle(terminalFailure ? .red : .secondary) }
++                    Image(systemName: expanded ? "chevron.down" : "chevron.right").font(.system(size: 10)).accessibilityHidden(true)
++                }
++                .font(.system(size: 12, weight: .regular)).foregroundStyle(WorkspaceStyle.secondary).padding(.horizontal, 7).padding(.vertical, 6)
++                .frame(minHeight: minimumHeight).contentShape(Rectangle())
++            }
++            .buttonStyle(.plain)
++            .accessibilityLabel(row.title(russian: russian) + ", " + row.status(russian: russian))
++            .accessibilityValue(expanded ? (russian ? "Развёрнуто" : "Expanded") : (russian ? "Свёрнуто" : "Collapsed"))
++            .accessibilityIdentifier("workspace.chat.tool-action.\(row.id)")
++            if expanded {
++                VStack(alignment: .leading, spacing: 7) {
++                    Text(row.status(russian: russian)).font(.caption.weight(.medium))
++                    ForEach(Array(row.details.enumerated()), id: \.offset) { _, item in
++                        VStack(alignment: .leading, spacing: 2) {
++                            Text(russian ? (item.label.components(separatedBy: " / ").first ?? item.label) : (item.label.components(separatedBy: " / ").last ?? item.label)).font(.caption2).foregroundStyle(.secondary)
++                            Text(item.label == "Журнал / Log" ? (russian ? "Показан фрагмент" : "Output truncated") : item.value).font(.caption.monospaced()).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
++                        }
++                    }
++                    if row.details.isEmpty { Text(russian ? "Статус получен из журнала выполнения." : "Status comes from the execution log.").font(.caption).foregroundStyle(.secondary) }
++                    if let id = row.logArtifactID, store.chatContent.artifacts[id] != nil {
++                        Button(russian ? "Открыть полный журнал" : "Open full log") { store.selectedRecordID = id; store.navigate(.file) }
++                            .font(.caption).buttonStyle(.bordered)
++                    }
++                }.padding(.leading, 35).padding(.bottom, 8)
++            }
++        }
++    }
++    private var name: some View { Text(row.title(russian: russian)).multilineTextAlignment(.leading) }
++    @ViewBuilder private var provider: some View {
++        if let provider = row.provider {
++            Text("@" + provider).foregroundStyle(row.plugin?.color ?? .secondary).multilineTextAlignment(.leading)
++        }
++    }
++}
+diff --git a/scripts/check-agent-progress.sh b/scripts/check-agent-progress.sh
+new file mode 100755
+--- /dev/null
++++ b/scripts/check-agent-progress.sh
+@@ -0,0 +1,18 @@
++#!/bin/bash
++set -euo pipefail
++cd "$(dirname "$0")/.."
++products="$PWD/.build/xcode/Build/Products/Debug"
++checks="$PWD/.build/agent-progress/harness"
++mkdir -p "$checks/cache"
++python3 - <<'PY'
++from pathlib import Path
++objects=Path('.build/xcode/Build/Intermediates.noindex/Blot.build/Debug/Blot.build/Objects-normal/arm64')
++items=sorted(p.resolve() for p in objects.glob('*.o') if p.name != 'BlotMacApp.o')
++assert items and all('"' not in str(p) for p in items)
++Path('.build/agent-progress/harness/objects.txt').write_text('\n'.join('"'+str(p)+'"' for p in items)+'\n')
++PY
++xcrun swiftc -parse-as-library -swift-version 5 -default-isolation MainActor -module-cache-path "$checks/cache" \
++    -I "$products" -I packages/BlotWorkspace/Sources/CSQLite \
++    "$products/BlotDomain.o" "$products/BlotWorkspace.o" "$products/BlotAppleIntegrations.o" "$products/BlotDesign.o" "$products/BlotAPI.o" \
++    @"$checks/objects.txt" -lsqlite3 scripts/verify-agent-progress.swift -o "$checks/verify"
++"$checks/verify"
+diff --git a/scripts/verify-agent-progress.swift b/scripts/verify-agent-progress.swift
+new file mode 100644
+--- /dev/null
++++ b/scripts/verify-agent-progress.swift
+@@ -0,0 +1,163 @@
++import AppKit
++import BlotAppleIntegrations
++import BlotDomain
++import BlotWorkspace
++import Foundation
++import Observation
++import Synchronization
++@testable import Blot
++
++@MainActor private struct ActivityFixture {
++    let owner = UUID(), conversation = UUID(), source = UUID(), response = UUID(), agent = UUID(), command = UUID()
++    func metadata(_ id: UUID) throws -> BlotV3.RecordMetadata {
++        try .init(id: id, ownerId: owner, workspaceId: owner, version: 1, createdAt: Date(timeIntervalSince1970: 1000), updatedAt: Date(timeIntervalSince1970: 1000))
++    }
++    func message(_ id: UUID? = nil, role: BlotV3.MessageRole = .assistant, author: UUID? = nil, commandID: UUID? = nil,
++                 content: String = "Проверю документацию.", delivery: BlotV3.DeliveryState = .completed, age: TimeInterval = 0) throws -> BlotV3.Message {
++        let id = id ?? response
++        return try .init(metadata: .init(id: id, ownerId: owner, workspaceId: owner, version: 1, createdAt: Date(timeIntervalSince1970: 1000 + age), updatedAt: Date(timeIntervalSince1970: 1000 + age)),
++            conversationId: conversation, role: role, content: content, delivery: delivery, commandId: commandID ?? command, artifactIds: [], authorAgentId: role == .assistant ? (author ?? agent) : nil)
++    }
++    func call(_ name: String, _ id: String = "call", arguments: [String: ChatJSON] = [:]) -> ChatToolCall { .init(id: id, name: name, arguments: .object(arguments)) }
++    func step(_ calls: [ChatToolCall], results: [String: ChatJSON] = [:], state: BlotV3.ModelStepState = .waiting_tools, index: Int = 0, id: UUID = UUID()) throws -> BlotV3.ModelStep {
++        try .init(metadata: metadata(id), conversationId: conversation, sourceMessageId: source, responseMessageId: response,
++            executorDeviceId: owner, originDeviceId: owner, executionMode: .local_owned, stepIndex: index, modelId: "compatible", budgetTokenLimit: 20000,
++            requestJSON: "secret old context must never become an activity row", toolCallsJSON: String(decoding: try JSONEncoder().encode(calls), as: UTF8.self),
++            toolResultsJSON: results.isEmpty ? nil : String(decoding: try JSONEncoder().encode(results), as: UTF8.self), state: state)
++    }
++    func action(_ tool: String, state: BlotV3.ActionState, scope: WorkspaceToolCallIdentity.Scope = .tool) throws -> BlotV3.PreparedAction {
++        try .init(metadata: metadata(WorkspaceToolCallIdentity.actionID(workspaceID: owner, sourceID: source, callID: "call", scope: scope)),
++            execution: .init(executorDeviceId: owner, originDeviceId: owner, taskId: UUID(), revision: 1), toolId: tool, resource: "fixture", parameters: "{}", digest: "fixture", consequences: "fixture", expiresAt: Date().addingTimeInterval(600), state: state)
++    }
++    func snapshot(_ steps: [BlotV3.ModelStep], actions: [BlotV3.PreparedAction] = [], invocations: [BlotV3.ToolInvocation] = []) throws -> WorkspaceSnapshot {
++        var value = WorkspaceSnapshot(); value.ownerID = owner; value.localDeviceID = owner
++        value.messages = [try message(source, role: .user, content: "Проверь сайт"), try message(content: "", delivery: .running)]
++        value.modelSteps = steps; value.preparedActions = actions; value.toolInvocations = invocations
++        return value
++    }
++}
++
++@MainActor private func verifyPresentation() throws {
++    let legacyWorkspace = UUID(uuidString: "00000000-0000-4000-8000-000000000001")!
++    let legacySource = UUID(uuidString: "00000000-0000-4000-8000-000000000002")!
++    for (scope, expected) in [(WorkspaceToolCallIdentity.Scope.tool, "2F9BC912-6918-8FBA-869F-096D9D1B7967"), (.browser, "66EFBBCC-5765-8417-B38D-660E98802F60"), (.sessionFile, "C0C4A083-94A4-8F99-AAF9-C3839E7BDD5B")] {
++        precondition(WorkspaceToolCallIdentity.actionID(workspaceID: legacyWorkspace, sourceID: legacySource, callID: "legacy-call", scope: scope).uuidString == expected)
++    }
++    print("PASS: persisted tool/browser/session action identity vectors remain compatible")
++    let f = ActivityFixture()
++    let a = try f.message(), b = try f.message(UUID(), age: 180), c = try f.message(UUID(), author: UUID(), age: 181)
++    let user = try f.message(UUID(), role: .user), next = try f.message(UUID(), commandID: UUID())
++    precondition(WorkspaceMessageSeries.authorIDs(in: [a, b, c, user, next]) == [a.metadata.id, c.metadata.id, next.metadata.id])
++    precondition(WorkspaceMessageSeries.authorIDs(in: [b]) == [b.metadata.id])
++    print("PASS: one author across long tool stages; different agent, new request and history boundary restore the author")
++
++    let content = WorkspaceChatPresentation()
++    let calls = [f.call("browser_open", arguments: ["url": .string("https://person:secret@example.com/path?token=secret#secret")]), f.call("workspace_read_file", "read", arguments: ["path": .string("Sources/app.swift")])]
++    var value = try f.snapshot([f.step(calls)])
++    content.update(value, previous: .init())
++    let pending = value.messages[1]
++    let rows = content.activities(for: pending)
++    precondition(rows.count == 2 && rows[0].state == .running && rows[1].state == .queued)
++    precondition(content.activityMessageIDs == [f.response])
++    let index = WorkspaceMessageIndex(value.messages, activityMessageIDs: content.activityMessageIDs)
++    precondition(index.visibleMessages(in: f.conversation).contains { $0.metadata.id == f.response })
++    precondition(!rows.flatMap(\.details).contains { $0.value.contains("secret") })
++    print("PASS: actual calls show active and queued rows before any assistant text, without URL credentials/query or request context")
++
++    let action = try f.action("browser_click", state: .waiting_approval, scope: .browser)
++    let step = try f.step([f.call("browser_click")])
++    let previous = value; value = try f.snapshot([step], actions: [action]); content.update(value, previous: previous)
++    precondition(content.activities(for: pending).first?.state == .approval)
++    let uncertain = try BlotV3.ToolInvocation(metadata: f.metadata(UUID()), execution: action.execution, preparedActionId: action.metadata.id, state: .unknown)
++    let before = value; value.toolInvocations = [uncertain]
++    let authorsChanged = Mutex(false)
++    withObservationTracking { _ = content.agents; _ = content.conversations; _ = content.artifacts } onChange: { authorsChanged.withLock { $0 = true } }
++    content.update(value, previous: before)
++    precondition(content.activities(for: pending).first?.state == .unknown && !authorsChanged.withLock { $0 })
++    let finished = try BlotV3.ToolInvocation(metadata: uncertain.metadata, execution: action.execution, preparedActionId: action.metadata.id, state: .succeeded, result: "{\"state\":\"succeeded\"}")
++    let beforeFinished = value; value.toolInvocations = [finished]; content.update(value, previous: beforeFinished)
++    precondition(content.activities(for: pending).first?.state == .succeeded)
++    print("PASS: exact browser action tracks approval → unknown → reconciled success without invalidating message identity")
++
++    let denied = try f.action("workspace_write_file", state: .denied, scope: .sessionFile)
++    let deniedSnapshot = try f.snapshot([f.step([f.call("workspace_write_file")])], actions: [denied])
++    content.update(deniedSnapshot, previous: value)
++    precondition(content.activities(for: pending).first?.state == .denied)
++    let builder = WorkspaceToolActivityBuilder()
++    for (state, expected) in [(BlotV3.ModelStepState.canceled, WorkspaceToolActivity.State.stopped), (.interrupted, .unknown), (.completed, .unknown)] {
++        let terminalStep = try f.step([f.call("git_push")], state: state)
++        precondition(builder.build(steps: [terminalStep], actions: [:], invocations: [:], connections: []).rows.first?.state == expected)
++    }
++    let failure: ChatJSON = .object(["isError": .bool(true)])
++    let failedStep = try f.step([f.call("browser_click")], results: ["call": failure], state: .completed)
++    precondition(builder.build(steps: [failedStep], actions: [:], invocations: [:], connections: []).rows.first?.state == .failed)
++    let pluginName = AppleToolCatalog.all.first { $0.plugin == .reminders && $0.operation == "create" }!.definition.name
++    let pluginRow = builder.build(steps: [try f.step([f.call(pluginName)], results: ["call": .object(["state": .string("succeeded")])])], actions: [:], invocations: [:], connections: []).rows.first!
++    precondition(pluginRow.plugin?.entry.appleID == .reminders)
++    print("PASS: denial, cancellation, missing result and failed provider output never become success; app calls retain native full-color plugin identity")
++
++    let secretCall = f.call("browser_type", arguments: ["text": .string("secret")])
++    let privateRow = builder.build(steps: [try f.step([secretCall], results: ["call": .object(["cookies": .string("secret"), "password": .string("secret")])])], actions: [:], invocations: [:], connections: []).rows.first!
++    precondition(privateRow.details.isEmpty)
++    let process = f.call("process_run", arguments: ["executable": .string("/bin/zsh"), "arguments": .array([.string("secret")]), "variables": .array([.string("TOKEN=secret")])])
++    let processRow = builder.build(steps: [try f.step([process], results: ["call": .object(["state": .string("running"), "stdout": .string(String(repeating: "x", count: 9000))])])], actions: [:], invocations: [:], connections: []).rows.first!
++    precondition(processRow.state == .running && processRow.details.allSatisfy { !$0.value.contains("secret") && $0.value.count <= 3000 })
++    precondition(processRow.details.contains { $0.label == "Журнал / Log" })
++    let poll = f.call("process_status", "poll", arguments: ["process_id": .string("process")])
++    let polls = [try f.step([poll], results: ["poll": .object(["state": .string("running")])], index: 0), try f.step([poll], results: ["poll": .object(["state": .string("succeeded"), "exitCode": .number(2)])], index: 1)]
++    let latest = builder.build(steps: polls, actions: [:], invocations: [:], connections: []).rows
++    precondition(latest.count == 1 && latest[0].state == .failed)
++    print("PASS: bounded stdout/stderr, explicit truncation, no arbitrary parameters or plugin payloads, repeated process checks collapse and nonzero exit is failure")
++
++    let baseline = ContinuousClock.now
++    for _ in 0..<5000 { _ = content.activities(for: pending) }
++    print("CACHE: 5000 activity lookups: \(baseline.duration(to: .now))")
++}
++
++private struct ProgressModel: ChatModel {
++    func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
++        AsyncThrowingStream { output in
++            if request.messages.contains(where: { $0.role == "tool" && $0.name == "document_create" }) {
++                output.yield(.text("Документ готов.")); output.yield(.finished(.stop))
++            } else {
++                output.yield(.text("Подготовлю документ, затем проверю результат."))
++                output.yield(.toolCall(.init(id: "document", name: "document_create", arguments: .object(["name": .string("progress-result.md"), "format": .string("markdown"), "content": .string("Verified result")]))))
++                output.yield(.finished(.toolCalls))
++            }
++            output.finish()
++        }
++    }
++}
++
++@MainActor @main enum AgentProgressVerification {
++    static func main() async throws {
++        try verifyPresentation()
++        let root = FileManager.default.temporaryDirectory.appendingPathComponent("blot-progress-" + UUID().uuidString)
++        defer { try? FileManager.default.removeItem(at: root) }
++        let local = try LocalWorkspaceService(databaseURL: root.appendingPathComponent("workspace.sqlite"), makeModel: { _ in ProgressModel() })
++        let store = WorkspaceStore(mode: .live, service: local)
++        await store.loadWorkspace()
++        store.form.agent = WorkspaceAgentForm(name: "Progress fixture", instructions: "Create a requested document", toolIDs: ["document_create"])
++        await store.perform(.createAgent)
++        guard let agent = store.selectedAgentID else { throw VoiceFailure.emptyResponse }
++        await store.newChat(with: agent)
++        store.form.composer.draft = "Создай документ"
++        await store.perform(.send)
++        for _ in 0..<300 {
++            if !store.isReplying { break }
++            try await _Concurrency.Task.sleep(for: .milliseconds(20))
++        }
++        let replies = store.currentVisibleMessages.filter { $0.role == .assistant }
++        precondition(replies.count == 2 && replies[0].content.contains("Подготовлю") && replies[1].content == "Документ готов.")
++        precondition(WorkspaceMessageSeries.authorIDs(in: replies).count == 1)
++        precondition(store.chatContent.activities(for: replies[0]).first?.state == .succeeded)
++        precondition(store.chatContent.activities(for: replies[1]).isEmpty)
++        precondition(!store.snapshot.artifacts.isEmpty)
++        print("PASS: actual chat → separate progress bubble → real document tool and recorded activity → separate final bubble; one author")
++        let saved = try await local.currentSnapshot()
++        let presentation = WorkspaceChatPresentation(); presentation.update(saved, previous: .init())
++        precondition(presentation.activities(for: replies[0]).first?.state == .succeeded)
++        print("PASS: restored snapshot reconstructs tool activity without rerunning the model or operation")
++        try await local.close()
++    }
++}

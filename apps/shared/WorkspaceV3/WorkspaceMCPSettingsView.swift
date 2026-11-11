@@ -45,7 +45,7 @@ struct WorkspaceMCPSettingsView: View {
             Button(text("Добавить MCP-сервер", "Add MCP server")) { sheet = .new }.buttonStyle(WorkspaceButtonStyle()).disabled(store.mcpCommands == nil || busy)
         }
         .task { await reload() }
-        .sheet(item: $sheet, onDismiss: { _Concurrency.Task { await reload() } }) { item in
+        .workspacePanelSheet(item: $sheet, onDismiss: { _Concurrency.Task { await reload() } }) { item in
             WorkspaceMCPEditor(initial: item.access, agents: store.snapshot.agents, russian: russian, commands: store.mcpCommands)
         }
         .confirmationDialog(text("Проверьте фактический результат на сервере. Это решение не повторяет вызов.", "Verify the actual outcome on the server. This decision does not repeat the call."),
@@ -87,7 +87,8 @@ private struct WorkspaceMCPEditor: View {
     let agents: [BlotV3.AgentProfile]
     let russian: Bool
     let commands: (any WorkspaceMCPProviding)?
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var name = ""
     @State private var configuration = MCPConfiguration()
     @State private var arguments = "[]"
@@ -122,17 +123,20 @@ private struct WorkspaceMCPEditor: View {
                     }
                     if busy { ProgressView() }
                     if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
-                }.textFieldStyle(.roundedBorder).padding(24).disabled(busy)
+                }.textFieldStyle(WorkspacePanelTextFieldStyle()).padding(24).disabled(busy)
             }
             .navigationTitle(text("Подключение MCP", "MCP connection"))
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if panelNavigation != nil { WorkspacePanelFormHeader(title: text("Подключение MCP", "MCP connection")) { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } }
+            }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } } }
             .task { if let initial { tools = initial.tools; selected = initial.selectedTools; selectedAgents = initial.agentIDs } }
             .confirmationDialog(text("Удалить локальные параметры и отозвать доступ агентов?", "Remove local settings and revoke agent access?"), isPresented: $removing, titleVisibility: .visible) {
                 Button(text("Отключить", "Disconnect"), role: .destructive) { disconnect() }
             }
         }
         #if os(macOS)
-        .frame(width: 640, height: 650)
+        .frame(width: panelNavigation == nil ? 640 : nil, height: panelNavigation == nil ? 650 : nil)
         #endif
         .interactiveDismissDisabled(busy)
     }
@@ -199,6 +203,6 @@ private struct MCPAccessFields: View {
             ForEach(agents, id: \.metadata.id) { agent in
                 Toggle(agent.name, isOn: Binding(get: { selectedAgents.contains(agent.metadata.id) }, set: { if $0 { selectedAgents.insert(agent.metadata.id) } else { selectedAgents.remove(agent.metadata.id) } }))
             }
-        }.toggleStyle(.switch)
+        }.toggleStyle(WorkspacePanelToggleStyle())
     }
 }

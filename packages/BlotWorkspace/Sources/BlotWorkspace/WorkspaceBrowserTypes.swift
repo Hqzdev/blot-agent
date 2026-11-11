@@ -19,6 +19,22 @@ public enum WorkspaceBrowserError: String, Error, LocalizedError, Sendable {
 }
 
 public enum WorkspaceBrowserURL {
+    /// Address-bar input only. Agent navigation continues to require an explicit, validated URL.
+    public static func userNavigation(_ input: String) throws -> URL {
+        let text = input.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty, text.utf8.count <= 8192 else { throw WorkspaceBrowserError.invalidURL }
+        if text.contains("://") { return try validated(text) }
+        let host = text.components(separatedBy: "/").first ?? text
+        let local = host == "localhost" || host.hasPrefix("localhost:") || host.hasPrefix("127.0.0.1") || host.hasPrefix("[::1]")
+        if text.rangeOfCharacter(from: .whitespacesAndNewlines) == nil, local || host.contains(".") {
+            return try validated((local ? "http://" : "https://") + text)
+        }
+        guard text.range(of: "^[A-Za-z][A-Za-z0-9+.-]*:", options: .regularExpression) == nil else { throw WorkspaceBrowserError.invalidURL }
+        var search = URLComponents(string: "https://www.google.com/search")!
+        search.queryItems = [.init(name: "q", value: text)]
+        guard let url = search.url else { throw WorkspaceBrowserError.invalidURL }
+        return try validated(url.absoluteString)
+    }
     public static func validated(_ text: String) throws -> URL {
         guard text.utf8.count <= 8192, let parts = URLComponents(string: text), let scheme = parts.scheme?.lowercased(),
               let host = parts.host?.lowercased(), !host.isEmpty, parts.user == nil, parts.password == nil,
@@ -51,14 +67,19 @@ public struct WorkspaceBrowserScope: Codable, Hashable, Sendable {
     public let agentID: UUID
     public init(sourceID: UUID, taskID: UUID?, agentID: UUID) { self.sourceID = sourceID; self.taskID = taskID; self.agentID = agentID }
 }
+public enum WorkspaceBrowserSessionKey: Codable, Hashable, Sendable {
+    case workspace, agent(UUID), group(UUID)
+}
+
 public struct WorkspaceBrowserCommand: Sendable {
     public let id: UUID
     public let name: String
     public let arguments: ChatJSON
     public let scope: WorkspaceBrowserScope
     public let origins: Set<String>
-    public init(id: UUID, name: String, arguments: ChatJSON, scope: WorkspaceBrowserScope, origins: Set<String>) {
-        self.id = id; self.name = name; self.arguments = arguments; self.scope = scope; self.origins = origins
+    public let sessionKey: WorkspaceBrowserSessionKey
+    public init(id: UUID, name: String, arguments: ChatJSON, scope: WorkspaceBrowserScope, origins: Set<String>, sessionKey: WorkspaceBrowserSessionKey = .workspace) {
+        self.id = id; self.name = name; self.arguments = arguments; self.scope = scope; self.origins = origins; self.sessionKey = sessionKey
     }
 }
 public struct WorkspaceBrowserBinding: Codable, Equatable, Sendable {

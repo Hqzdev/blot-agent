@@ -5,7 +5,8 @@ import SwiftUI
 struct WorkspaceGroupEditor: View {
     let conversationID: UUID?
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var draft: WorkspaceGroupDraft
     @State private var query = ""
     @State private var saveError: String?
@@ -36,8 +37,8 @@ struct WorkspaceGroupEditor: View {
             header
             #if os(macOS)
             Divider().opacity(0.5)
-            if sheetSize.height < 560 {
-                ScrollView { editorContent.frame(height: 420) }
+            if panelNavigation != nil || sheetSize.height < 560 {
+                ScrollView { editorContent.frame(height: panelNavigation == nil ? 420 : nil) }
             } else { editorContent }
             #else
             ScrollView { editorContent }.scrollDismissesKeyboard(.interactively)
@@ -47,7 +48,7 @@ struct WorkspaceGroupEditor: View {
         }
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
         #if os(macOS)
-        .frame(width: sheetSize.width, height: sheetSize.height)
+        .frame(width: panelNavigation == nil ? sheetSize.width : nil, height: panelNavigation == nil ? sheetSize.height : nil)
         #else
         .presentationDetents([.large]).presentationDragIndicator(.visible)
         #endif
@@ -65,9 +66,12 @@ struct WorkspaceGroupEditor: View {
         VStack(alignment: .leading, spacing: sectionSpacing) {
             nameField
             #if os(macOS)
-            HStack(alignment: .top, spacing: 24) {
-                agentPicker.frame(maxWidth: .infinity)
-                selectionPanel.frame(width: 228)
+            if panelNavigation != nil { selectionPanel; agentPicker }
+            else {
+                HStack(alignment: .top, spacing: 24) {
+                    agentPicker.frame(maxWidth: .infinity)
+                    selectionPanel.frame(width: 228)
+                }
             }
             #else
             selectionPanel

@@ -124,6 +124,7 @@ struct WorkspaceRootView: View {
             #endif
         }
         .modifier(WorkspaceBrowserHost())
+        .modifier(WorkspaceVoiceLifecycle())
         .environment(store)
         .onReceive(NotificationCenter.default.publisher(for: NSLocale.currentLocaleDidChangeNotification)) { _ in
             store.languagePreferences.refreshSystemLanguage()

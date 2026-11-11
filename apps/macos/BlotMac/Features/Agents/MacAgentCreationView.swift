@@ -5,6 +5,7 @@ import SwiftUI
 struct MacAgentCreationView: View {
     var isEditing = false
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @FocusState private var nameFocused: Bool
     @State private var nameGenerator = MacAgentNameGenerator()
     private let colors = ["brown", "red", "orange", "amber", "green", "teal", "blue", "purple", "pink", "gray"]
@@ -36,7 +37,7 @@ struct MacAgentCreationView: View {
                 Label(store.language == "ru" ? "Случайный вариант" : "Randomize", systemImage: "shuffle")
                     .font(MacWorkspaceStyle.caption)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(WorkspaceButtonStyle(.secondary))
             .disabled(store.busy)
             .help(store.language == "ru" ? "Выбрать случайные имя, цвет и форму" : "Choose a random name, color and shape")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 12)], spacing: 10) {
@@ -131,7 +132,14 @@ struct MacAgentCreationView: View {
     private func save() {
         guard !store.busy, !store.form.agent.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         _Concurrency.Task {
-            if isEditing { await store.perform(.saveAgent, next: .agentProfile) }
+            if isEditing {
+                await store.perform(.saveAgent, next: panelNavigation == nil ? .agentProfile : nil)
+                if store.error == nil { panelNavigation?.open(.agentProfile) }
+            }
+            else if let panelNavigation {
+                await store.perform(.createAgent)
+                if store.error == nil { panelNavigation.open(.agentProfile) }
+            }
             else { await store.createDesktopAgentAndStartChat() }
         }
     }

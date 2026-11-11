@@ -159,7 +159,7 @@ final class BrowserPage: NSObject, WKNavigationDelegate, WKUIDelegate, WKScriptM
     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
         guard let url = navigationAction.request.url, let owner, owner.permits(url, tab: tab) else { return nil }
         do {
-            let child = BrowserTab(url: url, scope: tab.scope, origins: tab.allowedOrigins)
+            let child = BrowserTab(url: url, scope: tab.scope, origins: tab.allowedOrigins, sessionKey: tab.sessionKey)
             try owner.createPage(child); owner.tabsAppend(child); owner.pages[child.id]?.load(url)
         } catch { tab.error = error.localizedDescription }
         return nil

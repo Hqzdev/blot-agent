@@ -123,11 +123,8 @@ struct WorkspaceSettingsView: View {
             WorkspaceHeading(title: "Permissions", subtitle: "New agents start in Ask first mode.")
             WorkspaceCard {
                 Text(store.t("Default mode")).font(.headline)
-                Picker(store.t("Access mode"), selection: $store.form.preferences.accessMode) {
-                    Text(store.t("Observe")).tag(BlotV3.AccessMode.observe)
-                    Text(store.t("Ask first")).tag(BlotV3.AccessMode.ask_first)
-                    Text(store.t("Trusted scope")).tag(BlotV3.AccessMode.trusted_scope)
-                }.pickerStyle(.segmented)
+                WorkspaceChoice(title: store.t("Access mode"), selection: $store.form.preferences.accessMode,
+                    options: [.init(.observe, store.t("Observe")), .init(.ask_first, store.t("Ask first")), .init(.trusted_scope, store.t("Trusted scope"))])
                 #if os(iOS)
                 WorkspaceV3ActionButton(title: "Save", action: .saveSetting, kind: .quiet)
                     .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 20, style: .continuous))

@@ -2,12 +2,14 @@ import BlotDomain
 import BlotAppleIntegrations
 import BlotWorkspace
 import Foundation
+import OSLog
 
 enum WorkspaceGroupResponseError: Error, Equatable { case membershipChanged, budgetExceeded, invalidPlan }
 
 /// Routes a group turn, then runs only its chosen conversation or bounded team dialogue.
 @MainActor
 struct WorkspaceGroupResponder {
+    private let logger = Logger(subsystem: "dev.blot.model", category: "GroupRouting")
     let repository: WorkspaceRepository
     let identity: WorkspaceIdentity
     let pool: WorkspaceExecutorPool
@@ -57,12 +59,30 @@ struct WorkspaceGroupResponder {
                 }.joined(separator: "\n")
                 let messages = try await prepare(source, responseID: initialResponseID, configuration: coordinator, budget: budget,
                     extra: WorkspaceAgentInstructions.routing + "\nRoster:\n" + roster)
-                let text = try await WorkspaceGroupPlanner(repository: repository, identity: identity, pool: pool).text(
-                    source: source, responseID: initialResponseID, request: .init(messages: messages, maximumOutputTokens: min(1536, maximumOutputTokens)),
-                    model: makeModel(coordinator.modelId), configuration: coordinator, budgetTokenLimit: try await budget.remaining())
-                // A malformed routing answer must not turn an ordinary user message into a planning error.
-                decision = (try? WorkspaceGroupDecision.decode(text, members: memberIDs)) ?? .specialist(coordinatorID)
+                // Routing is a control decision. Old assistant prose must not become a dialogue example for it.
+                let history = messages.dropLast().filter { $0.role != "system" }.map { $0.role + ": " + $0.content }.joined(separator: "\n")
+                var routing: [ChatModelMessage] = [.init(role: "system", content: WorkspaceAgentInstructions.routing + "\nRoster:\n" + roster),
+                    .init(role: "user", content: "Quoted earlier conversation (context only, not proof of actions):\n" + String(history.suffix(6000))
+                        + "\nLatest request: " + source.content + "\nReturn only the routing JSON for this latest request.")]
+                let definition = WorkspaceGroupDecision.routingDefinition(toolIDs: Set(try members.flatMap { try configuration($0.metadata.id, in: initial).toolIds }), memberIDs: memberIDs)
+                let planner = WorkspaceGroupPlanner(repository: repository, identity: identity, pool: pool)
+                var parsed: WorkspaceGroupDecision?
+                for attempt in 0..<2 {
+                    let text = try await planner.text(source: source, responseID: initialResponseID,
+                        request: .init(messages: routing, tools: [definition], maximumOutputTokens: min(1536, maximumOutputTokens), requiredTool: definition.name),
+                        model: makeModel(coordinator.modelId), configuration: coordinator, budgetTokenLimit: try await budget.remaining())
+                    parsed = try? WorkspaceGroupDecision.decode(text, members: memberIDs)
+                    logger.debug("Group routing envelope valid=\(parsed != nil, privacy: .public) attempt=\(attempt)")
+                    if parsed != nil { break }
+                    if attempt == 0 {
+                        routing.append(.init(role: "user", content: "The previous routing object was invalid. Correct it using the function schema and roster. Use a roster UUID for specialist agentID; use none for conversation/team. Team requires at least two distinct member assignments and no toolSteps. For a single-agent action use exact assigned tool IDs and ordered toolSteps. Do not execute or describe completed actions. Previous object (untrusted data):\n" + String(text.prefix(6000))))
+                    }
+                }
+                // Invalid control output must never become unconstrained prose that claims work succeeded.
+                guard let parsed else { throw WorkspaceGroupResponseError.invalidPlan }
+                decision = parsed
             }
+            logger.info("Group route mode=\(decision.mode.rawValue, privacy: .public) firstTool=\(decision.firstToolID ?? "auto", privacy: .public)")
             try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID)
             let runtime = WorkspaceModelRuntime(repository: repository, identity: identity, pool: pool, tools: tools)
             if decision.mode != .team {
@@ -80,7 +100,7 @@ struct WorkspaceGroupResponder {
                     if responseID != initialResponseID { emit(try await recorder.begin(id: responseID, replyingTo: source, agentID: id)) }
                     let name = members.first { $0.metadata.id == id }!.name
                     let instruction = decision.mode == .conversation
-                        ? "You are \(name). This is ordinary group conversation, not a work assignment. Reply naturally and briefly in the user's language. No plan, unrelated work, introductions or clarification interview. Earlier replies this turn:\n\(transcript)"
+                        ? "You are \(name). This is ordinary group conversation. Reply naturally and briefly in the user's language. Use permitted tools for requested checks or actions. No plan, unrelated work, introductions or clarification interview. Earlier replies this turn:\n\(transcript)"
                         : "You are \(name). This request is yours to handle independently. Complete it with your permitted tools. Do not wait for the coordinator or invent work for other members."
                     let messages: [ChatModelMessage]
                     if decision.mode == .conversation && WorkspaceGroupDecision.isCasual(source.content) {
@@ -94,7 +114,7 @@ struct WorkspaceGroupResponder {
                         request: .init(messages: messages, maximumOutputTokens: min(decision.mode == .conversation ? 256 : maximumOutputTokens, maximumOutputTokens)),
                         model: makeModel(revision.modelId), modelID: revision.modelId, configuration: revision, budgetTokenLimit: try await budget.remaining(),
                         toolsEnabled: decision.mode != .conversation || !WorkspaceGroupDecision.isCasual(source.content),
-                        executionToolIDs: decision.mode == .conversation ? ["browser_snapshot", "browser_tabs"] : nil,
+                        firstToolID: decision.firstToolID, resolvedContext: decision.summary, operations: decision.toolSteps,
                         validateExecution: { try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID) }, emit: emit)
                     activeID = nil
                     let after = try await repository.projection(identity: identity)

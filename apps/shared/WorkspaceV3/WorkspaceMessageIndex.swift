@@ -11,9 +11,9 @@ struct WorkspaceMessageIndex {
     private let lastUsers: [UUID: BlotV3.Message]
     private let runningResponses: [UUID: [BlotV3.Message]]
 
-    init(_ messages: [BlotV3.Message] = []) {
+    init(_ messages: [BlotV3.Message] = [], activityMessageIDs: Set<UUID> = []) {
         conversations = Dictionary(grouping: messages, by: \.conversationId).mapValues(WorkspaceMessageOrder.ordered)
-        visible = conversations.mapValues { $0.filter(WorkspaceMessagePresentation.isVisible) }
+        visible = conversations.mapValues { $0.filter { WorkspaceMessagePresentation.isVisible($0) || activityMessageIDs.contains($0.metadata.id) } }
         byID = Dictionary(messages.map { ($0.metadata.id, $0) }, uniquingKeysWith: { _, latest in latest })
         orderedIDs = conversations.mapValues { $0.map(\.metadata.id) }
         lastUsers = conversations.compactMapValues { $0.last { $0.role == .user } }

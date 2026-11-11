@@ -21,7 +21,7 @@ public struct WorkspaceSessionFileTools: WorkspaceToolExecuting {
     private func perform(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
         guard let service else { throw NativeExecutionError.unavailable }
         let conversation = try await service.authorize(call.name, context: context)
-        let actionID = WorkspaceLogicalID.make(kind: "SessionFileAction", workspaceID: identity.workspaceID, parts: [context.sourceMessageID.uuidString, call.id])
+        let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id, scope: .sessionFile)
         if !WorkspaceSessionFileCatalog.writes(call.name) { return try await service.perform(call, context: context, actionID: actionID) }
         let parameters = String(decoding: try WorkspaceCoding.encode(call.arguments), as: UTF8.self)
         guard parameters.utf8.count <= 48 * 1024 else { throw NativeExecutionError.invalidRequest }

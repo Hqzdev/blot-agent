@@ -17,14 +17,14 @@ extension WorkspaceBrowserController {
             let origin = try WorkspaceBrowserURL.origin(url)
             guard command.origins.contains("*") || command.origins.contains(origin) else { throw WorkspaceBrowserError.denied }
             if let tab = tabs.first(where: { $0.id == command.id }) {
-                guard tab.scope == command.scope, tab.initialURL == url, !tab.stopped else { throw WorkspaceBrowserError.denied }
+                guard tab.scope == command.scope, tab.sessionKey == command.sessionKey, tab.initialURL == url, !tab.stopped else { throw WorkspaceBrowserError.denied }
                 return .init(tabID: tab.id, documentID: tab.documentID, url: url.absoluteString)
             }
             return .init(tabID: command.id, documentID: command.id, url: url.absoluteString)
         }
         let tab = try ownedTab(arguments, command: command)
         if pages[tab.id] == nil, command.name == "browser_snapshot", command.origins.contains("*") {
-            try select(tab.id); try await pages[tab.id]?.waitForLoad()
+            try activatePage(tab); try await pages[tab.id]?.waitForLoad()
         }
         guard pages[tab.id] != nil, !tab.loading, let url = tab.url else { throw WorkspaceBrowserError.stalePage }
         if WorkspaceBrowserCatalog.requiresConfirmation(command.name) {
@@ -39,10 +39,11 @@ extension WorkspaceBrowserController {
     public func execute(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {
         guard !stopped else { throw WorkspaceBrowserError.unavailable }
         let arguments = try AppleArguments(command.arguments)
+        let selectedID = selectedID(in: command.sessionKey)
         if command.name == "browser_tabs" {
             guard try await prepare(command) == binding else { throw WorkspaceBrowserError.stalePage }
             let visible = tabs.filter { tab in
-                guard let url = tab.url, let origin = try? WorkspaceBrowserURL.origin(url), command.origins.contains("*") || command.origins.contains(origin) else { return false }
+                guard tab.sessionKey == command.sessionKey, let url = tab.url, let origin = try? WorkspaceBrowserURL.origin(url), command.origins.contains("*") || command.origins.contains(origin) else { return false }
                 return tab.scope == nil || tab.scope == command.scope || (command.origins.contains("*") && selectedID == tab.id)
             }
             return .value(.object(["tabs": .array(visible.map { tab in
@@ -55,7 +56,7 @@ extension WorkspaceBrowserController {
             if let existing = tabs.first(where: { $0.id == binding.tabID }) { tab = existing }
             else {
                 guard tabs.count < 32 else { throw WorkspaceBrowserError.busy }
-                tab = BrowserTab(id: binding.tabID, url: URL(string: binding.url), scope: command.scope, origins: command.origins)
+                tab = BrowserTab(id: binding.tabID, url: URL(string: binding.url), scope: command.scope, origins: command.origins, sessionKey: command.sessionKey)
                 try createPage(tab); tabsAppend(tab); pages[tab.id]?.load(URL(string: binding.url)!)
             }
             guard let page = pages[tab.id] else { throw WorkspaceBrowserError.stalePage }
@@ -99,11 +100,12 @@ extension WorkspaceBrowserController {
         }
     }
     private func ownedTab(_ arguments: AppleArguments, command: WorkspaceBrowserCommand) throws -> BrowserTab {
+        let selectedID = selectedID(in: command.sessionKey)
         let id: UUID?
         if let raw = arguments["tab_id"] { id = UUID(uuidString: raw) }
         else { id = command.name == "browser_snapshot" ? selectedID : nil }
         let automaticRead = command.name == "browser_snapshot" && command.origins.contains("*")
-        guard let id, let tab = tabs.first(where: { $0.id == id }),
+        guard let id, let tab = tabs.first(where: { $0.id == id }), tab.sessionKey == command.sessionKey,
               (tab.scope == command.scope || (tab.scope == nil && (selectedID == id || automaticRead) && command.name == "browser_snapshot") || (selectedID == id && automaticRead)),
               (!tab.stopped || automaticRead), let url = tab.url,
               (try command.origins.contains("*") || command.origins.contains(WorkspaceBrowserURL.origin(url))) else { throw WorkspaceBrowserError.denied }

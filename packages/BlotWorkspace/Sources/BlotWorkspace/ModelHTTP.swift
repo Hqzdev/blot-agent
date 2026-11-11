@@ -74,7 +74,7 @@ enum ModelHTTP {
 
 enum ModelRequestEncoder {
     static func compatible(_ request: ChatModelRequest, model: String) throws -> [String: Any] {
-        guard request.maximumOutputTokens > 0 else { throw ChatModelError.invalidConfiguration }
+        guard request.maximumOutputTokens > 0, request.requiredTool == nil || request.tools.contains(where: { $0.name == request.requiredTool }) else { throw ChatModelError.invalidConfiguration }
         let messages = try request.messages.map { message -> [String: Any] in
             var value: [String: Any] = ["role": message.role, "content": message.content]
             if let id = message.toolCallID { value["tool_call_id"] = id }
@@ -91,11 +91,14 @@ enum ModelRequestEncoder {
         if !request.tools.isEmpty {
             body["tools"] = try request.tools.map { tool in ["type": "function", "function": try object(tool)] as [String: Any] }
             body["tool_choice"] = "auto"
+            if let name = request.requiredTool {
+                body["tool_choice"] = ["type": "function", "function": ["name": name]]
+            }
         }
         return body
     }
     static func gigaChat(_ request: ChatModelRequest, model: String) throws -> [String: Any] {
-        guard request.maximumOutputTokens > 0 else { throw ChatModelError.invalidConfiguration }
+        guard request.maximumOutputTokens > 0, request.requiredTool == nil || request.tools.contains(where: { $0.name == request.requiredTool }) else { throw ChatModelError.invalidConfiguration }
         // GigaChat requires a single system message at the start, including memory and runtime instructions.
         let instructions = request.messages.filter { $0.role == "system" }
         let history = request.messages.filter { $0.role != "system" }
@@ -112,7 +115,12 @@ enum ModelRequestEncoder {
             return value
         }
         var body: [String: Any] = ["model": model, "messages": messages, "stream": true, "max_tokens": request.maximumOutputTokens]
-        if !request.tools.isEmpty { body["functions"] = try request.tools.map { try object($0) }; body["function_call"] = "auto" }
+        if !request.tools.isEmpty {
+            body["functions"] = try request.tools.map { try object($0) }; body["function_call"] = "auto"
+            if let name = request.requiredTool {
+                body["function_call"] = ["name": name]
+            }
+        }
         return body
     }
     private static func object<T: Encodable>(_ value: T) throws -> Any { try JSONSerialization.jsonObject(with: JSONEncoder().encode(value)) }

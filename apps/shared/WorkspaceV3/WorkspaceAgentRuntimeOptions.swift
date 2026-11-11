@@ -6,10 +6,8 @@ struct WorkspaceAgentRuntimeOptions: View {
     var body: some View {
         @Bindable var store = store
         DisclosureGroup(store.t("Model and tools")) {
-            Picker(store.t("Model"), selection: $store.form.agent.modelID) {
-                Text("GigaChat").tag("gigachat")
-                Text(store.t("Compatible API")).tag("compatible")
-            }
+            WorkspaceChoice(title: store.t("Model"), selection: $store.form.agent.modelID,
+                options: [.init("gigachat", "GigaChat"), .init("compatible", store.t("Compatible API"))])
             ForEach([("file_read", "Read attached files"), ("document_create", "Create documents"),
                      ("memory_candidate", "Propose memories")], id: \.0) { id, label in
                 Toggle(store.t(label), isOn: Binding(get: { store.form.agent.toolIDs.contains(id) }, set: { enabled in

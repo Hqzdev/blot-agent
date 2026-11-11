@@ -64,8 +64,14 @@ struct WorkspaceV3ActionButton: View {
     var next: WorkspaceRoute?
     var kind: WorkspaceButtonStyle.Kind = .primary
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     var body: some View {
-        Button { _Concurrency.Task { await store.perform(action, next: next) } } label: {
+        Button {
+            _Concurrency.Task {
+                await store.perform(action, next: panelNavigation == nil ? next : nil)
+                if store.error == nil, let next, let panelNavigation { panelNavigation.open(next) }
+            }
+        } label: {
             HStack {
                 if store.busy { ProgressView().controlSize(.small).tint(kind == .primary ? BlotColor.onInverse : WorkspaceStyle.ink) }
                 Text(store.t(title)).frame(maxWidth: .infinity)
@@ -79,8 +85,9 @@ struct WorkspaceLink: View {
     let route: WorkspaceRoute
     var symbol: String = "chevron.right"
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     var body: some View {
-        Button { store.navigate(route) } label: {
+        Button { if let panelNavigation { panelNavigation.open(route) } else { store.navigate(route) } } label: {
             HStack(spacing: 14) {
                 Text(store.t(title)).multilineTextAlignment(.leading)
                 Spacer(minLength: 4)

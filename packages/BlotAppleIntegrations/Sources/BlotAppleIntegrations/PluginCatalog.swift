@@ -136,10 +136,12 @@ public struct AppleResource: Identifiable, Codable, Equatable, Sendable {
 }
 
 public enum AppleIntegrationError: Error, LocalizedError, Sendable {
+    case applicationRequired(String)
     case permissionDenied, unavailable, invalidArguments, missingResource, uncertainResult, canceled
     case system(String)
     public var errorDescription: String? {
         switch self {
+        case .applicationRequired(let name): "Для этой операции требуется запущенное приложение «\(name)». Blot не запускает внешние приложения автоматически."
         case .permissionDenied: "Нужно разрешение или подключение для этого агента."
         case .unavailable: "Это действие недоступно на данном устройстве."
         case .invalidArguments: "Проверьте параметры действия."

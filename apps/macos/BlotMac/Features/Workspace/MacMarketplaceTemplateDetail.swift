@@ -4,7 +4,8 @@ import SwiftUI
 struct MacMarketplaceTemplateDetail: View {
     let template: MacDemoTemplate
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @Environment(\.macSheetSize) private var sheetSize
     @State private var commandID = UUID()
     @State private var saveError: String?
@@ -60,7 +61,7 @@ struct MacMarketplaceTemplateDetail: View {
                     }
                 }.buttonStyle(WorkspaceButtonStyle()).keyboardShortcut(.defaultAction)
             }.padding(18).disabled(store.busy)
-        }.frame(width: min(620, sheetSize.width), height: min(610, sheetSize.height)).background(WorkspaceStyle.canvas)
+        }.frame(width: panelNavigation == nil ? min(620, sheetSize.width) : nil, height: panelNavigation == nil ? min(610, sheetSize.height) : nil).background(WorkspaceStyle.canvas)
             .interactiveDismissDisabled(store.busy)
     }
 

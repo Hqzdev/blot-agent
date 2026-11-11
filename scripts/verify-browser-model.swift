@@ -48,6 +48,7 @@ enum BrowserModelVerification {
             mcpCredentials: BrowserModelCredentials(), makeBrowser: { id, folder in WorkspaceBrowserController(profileID: id, directory: folder, ephemeral: true) },
             automaticBrowserAccess: automatic, makeModel: { _ in BrowserVerificationModel(origin: origin) })
         _ = try await service.load()
+        service.workspaceBrowser.activateSession(.agent(agent))
         if !automatic { try await service.browserService().configure(agents: [agent], origins: [origin]) }
         let sourceID = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: "Open the approved test page and click Change status after confirmation")
         let source = try await repository.record(BlotV3.Message.self, id: sourceID, workspaceID: identity.workspaceID)!
@@ -89,6 +90,7 @@ enum BrowserModelVerification {
             mcpCredentials: BrowserModelCredentials(), makeBrowser: { id, folder in WorkspaceBrowserController(profileID: id, directory: folder, ephemeral: true) },
             automaticBrowserAccess: automatic, makeModel: { _ in SelectedBrowserVerificationModel() })
         _ = try await service.load()
+        service.workspaceBrowser.activateSession(group ? .group(chat) : .agent(agent))
         _ = try service.workspaceBrowser.open(origin + "/page")
         let deadline = ContinuousClock.now.advanced(by: .seconds(8))
         while service.workspaceBrowser.selectedTab?.loading == true {
@@ -130,7 +132,7 @@ private struct SelectedBrowserVerificationModel: ChatModel {
             } else {
                 precondition(systems.contains("A website tab is open in Blot") || systems.contains("Blot has a built-in browser"))
                 if request.tools.contains(where: { $0.name == "browser_snapshot" }) {
-                    if systems.contains("ordinary group conversation") { precondition(request.tools.allSatisfy { ["browser_snapshot", "browser_tabs"].contains($0.name) }) }
+                    if systems.contains("ordinary group conversation") { precondition(request.tools.contains { $0.name == "browser_tabs" }) }
                     continuation.yield(.toolCall(.init(id: "selected", name: "browser_snapshot", arguments: .object([:])))); continuation.yield(.finished(.toolCalls))
                 } else {
                     continuation.yield(.text("Enable agent access to the current site.")); continuation.yield(.finished(.stop))

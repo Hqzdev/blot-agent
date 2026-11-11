@@ -38,6 +38,8 @@ struct MacLiveTeamConversation: View {
     }
 
     var body: some View {
+        let visibleMessages = messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }
+        let authorIDs = WorkspaceMessageSeries.authorIDs(in: visibleMessages)
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: compactMessages ? 16 : 24) {
@@ -65,13 +67,13 @@ struct MacLiveTeamConversation: View {
                             }
                         }.frame(maxWidth: .infinity).padding(.vertical, 100)
                     }
-                    ForEach(messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
+                    ForEach(visibleMessages, id: \.metadata.id) { message in
                         Group {
                             if let plan = store.groupPlan(for: message) {
                                 WorkspaceGroupPlanCard(plan: plan, agents: store.chatContent.agents, skills: store.chatContent.skills, russian: store.language == "ru")
                             } else {
                                 MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
-                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
+                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages, showsAuthor: authorIDs.contains(message.metadata.id))
                             }
                         }
                             .id(message.metadata.id).transition(.identity)
@@ -144,6 +146,7 @@ struct MacLiveTeamConversation: View {
         .safeAreaInset(edge: .top, spacing: 0) { WorkspacePinnedGroupPlan().padding(.horizontal, 24).padding(.top, 6) }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
+                WorkspaceVoicePanel()
                 WorkspaceFeedback()
                 MacWorkspaceComposer(teamLayout: true, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
             }.frame(maxWidth: 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
@@ -160,6 +163,7 @@ private struct MacLiveTeamMessage: View {
     let arriving: Bool
     let inputFrame: CGRect?
     let compact: Bool
+    let showsAuthor: Bool
     @Environment(WorkspaceStore.self) private var store
     private var isUser: Bool { message.role == .user }
     private var agent: BlotV3.AgentProfile? {
@@ -172,19 +176,20 @@ private struct MacLiveTeamMessage: View {
         HStack(alignment: .top) {
             if isUser { Spacer(minLength: 54) }
             VStack(alignment: .leading, spacing: 12) {
-                if !isUser {
+                if !isUser && showsAuthor {
                     HStack(spacing: 9) {
                         if let agent { WorkspaceAvatarView(agent: agent, size: 22) }
                         Text(agent?.name ?? "Blot").font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(agent.map { WorkspaceAvatarView.color($0.avatarColor) } ?? WorkspaceStyle.ink)
                     }
                 }
+                if !message.content.isEmpty || !message.artifactIds.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    if let id = message.replyToMessageId, let quoted = store.message(id), store.groupPlan(for: quoted) == nil {
+                    if isUser || showsAuthor, let id = message.replyToMessageId, let quoted = store.message(id), store.groupPlan(for: quoted) == nil {
                         WorkspaceQuotedMessage(message: quoted)
                     }
                     WorkspaceMessageText(text: message.content, markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.system(size: 13)).lineSpacing(4)
-                    WorkspaceMessagePlugins(message: message)
+                    if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
                     ForEach(message.artifactIds, id: \.self) { id in
                         if let artifact = store.chatContent.artifacts[id] {
                             Button { store.selectedRecordID = id; store.navigate(.file) } label: {
@@ -219,6 +224,9 @@ private struct MacLiveTeamMessage: View {
                     })
                     .modifier(MacTeamSwipeToReply { store.beginReply(to: message.metadata.id) })
                     .modifier(MacTeamMessageEntrance(animated: arriving && isUser, outgoing: true, inputFrame: inputFrame))
+                    .padding(.leading, isUser ? 0 : 30)
+                }
+                WorkspaceToolActivityView(message: message).padding(.leading, 30)
                 HStack(spacing: 5) {
                 ForEach(WorkspaceChatInteractions.reactions, id: \.self) { reaction in
                     let count = reactions.filter { $0.emoji == reaction }.count

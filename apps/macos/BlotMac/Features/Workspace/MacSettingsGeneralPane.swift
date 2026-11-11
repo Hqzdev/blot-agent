@@ -28,6 +28,7 @@ struct MacSettingsGeneralPane: View {
                 MacTeamSettingsToggle(title: "Открывать при входе в систему", detail: "Запускать Blot вместе с macOS.",
                     isOn: Binding(get: { launchesAtLogin }, set: setLaunchAtLogin))
             }
+            WorkspaceVoiceSettingsView()
             MacTeamSettingsSection(title: "Сообщения") {
                 MacTeamSettingsToggle(title: "Отправлять по Enter", detail: "Если выключено, Enter переносит строку. ⌘Enter всегда отправляет сообщение.", isOn: $sendOnReturn)
                 Divider()

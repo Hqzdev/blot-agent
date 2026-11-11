@@ -50,6 +50,7 @@ public actor WorkspaceBrowserService {
         let scope: WorkspaceBrowserScope
         let origins: Set<String>
         let tools: Set<String>
+        let sessionKey: WorkspaceBrowserSessionKey
     }
     public func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
         do {
@@ -61,7 +62,7 @@ public actor WorkspaceBrowserService {
     public func authorize(_ name: String, context: WorkspaceToolContext) async throws -> WorkspaceBrowserCommand {
         let authorization = try await authorization(context)
         guard authorization.tools.contains(name) else { throw WorkspaceBrowserError.denied }
-        return .init(id: UUID(), name: name, arguments: .object([:]), scope: authorization.scope, origins: authorization.origins)
+        return .init(id: UUID(), name: name, arguments: .object([:]), scope: authorization.scope, origins: authorization.origins, sessionKey: authorization.sessionKey)
     }
     private func authorization(_ context: WorkspaceToolContext) async throws -> Authorization {
         guard !suspended, let agentID = context.agentID else { throw WorkspaceBrowserError.denied }
@@ -93,7 +94,9 @@ public actor WorkspaceBrowserService {
                 tools.formIntersection(revision.toolIds); id = task.parentTaskId
             }
         }
-        return Authorization(scope: .init(sourceID: context.sourceMessageID, taskID: context.taskID, agentID: agentID), origins: automaticAccess ? ["*"] : access.origins, tools: tools)
+        let group = projection.conversations.first { $0.metadata.id == source.conversationId && $0.kind == .group }
+        return Authorization(scope: .init(sourceID: context.sourceMessageID, taskID: context.taskID, agentID: agentID), origins: automaticAccess ? ["*"] : access.origins, tools: tools,
+            sessionKey: group.map { .group($0.metadata.id) } ?? .agent(agentID))
     }
     public func prepare(_ command: WorkspaceBrowserCommand) async throws -> WorkspaceBrowserBinding { try await driver.prepare(command) }
     public func perform(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {

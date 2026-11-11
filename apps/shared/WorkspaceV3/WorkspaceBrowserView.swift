@@ -19,42 +19,33 @@ struct WorkspaceBrowserView: View {
     @State private var preview: URL?
     @State private var pendingNavigation: (() throws -> Void)?
     @State private var navigationTab: UUID?
+    @State private var menuVisible = false
+    @FocusState private var addressFocused: Bool
+    private var toolNavigation: WorkspacePanelNavigation { store.panelNavigations.navigation(for: controller.selectedTab) }
     private var ru: Bool { store.language == "ru" }
     private func text(_ ru: String, _ en: String) -> String { self.ru ? ru : en }
     var body: some View {
         VStack(spacing: 0) {
+            tabs
             toolbar
-            if !controller.tabs.isEmpty { tabs }
-            if let center = store.appleIntegrations?.interactions, let pending = center.pending, pending.kind == .confirmation {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(pending.title).font(.headline)
-                    ScrollView { Text(pending.details).font(.caption).textSelection(.enabled) }.frame(maxHeight: 180)
-                    HStack {
-                        Button(text("Отклонить", "Deny")) { center.finish(pending.id, result: .success(.bool(false))) }
-                        Spacer()
-                        Button(text("Разрешить один раз", "Allow once")) { center.finish(pending.id, result: .success(.bool(true))) }
-                    }
-                }.padding(12).background(.regularMaterial)
-            }
-            if let tab = controller.selectedTab {
-                if tab.loading { ProgressView(value: tab.progress).progressViewStyle(.linear) }
-                if let error = tab.error { Text(error).font(.caption).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity, alignment: .leading) }
-                if tab.authenticationURL != nil {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(text("Этот провайдер запрещает встроенный вход. Системный браузер использует отдельную сессию; вход не переносится в Blot автоматически.", "This provider blocks embedded sign-in. The system browser uses a separate session; sign-in does not automatically transfer to Blot.")).font(.caption)
-                        Button(text("Выбрать системный браузер…", "Use system browser…")) { systemAuthentication = true }
-                    }.padding(10)
-                }
-                if tab.isLive, let view = controller.webView(for: tab.id) { WorkspaceWebSurface(view: view).id(tab.id).frame(maxWidth: .infinity, maxHeight: .infinity) }
-                else { empty }
-            } else { empty }
-            if let error = controller.error { Text(error).font(.caption).foregroundStyle(.red).padding(8) }
+            Divider().opacity(0.45)
+            NavigationStack { page }.id(controller.selectedID)
         }
+        .environment(\.workspacePanelNavigation, toolNavigation)
+        .workspacePanelControls()
         .background(WorkspaceStyle.canvas)
-        .task { if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } } }
-        .onChange(of: controller.selectedID, initial: true) { _, _ in address = controller.selectedTab?.url?.absoluteString ?? "" }
+        .task(id: controller.activeSession) {
+            if controller.sessionTabs.isEmpty { work { try controller.newTab() } }
+            else if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } }
+        }
+        .onChange(of: controller.selectedID, initial: true) { _, _ in address = controller.selectedTab?.url?.absoluteString ?? ""; menuVisible = false; showsDownloads = false; preview = nil; pendingNavigation = nil; closing = nil; systemAuthentication = false }
+        .onChange(of: controller.tabs.map(\.id), initial: true) { _, ids in store.panelNavigations.retain(Set(ids)) }
+        .onChange(of: toolNavigation.path) { _, path in
+            if path.isEmpty, controller.selectedTab?.localPage != nil, let id = controller.selectedID {
+                work { _ = try controller.openLocalPage("start", title: text("Новая вкладка", "New tab"), replacing: id) }
+            }
+        }
         .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
-        .sheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
         .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
             Button(text("Покинуть без сохранения", "Leave without saving"), role: .destructive) {
                 if let action = pendingNavigation, let id = navigationTab, controller.selectedID == id {
@@ -78,49 +69,113 @@ struct WorkspaceBrowserView: View {
         } message: { Text(controller.dialog?.message ?? "") }
         .accessibilityIdentifier("workspace.browser")
     }
+    private var page: some View {
+        VStack(spacing: 0) {
+            if let center = store.appleIntegrations?.interactions, let pending = center.pending, pending.kind == .confirmation {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(pending.title).font(.headline)
+                    ScrollView { Text(pending.details).font(.caption).textSelection(.enabled) }.frame(maxHeight: 180)
+                    HStack {
+                        Button(text("Отклонить", "Deny")) { center.finish(pending.id, result: .success(.bool(false))) }
+                        Spacer()
+                        Button(text("Разрешить один раз", "Allow once")) { center.finish(pending.id, result: .success(.bool(true))) }
+                    }
+                }.padding(12).background(.regularMaterial)
+            }
+            if !toolNavigation.path.isEmpty { WorkspaceBrowserToolPage(navigation: toolNavigation) }
+            else if let tab = controller.selectedTab {
+                if tab.loading { ProgressView(value: tab.progress).progressViewStyle(.linear) }
+                if let error = tab.error { Text(error).font(.caption).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity, alignment: .leading) }
+                if tab.authenticationURL != nil {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(text("Этот провайдер запрещает встроенный вход. Системный браузер использует отдельную сессию; вход не переносится в Blot автоматически.", "This provider blocks embedded sign-in. The system browser uses a separate session; sign-in does not automatically transfer to Blot.")).font(.caption)
+                        Button(text("Выбрать системный браузер…", "Use system browser…")) { systemAuthentication = true }
+                    }.padding(10)
+                }
+                if tab.isLive, let view = controller.webView(for: tab.id) { WorkspaceWebSurface(view: view).id(tab.id).frame(maxWidth: .infinity, maxHeight: .infinity) }
+                else { empty }
+            } else { empty }
+            if let error = controller.error { Text(error).font(.caption).foregroundStyle(.red).padding(8) }
+        }
+        .workspacePanelSheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 280, minHeight: 260).padding(20).quickLookPreview($preview) }
+    }
     private var toolbar: some View {
         HStack(spacing: 8) {
-            button("chevron.left", text("Назад", "Back"), disabled: controller.selectedTab?.canGoBack != true) { if let id = controller.selectedID { try controller.back(id) } }
-            button("chevron.right", text("Вперёд", "Forward"), disabled: controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
-            TextField(text("Адрес сайта", "Website address"), text: $address).textFieldStyle(.roundedBorder).onSubmit(openAddress)
+            HStack(spacing: 0) {
+                button("chevron.left", text("Назад", "Back"), disabled: toolNavigation.dismissDetail == nil && toolNavigation.path.isEmpty && controller.selectedTab?.canGoBack != true) {
+                    if let dismiss = toolNavigation.dismissDetail { dismiss() }
+                    else if !toolNavigation.path.isEmpty { toolNavigation.path.removeLast() }
+                    else if let id = controller.selectedID { try controller.back(id) }
+                }
+                button("chevron.right", text("Вперёд", "Forward"), disabled: !toolNavigation.path.isEmpty || controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
+                Rectangle().fill(WorkspaceStyle.secondary.opacity(0.2)).frame(width: 1, height: 16)
+                button(controller.selectedTab?.loading == true ? "xmark" : "arrow.clockwise", text("Обновить или остановить", "Reload or stop"), disabled: controller.selectedTab?.url == nil) { if let id = controller.selectedID { try controller.reload(id) } }
+            }.background(WorkspaceStyle.surface, in: Capsule())
+            TextField(text("Поиск Google или адрес", "Search Google or enter a URL"), text: $address)
+                .textFieldStyle(.plain).focused($addressFocused).onSubmit(openAddress)
+                .padding(.horizontal, 14).frame(minWidth: 40, minHeight: 36)
+                .background(WorkspaceStyle.surface, in: Capsule())
+                .overlay(Capsule().strokeBorder(WorkspaceStyle.ink.opacity(addressFocused ? 0.3 : 0.08)))
                 .accessibilityIdentifier("workspace.browser.address")
-            button(controller.selectedTab?.loading == true ? "xmark" : "arrow.clockwise", text("Обновить или остановить", "Reload or stop")) { if let id = controller.selectedID { try controller.reload(id) } }
-            Menu {
-                Button(text("Новая вкладка", "New tab")) { work { try controller.newTab() }; address = "" }
-                Button(text("Загрузки", "Downloads")) { showsDownloads = true }
-                Button(text("Доступ агентов", "Agent access")) { controller.presented = false; store.navigate(.browserSettings) }
-                if compact { Button(text("Развернуть", "Expand")) { controller.presented = false; store.navigate(.browser) } }
-            } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
-            button("xmark", text("Вернуться к чату", "Return to chat")) {
-                controller.presented = false
-                if store.route == .browser { store.back() }
-            }
-        }.padding(10)
+            button("arrow.down.to.line", text("Загрузки", "Downloads")) { showsDownloads = true }
+                .background(WorkspaceStyle.surface, in: Circle())
+            Button { menuVisible.toggle() } label: { Image(systemName: "ellipsis").frame(width: 34, height: 34).contentShape(Circle()) }
+                .buttonStyle(.plain).background(WorkspaceStyle.surface, in: Circle()).accessibilityLabel(text("Меню панели", "Panel menu"))
+                .popover(isPresented: $menuVisible, arrowEdge: .bottom) { panelMenu }
+        }.padding(.horizontal, 12).padding(.vertical, 10)
+    }
+    private var panelMenu: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            menuRow("plus", text("Новая вкладка", "New tab")) { work { try controller.newTab() } }
+            menuRow("square.grid.2x2", text("Все инструменты", "All tools")) { store.showTools() }
+            menuRow("globe.badge.shield.half.filled", text("Доступ браузера", "Browser access")) { openTool(.page(.browserSettings)) }
+            Divider().padding(.vertical, 4)
+            menuRow("sidebar.right", text("Закрыть правую панель", "Close right panel")) { controller.presented = false; if store.route == .browser { store.back() } }
+        }.padding(8).frame(width: 236).background(WorkspaceStyle.canvas).presentationCompactAdaptation(.popover)
+    }
+    private func menuRow(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
+        Button { menuVisible = false; action() } label: {
+            Label(title, systemImage: symbol).font(.system(size: 13)).frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
+                .padding(.horizontal, 10).contentShape(RoundedRectangle(cornerRadius: 10))
+        }.buttonStyle(WorkspaceRowButtonStyle(padding: 0))
     }
     private var tabs: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 6) {
-                ForEach(controller.tabs) { tab in
-                    HStack(spacing: 6) {
-                        Button { work { try controller.select(tab.id) } } label: {
-                            Text((tab.unsaved ? "• " : "") + tab.title).lineLimit(1).frame(maxWidth: 160)
-                        }.buttonStyle(.plain)
-                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
-                    }.padding(.horizontal, 10).padding(.vertical, 7).background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 8))
+        HStack(spacing: 6) {
+            ScrollView(.horizontal) {
+                HStack(spacing: 6) {
+                    ForEach(controller.sessionTabs) { tab in
+                        HStack(spacing: 7) {
+                            Button { work { try controller.select(tab.id) } } label: {
+                                HStack(spacing: 7) {
+                                    Image(systemName: tab.localPage.flatMap { WorkspaceToolDestination(identifier: $0) }?.symbol ?? "globe").foregroundStyle(WorkspaceStyle.secondary)
+                                    Text(tab.localPage == nil && tab.url == nil ? text("Новая вкладка", "New tab") : (tab.unsaved ? "• " : "") + tab.title).lineLimit(1)
+                                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                            }.buttonStyle(.plain)
+                            Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .medium)).frame(width: 22, height: 26).contentShape(Rectangle()) }
+                                .buttonStyle(.plain).foregroundStyle(WorkspaceStyle.secondary).accessibilityLabel(text("Закрыть вкладку", "Close tab") + " " + tab.title)
+                        }.font(.system(size: 12)).padding(.leading, 12).padding(.trailing, 4).frame(width: 166, height: 36)
+                            .background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 12))
+                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(WorkspaceStyle.ink.opacity(controller.selectedID == tab.id ? 0.08 : 0)))
+                    }
                 }
-            }.padding(.horizontal, 10)
-        }.scrollIndicators(.hidden)
+            }.scrollIndicators(.hidden)
+            button("plus", text("Новая вкладка", "New tab")) { try controller.newTab() }
+        }.padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 2)
     }
-    private var empty: some View {
-        ContentUnavailableView(text("Браузер Blot", "Blot browser"), systemImage: "globe", description: Text(text("Введите адрес сайта. Страница откроется внутри приложения.", "Enter a website address to open it inside the app.")))
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+    private var empty: some View { WorkspaceBrowserStartPage(controller: controller, select: openTool) }
+    private func openTool(_ destination: WorkspaceToolDestination) {
+        work {
+            let blank = controller.selectedTab.flatMap { $0.url == nil && ($0.localPage == nil || $0.localPage == "start") ? $0.id : nil }
+            let id = try controller.openLocalPage(destination.identifier, title: destination.title(russian: ru), replacing: blank)
+            store.panelNavigations.reset(controller.tabs.first { $0.id == id }, to: destination)
+        }
     }
     private var downloads: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack { Text(text("Загрузки", "Downloads")).font(.headline); Spacer(); Button(text("Закрыть", "Close")) { showsDownloads = false } }
-            if controller.downloads.isEmpty { Text(text("Загрузок пока нет", "No downloads yet")).foregroundStyle(.secondary) }
+            if controller.sessionDownloads.isEmpty { Text(text("Загрузок пока нет", "No downloads yet")).foregroundStyle(.secondary) }
             ScrollView {
-                ForEach(controller.downloads) { item in
+                ForEach(controller.sessionDownloads) { item in
                     HStack {
                         VStack(alignment: .leading) { Text(item.name); Text(item.error ?? item.state).font(.caption).foregroundStyle(.secondary) }
                         Spacer()
@@ -136,8 +191,10 @@ struct WorkspaceBrowserView: View {
     }
     private func openAddress() {
         work {
-            if let id = controller.selectedID { try controller.navigate(address, tabID: id) }
-            else { _ = try controller.open(address) }
+            let url = try WorkspaceBrowserURL.userNavigation(address)
+            if let id = controller.selectedID { try controller.navigate(url.absoluteString, tabID: id) }
+            else { _ = try controller.open(url.absoluteString) }
+            toolNavigation.path.removeAll()
         }
     }
     private func work(_ action: @escaping () throws -> Void) {
@@ -146,7 +203,7 @@ struct WorkspaceBrowserView: View {
         catch { controller.error = error.localizedDescription }
     }
     private func button(_ image: String, _ title: String, disabled: Bool = false, action: @escaping () throws -> Void) -> some View {
-        Button { work(action) } label: { Image(systemName: image).frame(width: 22, height: 24) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
+        Button { work(action) } label: { Image(systemName: image).font(.system(size: 12, weight: .medium)).frame(width: 30, height: 34).contentShape(Rectangle()) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
     }
     private func openSystemAuthentication() {
         guard let url = controller.selectedTab?.authenticationURL, WorkspaceBrowserURL.isRestrictedAuthentication(url) else { return }

@@ -5,7 +5,9 @@ import SwiftUI
 
 struct WorkspaceTeamView: View {
     let route: WorkspaceRoute
+    var openFile: ((UUID) -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     var body: some View {
         switch route {
         case .createAgent, .editAgent: editor
@@ -35,7 +37,10 @@ struct WorkspaceTeamView: View {
             WorkspaceHeading(title: "Your team", subtitle: "Each has its own role and context.")
             LazyVGrid(columns: agentColumns, spacing: 16) {
                 ForEach(visibleAgents, id: \.metadata.id) { agent in
-                    Button { store.selectAgent(agent.metadata.id) } label: {
+                    Button {
+                        store.selectAgent(agent.metadata.id, navigating: panelNavigation == nil)
+                        panelNavigation?.open(.agentProfile)
+                    } label: {
                         WorkspaceCard(isButtonLabel: true) {
                             VStack(alignment: .leading, spacing: 18) {
                                 WorkspaceAvatarView(agent: agent, size: 52)
@@ -124,7 +129,10 @@ struct WorkspaceTeamView: View {
             WorkspaceFilesImportButton()
             WorkspaceField(title: "Search by name", text: $store.form.search.query)
             ForEach(store.snapshot.artifacts.filter { store.form.search.query.isEmpty || $0.name.localizedCaseInsensitiveContains(store.form.search.query) }, id: \.metadata.id) { file in
-                Button { store.selectedRecordID = file.metadata.id; store.navigate(.file) } label: {
+                Button {
+                    if let openFile { openFile(file.metadata.id) }
+                    else { store.selectedRecordID = file.metadata.id; store.navigate(.file) }
+                } label: {
                     HStack { BlotIcon(symbol: "doc"); Text(file.name); Spacer(); BlotIcon(symbol: "chevron.right") }
                 }.buttonStyle(WorkspaceRowButtonStyle())
                 Divider()
@@ -209,10 +217,10 @@ struct WorkspaceTeamView: View {
             WorkspaceHeading(title: "Start the morning with a clear plan", subtitle: "Set what to do, when to run and where to show the result.")
             WorkspaceField(title: "Name", text: $store.form.schedule.name)
             WorkspaceCard {
-                DatePicker(store.t("Run time"), selection: $store.form.schedule.time, displayedComponents: .hourAndMinute)
+                WorkspacePanelDateField(title: store.t("Run time"), date: $store.form.schedule.time)
                 if store.mode == .live {
                     Toggle(store.t("One-time"), isOn: $store.form.schedule.oneTime)
-                    if store.form.schedule.oneTime { DatePicker(store.t("Date"), selection: $store.form.schedule.time, displayedComponents: .date) }
+                    if store.form.schedule.oneTime { WorkspacePanelDateField(title: store.t("Date"), date: $store.form.schedule.time, calendarOnly: true) }
                     WorkspaceField(title: "Time zone", text: $store.form.schedule.timezone)
                 } else { Text("Asia/Yekaterinburg · UTC+5").font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
             }
@@ -232,20 +240,14 @@ struct WorkspaceTeamView: View {
             }
             WorkspaceField(title: "What to do", text: $store.form.schedule.goal, multiline: true)
             if store.mode == .live {
-                Picker(store.t("Agent"), selection: $store.form.schedule.agentID) {
-                    Text(store.t("Not selected")).tag(nil as UUID?)
-                    ForEach(store.snapshot.agents, id: \.metadata.id) { agent in Text(agent.name).tag(Optional(agent.metadata.id)) }
-                }
-                Picker(store.t("Run tasks on"), selection: $store.form.schedule.deviceID) {
-                    Text(store.t("Not selected")).tag(nil as UUID?)
-                    if let id = store.snapshot.localDeviceID { Text(store.t("This device")).tag(Optional(id)) }
-                    ForEach(store.snapshot.devices, id: \.metadata.id) { device in Text(device.name).tag(Optional(device.metadata.id)) }
-                }
-                Picker(store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy) {
-                    ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in WorkspaceSchedulePolicyLabel(policy: policy).tag(policy) }
-                }
+                WorkspaceChoice(title: store.t("Agent"), selection: $store.form.schedule.agentID,
+                    options: [.init(nil, store.t("Not selected"))] + store.snapshot.agents.map { .init(Optional($0.metadata.id), $0.name) })
+                WorkspaceChoice(title: store.t("Run tasks on"), selection: $store.form.schedule.deviceID,
+                    options: [.init(nil, store.t("Not selected"))] + (store.snapshot.localDeviceID.map { [.init(Optional($0), store.t("This device"))] } ?? []) + store.snapshot.devices.filter { $0.metadata.id != store.snapshot.localDeviceID }.map { .init(Optional($0.metadata.id), $0.name) })
+                WorkspaceChoice(title: store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy,
+                    options: BlotV3.MissedRunPolicy.allCases.map { .init($0, WorkspaceSchedulePolicyLabel.title($0, russian: store.language == "ru")) })
                 if store.form.schedule.missedRunPolicy == .catch_up {
-                    Stepper(store.t("Maximum catch-up runs") + ": \(store.form.schedule.maximumCatchUpRuns)", value: $store.form.schedule.maximumCatchUpRuns, in: 1...100)
+                    WorkspaceCounter(title: store.t("Maximum catch-up runs"), value: $store.form.schedule.maximumCatchUpRuns, range: 1...100)
                 }
             }
             WorkspaceCard { WorkspaceLink(title: "Agent", route: .agents); WorkspaceLink(title: "Computer", route: .devices)

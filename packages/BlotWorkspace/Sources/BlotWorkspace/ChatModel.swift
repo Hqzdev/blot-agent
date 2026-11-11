@@ -58,8 +58,9 @@ public struct ChatModelRequest: Codable, Equatable, Sendable {
     public let messages: [ChatModelMessage]
     public let tools: [ChatToolDefinition]
     public let maximumOutputTokens: Int
-    public init(messages: [ChatModelMessage], tools: [ChatToolDefinition] = [], maximumOutputTokens: Int = 2048) {
-        self.messages = messages; self.tools = tools; self.maximumOutputTokens = maximumOutputTokens
+    public let requiredTool: String?
+    public init(messages: [ChatModelMessage], tools: [ChatToolDefinition] = [], maximumOutputTokens: Int = 2048, requiredTool: String? = nil) {
+        self.messages = messages; self.tools = tools; self.maximumOutputTokens = maximumOutputTokens; self.requiredTool = requiredTool
     }
 }
 

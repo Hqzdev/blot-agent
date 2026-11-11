@@ -71,7 +71,7 @@ enum MacTeamSettingsPane: String, CaseIterable, Identifiable {
     }
     func matches(_ query: String) -> Bool {
         let keywords: String = switch self {
-        case .general: "Enter ввод подсказки английский русский"
+        case .general: "Enter ввод подсказки английский русский голос звонок распознавание расшифровка voice speech recognition transcription"
         case .appearance: "светлая тёмная системная анимации уменьшить компактные"
         case .personalization: "задача обучение шаблон"
         case .connections: "Gmail Calendar Drive Slack Notion"

@@ -18,6 +18,7 @@ enum PhoneSettingsCopy {
         "Usage and subscription": "Использование и подписка", "Agent memory": "Память агентов",
         "Files and data": "Файлы и данные", "Data and privacy": "Данные и приватность", "Applications": "Приложения", "Updates": "Обновления",
         "App language and permissions.": "Язык интерфейса и разрешения приложения.",
+        "App language, voice recognition and permissions.": "Язык приложения, голосовой режим, расшифровка речи и разрешения.",
         "Events your agents notify you about.": "События, о которых сообщают ваши агенты.",
         "Your name in your personal workspace.": "Ваше имя в личном пространстве.",
         "Theme, motion and interface density.": "Тема, движение и плотность интерфейса.",

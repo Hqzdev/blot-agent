@@ -24,7 +24,7 @@ struct PhoneConversationView: View {
     private var agent: BlotV3.AgentProfile? { identity.agent }
 
     var body: some View {
-        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)))
+        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)), activityMessageIDs: store.chatContent.activityMessageIDs)
         let ids = rows.map(\.id)
         let animation = reduceMotion ? nil : PhoneMessageMotion.spring
         ScrollViewReader { proxy in
@@ -129,7 +129,10 @@ struct PhoneConversationView: View {
             }.padding(.horizontal, 18).padding(.top, 6).padding(.bottom, 8)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PhoneConversationComposer().padding(.horizontal, 30).padding(.vertical, 10)
+            VStack(spacing: 8) {
+                WorkspaceVoicePanel().padding(.horizontal, 18)
+                PhoneConversationComposer().padding(.horizontal, 30)
+            }.padding(.vertical, 10)
         }
         .workspaceGlassContainer()
         .sheet(isPresented: $showsPinnedMessages) {
@@ -164,7 +167,7 @@ struct PhoneConversationView: View {
                     .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 20))
                     .contextMenu { WorkspaceMessageActionsMenu(message: row.message).environment(store) }
             } else {
-                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery) { id in
+                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery, showsAuthor: row.showsAuthor) { id in
                     store.messageNavigationTarget = id
                 }
             }
@@ -203,6 +206,7 @@ struct PhoneConversationView: View {
             PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { store.back() }
             PhoneConversationTitle(identity: identity)
             Spacer(minLength: 0)
+            WorkspaceVoiceButton()
             Menu {
                 Button { store.showBrowser() } label: { Label(store.language == "ru" ? "Браузер" : "Browser", systemImage: "globe") }
                 BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
@@ -228,12 +232,14 @@ private struct PhoneMessageBubble: View {
     @AppStorage(PhoneSettingsPreferenceKey.compactMessages) private var compactMessages = false
     let message: BlotV3.Message
     let showsDelivery: Bool
+    let showsAuthor: Bool
     let showMessage: (UUID) -> Void
     @Environment(WorkspaceStore.self) private var store
 
     private var isUser: Bool { message.role == .user }
     private var metadata: WorkspaceMessageMetadata? { store.chatInteractions.messages[message.metadata.id] }
     private var quoted: BlotV3.Message? {
+        guard isUser || showsAuthor else { return nil }
         guard let id = metadata?.replyToMessageID ?? message.replyToMessageId else { return nil }
         guard let value = store.message(id), store.groupPlan(for: value) == nil else { return nil }
         return value
@@ -241,9 +247,10 @@ private struct PhoneMessageBubble: View {
 
     var body: some View {
         VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
-            if message.role == .assistant, store.currentConversation?.kind == .group {
+            if message.role == .assistant, showsAuthor {
                 PhoneGroupMessageAuthor(message: message)
             }
+            if !message.content.isEmpty || !message.artifactIds.isEmpty {
             HStack(spacing: 0) {
                 if isUser { Spacer(minLength: 44) }
                 VStack(alignment: .leading, spacing: 8) {
@@ -253,7 +260,7 @@ private struct PhoneMessageBubble: View {
                     }
                     WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.body)
                         .fixedSize(horizontal: false, vertical: true)
-                    WorkspaceMessagePlugins(message: message)
+                    if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
                 }
                 .foregroundStyle(WorkspaceStyle.ink)
                 .padding(.horizontal, compactMessages ? 12 : 14).padding(.vertical, compactMessages ? 8 : 12)
@@ -262,6 +269,8 @@ private struct PhoneMessageBubble: View {
                 .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
                 if !isUser { Spacer(minLength: 44) }
             }
+            }
+            WorkspaceToolActivityView(message: message).padding(.trailing, isUser ? 0 : 44)
             if let reaction = metadata?.reaction {
                 Button { store.toggleReaction(reaction, to: message.metadata.id) } label: {
                     Text(reaction).font(.system(size: 20)).padding(.horizontal, 9).padding(.vertical, 4)

@@ -1,4 +1,5 @@
 import BlotDomain
+import BlotDesign
 import BlotAppleIntegrations
 import BlotWorkspace
 import SwiftUI
@@ -42,7 +43,8 @@ struct WorkspaceBrowserSettingsView: View {
             Text(ru ? "Сайты открываются внутри приложения. Разрешения ниже действуют только для агентов на этом устройстве. Нажатия и ввод подтверждаются отдельно." : "Websites open inside the app. These agent permissions apply only on this device. Clicks and typing require separate confirmation.").foregroundStyle(.secondary)
             Button(ru ? "Открыть браузер" : "Open browser") { store.showBrowser() }.disabled(store.browserCommands == nil)
             Text(ru ? "Разрешённые сайты — по одному HTTPS-адресу на строку" : "Allowed sites — one HTTPS address per line").font(.headline)
-            TextEditor(text: $origins).font(.body.monospaced()).frame(minHeight: 90, maxHeight: 180).border(.secondary.opacity(0.3))
+            TextEditor(text: $origins).font(.body.monospaced()).scrollContentBackground(.hidden).padding(12).frame(minHeight: 90, maxHeight: 180)
+                .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12)).accessibilityLabel(ru ? "Разрешённые сайты" : "Allowed websites")
             Text("https://example.com").font(.caption).foregroundStyle(.secondary)
             if let url = store.browser?.selectedTab?.url, let origin = try? WorkspaceBrowserURL.origin(url) {
                 Button(ru ? "Добавить текущий сайт и агентов чата" : "Add current site and chat agents") {

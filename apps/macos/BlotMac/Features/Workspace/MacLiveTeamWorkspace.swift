@@ -7,11 +7,9 @@ import SwiftUI
 struct MacLiveTeamWorkspace: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.blotReduceMotion) private var reduceMotion
-    @State private var inspectorVisible = true
     @State private var settingsSearchFocusRequest = 0
     @State private var creating = false
     @State private var sidebarPopover = false
-    @State private var inspectorPopover = false
 
     private var isConversation: Bool { [.home, .newChat, .chat].contains(store.route) }
     private var agent: BlotV3.AgentProfile? {
@@ -50,8 +48,7 @@ struct MacLiveTeamWorkspace: View {
 
     private func workspace(layout: MacWorkspaceLayout) -> some View {
         let showsBrowser = store.browser?.presented == true && isConversation
-        let showsSidebar = layout.supportsSidebar && store.sidebarVisible && !showsBrowser
-        let showsInspector = inspectorVisible && isConversation && !showsBrowser && layout.supportsInspector(sidebarVisible: showsSidebar)
+        let showsSidebar = layout.supportsSidebar && store.sidebarVisible
         return HStack(spacing: 0) {
             if showsSidebar {
                 MacLiveTeamSidebar().frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.leading))
@@ -63,17 +60,12 @@ struct MacLiveTeamWorkspace: View {
                     WorkspaceBrowserView(controller: browser, compact: true)
                 }
             } else { conversation(layout: layout, showsSidebar: showsSidebar) }
-            if showsInspector {
-                MacLiveTeamInspector().frame(width: layout.inspectorWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.trailing))
-            }
         }
         .kAnimation(KMotion.sidebar, value: showsSidebar)
-        .kAnimation(KMotion.sidebar, value: showsInspector)
         .kAnimation(KMotion.panel, value: store.selectedConversationID)
-        .onChange(of: store.route) { _, _ in sidebarPopover = false; inspectorPopover = false }
-        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false; inspectorPopover = false }
+        .onChange(of: store.route) { _, _ in sidebarPopover = false }
+        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false }
         .onChange(of: layout.supportsSidebar) { _, _ in sidebarPopover = false }
-        .onChange(of: showsInspector) { _, _ in inspectorPopover = false }
     }
 
     private func conversation(layout: MacWorkspaceLayout, showsSidebar: Bool) -> some View {
@@ -87,19 +79,26 @@ struct MacLiveTeamWorkspace: View {
     private func header(layout: MacWorkspaceLayout, showsSidebar: Bool) -> some View {
         GlassEffectContainer(spacing: 8) {
             ZStack {
-                HStack(spacing: 8) {
-                    if store.route == .marketplace {
-                        Text(store.t(store.route.title))
-                            .font(.system(size: 17, weight: .semibold)).lineLimit(1)
-                    } else {
+                ViewThatFits(in: .horizontal) {
+                    HStack(spacing: 8) {
+                        if store.route == .marketplace {
+                            Text(store.t(store.route.title))
+                                .font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                        } else {
+                            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
+                            else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
+                            Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
+                                .font(.system(size: 17, weight: .semibold)).lineLimit(1)
+                                .padding(.horizontal, 16).padding(.vertical, 6)
+                                .glassEffect(.regular, in: .capsule)
+                        }
+                    }
+                    if isConversation {
                         if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
                         else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
-                        Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
-                            .font(.system(size: 17, weight: .semibold)).lineLimit(1)
-                            .padding(.horizontal, 16).padding(.vertical, 6)
-                            .glassEffect(.regular, in: .capsule)
                     }
-                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, 64)
+                    Color.clear.frame(width: 0, height: 0)
+                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, isConversation ? 104 : 64)
                 HStack(spacing: 6) {
                     if store.route == .marketplace {
                         headerButton(store.t("Back"), glyph: .chevronLeft) { store.back() }
@@ -130,16 +129,10 @@ struct MacLiveTeamWorkspace: View {
                             }.frame(width: 36, height: 36)
                         }
                     Spacer()
-                    Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
-                        .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
-                        .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
+                    if isConversation { WorkspaceVoiceButton() }
                     if isConversation {
-                        headerButton("Панель агента", glyph: .inspector) {
-                            if layout.supportsInspector(sidebarVisible: showsSidebar) { inspectorVisible.toggle() }
-                            else { inspectorPopover.toggle() }
-                        }
-                        .popover(isPresented: $inspectorPopover, arrowEdge: .top) {
-                            MacLiveTeamInspector().frame(width: 306, height: layout.popoverHeight).environment(store)
+                        headerButton("Инструменты", glyph: .inspector) {
+                            store.toggleToolsPanel()
                         }
                     }
                 }.padding(.leading, showsSidebar ? 18 : 108).padding(.trailing, 18)

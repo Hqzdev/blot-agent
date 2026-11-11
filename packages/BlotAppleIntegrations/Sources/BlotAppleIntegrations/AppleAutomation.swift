@@ -6,11 +6,16 @@ import BlotWorkspace
 /// NSAppleScript is main-thread-only. Model text is passed only as Apple event descriptors.
 @MainActor
 final class AppleAutomation {
+    private let running: (String) -> Bool
+    init(running: @escaping (String) -> Bool = { id in
+        NSRunningApplication.runningApplications(withBundleIdentifier: id).contains { !$0.isTerminated && $0.isFinishedLaunching }
+    }) { self.running = running }
+    func isRunning(_ plugin: ApplePluginID) -> Bool { running(plugin.bundleID) }
+    func requireRunning(_ plugin: ApplePluginID) throws {
+        guard isRunning(plugin) else { throw AppleIntegrationError.applicationRequired(plugin.name) }
+    }
     func authorized(_ plugin: ApplePluginID, request: Bool = false) async -> Bool {
-        guard [.mail, .notes].contains(plugin) else { return false }
-        // Automation requires a ready process, not a window opened by the user.
-        do { try await prepareApplication(plugin) }
-        catch { return false }
+        guard [.mail, .notes].contains(plugin), isRunning(plugin) else { return false }
         let bundleID = plugin.bundleID
         // Consent can wait indefinitely. Never block the app's main thread.
         return await _Concurrency.Task.detached {
@@ -20,6 +25,7 @@ final class AppleAutomation {
     }
     func resources(_ plugin: ApplePluginID) async throws -> [AppleResource] {
         try _Concurrency.Task.checkCancellation()
+        try requireRunning(plugin)
         guard await authorized(plugin) else { throw AppleIntegrationError.permissionDenied }
         try _Concurrency.Task.checkCancellation()
         let result = try run(plugin, values: ["resources"])
@@ -30,6 +36,7 @@ final class AppleAutomation {
     }
     func execute(_ tool: AppleTool, arguments a: AppleArguments, preview: Bool = false) async throws -> ChatJSON {
         try _Concurrency.Task.checkCancellation()
+        try requireRunning(tool.plugin)
         guard await authorized(tool.plugin) else { throw AppleIntegrationError.permissionDenied }
         try _Concurrency.Task.checkCancellation()
         var body = a["body"] ?? ""
@@ -44,31 +51,15 @@ final class AppleAutomation {
         return objects.first ?? appleObject(["state": "succeeded"])
     }
     func compileScripts() throws {
+        try requireRunning(.notes); try requireRunning(.mail)
         for source in [Self.notesScript, Self.mailScript] {
             guard let script = NSAppleScript(source: source) else { throw AppleIntegrationError.unavailable }
             var error: NSDictionary?
             guard script.compileAndReturnError(&error) else { throw AppleIntegrationError.system(error?.description ?? "AppleScript compilation failed") }
         }
     }
-    private func prepareApplication(_ plugin: ApplePluginID) async throws {
-        let application: NSRunningApplication
-        if let running = NSRunningApplication.runningApplications(withBundleIdentifier: plugin.bundleID).first(where: { !$0.isTerminated }) {
-            application = running
-        } else {
-            guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: plugin.bundleID) else { throw AppleIntegrationError.unavailable }
-            let configuration = NSWorkspace.OpenConfiguration()
-            configuration.activates = false
-            configuration.hides = true
-            application = try await NSWorkspace.shared.openApplication(at: url, configuration: configuration)
-        }
-        let deadline = Date().addingTimeInterval(10)
-        while !application.isFinishedLaunching {
-            guard !application.isTerminated, Date() < deadline else { throw AppleIntegrationError.unavailable }
-            try await _Concurrency.Task.sleep(for: .milliseconds(100))
-        }
-        guard !application.isTerminated else { throw AppleIntegrationError.unavailable }
-    }
     private func run(_ plugin: ApplePluginID, values: [String]) throws -> NSAppleEventDescriptor {
+        try requireRunning(plugin)
         guard [.mail, .notes].contains(plugin), let script = NSAppleScript(source: plugin == .notes ? Self.notesScript : Self.mailScript) else { throw AppleIntegrationError.unavailable }
         var error: NSDictionary?
         guard script.compileAndReturnError(&error) else { throw AppleIntegrationError.system(error?.description ?? "AppleScript compilation failed") }

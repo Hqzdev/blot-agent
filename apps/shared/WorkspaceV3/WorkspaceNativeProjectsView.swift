@@ -39,10 +39,8 @@ struct WorkspaceNativeProjectsView: View {
             Button(text("Подключить папку…", "Connect folder…")) { importing = true }.buttonStyle(WorkspaceButtonStyle()).disabled(busy)
             #endif
             if store.selectedConversationID != nil {
-                Picker(text("Проект этого чата", "Project for this chat"), selection: $selectedID) {
-                    Text(text("Без проекта", "No project")).tag(Optional<UUID>.none)
-                    ForEach(projects) { project in Text(project.name).tag(Optional(project.id)) }
-                }.disabled(busy)
+                WorkspaceChoice(title: text("Проект этого чата", "Project for this chat"), selection: $selectedID,
+                    options: [.init(nil, text("Без проекта", "No project"))] + projects.map { .init(Optional($0.id), $0.name) }).disabled(busy)
                 .onChange(of: selectedID) { _, value in select(value) }
             }
             ForEach(projects) { project in
@@ -92,7 +90,7 @@ struct WorkspaceNativeProjectsView: View {
                 } catch { return }
             }
         }
-        .sheet(item: $folder, onDismiss: { _Concurrency.Task { await reload() } }) { folder in NativeProjectSetup(folder: folder.url, agents: store.snapshot.agents, russian: ru, commands: store.nativeCommands) }
+        .workspacePanelSheet(item: $folder, onDismiss: { _Concurrency.Task { await reload() } }) { folder in NativeProjectSetup(folder: folder.url, agents: store.snapshot.agents, russian: ru, commands: store.nativeCommands) }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
             if case .success(let url) = result { folder = NativeFolderChoice(url: url) }
             else if case .failure(let error) = result { self.error = error.localizedDescription }
@@ -136,10 +134,14 @@ private struct NativeFolderChoice: Identifiable { let id = UUID(); let url: URL 
 struct WorkspaceNativeProjectButton: View {
     @State private var visible = false
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     var body: some View {
-        Button { visible = true } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
+        Button {
+            if let panelNavigation { panelNavigation.path.append(.projects) }
+            else { visible = true }
+        } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
             .font(.caption).disabled(store.nativeCommands == nil)
-            .sheet(isPresented: $visible) {
+            .workspacePanelSheet(isPresented: $visible) {
                 NavigationStack {
                     ScrollView { WorkspaceNativeProjectsView().padding(24) }
                         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.language == "ru" ? "Закрыть" : "Close") { visible = false } } }
@@ -176,7 +178,8 @@ private struct NativeProjectSetup: View {
     let agents: [BlotV3.AgentProfile]
     let russian: Bool
     let commands: (any WorkspaceNativeProviding)?
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var selected: Set<UUID> = []
     @State private var trusted: Set<String> = []
     @State private var trustCLI = false
@@ -188,7 +191,7 @@ private struct NativeProjectSetup: View {
     @State private var error: String?
     var body: some View {
         NavigationStack {
-            Form {
+            WorkspacePanelForm {
                 Text(folder.lastPathComponent).font(.headline)
                 Text(folder.path).font(.caption).textSelection(.enabled)
                 Toggle(russian ? "Доверяю выполнению кода проекта на этом Mac" : "Trust executing this project’s code on this Mac", isOn: $trustCLI)
@@ -212,12 +215,15 @@ private struct NativeProjectSetup: View {
                 }
                 if let error { Text(error).foregroundStyle(.red) }
                 Button(russian ? "Подключить проект" : "Connect project") { connect() }.disabled(busy || !trustCLI || selected.isEmpty)
-            }.formStyle(.grouped).disabled(busy)
-                .navigationTitle(russian ? "Доступ к проекту" : "Project access")
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
+            }.disabled(busy)
+            .navigationTitle(russian ? "Доступ к проекту" : "Project access")
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if panelNavigation != nil { WorkspacePanelFormHeader(title: russian ? "Доступ к проекту" : "Project access") { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
+            }
+            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } } }
         }
         #if os(macOS)
-        .frame(width: 660, height: 650)
+        .frame(width: panelNavigation == nil ? 660 : nil, height: panelNavigation == nil ? 650 : nil)
         #endif
         .interactiveDismissDisabled(busy)
     }

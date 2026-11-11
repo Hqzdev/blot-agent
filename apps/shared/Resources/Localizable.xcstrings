@@ -2578,6 +2578,9 @@
         }
       }
     },
+    "All actions (%lld)" : {
+
+    },
     "All apps" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2764,6 +2767,9 @@
           }
         }
       }
+    },
+    "All tools" : {
+
     },
     "Allow" : {
       "extractionState" : "manual",
@@ -4872,6 +4878,9 @@
         }
       }
     },
+    "Call agent" : {
+
+    },
     "Calls: %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5657,6 +5666,9 @@
         }
       }
     },
+    "Checking available languages" : {
+
+    },
     "Checking integrations" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6271,6 +6283,9 @@
           }
         }
       }
+    },
+    "Close voice mode" : {
+
     },
     "cloud" : {
       "extractionState" : "manual",
@@ -10505,6 +10520,12 @@
         }
       }
     },
+    "End conversation" : {
+
+    },
+    "End voice conversation" : {
+
+    },
     "English" : {
 
     },
@@ -10643,6 +10664,9 @@
           }
         }
       }
+    },
+    "Enter an address or search above — Google results open here." : {
+
     },
     "Enter an API key." : {
       "extractionState" : "manual",
@@ -12934,6 +12958,9 @@
         }
       }
     },
+    "Interrupt" : {
+
+    },
     "Interrupted" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14611,6 +14638,9 @@
           }
         }
       }
+    },
+    "Microphone" : {
+
     },
     "Missed run: one combined run when the computer returns." : {
       "extractionState" : "manual",
@@ -16729,6 +16759,9 @@
     "On Mac, schedules run while Blot is running, including with its window minimized. Missed-run policy applies after sleep or restart. Exact background execution is not guaranteed on iPhone." : {
 
     },
+    "On-device speech recognition is unavailable on this device." : {
+
+    },
     "One account for phone and computer." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17058,6 +17091,9 @@
         }
       }
     },
+    "Open full log" : {
+
+    },
     "Open in" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -17278,6 +17314,9 @@
           }
         }
       }
+    },
+    "Open websites" : {
+
     },
     "Opened pricing page" : {
       "extractionState" : "manual",
@@ -19758,6 +19797,9 @@
         }
       }
     },
+    "Recognition language" : {
+
+    },
     "Reconnect" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -21465,6 +21507,9 @@
         }
       }
     },
+    "Same as app" : {
+
+    },
     "Saturday" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -22656,6 +22701,9 @@
         }
       }
     },
+    "Send phrase" : {
+
+    },
     "Send recovery email" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23489,6 +23537,9 @@
         }
       }
     },
+    "Show fewer actions" : {
+
+    },
     "Show only this specialist's channel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23573,6 +23624,9 @@
           }
         }
       }
+    },
+    "Showing the latest 64 actions" : {
+
     },
     "Sidebar" : {
       "extractionState" : "manual",
@@ -24178,6 +24232,9 @@
         }
       }
     },
+    "Speech recognition language" : {
+
+    },
     "Spreadsheet" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24401,6 +24458,9 @@
           }
         }
       }
+    },
+    "Status comes from the execution log." : {
+
     },
     "Status: %@" : {
       "extractionState" : "manual",
@@ -27189,6 +27249,9 @@
           }
         }
       }
+    },
+    "Unmute" : {
+
     },
     "Unmute chat" : {
       "extractionState" : "manual",
@@ -31440,6 +31503,9 @@
         }
       }
     },
+    "Введите адрес или запрос в строке сверху — результаты Google откроются здесь." : {
+
+    },
     "Введите время в формате 09:00." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31888,6 +31954,9 @@
         }
       }
     },
+    "Включить" : {
+
+    },
     "Включить %@" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32316,6 +32385,9 @@
         }
       }
     },
+    "Все действия (%lld)" : {
+
+    },
     "Все закреплённые сообщения" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -32349,6 +32421,9 @@
           }
         }
       }
+    },
+    "Все инструменты" : {
+
     },
     "Все навыки" : {
       "extractionState" : "manual",
@@ -35500,6 +35575,9 @@
         }
       }
     },
+    "Завершить разговор" : {
+
+    },
     "Загружаем боковую панель" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -36080,6 +36158,9 @@
           }
         }
       }
+    },
+    "Закрыть голосовой режим" : {
+
     },
     "Закрыть меню" : {
       "extractionState" : "manual",
@@ -37773,6 +37854,9 @@
           }
         }
       }
+    },
+    "Как в приложении" : {
+
     },
     "Как в системе" : {
       "extractionState" : "manual",
@@ -39772,6 +39856,9 @@
         }
       }
     },
+    "Микрофон" : {
+
+    },
     "Модели и подключения к провайдерам." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -40012,6 +40099,9 @@
           }
         }
       }
+    },
+    "На этом устройстве локальное распознавание недоступно." : {
+
     },
     "Наблюдение" : {
       "extractionState" : "manual",
@@ -44180,6 +44270,9 @@
         }
       }
     },
+    "Открытые сайты" : {
+
+    },
     "Открытые счета" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44468,6 +44561,9 @@
           }
         }
       }
+    },
+    "Открыть полный журнал" : {
+
     },
     "Открыть приложения Apple в Blot" : {
       "extractionState" : "manual",
@@ -44905,6 +45001,9 @@
           }
         }
       }
+    },
+    "Отправить фразу" : {
+
     },
     "Отправка в системном редакторе" : {
       "extractionState" : "manual",
@@ -45492,6 +45591,9 @@
           }
         }
       }
+    },
+    "Перебить" : {
+
     },
     "Переименовал в «Квартиры в Сан-Франциско». Короткий список готов." : {
       "extractionState" : "manual",
@@ -47132,6 +47234,9 @@
         }
       }
     },
+    "Позвонить агенту" : {
+
+    },
     "Позже" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -47626,6 +47731,9 @@
       }
     },
     "Показана часть текста. Полное содержимое доступно в оригинале файла." : {
+
+    },
+    "Показаны последние 64 действия" : {
 
     },
     "Показать %@" : {
@@ -49218,6 +49326,9 @@
         }
       }
     },
+    "Проверка доступных языков" : {
+
+    },
     "Проверка ещё не запускалась." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -50283,6 +50394,9 @@
           }
         }
       }
+    },
+    "Развёрнуто" : {
+
     },
     "Раздел агента" : {
       "extractionState" : "manual",
@@ -51363,6 +51477,12 @@
           }
         }
       }
+    },
+    "Свёрнуто" : {
+
+    },
+    "Свернуть действия" : {
+
     },
     "Светлая" : {
       "extractionState" : "manual",
@@ -53716,6 +53836,9 @@
           }
         }
       }
+    },
+    "Статус получен из журнала выполнения." : {
+
     },
     "Статус: %@" : {
       "extractionState" : "manual",
@@ -56662,6 +56785,12 @@
           }
         }
       }
+    },
+    "Язык распознавания" : {
+
+    },
+    "Язык распознавания речи" : {
+
     },
     "Язык, запуск приложения и отправка сообщений." : {
       "extractionState" : "manual",

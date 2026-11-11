@@ -76,7 +76,7 @@ struct MacTeamPluginIcon: View {
 
 struct MacTeamSheetHeader: View {
     let title: String
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
     var body: some View {
         HStack {
             WorkspaceLocalizedText(title).font(.system(size: 16, weight: .semibold))

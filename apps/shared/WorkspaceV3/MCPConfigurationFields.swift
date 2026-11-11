@@ -10,14 +10,16 @@ struct MCPConfigurationFields: View {
     @State private var picking = MCPPath.executable
     @State private var importing = false
     private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
+    private var transports: [WorkspaceChoiceOption<MCPConfiguration.Transport>] {
+        #if os(macOS)
+        [.init(.http, "Streamable HTTP"), .init(.stdio, "stdio")]
+        #else
+        [.init(.http, "Streamable HTTP")]
+        #endif
+    }
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Picker(text("Транспорт", "Transport"), selection: $configuration.transport) {
-                Text("Streamable HTTP").tag(MCPConfiguration.Transport.http)
-                #if os(macOS)
-                Text("stdio").tag(MCPConfiguration.Transport.stdio)
-                #endif
-            }.pickerStyle(.segmented)
+            WorkspaceChoice(title: text("Транспорт", "Transport"), selection: $configuration.transport, options: transports)
             if configuration.transport == .http {
                 TextField("https://server.example/mcp", text: $configuration.endpoint)
                 SecureField(text("Bearer-токен (если нужен)", "Bearer token (optional)"), text: $configuration.bearerToken)
@@ -36,7 +38,7 @@ struct MCPConfigurationFields: View {
                 Toggle(text("Я доверяю этой программе", "I trust this executable"), isOn: $configuration.trustedLocalProcess)
                 Text(text("Программа получает только заданные переменные среды и доступ в рамках системной песочницы Blot. MCP сам по себе не изолирует программу.", "The executable receives only the specified environment and access allowed by Blot’s system sandbox. MCP itself does not isolate a process.")).font(.caption).foregroundStyle(.secondary)
             }
-            Stepper(value: $configuration.timeout, in: 5...300, step: 5) { Text(text("Таймаут: ", "Timeout: ") + String(Int(configuration.timeout)) + text(" с", " s")) }
+            WorkspaceCounter(title: text("Таймаут, с", "Timeout, s"), value: Binding(get: { Int(configuration.timeout) }, set: { configuration.timeout = Double($0) }), range: 5...300, step: 5)
         }
         .onChange(of: configuration.transport) { _, _ in
             configuration.endpoint = ""; configuration.arguments = []; configuration.environment = [:]; configuration.workingDirectory = ""

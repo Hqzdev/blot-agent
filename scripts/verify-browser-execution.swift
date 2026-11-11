@@ -39,16 +39,41 @@ struct VerifyBrowserExecution {
             try await Task.sleep(for: .milliseconds(20))
         }
     }
+    static func verifySessions(origin: String) async throws {
+        let browser = WorkspaceBrowserController(profileID: UUID(), ephemeral: true)
+        defer { browser.shutdown() }
+        let first = WorkspaceBrowserSessionKey.agent(UUID()), second = WorkspaceBrowserSessionKey.agent(UUID())
+        browser.activateSession(first)
+        let a = try browser.open(origin + "/page")
+        try await wait { browser.selectedTab?.loading == false }
+        browser.activateSession(second)
+        let b = try browser.open(origin + "/second")
+        try await wait { browser.selectedTab?.loading == false }
+        let scope = WorkspaceBrowserScope(sourceID: UUID(), taskID: nil, agentID: UUID())
+        let readA = WorkspaceBrowserCommand(id: UUID(), name: "browser_snapshot", arguments: .object([:]), scope: scope, origins: ["*"], sessionKey: first)
+        let result = fields(value(try await browser.execute(readA, binding: browser.prepare(readA))))
+        precondition(string(result["tab_id"]) == a.uuidString && string(result["text"]).contains("Local test page"))
+        precondition(browser.activeSession == second && browser.selectedID == b)
+        let cross = WorkspaceBrowserCommand(id: UUID(), name: "browser_snapshot", arguments: .object(["tab_id": .string(b.uuidString)]), scope: scope, origins: ["*"], sessionKey: first)
+        do { _ = try await browser.prepare(cross); preconditionFailure("read another agent session") } catch WorkspaceBrowserError.denied {}
+        let openA = WorkspaceBrowserCommand(id: UUID(), name: "browser_open", arguments: .object(["url": .string(origin + "/page")]), scope: scope, origins: ["*"], sessionKey: first)
+        _ = try await browser.execute(openA, binding: browser.prepare(openA))
+        precondition(browser.activeSession == second && browser.selectedID == b && browser.liveTabCount <= 2)
+        let list = WorkspaceBrowserCommand(id: UUID(), name: "browser_tabs", arguments: .object([:]), scope: scope, origins: ["*"], sessionKey: second)
+        guard case .array(let tabs) = fields(value(try await browser.execute(list, binding: browser.prepare(list))))["tabs"] else { preconditionFailure("missing tabs") }
+        precondition(tabs.count == 1 && string(fields(tabs[0])["tab_id"]) == b.uuidString)
+        print("PASS: background agent reads/opens only its own session, does not select another agent's page, and shares the two-WebView budget")
+    }
     static func verify() async throws {
         for window in [760.0, 900, 1280, 1920, 2560] {
             let layout = MacBrowserSplitLayout(width: window)
             for requested in [-100.0, 300, 500, 2000, .infinity, .nan] {
                 let width = layout.browserWidth(requested)
-                precondition(width.isFinite && width >= 300 && width <= 1000)
+                precondition(width.isFinite && width >= 300 && width <= window - MacBrowserSplitLayout.minimumChatWidth - MacBrowserSplitLayout.dividerWidth)
                 precondition(window - width - MacBrowserSplitLayout.dividerWidth >= MacBrowserSplitLayout.minimumChatWidth)
             }
         }
-        print("PASS: browser divider bounds preserve at least 420 points for the chat across window sizes and extreme saved widths")
+        print("PASS: browser divider bounds preserve at least 336 points for the chat across window sizes and extreme saved widths")
         guard CommandLine.arguments.count == 2 else { throw WorkspaceBrowserError.invalidURL }
         let origin = "http://127.0.0.1:" + CommandLine.arguments[1]
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("BlotBrowserVerification-" + UUID().uuidString)
@@ -122,6 +147,10 @@ struct VerifyBrowserExecution {
         try await wait { browser.downloads.contains { $0.state == "completed" } }
         let downloaded = try String(contentsOf: downloadURL, encoding: .utf8)
         precondition(downloaded == "Blot browser download verified\n")
+        precondition(!browser.sessionDownloads.isEmpty)
+        browser.activateSession(.agent(UUID()))
+        precondition(browser.sessionDownloads.isEmpty)
+        browser.activateSession(.workspace)
         print("PASS: actual WKDownload writes only to the chosen destination and remains in the app download list")
 
         let slow = command("browser_open", ["url": .string(origin + "/slow")])
@@ -153,6 +182,7 @@ struct VerifyBrowserExecution {
         try pinned.select(pinned.tabs.first!.id)
         do { _ = try await pinned.execute(active, binding: selectedBinding); preconditionFailure("switched tab reused old binding") } catch WorkspaceBrowserError.stalePage {}
         print("PASS: selected manual tab is readable with the allowed origin; writes, other origins and stale selection are denied")
+        try await verifySessions(origin: origin)
         try await BrowserModelVerification.run(origin: origin, directory: directory)
         try await BrowserModelVerification.selectedTab(origin: origin, directory: directory, group: false)
         try await BrowserModelVerification.selectedTab(origin: origin, directory: directory, group: true)

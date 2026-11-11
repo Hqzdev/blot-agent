@@ -201,7 +201,21 @@ private struct TestWorkspace {
 }
 
 #if os(macOS)
-@Test func fixedAppleScriptsCompileWithoutExecutingOrRequestingAccess() async throws { try await AppleAutomation().compileScripts() }
+@MainActor @Test func automationDoesNotLaunchClosedAppsEvenWhenAccessIsRequested() async throws {
+    let automation = AppleAutomation(running: { _ in false })
+    #expect(throws: AppleIntegrationError.self) { try automation.requireRunning(.shortcuts) }
+    for plugin in [ApplePluginID.mail, .notes] {
+        #expect(await automation.authorized(plugin) == false)
+        #expect(await automation.authorized(plugin, request: true) == false)
+        await #expect(throws: AppleIntegrationError.self) { _ = try await automation.resources(plugin) }
+    }
+    #expect(throws: AppleIntegrationError.self) { try automation.compileScripts() }
+}
+@MainActor @Test func fixedAppleScriptsCompileOnlyIfBothAppsAreAlreadyRunning() throws {
+    let automation = AppleAutomation()
+    guard automation.isRunning(.notes), automation.isRunning(.mail) else { return }
+    try automation.compileScripts()
+}
 #endif
 
 @Test func legacyConnectionsDecodeWithoutAppleFields() throws {

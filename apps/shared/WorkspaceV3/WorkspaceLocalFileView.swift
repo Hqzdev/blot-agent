@@ -6,6 +6,7 @@ import QuickLook
 import SwiftUI
 
 struct WorkspaceLocalFileView: View {
+    var artifactID: UUID? = nil
     @Environment(WorkspaceStore.self) private var store
     @State private var url: URL?
     @State private var preview: URL?
@@ -13,13 +14,17 @@ struct WorkspaceLocalFileView: View {
     @State private var page = 1
     @State private var failure: String?
     private var ru: Bool { store.language == "ru" }
+    private var file: BlotV3.Artifact? {
+        if let artifactID { return store.snapshot.artifacts.first { $0.metadata.id == artifactID } }
+        return store.selectedFile
+    }
     private struct ReadRequest: Hashable { let id: UUID?; let page: Int }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
                 #if os(macOS)
-                Text(store.selectedFile?.name ?? store.t("Files")).font(.title2).textSelection(.enabled)
+                Text(file?.name ?? store.t("Files")).font(.title2).textSelection(.enabled)
                 #endif
                 if let url {
                     HStack {
@@ -27,11 +32,9 @@ struct WorkspaceLocalFileView: View {
                         ShareLink(item: url) { Text(store.t("Share")) }
                     }
                 }
-                if let file = store.selectedFile, file.mediaType == "application/pdf" || file.mediaType.hasPrefix("image/") {
-                    Stepper(value: $page, in: 1...(read?.totalPages ?? 1_000)) {
-                        Text(ru ? "Страница \(page)" : "Page \(page)")
-                        if let read { Text(ru ? "Всего: \(read.totalPages)" : "Total: \(read.totalPages)").font(.caption).foregroundStyle(.secondary) }
-                    }
+                if let file = file, file.mediaType == "application/pdf" || file.mediaType.hasPrefix("image/") {
+                    WorkspaceCounter(title: ru ? "Страница" : "Page", value: $page, range: 1...(read?.totalPages ?? 1_000))
+                    if let read { Text(ru ? "Всего: \(read.totalPages)" : "Total: \(read.totalPages)").font(.caption).foregroundStyle(.secondary) }
                 }
                 if let read {
                     if read.usedOCR { Label(ru ? "Текст распознан на устройстве" : "Text recognized on this device", systemImage: "text.viewfinder").font(.caption).foregroundStyle(.secondary) }
@@ -49,10 +52,10 @@ struct WorkspaceLocalFileView: View {
             #endif
         }
         .quickLookPreview($preview)
-        .onChange(of: store.selectedFile?.metadata.id) { _, _ in page = 1; preview = nil }
-        .task(id: ReadRequest(id: store.selectedFile?.metadata.id, page: page)) {
+        .onChange(of: file?.metadata.id) { _, _ in page = 1; preview = nil }
+        .task(id: ReadRequest(id: file?.metadata.id, page: page)) {
             read = nil; failure = nil; url = nil
-            guard let id = store.selectedFile?.metadata.id else { failure = store.t("File is unavailable"); return }
+            guard let id = file?.metadata.id else { failure = store.t("File is unavailable"); return }
             do {
                 let localURL = try await store.localFileURL(id)
                 try _Concurrency.Task.checkCancellation()
