@@ -53,6 +53,7 @@ private struct WorkspaceSolidButtonStyle: ButtonStyle {
             .overlay(Capsule().strokeBorder(kind == .destructive ? Color.red : .clear))
             .opacity(enabled ? (configuration.isPressed ? 0.7 : 1) : 0.4)
             .contentShape(Capsule())
+            .blotHover(in: Capsule(), color: kind == .primary ? BlotColor.onInverse.opacity(0.1) : BlotColor.hover)
             .modifier(BlotPressFeedback(pressed: enabled && configuration.isPressed))
         #endif
     }
@@ -77,6 +78,7 @@ public struct WorkspaceRowButtonStyle: ButtonStyle {
             .modifier(BlotPressFeedback(pressed: enabled && configuration.isPressed, scale: 0.99))
         #else
         configuration.label
+            .blotHover(in: RoundedRectangle(cornerRadius: 14))
             .opacity(enabled ? (configuration.isPressed ? 0.6 : 1) : 0.4)
             .modifier(BlotPressFeedback(pressed: enabled && configuration.isPressed, scale: 0.99))
         #endif

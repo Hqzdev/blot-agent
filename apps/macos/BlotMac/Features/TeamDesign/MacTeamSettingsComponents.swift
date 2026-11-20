@@ -79,7 +79,6 @@ struct MacTeamSettingsNavigationRow: View {
     let pane: MacTeamSettingsPane
     let selected: Bool
     let action: () -> Void
-    @State private var hovered = false
     @FocusState private var focused: Bool
     var body: some View {
         Button(action: action) {
@@ -89,14 +88,13 @@ struct MacTeamSettingsNavigationRow: View {
                 Spacer(minLength: 0)
             }.padding(.horizontal, 10).padding(.vertical, 7)
                 .frame(maxWidth: .infinity, minHeight: 34)
-                .background(WorkspaceStyle.ink.opacity(selected ? 0.08 : hovered ? 0.035 : 0),
+                .background(WorkspaceStyle.ink.opacity(selected ? 0.08 : 0),
                             in: RoundedRectangle(cornerRadius: 9))
                 .contentShape(RoundedRectangle(cornerRadius: 9))
         }
-        .buttonStyle(BlotPlainButtonStyle()).focused($focused).focusEffectDisabled()
+        .buttonStyle(BlotPlainButtonStyle(hoverIn: RoundedRectangle(cornerRadius: 9))).focused($focused).focusEffectDisabled()
         .overlay(RoundedRectangle(cornerRadius: 9)
             .strokeBorder(WorkspaceStyle.ink.opacity(focused ? 0.4 : 0)))
-        .onHover { hovered = $0 }.kAnimation(KMotion.quick, value: hovered)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
     }
 }

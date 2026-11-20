@@ -12,7 +12,6 @@ struct MacTeamNavigationButton<Label: View>: View {
     var selected = false
     let action: () -> Void
     @ViewBuilder let label: Label
-    @State private var hovered = false
     @FocusState private var focused: Bool
     @Environment(\.macTeamPressState) private var pressState
 
@@ -26,19 +25,17 @@ struct MacTeamNavigationButton<Label: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(
-                    WorkspaceStyle.ink.opacity(selected ? 0.08 : hovered ? 0.035 : 0),
+                    WorkspaceStyle.ink.opacity(selected ? 0.08 : 0),
                     in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(BlotPlainButtonStyle())
+        .buttonStyle(BlotPlainButtonStyle(hoverIn: RoundedRectangle(cornerRadius: 14)))
         .focused($focused).focusEffectDisabled()
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(WorkspaceStyle.ink.opacity(focused ? 0.45 : 0), lineWidth: 1)
         }
-        .onHover { hovered = $0 }
-        .kAnimation(KMotion.quick, value: hovered)
         .kAnimation(KMotion.standard, value: selected)
         .kAnimation(KMotion.quick, value: focused)
         .accessibilityAddTraits(selected ? [.isSelected] : [])

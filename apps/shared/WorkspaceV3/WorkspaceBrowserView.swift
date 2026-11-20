@@ -105,8 +105,9 @@ struct WorkspaceBrowserView: View {
                         Button { work { try controller.select(tab.id) } } label: {
                             Text((tab.unsaved ? "• " : "") + tab.title).lineLimit(1).frame(maxWidth: 160)
                         }.buttonStyle(.plain)
-                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
+                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2).blotHover(in: Circle()) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
                     }.padding(.horizontal, 10).padding(.vertical, 7).background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 8))
+                        .blotHover(in: RoundedRectangle(cornerRadius: 8))
                 }
             }.padding(.horizontal, 10)
         }.scrollIndicators(.hidden)
@@ -146,7 +147,7 @@ struct WorkspaceBrowserView: View {
         catch { controller.error = error.localizedDescription }
     }
     private func button(_ image: String, _ title: String, disabled: Bool = false, action: @escaping () throws -> Void) -> some View {
-        Button { work(action) } label: { Image(systemName: image).frame(width: 22, height: 24) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
+        Button { work(action) } label: { Image(systemName: image).frame(width: 22, height: 24).blotHover(in: Capsule()) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
     }
     private func openSystemAuthentication() {
         guard let url = controller.selectedTab?.authenticationURL, WorkspaceBrowserURL.isRestrictedAuthentication(url) else { return }
