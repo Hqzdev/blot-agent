@@ -20,7 +20,6 @@ struct MacTeamMarketplaceContent: View {
     var addPlugin: (() -> Void)?
     var topInset: CGFloat = 64
     var pluginActionTitle = "Подключить"
-    var subtitle = "Подключите ваши приложения или пригласите готового специалиста."
     @State private var search = ""
     @State private var category = "Все"
     private var filteredPlugins: [MacTeamPlugin] {
@@ -41,9 +40,7 @@ struct MacTeamMarketplaceContent: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 25) {
                 HStack(alignment: .top) {
-                    MacTeamSectionHeading(
-                        title: "Больше возможностей для команды",
-                        subtitle: subtitle)
+                    MacTeamSectionHeading(title: "Приложения")
                     if let addPlugin {
                         Button(action: addPlugin) {
                             BlotLabel("Добавить плагин", symbol: "plus", size: BlotIconSize.control)
