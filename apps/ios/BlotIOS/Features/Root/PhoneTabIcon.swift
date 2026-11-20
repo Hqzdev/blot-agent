@@ -63,25 +63,16 @@ struct PhoneTabIcon: View {
         ZStack {
             switch kind {
             case .chats:
-                PhoneChatIconBubble(rear: true).stroke(style: stroke)
-                    .rotationEffect(.degrees(-frame.tilt), anchor: .init(x: 0.65, y: 0.65))
-                    .offset(x: -frame.travel * 1.2, y: frame.travel * 1.6)
-                PhoneChatIconBubble(rear: false).stroke(style: stroke)
-                    .rotationEffect(.degrees(frame.tilt), anchor: .init(x: 0.4, y: 0.4))
-                    .offset(x: frame.travel * 1.2, y: -frame.travel * 1.6)
+                BlotIcon(.chats, size: 24)
+                    .rotationEffect(.degrees(frame.tilt))
+                    .offset(y: frame.travel)
             case .calendar:
                 BlotIcon(symbol: "calendar", size: 24)
                 calendarPage(turn: frame.page)
             case .overview:
-                ForEach(0..<4, id: \.self) { index in
-                    let x: CGFloat = index % 2 == 0 ? 1 : -1
-                    let y: CGFloat = index < 2 ? 1 : -1
-                    RoundedRectangle(cornerRadius: 2).stroke(style: stroke)
-                        .frame(width: 7, height: 7)
-                        .rotationEffect(.degrees(frame.tilt * Double(x * y) * 0.7))
-                        .position(x: x > 0 ? 6.5 : 17.5, y: y > 0 ? 6.5 : 17.5)
-                        .offset(x: frame.travel * 2 * x, y: frame.travel * 2 * y)
-                }
+                BlotIcon(.grid, size: 24)
+                    .scaleEffect(1 + frame.travel * 0.05)
+                    .rotationEffect(.degrees(frame.tilt))
             case .settings:
                 BlotIcon(.settings, size: 24).rotationEffect(.degrees(frame.rotation))
             }
@@ -91,8 +82,6 @@ struct PhoneTabIcon: View {
         .scaleEffect(size / 24)
         .frame(width: size, height: size)
     }
-
-    private var stroke: StrokeStyle { StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round) }
 
     private func calendarPage(turn: Double) -> some View {
         let phase = turn.truncatingRemainder(dividingBy: 1)
@@ -108,34 +97,5 @@ struct PhoneTabIcon: View {
         .rotation3DEffect(.degrees(-180 * phase), axis: (x: 1, y: 0, z: 0), anchor: .top, perspective: 0.35)
         .opacity(opacity)
         .position(x: 12, y: 15.5)
-    }
-}
-
-private nonisolated struct PhoneChatIconBubble: Shape {
-    let rear: Bool
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        if rear {
-            path.move(to: .init(x: 18, y: 8))
-            path.addLine(to: .init(x: 19, y: 8))
-            path.addCurve(to: .init(x: 22, y: 11), control1: .init(x: 20.66, y: 8), control2: .init(x: 22, y: 9.34))
-            path.addLine(to: .init(x: 22, y: 21))
-            path.addLine(to: .init(x: 17, y: 18))
-            path.addLine(to: .init(x: 12, y: 18))
-            path.addCurve(to: .init(x: 9, y: 15), control1: .init(x: 10.34, y: 18), control2: .init(x: 9, y: 16.66))
-        } else {
-            path.move(to: .init(x: 5, y: 3))
-            path.addLine(to: .init(x: 15, y: 3))
-            path.addCurve(to: .init(x: 18, y: 6), control1: .init(x: 16.66, y: 3), control2: .init(x: 18, y: 4.34))
-            path.addLine(to: .init(x: 18, y: 12))
-            path.addCurve(to: .init(x: 15, y: 15), control1: .init(x: 18, y: 13.66), control2: .init(x: 16.66, y: 15))
-            path.addLine(to: .init(x: 8, y: 15))
-            path.addLine(to: .init(x: 3, y: 18))
-            path.addLine(to: .init(x: 3, y: 6))
-            path.addCurve(to: .init(x: 5, y: 3), control1: .init(x: 3, y: 4.6), control2: .init(x: 3.6, y: 3.4))
-            path.closeSubpath()
-        }
-        return path.applying(.init(scaleX: rect.width / 24, y: rect.height / 24))
     }
 }

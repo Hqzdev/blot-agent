@@ -24,7 +24,7 @@ struct WorkspaceSettingsView: View {
             #endif
             if !store.unresolvedConflicts.isEmpty {
                 Button { store.conflictsVisible = true } label: {
-                    Label(store.t("Review conflicting changes"), systemImage: "arrow.triangle.branch")
+                    BlotLabel(store.t("Review conflicting changes"), symbol: "arrow.triangle.branch", size: 16)
                 }.buttonStyle(WorkspaceButtonStyle(.secondary))
             }
             content

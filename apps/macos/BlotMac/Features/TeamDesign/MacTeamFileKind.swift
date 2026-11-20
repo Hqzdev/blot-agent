@@ -1,3 +1,4 @@
+import BlotDesign
 import Foundation
 
 nonisolated enum MacTeamFileKind {
@@ -20,12 +21,12 @@ nonisolated enum MacTeamFileKind {
         }
     }
 
-    var assetName: String {
+    var glyph: BlotGlyph {
         switch self {
-        case .document: "FileGoogleDocs"
-        case .spreadsheet: "FileGoogleSheets"
-        case .presentation: "FileGoogleSlides"
-        case .code: "FileVSCode"
+        case .document: .document
+        case .spreadsheet: .spreadsheet
+        case .presentation: .presentation
+        case .code: .code
         }
     }
 

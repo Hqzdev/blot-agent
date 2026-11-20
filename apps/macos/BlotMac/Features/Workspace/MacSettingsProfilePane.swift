@@ -27,7 +27,7 @@ struct MacSettingsProfilePane: View {
                 Text("Ваша команда").font(.system(size: 14, weight: .medium))
                 if store.snapshot.agents.isEmpty {
                     VStack(spacing: 14) {
-                        Image(systemName: "person.2").font(.system(size: 30)).foregroundStyle(.secondary)
+                        BlotIcon(symbol: "person.2", size: 30).foregroundStyle(.secondary)
                         Text("Добавьте первого специалиста в команду").foregroundStyle(.secondary)
                         Button("Создать агента") { store.settingsRoute = nil; store.navigate(.createAgent) }
                             .buttonStyle(MacSettingsActionStyle())

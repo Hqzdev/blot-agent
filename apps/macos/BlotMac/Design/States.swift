@@ -102,7 +102,7 @@ struct StatusBadge: View {
 
     var body: some View {
         HStack(spacing: 5) {
-            Image(systemName: tone.icon).font(.system(size: 11, weight: .semibold))
+            BlotIcon(symbol: tone.icon, size: 11)
                 .foregroundStyle(tone.color)
                 .opacity(tone == .active && pulse ? 0.35 : 1)
             Text(label).font(KFont.caption(tone == .attention || tone == .failure ? .semibold : .medium))

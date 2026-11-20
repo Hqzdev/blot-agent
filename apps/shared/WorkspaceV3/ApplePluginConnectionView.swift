@@ -60,7 +60,7 @@ struct ApplePluginConnectionView: View {
                 Button(action: activate) {
                     HStack(spacing: 8) {
                         if busy { ProgressView().controlSize(.small) }
-                        else if connected { Image(systemName: "checkmark") }
+                        else if connected { BlotIcon(symbol: "checkmark", size: 16) }
                         WorkspaceLocalizedText(busy ? "Подождите…" : connected ? "Подключено" : "Подключить")
                     }.frame(minWidth: 150)
                 }

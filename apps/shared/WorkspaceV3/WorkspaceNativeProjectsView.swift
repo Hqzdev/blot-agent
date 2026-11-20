@@ -137,7 +137,7 @@ struct WorkspaceNativeProjectButton: View {
     @State private var visible = false
     @Environment(WorkspaceStore.self) private var store
     var body: some View {
-        Button { visible = true } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
+        Button { visible = true } label: { BlotLabel(store.language == "ru" ? "Проект и терминал" : "Project and terminal", symbol: "terminal", size: 16) }
             .font(.caption).disabled(store.nativeCommands == nil)
             .sheet(isPresented: $visible) {
                 NavigationStack {

@@ -188,7 +188,7 @@ private struct MacLiveTeamMessage: View {
                     ForEach(message.artifactIds, id: \.self) { id in
                         if let artifact = store.chatContent.artifacts[id] {
                             Button { store.selectedRecordID = id; store.navigate(.file) } label: {
-                                Label(artifact.name, systemImage: "doc.text").frame(maxWidth: .infinity, alignment: .leading)
+                                BlotLabel(artifact.name, symbol: "doc.text", size: 16).frame(maxWidth: .infinity, alignment: .leading)
                             }.buttonStyle(.plain)
                         }
                     }

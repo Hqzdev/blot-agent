@@ -1,5 +1,6 @@
 import BlotDomain
 import BlotWorkspace
+import BlotDesign
 import SwiftUI
 
 private struct SkillSelection: Identifiable {
@@ -23,7 +24,7 @@ struct WorkspaceSkillsView: View {
             HStack {
                 Text(ru ? "Навыки" : "Skills").font(.largeTitle.bold())
                 Spacer()
-                Button { editor = .init(skill: nil) } label: { Label(ru ? "Создать" : "Create", systemImage: "plus") }
+                Button { editor = .init(skill: nil) } label: { BlotLabel(ru ? "Создать" : "Create", symbol: "plus", size: 16) }
                     .disabled(store.skillCommands == nil)
             }
             TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(.roundedBorder)
@@ -31,7 +32,7 @@ struct WorkspaceSkillsView: View {
             if skills.isEmpty { Text(ru ? "Здесь появятся сохранённые инструкции с параметрами для ваших агентов." : "Saved instructions with parameters for your agents will appear here.").foregroundStyle(.secondary) }
             ForEach(skills, id: \.metadata.id) { skill in
                 WorkspaceCard {
-                    Label(skill.name, systemImage: "shippingbox").font(.headline).foregroundStyle(.purple)
+                    BlotLabel(skill.name, symbol: "shippingbox", size: 16).font(.headline).foregroundStyle(.purple)
                     if let revision = store.snapshot.skillRevisions?.first(where: { $0.metadata.id == skill.activeRevisionId }) {
                         Text(revision.instructions).lineLimit(3).foregroundStyle(.secondary)
                     }
@@ -79,7 +80,7 @@ struct WorkspaceSkillEditor: View {
                         HStack {
                             TextField("parameter", text: Binding(get: { parameters[index].name }, set: { parameters[index] = .init(name: $0, required: parameters[index].required) }))
                             Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
-                            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
+                            Button(role: .destructive) { parameters.remove(at: index) } label: { BlotIcon(symbol: "minus.circle", size: 16) }.buttonStyle(.borderless)
                         }
                     }
                     Button(ru ? "Добавить параметр" : "Add parameter") { parameters.append(.init(name: "")) }.disabled(parameters.count >= 32)

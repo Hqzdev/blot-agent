@@ -33,7 +33,7 @@ struct MacAgentCreationView: View {
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
             }.frame(height: 96).animation(.easeInOut(duration: 0.18), value: store.form.agent.shape + store.form.agent.color)
             Button(action: randomizeIdentity) {
-                Label(store.language == "ru" ? "Случайный вариант" : "Randomize", systemImage: "shuffle")
+                BlotLabel(store.language == "ru" ? "Случайный вариант" : "Randomize", symbol: "shuffle", size: 16)
                     .font(MacWorkspaceStyle.caption)
             }
             .buttonStyle(.bordered)

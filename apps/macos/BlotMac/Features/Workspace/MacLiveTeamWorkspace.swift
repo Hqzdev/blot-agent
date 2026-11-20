@@ -130,7 +130,7 @@ struct MacLiveTeamWorkspace: View {
                             }.frame(width: 36, height: 36)
                         }
                     Spacer()
-                    Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
+                    Button { store.showBrowser() } label: { BlotIcon(symbol: "globe", size: 16).frame(width: 36, height: 36) }
                         .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
                         .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
                     if isConversation {
@@ -191,7 +191,7 @@ private struct MacLiveTeamSidebar: View {
                     }
                     if store.snapshot.agents.isEmpty {
                         MacTeamNavigationButton(action: { store.navigate(.createAgent) }) {
-                            Label("Создать своего агента", systemImage: "plus").font(.system(size: 12))
+                            BlotLabel("Создать своего агента", symbol: "plus", size: 12).font(.system(size: 12))
                         }
                     }
                     if !groups.isEmpty {
@@ -212,7 +212,7 @@ private struct MacLiveTeamSidebar: View {
                 MacTeamNavigationButton(selected: store.route == .marketplace, action: {
                     if store.route != .marketplace { store.navigate(.marketplace) }
                 }) {
-                    Label("Приложения и шаблоны", systemImage: "square.grid.2x2").font(.system(size: 12))
+                    BlotLabel("Приложения и шаблоны", symbol: "square.grid.2x2", size: 12).font(.system(size: 12))
                 }
                 Divider()
                 MacTeamNavigationButton(action: { store.navigate(.settings) }) {
@@ -250,7 +250,7 @@ struct MacLiveTeamGroupAvatar: View {
     var body: some View {
         ZStack {
             if agents.isEmpty {
-                Image(systemName: "person.2.fill").font(.system(size: size * 0.4)).foregroundStyle(.secondary)
+                BlotIcon(symbol: "person.2.fill", size: size * 0.4).foregroundStyle(.secondary)
             } else if agents.count == 1, let agent = agents.first {
                 WorkspaceAvatarView(agent: agent, size: size)
             } else {

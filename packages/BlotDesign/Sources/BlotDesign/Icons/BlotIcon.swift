@@ -23,8 +23,12 @@ public struct BlotIcon: View {
         self.size = size
     }
 
-    public var body: some View {
+    public static func image(_ glyph: BlotGlyph) -> Image {
         Image(glyph.assetName, bundle: .module).renderingMode(.template)
+    }
+
+    public var body: some View {
+        Self.image(glyph)
             .resizable().scaledToFit().frame(width: size * scale, height: size * scale)
             .accessibilityHidden(true)
     }
