@@ -19,6 +19,9 @@ struct WorkspaceBrowserView: View {
     @State private var preview: URL?
     @State private var pendingNavigation: (() throws -> Void)?
     @State private var navigationTab: UUID?
+    @State private var showsFiles = false
+    @State private var fileID: UUID?
+
     private var ru: Bool { store.language == "ru" }
     private func text(_ ru: String, _ en: String) -> String { self.ru ? ru : en }
     var body: some View {
@@ -36,7 +39,9 @@ struct WorkspaceBrowserView: View {
                     }
                 }.padding(12).background(.regularMaterial)
             }
-            if let tab = controller.selectedTab {
+            if showsFiles {
+                files
+            } else if let tab = controller.selectedTab {
                 if tab.loading { ProgressView(value: tab.progress).progressViewStyle(.linear) }
                 if let error = tab.error { Text(error).font(.caption).foregroundStyle(.secondary).padding(8).frame(maxWidth: .infinity, alignment: .leading) }
                 if tab.authenticationURL != nil {
@@ -52,8 +57,14 @@ struct WorkspaceBrowserView: View {
         }
         .background(WorkspaceStyle.canvas)
         .task { if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } } }
-        .onChange(of: controller.selectedID, initial: true) { _, _ in address = controller.selectedTab?.url?.absoluteString ?? "" }
-        .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
+        .onChange(of: controller.selectedID, initial: true) { _, _ in
+            address = controller.selectedTab?.url?.absoluteString ?? ""
+            showsFiles = false
+        }
+        .onChange(of: controller.selectedTab?.url) { _, url in
+            address = url?.absoluteString ?? ""
+            if url != nil { showsFiles = false }
+        }
         .sheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
         .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
             Button(text("Покинуть без сохранения", "Leave without saving"), role: .destructive) {
@@ -91,18 +102,24 @@ struct WorkspaceBrowserView: View {
                 Button(text("Доступ агентов", "Agent access")) { controller.presented = false; store.navigate(.browserSettings) }
                 if compact { Button(text("Развернуть", "Expand")) { controller.presented = false; store.navigate(.browser) } }
             } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
-            button("xmark", text("Вернуться к чату", "Return to chat")) {
-                controller.presented = false
-                if store.route == .browser { store.back() }
+            if compact {
+                button(showsFiles ? "globe" : "folder", showsFiles ? text("Браузер", "Browser") : store.t("Files")) { showsFiles.toggle() }
+            } else {
+                button("xmark", text("Вернуться к чату", "Return to chat")) {
+                    controller.presented = false
+                    if store.route == .browser { store.back() }
+                }
             }
-        }.padding(10)
+        }
+        .padding(10)
+        .padding(.trailing, compact ? 52 : 0)
     }
     private var tabs: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 6) {
                 ForEach(controller.tabs) { tab in
                     HStack(spacing: 6) {
-                        Button { work { try controller.select(tab.id) } } label: {
+                        Button { work { try controller.select(tab.id); showsFiles = false } } label: {
                             Text((tab.unsaved ? "• " : "") + tab.title).lineLimit(1).frame(maxWidth: 160)
                         }.buttonStyle(.plain)
                         Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
@@ -111,6 +128,19 @@ struct WorkspaceBrowserView: View {
             }.padding(.horizontal, 10)
         }.scrollIndicators(.hidden)
     }
+    @ViewBuilder private var files: some View {
+        if let fileID {
+            Button { self.fileID = nil } label: { Label(store.t("Files"), systemImage: "chevron.left") }
+                .buttonStyle(.plain).padding(12).frame(maxWidth: .infinity, alignment: .leading)
+            WorkspaceLocalFileView(artifactID: fileID)
+        } else {
+            ScrollView {
+                WorkspaceTeamView(route: .files, openFile: { fileID = $0 }).padding(18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
     private var empty: some View {
         ContentUnavailableView(text("Браузер Blot", "Blot browser"), systemImage: "globe", description: Text(text("Введите адрес сайта. Страница откроется внутри приложения.", "Enter a website address to open it inside the app.")))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -138,6 +168,7 @@ struct WorkspaceBrowserView: View {
         work {
             if let id = controller.selectedID { try controller.navigate(address, tabID: id) }
             else { _ = try controller.open(address) }
+            showsFiles = false
         }
     }
     private func work(_ action: @escaping () throws -> Void) {

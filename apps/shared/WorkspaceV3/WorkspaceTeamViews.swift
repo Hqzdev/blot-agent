@@ -5,6 +5,7 @@ import SwiftUI
 
 struct WorkspaceTeamView: View {
     let route: WorkspaceRoute
+    var openFile: ((UUID) -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
     var body: some View {
         switch route {
@@ -124,7 +125,10 @@ struct WorkspaceTeamView: View {
             WorkspaceFilesImportButton()
             WorkspaceField(title: "Search by name", text: $store.form.search.query)
             ForEach(store.snapshot.artifacts.filter { store.form.search.query.isEmpty || $0.name.localizedCaseInsensitiveContains(store.form.search.query) }, id: \.metadata.id) { file in
-                Button { store.selectedRecordID = file.metadata.id; store.navigate(.file) } label: {
+                Button {
+                    if let openFile { openFile(file.metadata.id) }
+                    else { store.selectedRecordID = file.metadata.id; store.navigate(.file) }
+                } label: {
                     HStack { BlotIcon(symbol: "doc"); Text(file.name); Spacer(); BlotIcon(symbol: "chevron.right") }
                 }.buttonStyle(WorkspaceRowButtonStyle())
                 Divider()

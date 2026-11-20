@@ -1,19 +1,14 @@
 import SwiftUI
 
-/// Keeps the conversation usable while retaining access to both auxiliary panels.
+/// Keeps the conversation usable as the chat list resizes.
 struct MacWorkspaceLayout {
     static let minimumWidth: CGFloat = 640
     static let minimumHeight: CGFloat = 480
     let size: CGSize
 
     var sidebarWidth: CGFloat { min(252, max(220, size.width * 0.22)) }
-    var inspectorWidth: CGFloat { min(306, max(276, size.width * 0.24)) }
     var supportsSidebar: Bool { size.width >= 900 }
     var popoverHeight: CGFloat { max(240, min(580, size.height - 100)) }
-
-    func supportsInspector(sidebarVisible: Bool) -> Bool {
-        size.width - (sidebarVisible ? sidebarWidth : 0) - inspectorWidth >= 520
-    }
 }
 
 private struct MacCompactSettingsKey: EnvironmentKey {

@@ -7,11 +7,11 @@ import SwiftUI
 struct MacLiveTeamWorkspace: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.blotReduceMotion) private var reduceMotion
-    @State private var inspectorVisible = true
     @State private var settingsSearchFocusRequest = 0
     @State private var creating = false
     @State private var sidebarPopover = false
-    @State private var inspectorPopover = false
+    private let toolbarInset: CGFloat = 18
+    private let computerTravel: CGFloat = 48
 
     private var isConversation: Bool { [.home, .newChat, .chat].contains(store.route) }
     private var agent: BlotV3.AgentProfile? {
@@ -51,29 +51,44 @@ struct MacLiveTeamWorkspace: View {
     private func workspace(layout: MacWorkspaceLayout) -> some View {
         let showsBrowser = store.browser?.presented == true && isConversation
         let showsSidebar = layout.supportsSidebar && store.sidebarVisible && !showsBrowser
-        let showsInspector = inspectorVisible && isConversation && !showsBrowser && layout.supportsInspector(sidebarVisible: showsSidebar)
         return HStack(spacing: 0) {
             if showsSidebar {
                 MacLiveTeamSidebar().frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.leading))
             }
-            if showsBrowser, let browser = store.browser {
-                MacBrowserSplitView {
-                    conversation(layout: layout, showsSidebar: showsSidebar)
-                } browser: {
-                    WorkspaceBrowserView(controller: browser, compact: true)
+            MacBrowserSplitView(isPresented: showsBrowser) {
+                conversation(layout: layout, showsSidebar: showsSidebar)
+            } browser: {
+                if let browser = store.browser { WorkspaceBrowserView(controller: browser, compact: true) }
+            }
+            .overlay(alignment: .topTrailing) {
+                if isConversation {
+                    computerButton(panelOpen: showsBrowser)
+                        .padding(.trailing, toolbarInset + (showsBrowser ? 0 : computerTravel))
+                        .padding(.top, showsBrowser ? 5 : 14)
                 }
-            } else { conversation(layout: layout, showsSidebar: showsSidebar) }
-            if showsInspector {
-                MacLiveTeamInspector().frame(width: layout.inspectorWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.trailing))
             }
         }
+        .kAnimation(KMotion.panel, value: showsBrowser)
         .kAnimation(KMotion.sidebar, value: showsSidebar)
-        .kAnimation(KMotion.sidebar, value: showsInspector)
         .kAnimation(KMotion.panel, value: store.selectedConversationID)
-        .onChange(of: store.route) { _, _ in sidebarPopover = false; inspectorPopover = false }
-        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false; inspectorPopover = false }
+        .onChange(of: store.route) { _, _ in sidebarPopover = false }
+        .onChange(of: store.selectedConversationID) { _, _ in sidebarPopover = false }
         .onChange(of: layout.supportsSidebar) { _, _ in sidebarPopover = false }
-        .onChange(of: showsInspector) { _, _ in inspectorPopover = false }
+    }
+
+    private func computerButton(panelOpen: Bool) -> some View {
+        let russian = store.language == "ru"
+        let title = panelOpen ? (russian ? "Закрыть компьютер" : "Close computer") : (russian ? "Открыть компьютер" : "Open computer")
+        return Button {
+            if panelOpen { store.browser?.presented = false }
+            else { store.showBrowser() }
+        } label: {
+            BlotIcon(symbol: "desktopcomputer", size: 18).frame(width: 36, height: 36)
+        }
+        .buttonStyle(.plain)
+        .glassEffect(.regular.interactive(), in: .circle)
+        .accessibilityLabel(title).help(title)
+        .accessibilityIdentifier("workspace.computer.toggle")
     }
 
     private func conversation(layout: MacWorkspaceLayout, showsSidebar: Bool) -> some View {
@@ -99,7 +114,7 @@ struct MacLiveTeamWorkspace: View {
                             .padding(.horizontal, 16).padding(.vertical, 6)
                             .glassEffect(.regular, in: .capsule)
                     }
-                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, 64)
+                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, isConversation && store.browser?.presented != true ? 110 : 64)
                 HStack(spacing: 6) {
                     if store.route == .marketplace {
                         headerButton(store.t("Back"), glyph: .chevronLeft) { store.back() }
@@ -130,17 +145,10 @@ struct MacLiveTeamWorkspace: View {
                             }.frame(width: 36, height: 36)
                         }
                     Spacer()
-                    Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
-                        .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
-                        .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
-                    if isConversation {
-                        headerButton("Панель агента", glyph: .inspector) {
-                            if layout.supportsInspector(sidebarVisible: showsSidebar) { inspectorVisible.toggle() }
-                            else { inspectorPopover.toggle() }
-                        }
-                        .popover(isPresented: $inspectorPopover, arrowEdge: .top) {
-                            MacLiveTeamInspector().frame(width: 306, height: layout.popoverHeight).environment(store)
-                        }
+                    if !isConversation {
+                        Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
+                            .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
+                            .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
                     }
                 }.padding(.leading, showsSidebar ? 18 : 108).padding(.trailing, 18)
             }.padding(.top, 14).frame(height: 64, alignment: .top)

@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Bounds both panes, including when the window shrinks after a drag.
 struct MacBrowserSplitLayout {
+    static let widthPreferenceKey = "blot.browser.panelWidth"
     static let minimumWidth: CGFloat = 760
     static let minimumChatWidth: CGFloat = 420
     static let dividerWidth: CGFloat = 8
@@ -14,8 +15,9 @@ struct MacBrowserSplitLayout {
 }
 
 struct MacBrowserSplitView<Chat: View, Browser: View>: View {
-    @AppStorage("blot.browser.panelWidth") private var savedWidth = 500.0
+    @AppStorage(MacBrowserSplitLayout.widthPreferenceKey) private var savedWidth = 500.0
     @State private var dragWidth: CGFloat?
+    var isPresented = true
     @ViewBuilder let chat: () -> Chat
     @ViewBuilder let browser: () -> Browser
 
@@ -25,21 +27,33 @@ struct MacBrowserSplitView<Chat: View, Browser: View>: View {
             let width = layout.browserWidth(dragWidth ?? savedWidth)
             HStack(spacing: 0) {
                 chat().frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
-                MacBrowserDivider(width: width) { requested, finished in
-                    let next = layout.browserWidth(requested)
-                    if finished { savedWidth = Double(next); dragWidth = nil }
-                    else { dragWidth = next }
-                }
-                    .frame(width: MacBrowserSplitLayout.dividerWidth)
-                    .overlay { Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 1).allowsHitTesting(false) }
-                    .accessibilityElement()
-                    .accessibilityLabel("Ширина браузера")
-                    .accessibilityValue("\(Int(width))")
-                    .accessibilityAdjustableAction { direction in
-                        savedWidth = Double(layout.browserWidth(width + (direction == .increment ? 40 : -40)))
+                // The outer frame animates while the page keeps its own width.
+                ZStack(alignment: .leading) {
+                    if isPresented {
+                        HStack(spacing: 0) {
+                            MacBrowserDivider(width: width) { requested, finished in
+                                let next = layout.browserWidth(requested)
+                                if finished { savedWidth = Double(next); dragWidth = nil }
+                                else { dragWidth = next }
+                            }
+                            .frame(width: MacBrowserSplitLayout.dividerWidth)
+                            .overlay { Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 1).allowsHitTesting(false) }
+                            .accessibilityElement()
+                            .accessibilityLabel("Ширина браузера")
+                            .accessibilityValue("\(Int(width))")
+                            .accessibilityAdjustableAction { direction in
+                                savedWidth = Double(layout.browserWidth(width + (direction == .increment ? 40 : -40)))
+                            }
+                            .accessibilityIdentifier("workspace.browser.resize")
+                            browser().frame(width: width)
+                        }
+                        .transition(.opacity)
                     }
-                    .accessibilityIdentifier("workspace.browser.resize")
-                browser().frame(width: width)
+                }
+                .frame(width: isPresented ? width + MacBrowserSplitLayout.dividerWidth : 0, alignment: .leading)
+                .clipped()
+                .allowsHitTesting(isPresented)
+                .accessibilityHidden(!isPresented)
             }
         }
     }
