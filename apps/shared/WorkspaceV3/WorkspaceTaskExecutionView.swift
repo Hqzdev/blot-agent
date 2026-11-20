@@ -50,7 +50,14 @@ struct WorkspaceTaskExecutionView: View {
                         Label(skill.name, systemImage: "shippingbox").foregroundStyle(.purple)
                         Text(revision.metadata.createdAt, format: .dateTime.day().month().hour().minute().second()).font(.caption).foregroundStyle(.secondary)
                     }
-                    Text(task.goal).font(.headline).textSelection(.enabled)
+                    if let title = operationTitle(for: task) {
+                        Text(title).font(.headline)
+                        DisclosureGroup(store.language == "ru" ? "Подробности" : "Details") {
+                            Text(task.goal).font(.caption).textSelection(.enabled)
+                        }
+                    } else {
+                        Text(task.goal).font(.headline).textSelection(.enabled)
+                    }
                     WorkspaceTaskStateLabel(state: task.state).font(.callout).foregroundStyle(.secondary)
                     let local = task.execution.executorDeviceId == store.snapshot.localDeviceID && (task.executionMode == .local_owned || task.executionMode == .delegated)
                     if !local, task.executionMode == .delegated {
@@ -77,6 +84,18 @@ struct WorkspaceTaskExecutionView: View {
             }
             WorkspaceFeedback()
         }.frame(maxWidth: 780, alignment: .leading).frame(maxWidth: .infinity)
+    }
+    private func operationTitle(for task: BlotV3.Task) -> String? {
+        let ru = store.language == "ru"
+        switch task.goal {
+        case "Файлы сессии · workspace_write_file": return ru ? "Сохранение файла" : "Save file"
+        case "drive_create":
+            guard store.snapshot.preparedActions?.contains(where: {
+                $0.execution.taskId == task.metadata.id && $0.toolId == task.goal
+            }) == true else { return nil }
+            return ru ? "Создание файла в Google Drive" : "Create file in Google Drive"
+        default: return nil
+        }
     }
     private func control(_ action: WorkspaceAction, task: BlotV3.Task) {
         store.selectedRecordID = task.metadata.id

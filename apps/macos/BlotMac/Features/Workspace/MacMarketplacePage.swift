@@ -41,8 +41,7 @@ struct MacMarketplacePage: View {
             } else {
                 MacTeamMarketplaceContent(plugins: plugins,
                     selectPlugin: { detail = .plugin($0) }, selectTemplate: { detail = .template($0) },
-                    topInset: 0, pluginActionTitle: "Подробнее",
-                    subtitle: "Готовые специалисты и приложения для вашей команды.")
+                    topInset: 0, pluginActionTitle: "Подробнее")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
