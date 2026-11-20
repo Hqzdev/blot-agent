@@ -159,33 +159,40 @@ private struct MacLiveTeamSidebar: View {
     @Environment(WorkspaceStore.self) private var store
     private var groups: [BlotV3.Conversation] {
         store.snapshot.conversations.filter { chat in
-            !chat.archived && chat.kind == .group
+            !chat.archived && !chat.pinned && chat.kind == .group
         }
     }
     var body: some View {
+        let pinnedChats = store.pinnedConversations
         VStack(spacing: 0) {
             if showsWindowSpace {
                 Color.clear.frame(height: 64).contentShape(Rectangle()).gesture(WindowDragGesture())
+            }
+            if !pinnedChats.isEmpty {
+                MacPinnedChats(chats: pinnedChats).padding(.bottom, 6)
             }
             ScrollView {
                 VStack(alignment: .leading, spacing: 5) {
                     heading("Команда")
                     ForEach(store.snapshot.agents, id: \.metadata.id) { agent in
-                        MacTeamNavigationButton(selected: store.currentConversation?.kind != .group && store.selectedAgentID == agent.metadata.id && store.route == .chat,
-                            action: { _Concurrency.Task { await store.openAgentChat(agent.metadata.id) } }) {
-                            HStack(spacing: 10) {
-                                WorkspaceAvatarView(agent: agent, size: 36)
-                                VStack(alignment: .leading, spacing: 5) {
-                                    Text(agent.name).font(.system(size: 12, weight: .medium))
-                                    Text(lastMessage(for: agent)).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                        let chat = latestChat(with: agent.metadata.id)
+                        if chat?.pinned != true {
+                            MacTeamNavigationButton(selected: chat?.metadata.id == store.selectedConversationID && chat != nil && store.route == .chat,
+                                action: { _Concurrency.Task { await store.openAgentChat(agent.metadata.id) } }) {
+                                HStack(spacing: 10) {
+                                    WorkspaceAvatarView(agent: agent, size: 36)
+                                    VStack(alignment: .leading, spacing: 5) {
+                                        Text(agent.name).font(.system(size: 12, weight: .medium))
+                                        Text(lastMessage(for: agent)).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                                    }
                                 }
-                            }
-                        }.contextMenu {
-                            Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }
-                            Button("Открыть чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
-                            if let chat = store.currentConversation, chat.kind != .group, chat.agentId == agent.metadata.id {
-                                Divider()
-                                WorkspaceChatActionsMenu(chat: chat).environment(store)
+                            }.contextMenu {
+                                Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }
+                                Button("Открыть чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
+                                if let chat {
+                                    Divider()
+                                    WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy)
+                                }
                             }
                         }
                     }
@@ -234,6 +241,11 @@ private struct MacLiveTeamSidebar: View {
         WorkspaceLocalizedText(text).font(.system(size: 11, weight: .semibold)).foregroundStyle(.secondary)
             .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 8)
     }
+    private func latestChat(with agentID: UUID) -> BlotV3.Conversation? {
+        store.snapshot.conversations.lazy.filter { !$0.archived && $0.kind != .group && $0.agentId == agentID }
+            .max { $0.metadata.updatedAt < $1.metadata.updatedAt }
+    }
+
     private func lastMessage(for agent: BlotV3.AgentProfile) -> String {
         let ids = Set(store.snapshot.conversations.filter { $0.kind != .group && $0.agentId == agent.metadata.id }.map(\.metadata.id))
         return store.snapshot.messages.last { ids.contains($0.conversationId) }?.content ?? agent.instructions
