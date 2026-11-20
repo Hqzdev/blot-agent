@@ -152,6 +152,60 @@ struct PhoneAuthenticationView: View {
     }
 }
 
+struct PhoneVerificationActions: View {
+    @Environment(WorkspaceStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))
+        layout {
+            Button(role: .cancel) {
+                store.form.account.code = ""
+                store.form.account.password = ""
+                store.dismissAuthentication()
+            } label: {
+                Text(store.t("Cancel"))
+                    .font(.body.weight(.medium)).foregroundStyle(WorkspaceStyle.ink)
+                    .padding(.horizontal, 18)
+                    .frame(maxWidth: textSize.isAccessibilitySize ? .infinity : nil, minHeight: 48)
+                    .background(reduceTransparency ? BlotColor.panel : .clear, in: Capsule())
+                    .glassEffect(reduceTransparency ? .identity : .regular.interactive(), in: Capsule())
+                    .contentShape(Capsule())
+            }.buttonStyle(BlotPlainButtonStyle())
+
+            Button {
+                _Concurrency.Task { await store.perform(.verify) }
+            } label: {
+                HStack(spacing: 8) {
+                    if store.busy { ProgressView().controlSize(.small).tint(BlotColor.onInverse) }
+                    Text(store.t("Confirm sign-in"))
+                }
+            }.buttonStyle(PhoneAuthenticationPrimaryButtonStyle())
+        }
+        .disabled(store.busy)
+        .padding(.horizontal, 30).padding(.top, 8).padding(.bottom, 2)
+        .background(PhoneReferenceStyle.authentication.ignoresSafeArea(edges: .bottom))
+    }
+}
+
+struct PhoneAuthenticationPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.medium)).multilineTextAlignment(.center)
+            .foregroundStyle(BlotColor.onInverse)
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(BlotColor.inverse, in: Capsule())
+            .overlay(Capsule().strokeBorder(WorkspaceStyle.secondary.opacity(0.15)).allowsHitTesting(false))
+            .shadow(color: .black.opacity(0.12), radius: 18, y: 6)
+            .contentShape(Capsule())
+            .opacity(enabled ? (configuration.isPressed ? 0.78 : 1) : 0.6)
+    }
+}
+
 private struct PhoneAuthenticationField: View {
     let title: String
     let placeholder: String

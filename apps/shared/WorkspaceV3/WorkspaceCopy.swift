@@ -453,6 +453,7 @@ enum WorkspaceCopy {
         "Configure": "Настроить",
         "Configure notifications": "Настроить уведомления",
         "Confirm on your computer": "Подтвердите на компьютере",
+        "Confirm sign-in": "Подтвердить вход",
         "Connect": "Подключить",
         "Connect computer": "Подключить компьютер",
         "Connect your browser on this computer.": "Подключите браузер на этом компьютере.",

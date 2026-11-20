@@ -17,6 +17,10 @@ struct WorkspaceAuthView: View {
         switch route {
         case .welcome: PhoneWelcomeView()
         case .signIn, .createAccount: PhoneAuthenticationView(initialRoute: route)
+        case .verifyEmail:
+            ScrollView { verification.padding(24).frame(maxWidth: 520) }.frame(maxWidth: .infinity)
+                .safeAreaInset(edge: .bottom, spacing: 0) { PhoneVerificationActions() }
+                .background(PhoneReferenceStyle.authentication.ignoresSafeArea())
         case .firstAgent: PhoneFirstAgentView()
         default: ScrollView { form.padding(24).frame(maxWidth: 520) }.frame(maxWidth: .infinity)
         }
@@ -91,13 +95,9 @@ struct WorkspaceAuthView: View {
                 .keyboardType(.numberPad)
                 #endif
             WorkspaceFeedback()
-            WorkspaceV3ActionButton(title: "Verify", action: .verify, next: {
-                #if os(macOS)
-                .firstRun
-                #else
-                .firstAgent
-                #endif
-            }())
+            #if os(macOS)
+            WorkspaceV3ActionButton(title: "Verify", action: .verify, next: .firstRun)
+            #endif
             WorkspaceV3ActionButton(title: "Resend code", action: .resendVerification, kind: .quiet)
             Button(store.t("Change email address")) { store.navigate(.createAccount) }.buttonStyle(WorkspaceRowButtonStyle())
         }.padding(.vertical, 70)

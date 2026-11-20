@@ -34,13 +34,8 @@ struct PhoneWelcomeView: View {
     private var footer: some View {
         VStack(spacing: 18) {
             Button { store.navigate(.signIn) } label: {
-                Text(store.t("Log In or Sign Up")).font(.body.weight(.medium))
-                    .foregroundStyle(BlotColor.onInverse)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(BlotColor.inverse, in: Capsule())
-                    .overlay(Capsule().strokeBorder(WorkspaceStyle.secondary.opacity(0.15)))
-                    .shadow(color: .black.opacity(0.12), radius: 18, y: 6)
-            }.buttonStyle(.plain)
+                Text(store.t("Log In or Sign Up"))
+            }.buttonStyle(PhoneAuthenticationPrimaryButtonStyle())
             Text(store.t("By continuing, you accept the Terms and Privacy Policy."))
                 .font(.system(size: 11)).foregroundStyle(WorkspaceStyle.secondary.opacity(0.6))
                 .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
