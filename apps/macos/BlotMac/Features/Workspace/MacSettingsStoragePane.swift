@@ -83,14 +83,14 @@ private struct MacSettingsStoredChats: View {
                     if chats.isEmpty { Text("Здесь пока нет переписок").foregroundStyle(.secondary).padding(40) }
                     ForEach(chats, id: \.metadata.id) { chat in
                         HStack(spacing: 14) {
-                            Image(systemName: chat.archived ? "archivebox" : "bubble.left").foregroundStyle(.secondary)
+                            BlotIcon(symbol: chat.archived ? "archivebox" : "bubble.left", size: 16).foregroundStyle(.secondary)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(chat.title).lineLimit(1)
                                 Text(chat.metadata.updatedAt, format: .dateTime.day().month().year()).font(.caption).foregroundStyle(.secondary)
                             }.frame(maxWidth: .infinity, alignment: .leading)
                             Button(chat.archived ? "Восстановить" : "В архив") { store.setChatArchived(chat.metadata.id, archived: !chat.archived) }
                                 .buttonStyle(MacSettingsActionStyle())
-                            Button(role: .destructive) { deleting = chat } label: { Image(systemName: "trash") }
+                            Button(role: .destructive) { deleting = chat } label: { BlotIcon(symbol: "trash", size: 16) }
                                 .buttonStyle(.plain).accessibilityLabel("Удалить чат: " + chat.title)
                         }.padding(.vertical, 14)
                         Divider()

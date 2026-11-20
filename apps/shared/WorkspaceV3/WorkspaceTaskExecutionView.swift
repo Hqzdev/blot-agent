@@ -47,7 +47,7 @@ struct WorkspaceTaskExecutionView: View {
                     if let revisionID = task.skillRevisionId,
                        let revision = store.snapshot.skillRevisions?.first(where: { $0.metadata.id == revisionID }),
                        let skill = store.snapshot.skills?.first(where: { $0.metadata.id == revision.skillId }) {
-                        Label(skill.name, systemImage: "shippingbox").foregroundStyle(.purple)
+                        BlotLabel(skill.name, symbol: "shippingbox", size: 16).foregroundStyle(.purple)
                         Text(revision.metadata.createdAt, format: .dateTime.day().month().hour().minute().second()).font(.caption).foregroundStyle(.secondary)
                     }
                     Text(task.goal).font(.headline).textSelection(.enabled)

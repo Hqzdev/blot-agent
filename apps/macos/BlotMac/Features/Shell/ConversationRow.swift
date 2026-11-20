@@ -61,24 +61,23 @@ struct ConversationRow: View {
         .contentShape(Rectangle())
         .onHover { hovered = $0 }
         .contextMenu {
-            Button { title = item.title; renaming = true } label: { Label("Rename", systemImage: "pencil") }.disabled(item.kind != .chat)
+            Button { title = item.title; renaming = true } label: { BlotLabel("Rename", symbol: "pencil", size: 16) }.disabled(item.kind != .chat)
             if !archived {
                 Button { app.shell.togglePin(item.id) } label: {
-                    Label(pinned ? "Unpin" : "Pin", systemImage: pinned ? "pin.slash" : "pin")
+                    BlotLabel(pinned ? "Unpin" : "Pin", symbol: pinned ? "pin.slash" : "pin", size: 16)
                 }
             }
             Button {
                 if unread { app.shell.markRead(item.id) } else { app.shell.markUnread(item.id) }
-            } label: { Label(unread ? "Mark as read" : "Mark as unread", systemImage: "eye") }
+            } label: { BlotLabel(unread ? "Mark as read" : "Mark as unread", symbol: "eye", size: 16) }
             Divider()
             Menu {
                 Button("Title") { copy(item.title) }
                 Button("Conversation ID") { copy(item.id) }
-            } label: { Label("Copy", systemImage: "doc.on.doc") }
+            } label: { BlotLabel("Copy", symbol: "doc.on.doc", size: 16) }
             Divider()
             Button { toggleArchive() } label: {
-                Label(archived ? "Restore from archive" : "Archive",
-                      systemImage: archived ? "arrow.uturn.backward" : "archivebox")
+                BlotLabel(archived ? "Restore from archive" : "Archive", symbol: archived ? "arrow.uturn.backward" : "archivebox", size: 16)
             }
         }
         .alert("Rename conversation", isPresented: $renaming) {

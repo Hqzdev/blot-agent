@@ -36,8 +36,11 @@ struct MacMarketplacePage: View {
             if store.isRestoringSession {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.mode == .live && store.snapshot.ownerID == nil {
-                ContentUnavailableView("Войдите в Blot", systemImage: "person.crop.circle",
-                    description: Text("Каталог доступен после входа в аккаунт."))
+                ContentUnavailableView {
+                    BlotLabel("Войдите в Blot", symbol: "person.crop.circle", size: 40)
+                } description: {
+                    Text("Каталог доступен после входа в аккаунт.")
+                }
             } else {
                 MacTeamMarketplaceContent(plugins: plugins,
                     selectPlugin: { detail = .plugin($0) }, selectTemplate: { detail = .template($0) },

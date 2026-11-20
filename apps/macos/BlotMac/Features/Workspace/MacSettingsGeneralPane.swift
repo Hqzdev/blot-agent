@@ -16,7 +16,7 @@ struct MacSettingsGeneralPane: View {
                 }
                 Divider()
                 MacTeamSettingsRow(title: "Учётные данные", detail: "Ключи и токены входа хранятся в системной Связке ключей.") {
-                    Image(systemName: "lock.shield").foregroundStyle(.secondary)
+                    BlotIcon(symbol: "lock.shield", size: 16).foregroundStyle(.secondary)
                 }
             }
             MacTeamSettingsSection(title: "Общие") {

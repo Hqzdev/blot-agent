@@ -90,7 +90,7 @@ struct WorkspaceBrowserView: View {
                 Button(text("Загрузки", "Downloads")) { showsDownloads = true }
                 Button(text("Доступ агентов", "Agent access")) { controller.presented = false; store.navigate(.browserSettings) }
                 if compact { Button(text("Развернуть", "Expand")) { controller.presented = false; store.navigate(.browser) } }
-            } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
+            } label: { BlotIcon(symbol: "ellipsis", size: 16) }.menuStyle(.borderlessButton)
             button("xmark", text("Вернуться к чату", "Return to chat")) {
                 controller.presented = false
                 if store.route == .browser { store.back() }
@@ -105,14 +105,18 @@ struct WorkspaceBrowserView: View {
                         Button { work { try controller.select(tab.id) } } label: {
                             Text((tab.unsaved ? "• " : "") + tab.title).lineLimit(1).frame(maxWidth: 160)
                         }.buttonStyle(.plain)
-                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
+                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { BlotIcon(symbol: "xmark", size: 12) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
                     }.padding(.horizontal, 10).padding(.vertical, 7).background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 8))
                 }
             }.padding(.horizontal, 10)
         }.scrollIndicators(.hidden)
     }
     private var empty: some View {
-        ContentUnavailableView(text("Браузер Blot", "Blot browser"), systemImage: "globe", description: Text(text("Введите адрес сайта. Страница откроется внутри приложения.", "Enter a website address to open it inside the app.")))
+        ContentUnavailableView {
+            BlotLabel(text("Браузер Blot", "Blot browser"), symbol: "globe", size: 40)
+        } description: {
+            Text(text("Введите адрес сайта. Страница откроется внутри приложения.", "Enter a website address to open it inside the app."))
+        }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     private var downloads: some View {
@@ -127,7 +131,7 @@ struct WorkspaceBrowserView: View {
                         if item.state == "running" { Button(text("Остановить", "Stop")) { controller.cancelDownload(item.id) } }
                         if item.state == "completed", let url = item.url {
                             Button(text("Просмотр", "Preview")) { preview = url }
-                            ShareLink(item: url) { Image(systemName: "square.and.arrow.up") }
+                            ShareLink(item: url) { BlotIcon(symbol: "square.and.arrow.up", size: 16) }
                         }
                     }.padding(.vertical, 6)
                 }
@@ -146,7 +150,7 @@ struct WorkspaceBrowserView: View {
         catch { controller.error = error.localizedDescription }
     }
     private func button(_ image: String, _ title: String, disabled: Bool = false, action: @escaping () throws -> Void) -> some View {
-        Button { work(action) } label: { Image(systemName: image).frame(width: 22, height: 24) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
+        Button { work(action) } label: { BlotIcon(symbol: image, size: 16).frame(width: 22, height: 24) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
     }
     private func openSystemAuthentication() {
         guard let url = controller.selectedTab?.authenticationURL, WorkspaceBrowserURL.isRestrictedAuthentication(url) else { return }

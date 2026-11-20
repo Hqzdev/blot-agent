@@ -59,7 +59,7 @@ struct WorkspacePairedDeviceCard: View {
 
     private var identity: some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol).font(.system(size: 24, weight: .medium))
+            BlotIcon(symbol: symbol, size: 24)
                 .frame(width: 48, height: 48)
                 .background(WorkspaceStyle.secondary.opacity(0.08), in: .rect(cornerRadius: 14))
                 .accessibilityHidden(true)
@@ -79,27 +79,27 @@ struct WorkspacePairedDeviceCard: View {
                 .fixedSize()
             Menu {
                 Button { showingDetails = true } label: {
-                    Label(ru ? "Об устройстве" : "Device details", systemImage: "info.circle")
+                    BlotLabel(ru ? "Об устройстве" : "Device details", symbol: "info.circle", size: 16)
                 }
                 Button {
                     WorkspaceClipboard.copy(device.id.uuidString)
                     copiedID = true
                 } label: {
-                    Label(ru ? (copiedID ? "ID скопирован" : "Скопировать ID") : (copiedID ? "ID copied" : "Copy device ID"), systemImage: "doc.on.doc")
+                    BlotLabel(ru ? (copiedID ? "ID скопирован" : "Скопировать ID") : (copiedID ? "ID copied" : "Copy device ID"), symbol: "doc.on.doc", size: 16)
                 }
                 Button { _Concurrency.Task { await refresh() } } label: {
-                    Label(ru ? "Обновить статус" : "Refresh status", systemImage: "arrow.clockwise")
+                    BlotLabel(ru ? "Обновить статус" : "Refresh status", symbol: "arrow.clockwise", size: 16)
                 }.disabled(store.pairingCommands == nil)
                 if !device.revoked && device.id != store.snapshot.localDeviceID {
                     Divider()
                     Button(role: .destructive) { confirmingRevoke = true } label: {
-                        Label(ru ? "Отозвать доступ" : "Revoke access", systemImage: "xmark.shield")
+                        BlotLabel(ru ? "Отозвать доступ" : "Revoke access", symbol: "xmark.shield", size: 16)
                     }.disabled(store.pairingCommands == nil)
                 }
             } label: {
                 Group {
                     if working { ProgressView().controlSize(.small) }
-                    else { Image(systemName: "ellipsis").font(.body.weight(.semibold)) }
+                    else { BlotIcon(symbol: "ellipsis", size: 16).font(.body.weight(.semibold)) }
                 }
                 .frame(width: 44, height: 44).contentShape(Rectangle())
             }

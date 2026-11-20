@@ -85,7 +85,7 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
                 Button(action: close) {
-                    Label("К команде", systemImage: "chevron.left")
+                    BlotLabel("К команде", symbol: "chevron.left", size: 16)
                 }.buttonStyle(.plain).accessibilityLabel("Вернуться к команде")
                 Spacer(minLength: 8)
                 Menu {
@@ -119,7 +119,7 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
             HStack {
                 Text("Настройки").font(.system(size: 17, weight: .semibold))
                 Spacer()
-                Button(action: close) { Image(systemName: "arrow.left").font(.system(size: 14)) }
+                Button(action: close) { BlotIcon(symbol: "arrow.left", size: 14) }
                     .buttonStyle(.plain).help("Вернуться к команде").accessibilityLabel("Вернуться к команде")
             }.padding(.horizontal, 20).frame(height: 54)
             searchField.padding(.horizontal, 16).padding(.bottom, 20)

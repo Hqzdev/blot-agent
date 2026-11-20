@@ -34,7 +34,7 @@ struct WorkspaceLocalFileView: View {
                     }
                 }
                 if let read {
-                    if read.usedOCR { Label(ru ? "Текст распознан на устройстве" : "Text recognized on this device", systemImage: "text.viewfinder").font(.caption).foregroundStyle(.secondary) }
+                    if read.usedOCR { BlotLabel(ru ? "Текст распознан на устройстве" : "Text recognized on this device", symbol: "text.viewfinder", size: 16).font(.caption).foregroundStyle(.secondary) }
                     Text(read.content).font(.system(.body, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                     if read.truncated && read.content.count >= 48_000 {
                         Text(ru ? "Показана часть текста. Полное содержимое доступно в оригинале файла." : "Part of the text is shown. Open the original for the full content.").font(.caption).foregroundStyle(.secondary)

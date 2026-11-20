@@ -28,6 +28,20 @@ import Testing
         #expect(glyph != .document)
     }
 
+    @Test func catalogNamesResolveToTheirOwnArtwork() {
+        for glyph in BlotGlyph.allCases {
+            #expect(BlotGlyph.resolve(symbol: glyph.rawValue) == glyph)
+        }
+    }
+
+    @Test func legacyMacAndPhoneNamesResolveToRoundedArtwork() {
+        #expect(BlotGlyph.resolve(symbol: "square-pen") == .compose)
+        #expect(BlotGlyph.resolve(symbol: "panel-right") == .inspector)
+        #expect(BlotGlyph.resolve(symbol: "iphone") == .mobile)
+        #expect(BlotGlyph.resolve(symbol: "internaldrive") == .drive)
+        #expect(BlotGlyph.resolve(symbol: "photo.on.rectangle") == .image)
+    }
+
     @Test func unsupportedSymbolsCanBeDetected() {
         #expect(BlotGlyph.resolve(symbol: "unsupported.symbol") == nil)
     }

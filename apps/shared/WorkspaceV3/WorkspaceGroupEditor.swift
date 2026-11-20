@@ -74,7 +74,7 @@ struct WorkspaceGroupEditor: View {
             agentPicker
             #endif
             if let saveError {
-                Label(saveError, systemImage: "exclamationmark.triangle")
+                BlotLabel(saveError, symbol: "exclamationmark.triangle", size: 16)
                     .font(.callout).foregroundStyle(.red).fixedSize(horizontal: false, vertical: true)
             }
         }.padding(pageInset).disabled(store.busy)
@@ -110,7 +110,7 @@ struct WorkspaceGroupEditor: View {
             .disabled(store.busy)
         #else
         HStack(spacing: 14) {
-            Image(systemName: "person.2.fill").font(.system(size: 20, weight: .medium))
+            BlotIcon(symbol: "person.2.fill", size: 20)
                 .frame(width: 44, height: 44).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 14))
             VStack(alignment: .leading, spacing: 5) {
                 Text(store.t(conversationID == nil ? "New group" : "Group members"))
@@ -120,7 +120,7 @@ struct WorkspaceGroupEditor: View {
             }
             Spacer(minLength: 0)
             Button { dismiss() } label: {
-                Image(systemName: "xmark").font(.system(size: 12, weight: .semibold))
+                BlotIcon(symbol: "xmark", size: 12)
                     .frame(width: controlSize, height: controlSize).contentShape(Circle())
             }.buttonStyle(.plain).accessibilityLabel(store.t("Close")).disabled(store.busy)
         }.padding(24)
@@ -142,11 +142,11 @@ struct WorkspaceGroupEditor: View {
     private var agentPicker: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(spacing: 9) {
-                Image(systemName: "magnifyingglass").foregroundStyle(WorkspaceStyle.secondary)
+                BlotIcon(symbol: "magnifyingglass", size: 16).foregroundStyle(WorkspaceStyle.secondary)
                 TextField(store.t("Search agents"), text: $query).textFieldStyle(.plain)
                 if !query.isEmpty {
                     Button { query = "" } label: {
-                        Image(systemName: "xmark.circle.fill").frame(width: controlSize, height: controlSize)
+                        BlotIcon(symbol: "xmark.circle.fill", size: 16).frame(width: controlSize, height: controlSize)
                     }
                         .buttonStyle(.plain).foregroundStyle(WorkspaceStyle.secondary).accessibilityLabel(store.t("Clear search"))
                 }
@@ -176,7 +176,7 @@ struct WorkspaceGroupEditor: View {
             }
             if filtered.isEmpty {
                 VStack(spacing: 10) {
-                    Image(systemName: agents.isEmpty ? "person.2" : "magnifyingglass").font(.title2)
+                    BlotIcon(symbol: agents.isEmpty ? "person.2" : "magnifyingglass", size: 16).font(.title2)
                     Text(store.t(agents.isEmpty ? "No agents yet" : "No agents found")).font(.body.weight(.medium))
                     Text(store.t(agents.isEmpty ? "Add agents to your team first." : "Try another name or clear the search."))
                         .font(.callout).multilineTextAlignment(.center)
@@ -228,7 +228,7 @@ struct WorkspaceGroupEditor: View {
             }
             Spacer(minLength: 3)
             Button { draft.remove(agent.metadata.id) } label: {
-                Image(systemName: "xmark").font(.system(size: 10, weight: .semibold)).frame(width: controlSize, height: controlSize).contentShape(Circle())
+                BlotIcon(symbol: "xmark", size: 10).frame(width: controlSize, height: controlSize).contentShape(Circle())
             }.buttonStyle(.plain).foregroundStyle(WorkspaceStyle.secondary)
                 .accessibilityLabel(store.t("Remove participant") + ": " + agent.name)
         }
@@ -240,7 +240,7 @@ struct WorkspaceGroupEditor: View {
             Menu {
                 ForEach(selected, id: \.metadata.id) { agent in
                     Button { draft.coordinate(with: agent.metadata.id) } label: {
-                        if draft.coordinatorID == agent.metadata.id { Label(agent.name, systemImage: "checkmark") }
+                        if draft.coordinatorID == agent.metadata.id { BlotLabel(agent.name, symbol: "checkmark", size: 16) }
                         else { Text(agent.name) }
                     }
                 }
@@ -248,7 +248,7 @@ struct WorkspaceGroupEditor: View {
                 HStack {
                     Text(selected.first { $0.metadata.id == draft.coordinatorID }?.name ?? "").lineLimit(1)
                     Spacer()
-                    Image(systemName: "chevron.down").font(.caption2)
+                    BlotIcon(symbol: "chevron.down", size: 12)
                 }.font(.callout)
             }
             #if os(macOS)

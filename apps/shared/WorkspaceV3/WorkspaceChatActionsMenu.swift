@@ -31,7 +31,7 @@ struct WorkspaceChatActionsMenu: View {
         }
         if let agentID = chat.agentId, chat.kind != .group {
             Divider()
-            BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agentID) }
+            BlotIconButton(store.t("Agent"), symbol: "agent") { store.selectAgent(agentID) }
             BlotIconButton(store.t("Edit agent"), symbol: "paintbrush") { store.editChatAgent(agentID) }
         }
         Divider()

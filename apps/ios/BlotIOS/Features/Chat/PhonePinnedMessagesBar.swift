@@ -80,14 +80,14 @@ struct PhonePinnedMessagesList: View {
                     .buttonStyle(.plain)
                     .swipeActions {
                         Button(role: .destructive) { store.toggleMessagePin(message.metadata.id) } label: {
-                            Label(store.t("Unpin message"), systemImage: "pin.slash")
+                            BlotLabel(store.t("Unpin message"), symbol: "pin.slash", size: 16)
                         }.disabled(store.pendingMessagePins.contains(message.metadata.id))
                     }
                 }
             }
             .overlay {
                 if store.currentPinnedMessages.isEmpty {
-                    ContentUnavailableView(store.t("No pinned messages"), systemImage: "pin.slash")
+                    ContentUnavailableView { BlotLabel(store.t("No pinned messages"), symbol: "pin.slash", size: 40) }
                 }
             }
             .navigationTitle(store.t("Pinned messages"))

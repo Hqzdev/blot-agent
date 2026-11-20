@@ -16,33 +16,33 @@ struct ConversationToolbarMenu: View {
 
     var body: some View {
         Menu {
-            Button { title = item.title; renaming = true } label: { Label("Rename", systemImage: "pencil") }.disabled(item.kind != .chat)
+            Button { title = item.title; renaming = true } label: { BlotLabel("Rename", symbol: "pencil", size: 16) }.disabled(item.kind != .chat)
                 .keyboardShortcut("r", modifiers: [.option, .command])
             Button { app.shell.togglePin(item.id) } label: {
-                Label(pinned ? "Unpin" : "Pin", systemImage: pinned ? "pin.slash" : "pin")
+                BlotLabel(pinned ? "Unpin" : "Pin", symbol: pinned ? "pin.slash" : "pin", size: 16)
             }.disabled(archived).keyboardShortcut("p", modifiers: [.option, .command])
             Divider()
             Button {
                 let session = app.createSideChat(for: item)
                 openWindow(value: ConversationWindowRequest(id: session.id, title: session.title,
                     transcript: app.transcript(for: item), chatID: session.id))
-            } label: { Label("New side chat", systemImage: "bubble.left.and.bubble.right") }
+            } label: { BlotLabel("New side chat", symbol: "bubble.left.and.bubble.right", size: 16) }
                 .keyboardShortcut("s", modifiers: [.option, .command])
             Menu {
                 Button("Fork entire conversation") { app.forkConversation(item) }.disabled(item.kind != .chat)
-            } label: { Label("Create fork", systemImage: "point.3.connected.trianglepath.dotted") }
-            Button { scheduling = true } label: { Label("Add scheduled task…", systemImage: "clock") }
+            } label: { BlotLabel("Create fork", symbol: "point.3.connected.trianglepath.dotted", size: 16) }
+            Button { scheduling = true } label: { BlotLabel("Add scheduled task…", symbol: "clock", size: 16) }
             Divider()
-            ShareLink(item: app.transcript(for: item)) { Label("Share", systemImage: "square.and.arrow.up") }
+            ShareLink(item: app.transcript(for: item)) { BlotLabel("Share", symbol: "square.and.arrow.up", size: 16) }
             Menu {
                 Button("Conversation") { copy(app.transcript(for: item)) }
                 Button("Title") { copy(item.title) }
                 Button("Conversation ID") { copy(item.id) }
-            } label: { Label("Copy", systemImage: "doc.on.doc") }
+            } label: { BlotLabel("Copy", symbol: "doc.on.doc", size: 16) }
             Divider()
             Button {
                 openWindow(value: ConversationWindowRequest(id: item.id, title: item.title, transcript: app.transcript(for: item)))
-            } label: { Label("Open in new window", systemImage: "macwindow.on.rectangle") }
+            } label: { BlotLabel("Open in new window", symbol: "macwindow.on.rectangle", size: 16) }
             Menu {
                 Button("Chat") { app.openConversation(item) }
                 if item.kind != .chat {
@@ -53,12 +53,12 @@ struct ConversationToolbarMenu: View {
                         app.shell.previewSource = nil; app.shell.rightVisible = true; app.shell.expandedSources = true
                     }
                 }
-            } label: { Label("Open in", systemImage: "arrow.up.right") }
+            } label: { BlotLabel("Open in", symbol: "arrow.up.right", size: 16) }
             Divider()
             Button {
                 if archived { app.shell.restore(item.id) } else { app.shell.archive(item.id) }
             } label: {
-                Label(archived ? "Restore from archive" : "Archive", systemImage: archived ? "arrow.uturn.backward" : "archivebox")
+                BlotLabel(archived ? "Restore from archive" : "Archive", symbol: archived ? "arrow.uturn.backward" : "archivebox", size: 16)
             }.keyboardShortcut("a", modifiers: [.shift, .command])
         } label: {
             KIcon("ellipsis", size: 16, color: K.text2)

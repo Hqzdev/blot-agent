@@ -48,7 +48,7 @@ struct WorkspaceMessageText: View {
                     result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
                 }
             case .skill:
-                let avatar = Text(Image(systemName: "shippingbox")).foregroundColor(target.color)
+                let avatar = Text(BlotIcon.image(.skill)).foregroundColor(target.color)
                 result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
             case .plugin(let plugin):
                 if let image = WorkspaceMentionAvatar.image(plugin: plugin, size: avatarSize, scale: displayScale, scheme: scheme) {

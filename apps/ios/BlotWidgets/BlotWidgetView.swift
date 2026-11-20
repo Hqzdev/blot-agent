@@ -1,4 +1,5 @@
 import BlotWidgetSupport
+import BlotDesign
 import SwiftUI
 import WidgetKit
 
@@ -48,7 +49,7 @@ struct BlotWidgetView: View {
             HStack(spacing: 7) { BlotWidgetAvatar(); Text("Blot").font(.subheadline.weight(.semibold)) }
             Spacer(minLength: 0)
             Text(snapshot.text("Новое\nпоручение", "New\nrequest")).font(.headline).lineLimit(2)
-            Label(snapshot.text("Открыть чат", "Open chat"), systemImage: "arrow.up.right")
+            BlotLabel(snapshot.text("Открыть чат", "Open chat"), symbol: "arrow.up.right", size: 12)
                 .font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -57,7 +58,7 @@ struct BlotWidgetView: View {
             HStack {
                 Text(entry.decisions.count, format: .number).font(.largeTitle.weight(.medium)).monospacedDigit().widgetAccentable()
                 Spacer(minLength: 0)
-                Image(systemName: "checkmark.shield").foregroundStyle(.secondary).accessibilityHidden(true)
+                BlotIcon(symbol: "checkmark.shield", size: 16).foregroundStyle(.secondary).accessibilityHidden(true)
             }
             Spacer(minLength: 0)
             Text(entry.decisions.isEmpty ? snapshot.text("Всё решено", "All clear") : snapshot.text("Нужно твоё решение", "Your decision needed"))
@@ -157,7 +158,7 @@ struct BlotWidgetView: View {
                             BlotWidgetState(state: chat.state, snapshot: snapshot)
                         }
                         Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+                        BlotIcon(symbol: "chevron.right", size: 12).foregroundStyle(.secondary)
                     }
                 }.buttonStyle(.plain)
             }
@@ -166,7 +167,7 @@ struct BlotWidgetView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
-            Label(snapshot.text("Открыть Blot", "Open Blot"), systemImage: "arrow.up.right")
+            BlotLabel(snapshot.text("Открыть Blot", "Open Blot"), symbol: "arrow.up.right", size: 12)
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }
@@ -178,7 +179,7 @@ struct BlotWidgetView: View {
     }
     private var freshness: some View {
         HStack(spacing: 3) {
-            if entry.isStale { Image(systemName: "arrow.clockwise") }
+            if entry.isStale { BlotIcon(symbol: "arrow.clockwise", size: 16) }
             Text(snapshot.text("Данные на", "Updated"))
             Text(snapshot.updatedAt, style: .time)
         }.font(.caption2).foregroundStyle(.secondary).lineLimit(1)

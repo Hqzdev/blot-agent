@@ -8,26 +8,25 @@ struct ShellToolbar: ToolbarContent {
     var body: some ToolbarContent {
         ToolbarItemGroup(placement: .navigation) {
             if app.showingSettings || app.profileVisible || app.activeTool != nil {
-                Button { app.openQuickChat() } label: { Label("На главную", systemImage: "house") }
+                Button { app.openQuickChat() } label: { BlotLabel("На главную", symbol: "house", size: 16) }
                     .help("На главную")
             }
-            Button { app.navigateHistory(-1) } label: { Label("Назад", systemImage: "chevron.left") }
+            Button { app.navigateHistory(-1) } label: { BlotLabel("Назад", symbol: "chevron.left", size: 16) }
                 .disabled(!app.shell.history.canGoBack).help("Назад · ⌘[")
-            Button { app.navigateHistory(1) } label: { Label("Вперёд", systemImage: "chevron.right") }
+            Button { app.navigateHistory(1) } label: { BlotLabel("Вперёд", symbol: "chevron.right", size: 16) }
                 .disabled(!app.shell.history.canGoForward).help("Вперёд · ⌘]")
         }
         ToolbarItemGroup(placement: .primaryAction) {
             if app.runControlsAvailable {
                 Button { app.pauseOrResumeRun() } label: {
-                    Label(app.currentRunPaused ? "Продолжить" : "Пауза",
-                          systemImage: app.currentRunPaused ? "play" : "pause")
+                    BlotLabel(app.currentRunPaused ? "Продолжить" : "Пауза", symbol: app.currentRunPaused ? "play" : "pause", size: 16)
                 }.disabled(!app.canPauseOrResumeRun)
-                Button { app.confirmingStopRun = true } label: { Label("Остановить", systemImage: "stop") }
+                Button { app.confirmingStopRun = true } label: { BlotLabel("Остановить", symbol: "stop", size: 16) }
                     .disabled(!app.canStopRun)
             }
             if let conversation = app.currentConversation { ConversationToolbarMenu(item: conversation) }
             if app.shellSupportsProjectPanel {
-                Button { app.toggleShellPanel() } label: { Label("Панель проекта", systemImage: "sidebar.right") }
+                Button { app.toggleShellPanel() } label: { BlotLabel("Панель проекта", symbol: "sidebar.right", size: 16) }
                     .help("Панель проекта · ⌥⌘0")
             }
         }
