@@ -198,7 +198,8 @@ private struct MacLiveTeamMessage: View {
                         }
                     }
                 }.padding(.horizontal, 16).padding(.vertical, compact ? 9 : 12)
-                    .background(isUser ? MacTeamStyle.field : WorkspaceStyle.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 20))
+                    .foregroundStyle(WorkspaceStyle.ink)
+                    .background(isUser ? MacWorkspaceStyle.outgoingMessage : WorkspaceStyle.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 20))
                     .modifier(MacTeamPressMenu(secondaryClick: true) { close in
                         Group {
                             MacTeamMessageMenuLayout(choices: WorkspaceChatInteractions.reactions, react: { store.toggleReaction($0, to: message.metadata.id) },

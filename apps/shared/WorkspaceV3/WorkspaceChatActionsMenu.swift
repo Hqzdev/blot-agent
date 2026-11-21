@@ -7,17 +7,22 @@ struct WorkspaceChatActionsMenu: View {
     @Environment(WorkspaceStore.self) private var store
 
     var body: some View {
-        if chat.kind == .group {
-            BlotIconButton(store.t("Group members"), symbol: "person.2") { store.editGroup(chat.metadata.id) }
-        }
+        #if !os(macOS)
+        if chat.kind == .group { groupMembers }
+        #endif
         BlotIconButton(store.t("Rename chat"), symbol: "pencil") { store.beginChatRename(chat.metadata.id) }
+        #if !os(macOS)
         Divider()
+        #endif
         BlotIconButton(store.t(chat.pinned ? "Unpin chat" : "Pin chat"), symbol: "pin") {
             store.toggleChatPin(chat.metadata.id)
         }
         BlotIconButton(store.t(chat.archived ? "Unarchive chat" : "Archive chat"), symbol: "archivebox") {
             store.setChatArchived(chat.metadata.id, archived: !chat.archived)
         }
+        #if os(macOS)
+        Divider()
+        #endif
         BlotIconButton(store.t(store.chatInteractions.unreadCount(in: chat.metadata.id) > 0 ? "Mark as read" : "Mark as unread"), symbol: "envelope") {
             if store.chatInteractions.unreadCount(in: chat.metadata.id) > 0 { store.markChatRead(chat.metadata.id) }
             else { store.markChatUnread(chat.metadata.id) }
@@ -29,6 +34,12 @@ struct WorkspaceChatActionsMenu: View {
         if store.chatActivity.isResponding(in: chat.metadata.id) {
             BlotIconButton(store.t("Stop reply"), symbol: "stop") { store.stopReply(in: chat.metadata.id) }
         }
+        #if os(macOS)
+        if chat.kind == .group {
+            Divider()
+            groupMembers
+        }
+        #endif
         if let agentID = chat.agentId, chat.kind != .group {
             Divider()
             BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agentID) }
@@ -38,5 +49,9 @@ struct WorkspaceChatActionsMenu: View {
         Button(role: .destructive) { store.pendingChatDeletionID = chat.metadata.id } label: {
             BlotLabel(store.t("Delete chat"), symbol: "trash")
         }
+    }
+
+    private var groupMembers: some View {
+        BlotIconButton(store.t("Group members"), symbol: "person.2") { store.editGroup(chat.metadata.id) }
     }
 }

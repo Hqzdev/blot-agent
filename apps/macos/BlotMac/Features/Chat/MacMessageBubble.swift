@@ -25,8 +25,8 @@ struct MacMessageBubble: View {
                     agents: store.chatContent.agents, skills: store.chatContent.skills)
                     .font(.system(size: 14)).lineSpacing(3)
                     .padding(.horizontal, 12).padding(.vertical, 10)
-                    .foregroundStyle(isUser ? BlotColor.onInverse : WorkspaceStyle.ink)
-                    .background(isUser ? BlotColor.inverse : WorkspaceStyle.surface,
+                    .foregroundStyle(WorkspaceStyle.ink)
+                    .background(isUser ? MacWorkspaceStyle.outgoingMessage : WorkspaceStyle.surface,
                                 in: RoundedRectangle(cornerRadius: BlotRadius.panel))
                     .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
                 }

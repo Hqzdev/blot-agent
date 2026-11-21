@@ -1,5 +1,6 @@
 import BlotDesign
 import BlotDomain
+import BlotWorkspace
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -82,7 +83,7 @@ struct MacWorkspaceComposer: View {
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
             if showsStarters {
-                MacChatStarters(russian: store.language == "ru") { prompt in
+                MacChatStarters(examples: taskExamples) { prompt in
                     store.form.composer.draft = prompt
                     focused = true
                 }
@@ -107,11 +108,28 @@ struct MacWorkspaceComposer: View {
         .onChange(of: store.replyFocusRequest) { _, _ in focused = true }
     }
 
+    private var destinationChat: BlotV3.Conversation? {
+        [.home, .newChat].contains(store.route) ? nil : store.currentConversation
+    }
+
+    private var destinationAgent: BlotV3.AgentProfile? {
+        let agents = store.snapshot.agents
+        if let chat = destinationChat { return agents.first { $0.metadata.id == chat.agentId } }
+        if let id = store.selectedAgentID { return agents.first { $0.metadata.id == id } }
+        return agents.first
+    }
+
+    private var taskExamples: [MacChatTaskExample] {
+        let agent = destinationAgent
+        let ids = Set((store.snapshot.skillAssignments ?? []).filter { $0.assigned && $0.agentID == agent?.metadata.id }.map(\.skillID))
+        let names = (store.snapshot.skills ?? []).filter { !$0.archived && ids.contains($0.metadata.id) }.map(\.name)
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+        return MacChatTaskExample.suggestions(for: agent, skills: names, group: destinationChat?.kind == .group, russian: store.language == "ru")
+    }
+
     private var placeholder: String {
-        if let group = store.currentConversation, group.kind == .group { return store.t("Message group") + " «" + group.title + "»" }
-        let id = store.route == .home ? store.selectedAgentID : store.currentConversation?.agentId
-        let name = store.snapshot.agents.first { $0.metadata.id == id }?.name ?? "Blot Agent"
-        return store.t("Message agent") + " " + name
+        if let group = destinationChat, group.kind == .group { return store.t("Message group") + " «" + group.title + "»" }
+        return store.t("Message agent") + " " + (destinationAgent?.name ?? "Blot Agent")
     }
 
     private var attachments: some View {
