@@ -8,6 +8,7 @@ import QuickLook
 import AppKit
 #endif
 
+#if os(macOS)
 struct WorkspaceBrowserView: View {
     let controller: WorkspaceBrowserController
     var compact = false
@@ -164,18 +165,17 @@ private struct WorkspaceWebSurface: NSViewRepresentable {
     func makeNSView(context: Context) -> WKWebView { view }
     func updateNSView(_ nsView: WKWebView, context: Context) {}
 }
-#else
-private struct WorkspaceWebSurface: UIViewRepresentable {
-    let view: WKWebView
-    func makeUIView(context: Context) -> WKWebView { view }
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
-}
+#endif
 #endif
 
 struct WorkspaceBrowserDestination: View {
     @Environment(WorkspaceStore.self) private var store
     var body: some View {
+        #if os(iOS)
+        WorkspaceBrowserSettingsView()
+        #else
         if let browser = store.browser { WorkspaceBrowserView(controller: browser) }
         else { ProgressView().task { store.ensureBrowser() } }
+        #endif
     }
 }

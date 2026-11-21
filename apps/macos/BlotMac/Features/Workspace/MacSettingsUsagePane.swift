@@ -18,6 +18,7 @@ struct MacSettingsUsagePane: View {
                 }
             }
             if tab == "Обзор" {
+                WorkspaceBillingView()
                 MacTeamSettingsSection(title: "Ваше пространство", detail: "Учёт использования моделей в этом аккаунте Blot.") {
                     MacTeamSettingsRow(title: store.accountDisplayName, detail: store.form.account.email) {
                         Text("Личное").foregroundStyle(.secondary)

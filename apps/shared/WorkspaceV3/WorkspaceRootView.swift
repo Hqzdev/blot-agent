@@ -141,6 +141,9 @@ struct WorkspaceRootView: View {
         }
         .sheet(isPresented: $store.conflictsVisible) { WorkspaceConflictsView().environment(store) }
         .task { await store.loadWorkspace() }
+        .task(id: scenePhase == .active ? store.snapshot.ownerID : nil) {
+            if scenePhase == .active { await store.refreshBilling() }
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await store.synchronizeAccount()
@@ -156,6 +159,32 @@ struct WorkspaceRootView: View {
         .onDisappear { store.persistChatState(immediately: true) }
         .modifier(AppleInteractionHost(center: store.appleIntegrations?.interactions))
         .onOpenURL { url in
+            if url.scheme == WorkspaceBillingClient.callbackScheme, url.host == "billing" {
+                #if os(macOS)
+                let destination = WorkspaceRoute.usage
+                #else
+                let destination = WorkspaceRoute.settingsProfile
+                #endif
+                if url.path == "/settings" {
+                    store.navigate(destination)
+                    return
+                }
+                guard url.path == "/return" else { return }
+                #if os(iOS)
+                PhoneLinkBrowser.dismiss()
+                #endif
+                _Concurrency.Task {
+                    do {
+                        guard let commands = store.billingCommands else { throw WorkspaceServiceError.unavailable }
+                        _ = try await commands.billingClient().redeem(url)
+                        store.navigate(destination)
+                        await store.refreshBilling()
+                        store.notice = store.language == "ru" ? "Тестовый платёж подтверждён" : "Test payment confirmed"
+                    }
+                    catch { store.error = WorkspaceFailureCopy.message(error) }
+                }
+                return
+            }
             #if os(iOS)
             if store.handleWidgetURL(url) { return }
             #endif

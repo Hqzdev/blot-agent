@@ -16,9 +16,15 @@ extension WorkspaceStore {
         presentBrowser(ensureBrowser())
     }
     func openBrowserURL(_ url: URL) {
+        #if os(iOS)
+        if !PhoneLinkBrowser.open(url) {
+            error = language == "ru" ? "Не удалось открыть ссылку." : "Could not open the link."
+        }
+        #else
         let browser = ensureBrowser()
         do { _ = try browser.open(url.absoluteString); presentBrowser(browser) }
         catch { self.error = error.localizedDescription }
+        #endif
     }
     private func presentBrowser(_ browser: WorkspaceBrowserController) {
         browser.presented = true

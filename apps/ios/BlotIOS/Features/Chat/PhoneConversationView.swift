@@ -204,7 +204,6 @@ struct PhoneConversationView: View {
             PhoneConversationTitle(identity: identity)
             Spacer(minLength: 0)
             Menu {
-                Button { store.showBrowser() } label: { Label(store.language == "ru" ? "Браузер" : "Browser", systemImage: "globe") }
                 BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
                 BlotIconButton(store.t("Schedule this task"), symbol: "calendar.badge.plus") { store.navigate(.createSchedule) }
                 BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }

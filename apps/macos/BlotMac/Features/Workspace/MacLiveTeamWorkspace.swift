@@ -215,6 +215,7 @@ private struct MacLiveTeamSidebar: View {
                     Label("Приложения и шаблоны", systemImage: "square.grid.2x2").font(.system(size: 12))
                 }
                 Divider()
+                WorkspaceBillingView(showsLimits: false)
                 MacTeamNavigationButton(action: { store.navigate(.settings) }) {
                     HStack(spacing: 10) {
                         Text(String(store.accountDisplayName.prefix(1))).font(.system(size: 10, weight: .medium))

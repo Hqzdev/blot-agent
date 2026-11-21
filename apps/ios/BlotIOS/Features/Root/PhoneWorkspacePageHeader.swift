@@ -37,7 +37,6 @@ struct PhoneWorkspacePageHeader: View {
                     Button(store.t("Task details")) { store.navigate(.running) }
                     Button(store.t("Review prepared action")) { store.navigate(.approval) }
                     Button(store.t("Result")) { store.navigate(.result) }
-                    Button(store.t("View browser")) { store.navigate(.browser) }
                 } label: {
                     BlotIcon(symbol: "ellipsis").frame(width: 44, height: 44)
                 }.accessibilityLabel(store.t("More options"))

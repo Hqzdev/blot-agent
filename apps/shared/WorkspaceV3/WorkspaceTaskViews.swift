@@ -163,7 +163,12 @@ struct WorkspaceTaskView: View {
             #endif
             HStack { WorkspaceV3ActionButton(title: store.taskPaused ? "Resume" : "Pause", action: .pause, kind: .secondary)
                 WorkspaceV3ActionButton(title: "Stop task", action: .stop, next: .chat, kind: .destructive) }
-            if store.isPreview { WorkspaceLink(title: "Review prepared action", route: .approval); WorkspaceLink(title: "View browser", route: .browser) }
+            if store.isPreview {
+                WorkspaceLink(title: "Review prepared action", route: .approval)
+                #if os(macOS)
+                WorkspaceLink(title: "View browser", route: .browser)
+                #endif
+            }
             WorkspaceFeedback()
             #if os(macOS)
             WorkspaceComposer()
