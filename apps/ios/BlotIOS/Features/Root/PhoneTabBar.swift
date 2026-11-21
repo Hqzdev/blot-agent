@@ -17,6 +17,8 @@ struct PhoneTabBar: View {
     ]
 
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.blotReduceMotion) private var reduceMotion
     @Namespace private var selection
 
     static func isTab(_ route: WorkspaceRoute) -> Bool { items.contains { $0.route == route } }
@@ -38,13 +40,7 @@ struct PhoneTabBar: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 50)
                         .foregroundStyle(store.tab == item.route ? WorkspaceStyle.ink : WorkspaceStyle.secondary)
-                        .background {
-                            if store.tab == item.route {
-                                Capsule().fill(WorkspaceStyle.ink.opacity(0.08))
-                                    .matchedGeometryEffect(id: "selected-tab", in: selection)
-                            }
-                        }
-                        .animation(.smooth(duration: 0.22), value: store.tab)
+                        .background { Color.clear.matchedGeometryEffect(id: item.route, in: selection) }
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -52,6 +48,15 @@ struct PhoneTabBar: View {
                     .accessibilityIdentifier("workspace.tab.\(item.route.rawValue)")
                 }
             }
+            .background {
+                if Self.isTab(store.tab) {
+                    Capsule().fill(WorkspaceStyle.ink.opacity(0.08))
+                        .matchedGeometryEffect(id: store.tab, in: selection, isSource: false)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: store.tab)
             .padding(5)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
