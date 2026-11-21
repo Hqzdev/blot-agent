@@ -9,7 +9,9 @@ struct PhoneBrowserSignInButton: View {
 
     @State private var preparingSignIn = false
 
-    private var waiting: Bool { preparingSignIn || store.browserSignIn.isActive }
+    private var waiting: Bool {
+        preparingSignIn || store.browserSignIn.isActive || store.authenticationRoute != nil
+    }
 
     var body: some View {
         GeometryReader { geometry in
