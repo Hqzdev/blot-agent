@@ -157,6 +157,7 @@ struct MacLiveTeamWorkspace: View {
 private struct MacLiveTeamSidebar: View {
     var showsWindowSpace = true
     @Environment(WorkspaceStore.self) private var store
+    @State private var profileOpen = false
     private var groups: [BlotV3.Conversation] {
         store.snapshot.conversations.filter { chat in
             !chat.archived && chat.kind == .group
@@ -215,17 +216,20 @@ private struct MacLiveTeamSidebar: View {
                     Label("Приложения и шаблоны", systemImage: "square.grid.2x2").font(.system(size: 12))
                 }
                 Divider()
-                MacTeamNavigationButton(action: { store.navigate(.settings) }) {
+                MacTeamNavigationButton(action: { profileOpen.toggle() }) {
                     HStack(spacing: 10) {
-                        Text(String(store.accountDisplayName.prefix(1))).font(.system(size: 10, weight: .medium))
+                        Text(String(store.accountDisplayName.split(separator: " ").prefix(2).compactMap(\.first)).uppercased())
+                            .font(.system(size: 10, weight: .medium))
                             .frame(width: 28, height: 28).background(.quaternary, in: Circle())
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(store.accountDisplayName).font(.system(size: 12, weight: .medium))
-                            Text("Личное пространство").font(.system(size: 10)).foregroundStyle(.secondary)
-                        }
+                        Text(store.accountDisplayName).font(.system(size: 12, weight: .medium))
                         Spacer()
-                        BlotIcon(.settings, size: BlotIconSize.control)
+                        Image(systemName: "chevron.up")
                     }
+                }
+                .accessibilityLabel(store.t("Profile"))
+                .popover(isPresented: $profileOpen, arrowEdge: .bottom) {
+                    MacSidebarProfileMenu { profileOpen = false }
+                        .environment(store)
                 }
             }.padding(.horizontal, 10).padding(.bottom, 12)
         }

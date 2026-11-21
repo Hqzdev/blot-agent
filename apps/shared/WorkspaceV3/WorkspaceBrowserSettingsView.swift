@@ -15,10 +15,14 @@ struct WorkspaceBrowserSettingsView: View {
     var body: some View {
         if store.browserCommands?.automaticBrowserAccess == true {
             VStack(alignment: .leading, spacing: 16) {
+                #if os(iOS)
+                Text(ru ? "Доступ браузера агента" : "Agent browser access").font(.title2.bold())
+                #else
                 Text(ru ? "Браузер Blot" : "Blot browser").font(.title2.bold())
                 Text(ru ? "Агенты могут сразу открывать сайты и читать открытые вами вкладки. Настраивать доступ для каждого сайта не нужно." : "Agents can open websites and read your open tabs immediately. No per-site access setup is needed.")
                 Text(ru ? "Пароли, коды входа и платёжные поля вводите вручную. Нажатия и ввод агента подтверждаются отдельно." : "Enter passwords, sign-in codes and payment details manually. Agent clicks and typing require separate confirmation.").foregroundStyle(.secondary)
                 Button(ru ? "Открыть браузер" : "Open browser") { store.showBrowser() }
+                #endif
                 automaticRecovery
             }
         } else { configuredSettings }
@@ -40,7 +44,9 @@ struct WorkspaceBrowserSettingsView: View {
         VStack(alignment: .leading, spacing: 18) {
             Text(ru ? "Браузер Blot" : "Blot browser").font(.title2.bold())
             Text(ru ? "Сайты открываются внутри приложения. Разрешения ниже действуют только для агентов на этом устройстве. Нажатия и ввод подтверждаются отдельно." : "Websites open inside the app. These agent permissions apply only on this device. Clicks and typing require separate confirmation.").foregroundStyle(.secondary)
+            #if os(macOS)
             Button(ru ? "Открыть браузер" : "Open browser") { store.showBrowser() }.disabled(store.browserCommands == nil)
+            #endif
             Text(ru ? "Разрешённые сайты — по одному HTTPS-адресу на строку" : "Allowed sites — one HTTPS address per line").font(.headline)
             TextEditor(text: $origins).font(.body.monospaced()).frame(minHeight: 90, maxHeight: 180).border(.secondary.opacity(0.3))
             Text("https://example.com").font(.caption).foregroundStyle(.secondary)

@@ -8,6 +8,7 @@ struct PhoneSettingsProfileView: View {
         let activity = PhoneSettingsActivity(snapshot: store.snapshot)
         PhoneSettingsPage {
             PhoneProfileIdentitySection()
+            WorkspaceBillingView()
             PhoneSettingsGroup(title: "Activity") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 16)], spacing: 24) {
                     metric("Total tokens", value: activity.totalTokens)

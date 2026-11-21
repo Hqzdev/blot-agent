@@ -37,6 +37,8 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
     var workspaceCommands: (any WorkspaceCommandService)? { local }
     var isAuthenticated: Bool { local != nil }
 
+    func billingClient() -> WorkspaceBillingClient { .init(authorization: session, credentials: credentials) }
+
     init(installation: AppleInstallationConfiguration, directory: URL) throws {
         self.installation = installation
         guard let origin = installation.accountServiceURL else { throw WorkspaceCloudError.invalidConfiguration }

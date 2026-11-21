@@ -77,6 +77,26 @@ final class WorkspaceStore {
     @ObservationIgnored private var observation: _Concurrency.Task<Void, Never>?
     @ObservationIgnored private var restoringPresentation = false
     @ObservationIgnored private let presentationWriter = WorkspacePresentationWriter()
+    var billingCommands: (any WorkspaceBillingProviding)? { service as? any WorkspaceBillingProviding }
+    private(set) var billingOverview: WorkspaceBillingOverview?
+    private(set) var billingLoadFailed = false
+    @ObservationIgnored private var billingRequestID: UUID?
+
+    func refreshBilling() async {
+        guard let owner = snapshot.ownerID, let commands = billingCommands else { return }
+        let requestID = UUID()
+        billingRequestID = requestID
+        do {
+            let overview = try await commands.billingClient().overview(includePayments: false)
+            guard snapshot.ownerID == owner, billingRequestID == requestID else { return }
+            billingOverview = overview
+            billingLoadFailed = false
+        } catch {
+            guard snapshot.ownerID == owner, billingRequestID == requestID, !_Concurrency.Task.isCancelled else { return }
+            billingLoadFailed = true
+        }
+    }
+
     private var sessionGeneration = UUID()
     #if os(macOS)
     private var restoredUserProfile: WorkspaceUserProfile?
@@ -84,7 +104,7 @@ final class WorkspaceStore {
     @ObservationIgnored private let authenticationLog = Logger(subsystem: "dev.blot.authentication", category: "BrowserHandoff")
     private(set) var snapshot = WorkspaceSnapshot() {
         didSet {
-            if snapshot.ownerID != oldValue.ownerID { guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
+            if snapshot.ownerID != oldValue.ownerID { billingOverview = nil; billingLoadFailed = false; billingRequestID = nil; guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
             chatContent.update(snapshot, previous: oldValue)
             if snapshot.messages != oldValue.messages { messageIndex = WorkspaceMessageIndex(snapshot.messages) }
             if mode == .live {
