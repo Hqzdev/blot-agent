@@ -106,16 +106,10 @@ struct PhonePluginsView: View {
                     }
                 }
             } label: {
-                HStack(spacing: 3) {
-                    if isAdded(plugin) { BlotIcon(symbol: "checkmark", size: 12) }
-                    Text(store.t(isAdded(plugin) ? "Added" : "Add"))
-                }.font(.caption2.weight(.medium))
-                    .foregroundStyle(isAdded(plugin) ? Color(red: 0.21, green: 0.66, blue: 0.49) : WorkspaceStyle.ink)
-                    .padding(.horizontal, 8).padding(.vertical, 5)
-                    .background(isAdded(plugin) ? Color.green.opacity(0.09) : WorkspaceStyle.surface, in: Capsule())
+                PhonePluginBadge(connected: isAdded(plugin))
                     .frame(minHeight: 44)
             }.buttonStyle(.plain).disabled(store.busy)
-                .accessibilityLabel(store.t(isAdded(plugin) ? "Manage connection" : "Add") + " " + plugin.name)
+                .accessibilityHint(store.t("Manage connection") + " " + plugin.name)
         }.frame(minHeight: 56)
             .animation(reduceMotion ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: isAdded(plugin))
     }
