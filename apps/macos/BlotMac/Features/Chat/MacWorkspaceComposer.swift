@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 
 struct MacWorkspaceComposer: View {
     var teamLayout = false
+    var showsStarters = false
     var onInputFrameChange: ((CGRect) -> Void)? = nil
     var onSend: (() -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
@@ -80,7 +81,14 @@ struct MacWorkspaceComposer: View {
                 .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 23))
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
-            if teamLayout && composerHints {
+            if showsStarters {
+                MacChatStarters(russian: store.language == "ru") { prompt in
+                    store.form.composer.draft = prompt
+                    focused = true
+                }
+                .frame(maxWidth: .infinity)
+                .disabled(store.busy || !store.form.composer.draft.isEmpty)
+            } else if teamLayout && composerHints {
                 Text(store.currentConversation?.kind == .group ? "Задайте общую задачу — команда распределит работу по ролям" : "Прикрепите файл или задайте агенту задачу сообщением")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.horizontal, 14)
             }

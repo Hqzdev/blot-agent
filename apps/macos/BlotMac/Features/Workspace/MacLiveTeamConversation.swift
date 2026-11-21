@@ -37,6 +37,26 @@ struct MacLiveTeamConversation: View {
         return store.chatContent.agents.filter { ids.contains($0.metadata.id) }
     }
 
+    private var isEmptyChat: Bool {
+        messages.isEmpty && store.currentReplyDraft == nil
+    }
+
+    private var welcome: some View {
+        VStack(spacing: 12) {
+            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 48) }
+            else if let agent { WorkspaceAvatarView(agent: agent, size: 48, animated: !reduced) }
+            else { WorkspaceAnimatedAvatar(size: 48) }
+            Group {
+                if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
+                else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
+                else { WorkspaceWelcomeGreeting() }
+            }.font(.system(size: 23, weight: .medium)).multilineTextAlignment(.center)
+            if store.chatContent.agents.isEmpty {
+                Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
+            }
+        }
+    }
+
     var body: some View {
         let visibleMessages = messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }
         let authorIDs = WorkspaceMessageSeries.authorIDs(in: visibleMessages)
@@ -51,21 +71,6 @@ struct MacLiveTeamConversation: View {
                             timeline.synchronize(items: messages.map { .init(id: $0.metadata.id.uuidString, isUser: $0.role == .user) }, immediate: true)
                             _Concurrency.Task { await _Concurrency.Task.yield(); if let anchor { proxy.scrollTo(anchor, anchor: .top) } }
                         }.font(.callout).frame(maxWidth: .infinity)
-                    }
-                    if messages.isEmpty, store.currentReplyDraft == nil {
-                        VStack(spacing: 16) {
-                            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 68) }
-                            else if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
-                            else { WorkspaceAnimatedAvatar(size: 68) }
-                            Group {
-                                if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
-                                else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
-                                else { WorkspaceWelcomeGreeting() }
-                            }.font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
-                            if store.chatContent.agents.isEmpty {
-                                Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
-                            }
-                        }.frame(maxWidth: .infinity).padding(.vertical, 100)
                     }
                     ForEach(visibleMessages, id: \.metadata.id) { message in
                         Group {
@@ -146,10 +151,11 @@ struct MacLiveTeamConversation: View {
         .safeAreaInset(edge: .top, spacing: 0) { WorkspacePinnedGroupPlan().padding(.horizontal, 24).padding(.top, 6) }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
+                if isEmptyChat { welcome.padding(.bottom, 12) }
                 WorkspaceFeedback()
-                MacWorkspaceComposer(teamLayout: true, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
-            }.frame(maxWidth: 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
-                .frame(maxWidth: .infinity).background(WorkspaceStyle.canvas)
+                MacWorkspaceComposer(teamLayout: true, showsStarters: isEmptyChat && !store.chatContent.agents.isEmpty, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
+            }.frame(maxWidth: isEmptyChat ? 560 : 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, isEmptyChat ? 62 : 8)
+                .frame(maxWidth: .infinity, maxHeight: isEmptyChat ? .infinity : nil).background(WorkspaceStyle.canvas)
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
         .kAnimation(MacTeamMessageMotion.receive, value: timeline.lastRevealedID)

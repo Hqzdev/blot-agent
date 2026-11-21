@@ -139,7 +139,7 @@ private struct ProgressModel: ChatModel {
         await store.loadWorkspace()
         store.form.agent = WorkspaceAgentForm(name: "Progress fixture", instructions: "Create a requested document", toolIDs: ["document_create"])
         await store.perform(.createAgent)
-        guard let agent = store.selectedAgentID else { throw VoiceFailure.emptyResponse }
+        guard let agent = store.selectedAgentID else { throw CocoaError(.coderInvalidValue) }
         await store.newChat(with: agent)
         store.form.composer.draft = "Создай документ"
         await store.perform(.send)

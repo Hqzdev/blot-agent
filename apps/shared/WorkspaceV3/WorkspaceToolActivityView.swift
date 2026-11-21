@@ -6,22 +6,45 @@ struct WorkspaceToolActivityView: View {
     let message: BlotV3.Message
     @Environment(WorkspaceStore.self) private var store
     @State private var showsAll = false
+    @State private var expanded = false
     private var russian: Bool { store.language == "ru" }
     var body: some View {
         let rows = store.chatContent.activities(for: message)
         if !rows.isEmpty {
             VStack(alignment: .leading, spacing: 3) {
-                ForEach(showsAll ? rows : Array(rows.suffix(4))) { row in
-                    WorkspaceToolActivityRow(row: row, russian: russian)
+                #if os(macOS)
+                let active = rows.contains { $0.state == .running || $0.state == .queued || $0.state == .approval }
+                let failure = rows.contains { [.denied, .failed, .stopped, .unknown].contains($0.state) }
+                if active {
+                    MacChatWorkStatus(title: russian ? "Работаю" : "Working", start: message.metadata.createdAt, russian: russian)
+                        .font(.callout).foregroundStyle(.secondary)
+                } else {
+                    Button { expanded.toggle() } label: {
+                        HStack(spacing: 6) {
+                            MacChatWorkStatus(title: failure ? (russian ? "Работа остановлена" : "Work stopped") : (russian ? "Готово" : "Done"),
+                                start: message.metadata.createdAt, end: message.metadata.updatedAt, russian: russian)
+                            Image(systemName: expanded ? "chevron.down" : "chevron.right").font(.caption2)
+                        }.padding(.vertical, 6).contentShape(Rectangle())
+                    }.buttonStyle(.plain).foregroundStyle(.secondary)
                 }
-                if rows.count > 4 {
-                    Button(showsAll ? (russian ? "Свернуть действия" : "Show fewer actions") : (russian ? "Все действия (\(rows.count))" : "All actions (\(rows.count))")) { showsAll.toggle() }
-                        .font(.caption).buttonStyle(.plain).foregroundStyle(.secondary).padding(.leading, 27).padding(.vertical, 5)
-                }
-                if rows.count == 64 { Text(russian ? "Показаны последние 64 действия" : "Showing the latest 64 actions").font(.caption2).foregroundStyle(.secondary) }
+                if active || expanded { actionRows(rows) }
+                #else
+                actionRows(rows)
+                #endif
             }.accessibilityIdentifier("workspace.chat.tool-activity.\(message.metadata.id)")
         }
     }
+    @ViewBuilder private func actionRows(_ rows: [WorkspaceToolActivity]) -> some View {
+        ForEach(showsAll ? rows : Array(rows.suffix(4))) { row in
+            WorkspaceToolActivityRow(row: row, russian: russian)
+        }
+        if rows.count > 4 {
+            Button(showsAll ? (russian ? "Свернуть действия" : "Show fewer actions") : (russian ? "Все действия (\(rows.count))" : "All actions (\(rows.count))")) { showsAll.toggle() }
+                .font(.caption).buttonStyle(.plain).foregroundStyle(.secondary).padding(.leading, 27).padding(.vertical, 5)
+        }
+        if rows.count == 64 { Text(russian ? "Показаны последние 64 действия" : "Showing the latest 64 actions").font(.caption2).foregroundStyle(.secondary) }
+    }
+
 }
 
 private struct WorkspaceToolActivityRow: View {
@@ -35,6 +58,12 @@ private struct WorkspaceToolActivityRow: View {
         #else
         30
         #endif
+    }
+    private var displayTitle: String {
+        #if os(macOS)
+        if russian && row.state == .running && row.tool == "document_create" { return "Создаю документ" }
+        #endif
+        return row.title(russian: russian)
     }
     private var terminalFailure: Bool { row.state == .failed || row.state == .denied || row.state == .unknown }
     var body: some View {
@@ -55,7 +84,7 @@ private struct WorkspaceToolActivityRow: View {
                 .frame(minHeight: minimumHeight).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(row.title(russian: russian) + ", " + row.status(russian: russian))
+            .accessibilityLabel(displayTitle + ", " + row.status(russian: russian))
             .accessibilityValue(expanded ? (russian ? "Развёрнуто" : "Expanded") : (russian ? "Свёрнуто" : "Collapsed"))
             .accessibilityIdentifier("workspace.chat.tool-action.\(row.id)")
             if expanded {
@@ -76,7 +105,14 @@ private struct WorkspaceToolActivityRow: View {
             }
         }
     }
-    private var name: some View { Text(row.title(russian: russian)).multilineTextAlignment(.leading) }
+    @ViewBuilder private var name: some View {
+        #if os(macOS)
+        if row.state == .running { MacChatActivityLabel(title: displayTitle).multilineTextAlignment(.leading) }
+        else { Text(displayTitle).multilineTextAlignment(.leading) }
+        #else
+        Text(row.title(russian: russian)).multilineTextAlignment(.leading)
+        #endif
+    }
     @ViewBuilder private var provider: some View {
         if let provider = row.provider {
             Text("@" + provider).foregroundStyle(row.plugin?.color ?? .secondary).multilineTextAlignment(.leading)
