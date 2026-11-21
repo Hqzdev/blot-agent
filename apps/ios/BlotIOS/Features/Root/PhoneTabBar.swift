@@ -19,7 +19,6 @@ struct PhoneTabBar: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.blotReduceMotion) private var reduceMotion
-    @Namespace private var selection
 
     static func isTab(_ route: WorkspaceRoute) -> Bool { items.contains { $0.route == route } }
     static func isVisible(on route: WorkspaceRoute) -> Bool {
@@ -40,7 +39,9 @@ struct PhoneTabBar: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 50)
                         .foregroundStyle(store.tab == item.route ? WorkspaceStyle.ink : WorkspaceStyle.secondary)
-                        .background { Color.clear.matchedGeometryEffect(id: item.route, in: selection) }
+                        .anchorPreference(key: PhoneTabSelectionBounds.self, value: .bounds) {
+                            store.tab == item.route ? $0 : nil
+                        }
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
@@ -48,15 +49,17 @@ struct PhoneTabBar: View {
                     .accessibilityIdentifier("workspace.tab.\(item.route.rawValue)")
                 }
             }
-            .background {
-                if Self.isTab(store.tab) {
-                    Capsule().fill(WorkspaceStyle.ink.opacity(0.08))
-                        .matchedGeometryEffect(id: store.tab, in: selection, isSource: false)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
+            .backgroundPreferenceValue(PhoneTabSelectionBounds.self) { anchor in
+                GeometryReader { geometry in
+                    PhoneTabSelectionIndicator(
+                        target: anchor.map { geometry[$0] } ?? .zero,
+                        color: WorkspaceStyle.ink.opacity(0.08),
+                        reduceMotion: reduceMotion || systemReduceMotion
+                    )
                 }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
-            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: store.tab)
             .padding(5)
             .glassEffect(.regular.interactive(), in: .capsule)
         }
