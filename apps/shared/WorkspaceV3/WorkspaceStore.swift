@@ -31,6 +31,7 @@ final class WorkspaceStore {
     }
     private var messageIndex = WorkspaceMessageIndex()
     private(set) var busy = false
+    let browserSignIn = WorkspaceBrowserSignIn()
     private(set) var isRestoringSession: Bool
     private(set) var history: [WorkspaceRoute] = []
     var route: WorkspaceRoute
@@ -229,6 +230,7 @@ final class WorkspaceStore {
             form.personalization = saved.personalization
             form.account.name = saved.firstName; form.account.lastName = saved.lastName; form.account.email = saved.email
         }
+        guard !_Concurrency.Task.isCancelled else { return }
         if let profile = (service as? any WorkspaceAccountService)?.profile {
             form.account.name = profile.name; form.account.email = profile.email
         }
@@ -278,8 +280,7 @@ final class WorkspaceStore {
                 return
             }
             authenticationLog.info("Starting browser sign-in")
-            form.account.browserRegistering = false
-            await perform(.oauth)
+            signInWithBrowser()
         }
     }
 
@@ -336,10 +337,15 @@ final class WorkspaceStore {
     }
     #endif
     func t(_ english: String) -> String { WorkspaceCopy.text(english, language: language) }
+    func signInWithBrowser(registering: Bool = false) {
+        guard !busy, !isRestoringSession, !browserSignIn.isActive else { return }
+        form.account.browserRegistering = registering
+        browserSignIn.start { [weak self] in await self?.perform(.oauth) }
+    }
+
     func navigate(_ destination: WorkspaceRoute) {
         if mode == .live, [.signIn, .createAccount].contains(destination) {
-            form.account.browserRegistering = destination == .createAccount
-            _Concurrency.Task { await perform(.oauth) }
+            signInWithBrowser(registering: destination == .createAccount)
             return
         }
         guard mode != .live || commands != nil || destination.isAuthentication else { return }
@@ -453,9 +459,14 @@ final class WorkspaceStore {
                 else { pendingSendCommands[id] = (request.commandID, input.composer.draft) }
             }
             let result = try await service.execute(request, snapshot: snapshot)
+            if action == .oauth { try _Concurrency.Task.checkCancellation() }
             guard sessionGeneration == generation else { return }
             snapshot = result
-            if [.signIn, .verify, .oauth].contains(action) { await enterWorkspace(); return }
+            if [.signIn, .verify, .oauth].contains(action) {
+                await enterWorkspace()
+                if action == .oauth { try _Concurrency.Task.checkCancellation() }
+                return
+            }
             if action == .register {
                 #if os(iOS)
                 authenticationRoute = nil
@@ -494,6 +505,11 @@ final class WorkspaceStore {
                 else { navigate(next) }
             }
         } catch {
+            if action == .oauth, error is CancellationError || _Concurrency.Task.isCancelled {
+                try? await (service as? any WorkspaceAccountService)?.signOut()
+                snapshot = WorkspaceSnapshot()
+                return
+            }
             if action == .send, let submittedConversationID { failedSends[submittedConversationID] = submittedComposer }
             guard sessionGeneration == generation else { return }
             self.error = WorkspaceFailureCopy.message(error)

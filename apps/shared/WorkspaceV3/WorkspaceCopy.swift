@@ -351,6 +351,7 @@ enum WorkspaceCopy {
         "API key": "API-ключ",
         "Check and save": "Проверить и сохранить",
         "Cancel": "Отмена",
+        "Waiting for browser": "Ожидание браузера",
         "Save": "Сохранить",
         "Observe": "Наблюдение",
         "Trusted scope": "Доверенная область",
