@@ -23,7 +23,12 @@ struct WorkspaceReplyBubble: View {
                     }
                 }.accessibilityHidden(true)
             }
+            #if os(macOS)
+            MacChatActivityLabel(title: store.language == "ru" ? "Думаю" : "Thinking")
+                .font(compact ? .system(size: 13) : .callout)
+            #else
             WorkspaceTypingIndicator(size: compact ? 6 : 8)
+            #endif
             Spacer(minLength: compact ? 54 : 44)
         }
         .padding(.vertical, 8)
