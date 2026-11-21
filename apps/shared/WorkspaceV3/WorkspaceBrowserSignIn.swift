@@ -1,3 +1,4 @@
+import BlotDesign
 import Observation
 
 @MainActor @Observable
@@ -10,6 +11,12 @@ final class WorkspaceBrowserSignIn {
         isActive = true
         task = _Concurrency.Task {
             defer { isActive = false; task = nil }
+            #if os(iOS)
+            // Let the split finish before the system browser covers the welcome screen.
+            do { try await _Concurrency.Task.sleep(for: .seconds(BlotInterfaceMotion.Duration.standard)) }
+            catch { return }
+            #endif
+            guard !_Concurrency.Task.isCancelled else { return }
             await operation()
         }
     }

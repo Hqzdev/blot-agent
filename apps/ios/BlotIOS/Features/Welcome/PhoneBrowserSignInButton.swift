@@ -11,7 +11,7 @@ struct PhoneBrowserSignInButton: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let width = geometry.size.width - (waiting ? 8 : 0)
+            let width = max(0, geometry.size.width - (waiting ? 8 : 0))
             HStack(spacing: 8) {
                 if waiting {
                     cancelButton.frame(width: width * 0.3)
@@ -20,7 +20,7 @@ struct PhoneBrowserSignInButton: View {
                 Button { store.navigate(.signIn) } label: {
                     HStack(spacing: 8) {
                         if waiting { ProgressView().controlSize(.small).tint(WorkspaceStyle.secondary) }
-                        Text(store.t(waiting ? "Wait for browser" : "Log In or Sign Up"))
+                        Text(store.t(waiting ? "Waiting for browser" : "Log In or Sign Up"))
                             .font(waiting ? .subheadline.weight(.medium) : .body.weight(.medium))
                             .lineLimit(1).minimumScaleFactor(0.75)
                     }
