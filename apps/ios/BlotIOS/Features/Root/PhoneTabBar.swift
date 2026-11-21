@@ -17,7 +17,8 @@ struct PhoneTabBar: View {
     ]
 
     @Environment(WorkspaceStore.self) private var store
-    @Namespace private var selection
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.blotReduceMotion) private var reduceMotion
 
     static func isTab(_ route: WorkspaceRoute) -> Bool { items.contains { $0.route == route } }
     static func isVisible(on route: WorkspaceRoute) -> Bool {
@@ -38,19 +39,26 @@ struct PhoneTabBar: View {
                         }
                         .frame(maxWidth: .infinity, minHeight: 50)
                         .foregroundStyle(store.tab == item.route ? WorkspaceStyle.ink : WorkspaceStyle.secondary)
-                        .background {
-                            if store.tab == item.route {
-                                Capsule().fill(WorkspaceStyle.ink.opacity(0.08))
-                                    .matchedGeometryEffect(id: "selected-tab", in: selection)
-                            }
+                        .anchorPreference(key: PhoneTabSelectionBounds.self, value: .bounds) {
+                            store.tab == item.route ? $0 : nil
                         }
-                        .animation(.smooth(duration: 0.22), value: store.tab)
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityAddTraits(store.tab == item.route ? .isSelected : [])
                     .accessibilityIdentifier("workspace.tab.\(item.route.rawValue)")
                 }
+            }
+            .backgroundPreferenceValue(PhoneTabSelectionBounds.self) { anchor in
+                GeometryReader { geometry in
+                    PhoneTabSelectionIndicator(
+                        target: anchor.map { geometry[$0] } ?? .zero,
+                        color: WorkspaceStyle.ink.opacity(0.08),
+                        reduceMotion: reduceMotion || systemReduceMotion
+                    )
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
             .padding(5)
             .glassEffect(.regular.interactive(), in: .capsule)
