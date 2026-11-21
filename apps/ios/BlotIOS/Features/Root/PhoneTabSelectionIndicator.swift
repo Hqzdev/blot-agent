@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 import UIKit
 
@@ -57,8 +58,8 @@ struct PhoneTabSelectionIndicator: UIViewRepresentable {
             bounds.toValue = target.size
             let slide = CAAnimationGroup()
             slide.animations = [position, bounds]
-            slide.duration = 0.34
-            slide.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            slide.duration = BlotInterfaceMotion.Duration.quick
+            slide.timingFunction = CAMediaTimingFunction(name: .easeOut)
             layer.add(slide, forKey: "selection")
         }
     }
