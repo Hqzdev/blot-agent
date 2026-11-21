@@ -93,7 +93,6 @@ struct MacLiveTeamWorkspace: View {
                             .font(.system(size: 17, weight: .semibold)).lineLimit(1)
                     } else {
                         if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
-                        else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
                         Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
                             .font(.system(size: 17, weight: .semibold)).lineLimit(1)
                             .padding(.horizontal, 16).padding(.vertical, 6)

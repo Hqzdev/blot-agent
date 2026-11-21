@@ -26,10 +26,6 @@ struct MacLiveTeamConversation: View {
     }
     private var messages: [BlotV3.Message] { Array(history.messages(in: store.currentVisibleMessages)) }
     private var reduced: Bool { reduceMotion || systemReduceMotion }
-    private var agent: BlotV3.AgentProfile? {
-        store.chatContent.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
-    }
-
     private var groupMembers: [BlotV3.AgentProfile] {
         let ids = Set((store.chatContent.participants).filter {
             $0.conversationId == store.selectedConversationID && $0.kind == .agent && !$0.removed
@@ -44,8 +40,6 @@ struct MacLiveTeamConversation: View {
     private var welcome: some View {
         VStack(spacing: 12) {
             if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 48) }
-            else if let agent { WorkspaceAvatarView(agent: agent, size: 48, animated: !reduced) }
-            else { WorkspaceAnimatedAvatar(size: 48) }
             Group {
                 if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
                 else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
@@ -171,6 +165,7 @@ private struct MacLiveTeamMessage: View {
     let showsAuthor: Bool
     @Environment(WorkspaceStore.self) private var store
     private var isUser: Bool { message.role == .user }
+    private var isGroup: Bool { store.currentConversation?.kind == .group }
     private var agent: BlotV3.AgentProfile? {
         store.chatContent.agents.first { $0.metadata.id == (message.authorAgentId ?? store.currentConversation?.agentId) }
     }
@@ -181,7 +176,7 @@ private struct MacLiveTeamMessage: View {
         HStack(alignment: .top) {
             if isUser { Spacer(minLength: 54) }
             VStack(alignment: .leading, spacing: 12) {
-                if !isUser && showsAuthor {
+                if isGroup && !isUser && showsAuthor {
                     HStack(spacing: 9) {
                         if let agent { WorkspaceAvatarView(agent: agent, size: 22) }
                         Text(agent?.name ?? "Blot").font(.system(size: 11, weight: .semibold))
@@ -229,9 +224,9 @@ private struct MacLiveTeamMessage: View {
                     })
                     .modifier(MacTeamSwipeToReply { store.beginReply(to: message.metadata.id) })
                     .modifier(MacTeamMessageEntrance(animated: arriving && isUser, outgoing: true, inputFrame: inputFrame))
-                    .padding(.leading, isUser ? 0 : 30)
+                    .padding(.leading, isGroup && !isUser ? 30 : 0)
                 }
-                WorkspaceToolActivityView(message: message).padding(.leading, 30)
+                WorkspaceToolActivityView(message: message).padding(.leading, isGroup ? 30 : 0)
                 HStack(spacing: 5) {
                 ForEach(WorkspaceChatInteractions.reactions, id: \.self) { reaction in
                     let count = reactions.filter { $0.emoji == reaction }.count
