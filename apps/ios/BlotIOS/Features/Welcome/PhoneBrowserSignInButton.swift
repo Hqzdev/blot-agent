@@ -7,7 +7,9 @@ struct PhoneBrowserSignInButton: View {
     @Environment(\.blotReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
-    private var waiting: Bool { store.browserSignIn.isActive }
+    @State private var preparingSignIn = false
+
+    private var waiting: Bool { preparingSignIn || store.browserSignIn.isActive }
 
     var body: some View {
         GeometryReader { geometry in
@@ -16,8 +18,17 @@ struct PhoneBrowserSignInButton: View {
                 if waiting {
                     cancelButton.frame(width: width * 0.3)
                         .transition(.opacity.combined(with: .scale(scale: 0.9, anchor: .leading)))
+                        .task(id: preparingSignIn) {
+                            guard preparingSignIn else { return }
+                            // Start the handoff only after the split controls appear.
+                            do { try await _Concurrency.Task.sleep(for: .milliseconds(350)) }
+                            catch { return }
+                            guard preparingSignIn, !_Concurrency.Task.isCancelled else { return }
+                            store.navigate(.signIn)
+                            preparingSignIn = false
+                        }
                 }
-                Button { store.navigate(.signIn) } label: {
+                Button { preparingSignIn = true } label: {
                     HStack(spacing: 8) {
                         if waiting { ProgressView().controlSize(.small).tint(WorkspaceStyle.secondary) }
                         Text(store.t(waiting ? "Waiting for browser" : "Log In or Sign Up"))
@@ -41,7 +52,10 @@ struct PhoneBrowserSignInButton: View {
     }
 
     private var cancelButton: some View {
-        Button { store.browserSignIn.cancel() } label: {
+        Button {
+            preparingSignIn = false
+            store.browserSignIn.cancel()
+        } label: {
             Text(store.t("Cancel")).font(.subheadline.weight(.medium))
                 .lineLimit(1).minimumScaleFactor(0.75)
                 .frame(maxWidth: .infinity, minHeight: 48)
