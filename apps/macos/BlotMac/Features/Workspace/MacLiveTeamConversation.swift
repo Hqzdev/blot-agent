@@ -146,7 +146,7 @@ struct MacLiveTeamConversation: View {
             VStack(spacing: 8) {
                 WorkspaceFeedback()
                 MacWorkspaceComposer(teamLayout: true, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
-            }.frame(maxWidth: 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
+            }.frame(maxWidth: store.currentVisibleMessages.isEmpty ? 660 : 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
                 .frame(maxWidth: .infinity).background(WorkspaceStyle.canvas)
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)

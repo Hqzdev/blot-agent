@@ -25,7 +25,7 @@ struct MacWorkspaceComposer: View {
                 HStack(alignment: .top) {
                     WorkspaceQuotedMessage(message: quoted)
                     Button { store.form.composer.replyToMessageID = nil } label: { BlotIcon(.close, size: 12) }
-                        .buttonStyle(.plain).accessibilityLabel(store.t("Cancel reply"))
+                        .buttonStyle(.plain).accessibilityLabel(store.t("Cancel reply")).macHoverTip(store.t("Cancel reply"))
                 }.padding(.horizontal, 10).padding(.top, 4)
             }
             if !store.form.composer.attachments.isEmpty { attachments }
@@ -43,9 +43,9 @@ struct MacWorkspaceComposer: View {
                     BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
                     BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
                 } label: {
-                    Color.clear.frame(width: 30, height: 30)
+                    Color.clear.frame(width: 34, height: 34)
                 }.menuStyle(.borderlessButton).menuIndicator(.hidden)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 34, height: 34)
                     .background(WorkspaceStyle.surface, in: Circle())
                     // Draw outside the native menu label, which applies its own template tint.
                     .overlay {
@@ -53,10 +53,10 @@ struct MacWorkspaceComposer: View {
                             .foregroundStyle(colorScheme == .dark ? Color.white : WorkspaceStyle.ink)
                             .allowsHitTesting(false)
                     }
-                    .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
+                    .macHoverTip(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
                 TextField(placeholder, text: $store.form.composer.draft, axis: .vertical)
-                    .font(.system(size: 13)).textFieldStyle(.plain).lineLimit(1...6)
-                    .focused($focused).disabled(store.busy).accessibilityLabel(store.t("Message"))
+                    .font(.system(size: 16)).textFieldStyle(.plain).lineLimit(1...6)
+                    .focused($focused).disabled(store.busy).accessibilityLabel(store.t("Message")).macHoverTip(placeholder)
                     .padding(.vertical, 7).onSubmit {
                         if !teamLayout || sendOnReturn { send() }
                         else { store.form.composer.draft += "\n" }
@@ -71,12 +71,12 @@ struct MacWorkspaceComposer: View {
                         if store.isReplying { BlotIcon(.stop, size: 15) }
                         else if store.busy { ProgressView().controlSize(.mini).tint(BlotColor.onInverse) }
                         else { BlotIcon(.arrowUp, size: 15) }
-                    }.frame(width: 30, height: 30)
+                    }.frame(width: 34, height: 34)
                         .foregroundStyle(BlotColor.onInverse).background(BlotColor.inverse, in: Circle())
                 }.buttonStyle(.plain)
-                    .help(store.t(store.isReplying ? "Stop reply" : "Send message"))
+                    .macHoverTip(store.t(store.isReplying ? "Stop reply" : "Send message"))
                     .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
-            }.padding(teamLayout ? 10 : 5)
+            }.padding(teamLayout ? 13 : 5)
                 .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 23))
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
@@ -114,7 +114,7 @@ struct MacWorkspaceComposer: View {
                         BlotIcon(.document, size: 12)
                         Text(url.lastPathComponent).lineLimit(1)
                         Button { store.form.composer.attachments.removeAll { $0 == url } } label: { BlotIcon(.close, size: 10) }
-                            .buttonStyle(.plain).accessibilityLabel(store.t("Remove attachment"))
+                            .buttonStyle(.plain).accessibilityLabel(store.t("Remove attachment")).macHoverTip(store.t("Remove attachment"))
                     }.font(MacWorkspaceStyle.caption).padding(.horizontal, 8).padding(.vertical, 6)
                         .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
                 }

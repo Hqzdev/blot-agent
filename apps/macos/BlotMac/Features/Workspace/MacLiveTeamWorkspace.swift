@@ -7,6 +7,7 @@ import SwiftUI
 struct MacLiveTeamWorkspace: View {
     @Environment(WorkspaceStore.self) private var store
     @Environment(\.blotReduceMotion) private var reduceMotion
+    @AppStorage("blot.mac.workspace.sidebarWidth") private var sidebarWidth = 0.0
     @State private var inspectorVisible = true
     @State private var settingsSearchFocusRequest = 0
     @State private var creating = false
@@ -27,9 +28,10 @@ struct MacLiveTeamWorkspace: View {
             ZStack {
                 if let route = store.settingsRoute {
                     MacLiveTeamSettings(route: route, searchFocusRequest: settingsSearchFocusRequest).transition(.opacity)
-                } else { workspace(layout: MacWorkspaceLayout(size: geometry.size)).transition(.opacity) }
+                } else { workspace(layout: MacWorkspaceLayout(size: geometry.size, preferredSidebarWidth: sidebarWidth > 0 ? sidebarWidth : nil)).transition(.opacity) }
             }
         }
+        .macHoverTipHost()
         .kAnimation(KMotion.panel, value: store.settingsRoute != nil)
         .font(.system(size: 13)).foregroundStyle(WorkspaceStyle.ink).background(WorkspaceStyle.canvas)
         .frame(minWidth: store.browser?.presented == true && isConversation ? MacBrowserSplitLayout.minimumWidth : MacWorkspaceLayout.minimumWidth,
@@ -53,9 +55,26 @@ struct MacLiveTeamWorkspace: View {
         let showsSidebar = layout.supportsSidebar && store.sidebarVisible && !showsBrowser
         let showsInspector = inspectorVisible && isConversation && !showsBrowser && layout.supportsInspector(sidebarVisible: showsSidebar)
         return HStack(spacing: 0) {
-            if showsSidebar {
-                MacLiveTeamSidebar().frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.leading))
+            ZStack(alignment: .trailing) {
+                if showsSidebar {
+                    MacLiveTeamSidebar()
+                        .frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar)
+                        .transition(.opacity)
+                }
             }
+            .frame(width: showsSidebar ? layout.sidebarWidth : 0, alignment: .trailing)
+            .clipped()
+            .allowsHitTesting(showsSidebar)
+            .accessibilityHidden(!showsSidebar)
+            .overlay(alignment: .trailing) {
+                if showsSidebar {
+                    MacWorkspaceDivider(width: Binding(get: { Double(layout.sidebarWidth) }, set: { sidebarWidth = $0 }),
+                        bounds: layout.sidebarBounds,
+                        title: store.language == "ru" ? "Ширина списка чатов" : "Chat list width")
+                        .offset(x: MacWorkspaceDivider.hitWidth / 2)
+                }
+            }
+            .zIndex(1)
             if showsBrowser, let browser = store.browser {
                 MacBrowserSplitView {
                     conversation(layout: layout, showsSidebar: showsSidebar)
@@ -104,18 +123,18 @@ struct MacLiveTeamWorkspace: View {
                     if store.route == .marketplace {
                         headerButton(store.t("Back"), glyph: .chevronLeft) { store.back() }
                     }
-                    headerButton("Боковая панель", glyph: .layout) {
+                    headerButton(sidebarToggleTitle(visible: showsSidebar || sidebarPopover), glyph: .layout) {
                         if layout.supportsSidebar { store.sidebarVisible.toggle() }
                         else { sidebarPopover.toggle() }
                     }
                     .popover(isPresented: $sidebarPopover, arrowEdge: .top) {
                         MacLiveTeamSidebar(showsWindowSpace: false)
-                            .frame(width: 280, height: layout.popoverHeight).environment(store)
+                            .frame(width: MacWorkspaceLayout.defaultSidebarWidth, height: layout.popoverHeight).macHoverTipHost().environment(store)
                     }
                     Button { creating.toggle() } label: {
                         BlotIcon(.plus, size: BlotIconSize.control).frame(width: 36, height: 36)
                     }.buttonStyle(.plain).opacity(creating ? 0 : 1)
-                        .glassEffect(.regular.interactive(), in: .circle).accessibilityLabel("Создать")
+                        .glassEffect(.regular.interactive(), in: .circle).accessibilityLabel("Создать").macHoverTip(store.t("Create"))
                         .background {
                             MacTeamToolbarExpansion(isPresented: $creating, size: CGSize(width: 192, height: 128)) {
                                 MacTeamCreateMenu(close: { creating = false }) { sheet in
@@ -132,9 +151,9 @@ struct MacLiveTeamWorkspace: View {
                     Spacer()
                     Button { store.showBrowser() } label: { Image(systemName: "globe").frame(width: 36, height: 36) }
                         .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle)
-                        .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser")
+                        .accessibilityLabel(store.language == "ru" ? "Браузер" : "Browser").macHoverTip(store.language == "ru" ? "Браузер" : "Browser")
                     if isConversation {
-                        headerButton("Панель агента", glyph: .inspector) {
+                        headerButton(store.language == "ru" ? "Панель агента" : "Agent panel", glyph: .inspector) {
                             if layout.supportsInspector(sidebarVisible: showsSidebar) { inspectorVisible.toggle() }
                             else { inspectorPopover.toggle() }
                         }
@@ -148,9 +167,14 @@ struct MacLiveTeamWorkspace: View {
         .background { Color.clear.contentShape(Rectangle()).gesture(WindowDragGesture()).allowsWindowActivationEvents(true) }
     }
 
+    private func sidebarToggleTitle(visible: Bool) -> String {
+        if store.language == "ru" { return visible ? "Скрыть боковую панель" : "Показать боковую панель" }
+        return visible ? "Hide sidebar" : "Show sidebar"
+    }
+
     private func headerButton(_ title: String, glyph: BlotGlyph, action: @escaping () -> Void) -> some View {
         Button(action: action) { BlotIcon(glyph, size: BlotIconSize.control).frame(width: 36, height: 36) }
-            .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle).accessibilityLabel(Text(LocalizedStringKey(title))).help(Text(LocalizedStringKey(title)))
+            .buttonStyle(.plain).glassEffect(.regular.interactive(), in: .circle).accessibilityLabel(Text(LocalizedStringKey(title))).macHoverTip(title)
     }
 }
 
@@ -176,11 +200,11 @@ private struct MacLiveTeamSidebar: View {
                             HStack(spacing: 10) {
                                 WorkspaceAvatarView(agent: agent, size: 36)
                                 VStack(alignment: .leading, spacing: 5) {
-                                    Text(agent.name).font(.system(size: 12, weight: .medium))
-                                    Text(lastMessage(for: agent)).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
+                                    Text(agent.name).font(.system(size: 14, weight: .medium))
+                                    Text(lastMessage(for: agent)).font(.system(size: 13)).foregroundStyle(.secondary).lineLimit(1)
                                 }
                             }
-                        }.contextMenu {
+                        }.macHoverTip(agent.name).contextMenu {
                             Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }
                             Button("Открыть чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
                             if let chat = store.currentConversation, chat.kind != .group, chat.agentId == agent.metadata.id {
@@ -191,8 +215,8 @@ private struct MacLiveTeamSidebar: View {
                     }
                     if store.snapshot.agents.isEmpty {
                         MacTeamNavigationButton(action: { store.navigate(.createAgent) }) {
-                            Label("Создать своего агента", systemImage: "plus").font(.system(size: 12))
-                        }
+                            Label("Создать своего агента", systemImage: "plus").font(.system(size: 14))
+                        }.macHoverTip(store.t("Create agent"))
                     }
                     if !groups.isEmpty {
                         heading("Группы").padding(.top, 16)
@@ -201,9 +225,9 @@ private struct MacLiveTeamSidebar: View {
                                 action: { store.openConversation(chat.metadata.id) }) {
                                 HStack(spacing: 10) {
                                     MacLiveTeamGroupAvatar(agents: members(of: chat), size: 36)
-                                    Text(chat.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
+                                    Text(chat.title).font(.system(size: 14, weight: .medium)).lineLimit(2)
                                 }
-                            }.contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store) }
+                            }.macHoverTip(chat.title).contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store) }
                         }
                     }
                 }.padding(.horizontal, 10).padding(.bottom, 16)
@@ -212,21 +236,21 @@ private struct MacLiveTeamSidebar: View {
                 MacTeamNavigationButton(selected: store.route == .marketplace, action: {
                     if store.route != .marketplace { store.navigate(.marketplace) }
                 }) {
-                    Label("Приложения и шаблоны", systemImage: "square.grid.2x2").font(.system(size: 12))
-                }
+                    Label("Приложения и шаблоны", systemImage: "square.grid.2x2").font(.system(size: 14))
+                }.macHoverTip(store.t("Connect apps"))
                 Divider()
                 MacTeamNavigationButton(action: { store.navigate(.settings) }) {
                     HStack(spacing: 10) {
                         Text(String(store.accountDisplayName.prefix(1))).font(.system(size: 10, weight: .medium))
                             .frame(width: 28, height: 28).background(.quaternary, in: Circle())
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(store.accountDisplayName).font(.system(size: 12, weight: .medium))
+                            Text(store.accountDisplayName).font(.system(size: 14, weight: .medium))
                             Text("Личное пространство").font(.system(size: 10)).foregroundStyle(.secondary)
                         }
                         Spacer()
                         BlotIcon(.settings, size: BlotIconSize.control)
                     }
-                }
+                }.macHoverTip(store.t("Settings"))
             }.padding(.horizontal, 10).padding(.bottom, 12)
         }
     }
