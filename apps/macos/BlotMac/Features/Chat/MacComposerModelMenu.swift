@@ -22,7 +22,6 @@ struct MacComposerModelMenu: View {
     private var automatic: String { store.language == "ru" ? "Модель агента" : "Agent model" }
 
     private let extraInk = BlotColor.dynamic(.init(light: 0x62399DFF, dark: 0xD5BEFFFF))
-    private let extraFill = BlotColor.dynamic(.init(light: 0xEFE7FAFF, dark: 0x402D57FF))
 
     var body: some View {
         HStack(spacing: 4) {
@@ -45,12 +44,11 @@ struct MacComposerModelMenu: View {
 
     private func chip(_ title: String, highlighted: Bool = false) -> some View {
         Text(title)
-            .font(.system(size: 13, weight: highlighted ? .medium : .regular))
+            .font(.system(size: 13))
             .foregroundStyle(highlighted ? extraInk : BlotColor.textSecondary)
             .lineLimit(1)
             .padding(.horizontal, 8)
             .frame(minHeight: 30)
-            .background(highlighted ? extraFill : .clear, in: RoundedRectangle(cornerRadius: 7))
     }
 
     private func option(_ title: String, glyph: BlotGlyph, checked: Bool, accented: Bool = false) -> some View {
@@ -60,16 +58,13 @@ struct MacComposerModelMenu: View {
                     .foregroundStyle(accented ? extraInk : BlotColor.text)
             } icon: {
                 BlotIcon(glyph, size: BlotIconSize.control)
-                    .foregroundStyle(accented ? extraInk : BlotColor.text)
             }
             Spacer(minLength: 8)
             if checked {
                 BlotIcon(.check, size: BlotIconSize.inline)
-                    .foregroundStyle(accented ? extraInk : BlotColor.text)
             }
         }
         .frame(minHeight: 25)
-        .background(accented ? extraFill : .clear, in: RoundedRectangle(cornerRadius: 6))
         .accessibilityAddTraits(checked ? .isSelected : [])
     }
 }
