@@ -4,8 +4,10 @@ import SwiftUI
 
 /// One menu surface for holding a message or chat row, with optional secondary-click support.
 struct MacTeamPressMenu<Actions: View>: ViewModifier {
+    enum Surface { case message, sidebar }
     var secondaryClick = false
     var preservesTap = false
+    var surface: Surface = .message
     let actions: (@escaping () -> Void) -> Actions
     @Environment(\.blotReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
@@ -22,20 +24,15 @@ struct MacTeamPressMenu<Actions: View>: ViewModifier {
             .accessibilityAction(named: Text("Открыть действия")) { open() }
             .overlay {
                 if secondaryClick {
-                    MacTeamPointerInput(onSecondaryClick: open)
+                    MacTeamPointerInput(onSecondaryClick: open, restrictSecondaryClickToConversation: surface == .message)
                         .frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false)
                 }
             }
             .popover(isPresented: $expanded, arrowEdge: .bottom) {
-                VStack(alignment: .leading, spacing: 3) {
+                MacActionMenuPanel {
                     actions { expanded = false }
                 }
-                .padding(6).frame(width: 264)
                 .environment(\.macTeamPressState, nil)
-                .foregroundStyle(WorkspaceStyle.ink)
-                .teamControls()
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 22))
-                .presentationBackground(.clear)
             }
             .onChange(of: expanded) { _, value in
                 if !value { pressState.endMenu() }

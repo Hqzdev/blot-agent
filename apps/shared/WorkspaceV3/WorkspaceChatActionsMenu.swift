@@ -12,7 +12,7 @@ struct WorkspaceChatActionsMenu: View {
         #endif
         BlotIconButton(store.t("Rename chat"), symbol: "pencil") { store.beginChatRename(chat.metadata.id) }
         #if !os(macOS)
-        Divider()
+        WorkspaceMenuGap()
         #endif
         BlotIconButton(store.t(chat.pinned ? "Unpin chat" : "Pin chat"), symbol: "pin") {
             store.toggleChatPin(chat.metadata.id)
@@ -21,7 +21,7 @@ struct WorkspaceChatActionsMenu: View {
             store.setChatArchived(chat.metadata.id, archived: !chat.archived)
         }
         #if os(macOS)
-        Divider()
+        WorkspaceMenuGap()
         #endif
         BlotIconButton(store.t(store.chatInteractions.unreadCount(in: chat.metadata.id) > 0 ? "Mark as read" : "Mark as unread"), symbol: "envelope") {
             if store.chatInteractions.unreadCount(in: chat.metadata.id) > 0 { store.markChatRead(chat.metadata.id) }
@@ -36,16 +36,16 @@ struct WorkspaceChatActionsMenu: View {
         }
         #if os(macOS)
         if chat.kind == .group {
-            Divider()
+            WorkspaceMenuGap()
             groupMembers
         }
         #endif
         if let agentID = chat.agentId, chat.kind != .group {
-            Divider()
+            WorkspaceMenuGap()
             BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agentID) }
             BlotIconButton(store.t("Edit agent"), symbol: "paintbrush") { store.editChatAgent(agentID) }
         }
-        Divider()
+        WorkspaceMenuGap()
         Button(role: .destructive) { store.pendingChatDeletionID = chat.metadata.id } label: {
             BlotLabel(store.t("Delete chat"), symbol: "trash")
         }

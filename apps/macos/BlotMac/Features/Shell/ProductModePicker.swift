@@ -53,12 +53,11 @@ struct ProductModeMenuCard: View {
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         if app.product == product { KIcon("check", size: 16, color: K.text) }
                     }
-                    .padding(.horizontal, 12).padding(.vertical, 10).contentShape(Rectangle())
-                    .kHover(radius: 10, active: app.product == product)
-                }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: 10).accessibilityAddTraits(app.product == product ? .isSelected : [])
+                    .padding(.vertical, 4)
+                }.buttonStyle(MacMenuRowStyle()).kFocusRing(radius: 7).accessibilityAddTraits(app.product == product ? .isSelected : [])
             }
         }
         .padding(6).frame(width: 300)
-        .kPopover(radius: K.rXl)
+        .kPopover(radius: 16)
     }
 }

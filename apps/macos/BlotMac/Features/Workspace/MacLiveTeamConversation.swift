@@ -212,15 +212,15 @@ private struct MacLiveTeamMessage: View {
                                     }
                                 }, close: close)
                             if message.role == .user {
-                                MacTeamNavigationButton(action: { store.retryResponse(to: message.metadata.id); close() }) {
+                                Button(action: { store.retryResponse(to: message.metadata.id); close() }) {
                                     BlotLabel(store.t("Retry response"), symbol: "arrow.clockwise")
-                                }.disabled(store.isReplying)
+                                }.buttonStyle(MacMenuRowStyle()).disabled(store.isReplying)
                             }
-                            Menu(store.t("Export")) {
+                            MacActionMenu(edge: .trailing, isSubmenu: true) {
                                 ForEach(WorkspaceExportFormat.allCases, id: \.self) { format in
                                     Button(format.rawValue.uppercased()) { store.exportMessage(message.metadata.id, format: format); close() }
                                 }
-                            }
+                            } label: { BlotLabel(store.t("Export"), symbol: "chevron.right") }
                         }
                     })
                     .modifier(MacTeamSwipeToReply { store.beginReply(to: message.metadata.id) })

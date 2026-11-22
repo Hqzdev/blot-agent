@@ -64,7 +64,7 @@ struct ProfileMenuCard: View {
             if showingHelp { helpMenu } else { profileMenu }
         }
         .padding(6).frame(width: 232, height: 250)
-        .kPopover()
+        .kPopover(radius: 16)
     }
 
     private var profileMenu: some View {
@@ -112,7 +112,7 @@ struct ProfileMenuCard: View {
         }
     }
 
-    private var separator: some View { HDivider().padding(.horizontal, 4).padding(.vertical, 4) }
+    private var separator: some View { WorkspaceMenuGap() }
 
     private func row(_ title: String, icon: String, detail: String? = nil, submenu: Bool = false,
                      perform: @escaping () -> Void) -> some View {
@@ -127,7 +127,7 @@ struct ProfileMenuCard: View {
                 Spacer(minLength: 0)
                 if let detail { Text(detail).font(KFont.caption()).foregroundStyle(K.text3).fixedSize() }
                 if submenu { KIcon("chevron-right", size: 12, color: K.text3) }
-            }.padding(.horizontal, 8).frame(height: 30).contentShape(Rectangle()).kHover(radius: K.rMd)
-        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
+            }
+        }.buttonStyle(MacMenuRowStyle()).kFocusRing(radius: K.rMd)
     }
 }

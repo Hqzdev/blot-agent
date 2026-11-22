@@ -179,11 +179,11 @@ private struct MacLiveTeamSidebar: View {
                                     Text(lastMessage(for: agent)).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(1)
                                 }
                             }
-                        }.contextMenu {
+                        }.macCommandMenu {
                             Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }
                             Button("Открыть чат") { _Concurrency.Task { await store.newChat(with: agent.metadata.id) } }
                             if let chat = store.currentConversation, chat.kind != .group, chat.agentId == agent.metadata.id {
-                                Divider()
+                                WorkspaceMenuGap()
                                 WorkspaceChatActionsMenu(chat: chat).environment(store)
                             }
                         }
@@ -202,7 +202,7 @@ private struct MacLiveTeamSidebar: View {
                                     MacLiveTeamGroupAvatar(agents: members(of: chat), size: 36)
                                     Text(chat.title).font(.system(size: 12, weight: .medium)).lineLimit(2)
                                 }
-                            }.contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store) }
+                            }.macCommandMenu { WorkspaceChatActionsMenu(chat: chat).environment(store) }
                         }
                     }
                 }.padding(.horizontal, 10).padding(.bottom, 16)

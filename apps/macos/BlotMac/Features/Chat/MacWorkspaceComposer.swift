@@ -10,7 +10,6 @@ struct MacWorkspaceComposer: View {
     var onInputFrameChange: ((CGRect) -> Void)? = nil
     var onSend: (() -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
-    @Environment(\.colorScheme) private var colorScheme
     @State private var importingFiles = false
     @FocusState private var focused: Bool
     @AppStorage(MacTeamPreferenceKey.sendOnReturn) private var sendOnReturn = true
@@ -32,29 +31,19 @@ struct MacWorkspaceComposer: View {
             }
             if !store.form.composer.attachments.isEmpty { attachments }
             HStack(alignment: .bottom, spacing: 8) {
-                Menu {
+                MacActionMenu(edge: .top) {
                     BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
                     BlotIconButton(store.t("Attach files"), symbol: "paperclip") { importingFiles = true }
-                    Divider()
-                    Picker(store.t("Access mode"), selection: $store.form.preferences.accessMode) {
-                        Text(store.t("Observe")).tag(BlotV3.AccessMode.observe)
-                        Text(store.t("Ask first")).tag(BlotV3.AccessMode.ask_first)
-                        Text(store.t("Trusted scope")).tag(BlotV3.AccessMode.trusted_scope)
-                    }
+                    WorkspaceMenuGap()
+                    MacComposerAccessMenu(selection: $store.form.preferences.accessMode)
+                    WorkspaceMenuGap()
                     BlotIconButton(store.t("AI models"), symbol: "cpu") { store.navigate(.models) }
                     BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
                     BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
                 } label: {
-                    Color.clear.frame(width: 30, height: 30)
-                }.menuStyle(.borderlessButton).menuIndicator(.hidden)
-                    .frame(width: 30, height: 30)
-                    .background(WorkspaceStyle.surface, in: Circle())
-                    // Draw outside the native menu label, which applies its own template tint.
-                    .overlay {
-                        BlotIcon(.plus, size: 17)
-                            .foregroundStyle(colorScheme == .dark ? Color.white : WorkspaceStyle.ink)
-                            .allowsHitTesting(false)
-                    }
+                    BlotIcon(.plus, size: 17).frame(width: 30, height: 30)
+                        .foregroundStyle(WorkspaceStyle.ink).background(WorkspaceStyle.surface, in: Circle())
+                }
                     .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
                 TextField(placeholder, text: $store.form.composer.draft, axis: .vertical)
                     .font(.system(size: 13)).textFieldStyle(.plain).lineLimit(1...6)

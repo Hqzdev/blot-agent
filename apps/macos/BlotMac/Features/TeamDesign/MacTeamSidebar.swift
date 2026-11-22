@@ -24,8 +24,7 @@ struct MacTeamSidebar: View {
                                 }
                             }
                         }
-                        .modifier(MacTeamPressMenu(preservesTap: true) { close in MacTeamChatMenu(selection: .agent(agent.id), close: close) })
-                        .contextMenu { MacTeamChatContextActions(selection: .agent(agent.id)) }
+                        .modifier(MacTeamPressMenu(secondaryClick: true, preservesTap: true, surface: .sidebar) { close in MacTeamChatMenu(selection: .agent(agent.id), close: close) })
                     }
                     sectionTitle("Группы").padding(.top, 16)
                     ForEach(presentation.demo.state.groups) { group in
@@ -42,8 +41,7 @@ struct MacTeamSidebar: View {
                                 }
                             }
                         }
-                        .modifier(MacTeamPressMenu(preservesTap: true) { close in MacTeamChatMenu(selection: .group(group.id), close: close) })
-                        .contextMenu { MacTeamChatContextActions(selection: .group(group.id)) }
+                        .modifier(MacTeamPressMenu(secondaryClick: true, preservesTap: true, surface: .sidebar) { close in MacTeamChatMenu(selection: .group(group.id), close: close) })
                     }
 
                 }.kAnimation(KMotion.standard, value: presentation.agents.map(\.id))

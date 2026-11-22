@@ -28,7 +28,7 @@ struct MacMessageBubble: View {
                     .foregroundStyle(WorkspaceStyle.ink)
                     .background(isUser ? MacWorkspaceStyle.outgoingMessage : WorkspaceStyle.surface,
                                 in: RoundedRectangle(cornerRadius: BlotRadius.panel))
-                    .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
+                    .macCommandMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
                 }
                 if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message).padding(.horizontal, 12) }
                 WorkspaceToolActivityView(message: message)
