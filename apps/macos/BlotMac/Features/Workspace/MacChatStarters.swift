@@ -7,6 +7,7 @@ struct MacChatStarters: View {
     @Binding var draft: String
     let focus: () -> Void
     @State private var selected: MacChatTaskTopic?
+    @State private var hoveredTopic: MacChatTaskTopic?
     @State private var inserted: String?
 
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
@@ -55,18 +56,25 @@ struct MacChatStarters: View {
 
     private func topicButton(_ topic: MacChatTaskTopic) -> some View {
         let active = selected == topic
+        let hovered = hoveredTopic == topic
+        let accent = topic.accent
         let shape = RoundedRectangle(cornerRadius: 10)
         return Button {
             withAnimation(selectionAnimation) { selected = active ? nil : topic }
         } label: {
             topicLabel(topic)
                 .font(.system(size: 13, weight: active ? .medium : .regular))
-                .foregroundStyle(active ? topic.accent : BlotColor.textSecondary)
+                .foregroundStyle(active || hovered ? accent : BlotColor.textSecondary)
                 .padding(.horizontal, 10).frame(height: 34)
-                .background(active ? topic.accent.opacity(0.12) : .clear, in: shape)
-                .overlay { shape.strokeBorder(active ? topic.accent.opacity(0.30) : BlotColor.hairline) }
+                .background(accent.opacity(active ? 0.19 : hovered ? 0.10 : 0), in: shape)
+                .overlay { shape.strokeBorder(active || hovered ? accent.opacity(active ? 0.48 : 0.28) : BlotColor.hairline) }
+                .animation(selectionAnimation, value: hovered)
         }
-        .buttonStyle(BlotPlainButtonStyle()).kHover(radius: 10)
+        .buttonStyle(BlotPlainButtonStyle())
+        .onHover { inside in
+            if inside { hoveredTopic = topic }
+            else if hoveredTopic == topic { hoveredTopic = nil }
+        }
         .id(topic)
         .accessibilityAddTraits(active ? .isSelected : [])
     }

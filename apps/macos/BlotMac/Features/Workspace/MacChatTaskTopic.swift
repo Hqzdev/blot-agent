@@ -22,11 +22,11 @@ enum MacChatTaskTopic: CaseIterable {
 
     var accent: Color {
         let pair: BlotColorPair = switch self {
-        case .tables: .init(light: 0x186649FF, dark: 0x88D9AFFF)
-        case .documents, .research: .init(light: 0x32599BFF, dark: 0xA8C6FFFF)
-        case .presentations, .websites: .init(light: 0x693DA1FF, dark: 0xD9C0FFFF)
-        case .planning, .meetings: .init(light: 0x875017FF, dark: 0xFFCA8DFF)
-        case .agent, .development: .init(light: 0x405A72FF, dark: 0xB0CBE1FF)
+        case .tables: .init(light: 0x08723AFF, dark: 0x66E7A0FF)
+        case .documents, .research: .init(light: 0x1B55B5FF, dark: 0x96B9FFFF)
+        case .presentations, .websites: .init(light: 0x7035B9FF, dark: 0xD3A7FFFF)
+        case .planning, .meetings: .init(light: 0x934C05FF, dark: 0xFFB962FF)
+        case .agent, .development: .init(light: 0x0B6094FF, dark: 0x78CEFFFF)
         }
         return BlotColor.dynamic(pair)
     }
