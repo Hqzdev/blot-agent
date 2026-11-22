@@ -1,23 +1,24 @@
+import BlotDesign
 import Foundation
 
 enum MacChatTaskTopic: CaseIterable {
     case agent, documents, tables, presentations, websites, planning, meetings, research, development
 
-    private var label: (ru: String, en: String, symbol: String) {
+    private var label: (ru: String, en: String, glyph: BlotGlyph) {
         switch self {
-        case .agent: ("Для этого чата", "For this chat", "sparkles")
-        case .documents: ("Документы", "Documents", "doc.text")
-        case .tables: ("Таблицы", "Tables", "tablecells")
-        case .presentations: ("Презентации", "Slides", "rectangle.on.rectangle")
-        case .websites: ("Сайты", "Websites", "globe")
-        case .planning: ("Планирование", "Planning", "checklist")
-        case .meetings: ("Встречи", "Meetings", "person.2")
-        case .research: ("Исследования", "Research", "magnifyingglass")
-        case .development: ("Разработка", "Development", "chevron.left.forwardslash.chevron.right")
+        case .agent: ("Для этого чата", "For this chat", .sparkle)
+        case .documents: ("Документы", "Documents", .document)
+        case .tables: ("Таблицы", "Tables", .spreadsheet)
+        case .presentations: ("Презентации", "Slides", .presentation)
+        case .websites: ("Сайты", "Websites", .globe)
+        case .planning: ("Планирование", "Planning", .list)
+        case .meetings: ("Встречи", "Meetings", .people)
+        case .research: ("Исследования", "Research", .search)
+        case .development: ("Разработка", "Development", .code)
         }
     }
 
-    var symbol: String { label.symbol }
+    var glyph: BlotGlyph { label.glyph }
     func title(russian: Bool) -> String { russian ? label.ru : label.en }
 
     func examples(russian: Bool, personal: [MacChatTaskExample]) -> [MacChatTaskExample] {

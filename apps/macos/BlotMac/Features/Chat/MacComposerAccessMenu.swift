@@ -23,9 +23,12 @@ struct MacComposerAccessMenu: View {
             }
         } label: {
             ViewThatFits(in: .horizontal) {
-                Label(store.t(modes.first { $0.0 == selection }?.1 ?? "Access mode"), systemImage: "lock.shield")
+                HStack(spacing: 5) {
+                    BlotIcon(.shieldCheck, size: BlotIconSize.inline)
+                    Text(store.t(modes.first { $0.0 == selection }?.1 ?? "Access mode"))
+                }
                     .font(.system(size: 12)).fixedSize()
-                Image(systemName: "lock.shield")
+                BlotIcon(.shieldCheck, size: BlotIconSize.inline)
             }.padding(.horizontal, 5).frame(minHeight: 26)
                 .help(store.t("Access mode"))
         }

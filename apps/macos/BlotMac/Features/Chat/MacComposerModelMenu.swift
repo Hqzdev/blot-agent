@@ -43,7 +43,7 @@ struct MacComposerModelMenu: View {
     private func chip(_ title: String) -> some View {
         HStack(spacing: 4) {
             Text(title).lineLimit(1)
-            Image(systemName: "chevron.down").font(.system(size: 8, weight: .semibold))
+            BlotIcon(.chevronDown, size: 10)
         }.font(.system(size: 12, weight: .medium)).padding(.horizontal, 6).frame(minHeight: 26)
     }
 

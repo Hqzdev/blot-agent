@@ -71,8 +71,17 @@ struct MacLiveTeamConversation: View {
                             if let plan = store.groupPlan(for: message) {
                                 WorkspaceGroupPlanCard(plan: plan, agents: store.chatContent.agents, skills: store.chatContent.skills, russian: store.language == "ru")
                             } else {
-                                MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
-                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages, showsAuthor: authorIDs.contains(message.metadata.id))
+                                VStack(alignment: .leading, spacing: 5) {
+                                    MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
+                                        inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages, showsAuthor: authorIDs.contains(message.metadata.id))
+                                    if message.role == .assistant, message.delivery == .completed, !message.content.isEmpty,
+                                       store.chatContent.activities(for: message).isEmpty {
+                                        MacChatWorkStatus(title: store.language == "ru" ? "Готово" : "Done",
+                                            start: message.metadata.createdAt, end: message.metadata.updatedAt, russian: store.language == "ru")
+                                            .font(.callout).foregroundStyle(.secondary)
+                                            .accessibilityIdentifier("workspace.chat.reply-completed.\(message.metadata.id)")
+                                    }
+                                }
                             }
                         }
                             .id(message.metadata.id).transition(.identity)
