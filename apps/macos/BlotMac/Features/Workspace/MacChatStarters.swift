@@ -57,17 +57,17 @@ struct MacChatStarters: View {
     private func topicButton(_ topic: MacChatTaskTopic) -> some View {
         let active = selected == topic
         let hovered = hoveredTopic == topic
-        let accent = topic.accent
+        let colors = topic.colors
         let shape = RoundedRectangle(cornerRadius: 10)
         return Button {
             withAnimation(selectionAnimation) { selected = active ? nil : topic }
         } label: {
             topicLabel(topic)
                 .font(.system(size: 13, weight: active ? .medium : .regular))
-                .foregroundStyle(active || hovered ? accent : BlotColor.textSecondary)
+                .foregroundStyle(active || hovered ? colors.ink : BlotColor.textSecondary)
                 .padding(.horizontal, 10).frame(height: 34)
-                .background(accent.opacity(active ? 0.19 : hovered ? 0.10 : 0), in: shape)
-                .overlay { shape.strokeBorder(active || hovered ? accent.opacity(active ? 0.48 : 0.28) : BlotColor.hairline) }
+                .background(colors.tint.opacity(active ? 0.26 : hovered ? 0.15 : 0), in: shape)
+                .overlay { shape.strokeBorder(active || hovered ? colors.tint.opacity(active ? 0.72 : 0.52) : BlotColor.hairline) }
                 .animation(selectionAnimation, value: hovered)
         }
         .buttonStyle(BlotPlainButtonStyle())
@@ -94,10 +94,10 @@ struct MacChatStarters: View {
             focus()
         } label: {
             HStack(spacing: 10) {
-                BlotIcon(topic.glyph, size: BlotIconSize.control)
-                    .foregroundStyle(topic.accent)
+                BlotIcon(example.glyph, size: BlotIconSize.control)
+                    .foregroundStyle(topic.colors.ink)
                     .frame(width: 28, height: 28)
-                    .background(topic.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                    .background(topic.colors.tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 8))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(example.title)
                         .font(.system(size: 13, weight: .medium))
