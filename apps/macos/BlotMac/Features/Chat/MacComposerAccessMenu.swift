@@ -11,7 +11,7 @@ struct MacComposerAccessMenu: View {
     ]
 
     var body: some View {
-        MacActionMenu(edge: .trailing, isSubmenu: true) {
+        MacActionMenu(edge: .top) {
             ForEach(modes, id: \.0) { mode, title in
                 Button { selection = mode } label: {
                     HStack {
@@ -22,14 +22,12 @@ struct MacComposerAccessMenu: View {
                 }.accessibilityAddTraits(selection == mode ? .isSelected : [])
             }
         } label: {
-            HStack {
-                BlotLabel(store.t("Access mode"), symbol: "lock.shield", size: 17)
-                Spacer(minLength: 4)
-                if let current = modes.first(where: { $0.0 == selection }) {
-                    Text(store.t(current.1)).font(.caption).foregroundStyle(.secondary)
-                }
-                Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
-            }
+            ViewThatFits(in: .horizontal) {
+                Label(store.t(modes.first { $0.0 == selection }?.1 ?? "Access mode"), systemImage: "lock.shield")
+                    .font(.system(size: 12)).fixedSize()
+                Image(systemName: "lock.shield")
+            }.padding(.horizontal, 5).frame(minHeight: 26)
+                .help(store.t("Access mode"))
         }
     }
 }

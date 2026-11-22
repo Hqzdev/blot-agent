@@ -339,7 +339,7 @@ final class LocalWorkspaceService: WorkspaceDevicePairingCommands, WorkspaceDevi
         return try await snapshot(identity)
     }
 
-    func responses(to message: BlotV3.Message) async throws -> AsyncThrowingStream<BlotV3.Message, Error> {
+    func responses(to message: BlotV3.Message, profile: BlotInferenceProfile? = nil) async throws -> AsyncThrowingStream<BlotV3.Message, Error> {
         guard responseWorkers[message.conversationId] == nil, !taskConversations.contains(message.conversationId),
               startingResponses.insert(message.conversationId).inserted else { throw WorkspaceStorageError.permissionDenied }
         defer {
@@ -356,7 +356,12 @@ final class LocalWorkspaceService: WorkspaceDevicePairingCommands, WorkspaceDevi
         let configuration = try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection)
         if let configuration, !["compatible", "gigachat"].contains(configuration.modelId) { throw WorkspaceServiceError.unavailable }
         let modelID = configuration?.modelId ?? "gigachat"
-        let model = try makeModel(modelID)
+        let resolve: @MainActor (String) throws -> any ChatModel = { [makeModel] id in
+            guard let profile else { return try makeModel(id) }
+            guard let provider = try makeModel("gigachat") as? any BlotSelectableModel else { throw ChatModelError.invalidConfiguration }
+            return BlotInferenceModel(provider: provider, profile: profile)
+        }
+        let model = try resolve(modelID)
         let recorder = WorkspaceResponseRecorder(repository: repository, identity: identity)
         let tools = try WorkspaceToolRegistry(providers: [WorkspaceLocalTools(repository: repository, identity: identity, files: try await fileService()),
             WorkspaceSkillTools(repository: repository, identity: identity),
@@ -382,7 +387,7 @@ final class LocalWorkspaceService: WorkspaceDevicePairingCommands, WorkspaceDevi
                         generating = true
                         let group = WorkspaceGroupResponder(repository: repository, identity: identity, pool: executorPool,
                             tools: tools, maximumOutputTokens: maximumOutputTokens, budgetTokenLimit: runTokenBudget,
-                            makeModel: makeModel, context: responseContext)
+                            makeModel: resolve, context: responseContext)
                         try await group.respond(to: message, initialResponseID: responseID, emit: { continuation.yield($0) })
                         continuation.finish()
                         return

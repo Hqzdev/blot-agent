@@ -32,21 +32,7 @@ struct MacWorkspaceComposer: View {
                 }.padding(.horizontal, 10).padding(.top, 4)
             }
             if !store.form.composer.attachments.isEmpty { attachments }
-            HStack(alignment: .bottom, spacing: 8) {
-                MacActionMenu(edge: .top) {
-                    BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
-                    BlotIconButton(store.t("Attach files"), symbol: "paperclip") { importingFiles = true }
-                    WorkspaceMenuGap()
-                    MacComposerAccessMenu(selection: $store.form.preferences.accessMode)
-                    WorkspaceMenuGap()
-                    BlotIconButton(store.t("AI models"), symbol: "cpu") { store.navigate(.models) }
-                    BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
-                    BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
-                } label: {
-                    BlotIcon(.plus, size: 17).frame(width: 30, height: 30)
-                        .foregroundStyle(WorkspaceStyle.ink).background(WorkspaceStyle.surface, in: Circle())
-                }
-                    .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
+            VStack(alignment: .leading, spacing: 5) {
                 TextField(placeholder, text: $store.form.composer.draft, selection: $selection, axis: .vertical)
                     .font(.system(size: 13)).textFieldStyle(.plain).lineLimit(1...6)
                     .focused($focused).disabled(store.busy).accessibilityLabel(store.t("Message"))
@@ -63,20 +49,37 @@ struct MacWorkspaceComposer: View {
                         send(); return .handled
                     }
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(MacTeamMessageMotion.coordinateSpace)) } action: { onInputFrameChange?($0) }
-                Button { if store.isReplying { store.stopReply() } else { send() } } label: {
-                    Group {
-                        if store.isReplying { BlotIcon(.stop, size: 15) }
-                        else if store.busy { ProgressView().controlSize(.mini).tint(BlotColor.onInverse) }
-                        else { BlotIcon(.arrowUp, size: 15) }
-                    }.frame(width: 30, height: 30)
-                        .foregroundStyle(BlotColor.onInverse).background(BlotColor.inverse, in: Circle())
-                }.buttonStyle(.plain)
-                    .help(store.t(store.isReplying ? "Stop reply" : "Send message"))
-                    .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
-            }.padding(teamLayout ? 10 : 5)
-                .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 23))
-                .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
-                .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
+                    .padding(.horizontal, 4)
+                HStack(spacing: 4) {
+                    MacActionMenu(edge: .top) {
+                        BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
+                        BlotIconButton(store.t("Attach files"), symbol: "paperclip") { importingFiles = true }
+                        WorkspaceMenuGap()
+                        BlotIconButton(store.t("AI models"), symbol: "cpu") { store.navigate(.models) }
+                        BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
+                        BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
+                    } label: {
+                        BlotIcon(symbol: "paperclip", size: 17).frame(width: 30, height: 30)
+                            .foregroundStyle(WorkspaceStyle.ink).background(WorkspaceStyle.surface, in: Circle())
+                    }
+                        .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
+                    MacComposerAccessMenu(selection: $store.form.preferences.accessMode)
+                    Spacer(minLength: 2)
+                    MacComposerModelMenu()
+                    Button { if store.isReplying { store.stopReply() } else { send() } } label: {
+                        Group {
+                            if store.isReplying { BlotIcon(.stop, size: 15) }
+                            else if store.busy { ProgressView().controlSize(.mini).tint(BlotColor.onInverse) }
+                            else { BlotIcon(.arrowUp, size: 15) }
+                        }.frame(width: 30, height: 30)
+                            .foregroundStyle(BlotColor.onInverse).background(BlotColor.inverse, in: Circle())
+                    }.buttonStyle(.plain)
+                        .help(store.t(store.isReplying ? "Stop reply" : "Send message"))
+                        .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
+                }
+            }.padding(10)
+                .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 19))
+                .overlay { RoundedRectangle(cornerRadius: 19).strokeBorder(BlotColor.hairline).allowsHitTesting(false) }
             if let query = skillQuery {
                 MacComposerSkillSuggestions(matches: matchingSkills(query), russian: russian,
                     select: { insertSkill($0, at: query) }, manage: { store.navigate(.skills) })

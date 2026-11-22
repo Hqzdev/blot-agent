@@ -479,6 +479,7 @@ final class WorkspaceStore {
     #if os(macOS)
     func sendDesktopMessage() async {
         guard !busy, !form.composer.draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !form.composer.attachments.isEmpty else { return }
+        form.composer.inferenceProfile = MacComposerModelPreferences.profile
         if [.home, .newChat].contains(route) || selectedConversationID == nil {
             let composer = form.composer
             if selectedAgentID == nil { selectedAgentID = snapshot.agents.first?.metadata.id }
@@ -671,7 +672,7 @@ final class WorkspaceStore {
                 chatInteractions.messages[sent.metadata.id, default: WorkspaceMessageMetadata()].replyToMessageID = submittedComposer.replyToMessageID
                 failedSends[sent.conversationId] = nil
                 if mode != .live { touchConversation(sent.conversationId) }
-                if mode == .live { enqueueLiveResponse(to: sent) }
+                if mode == .live { enqueueLiveResponse(to: sent, profile: submittedComposer.inferenceProfile) }
             }
             persistChatState()
             if mode == .preview, action == .pause { previewTaskPaused.toggle() }
@@ -851,14 +852,14 @@ final class WorkspaceStore {
         chatActivity.cancel(in: conversationID)
     }
 
-    private func enqueueLiveResponse(to message: BlotV3.Message) {
+    private func enqueueLiveResponse(to message: BlotV3.Message, profile: BlotInferenceProfile? = nil) {
         guard let service = commands, liveResponses[message.conversationId] == nil else { return }
         let generation = sessionGeneration
         liveResponses[message.conversationId] = _Concurrency.Task { [weak self] in
             guard let self else { return }
             defer { if self.sessionGeneration == generation { self.liveResponses[message.conversationId] = nil } }
             do {
-                for try await _ in try await service.responses(to: message) {
+                for try await _ in try await service.responses(to: message, profile: profile) {
                     guard self.sessionGeneration == generation else { return }
                     self.snapshot = try await service.currentSnapshot()
                 }
@@ -883,7 +884,11 @@ final class WorkspaceStore {
         guard mode == .live, let message = snapshot.messages.first(where: { $0.metadata.id == messageID }),
               message.role == .user, liveResponses[message.conversationId] == nil else { return }
         error = nil
+        #if os(macOS)
+        enqueueLiveResponse(to: message, profile: MacComposerModelPreferences.profile)
+        #else
         enqueueLiveResponse(to: message)
+        #endif
     }
 
     func deliveryTitle(_ delivery: BlotV3.DeliveryState) -> String {
