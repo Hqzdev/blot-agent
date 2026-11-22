@@ -6,7 +6,12 @@ struct MacWorkspaceLayout {
     static let minimumHeight: CGFloat = 480
     let size: CGSize
 
-    var sidebarWidth: CGFloat { min(252, max(220, size.width * 0.22)) }
+    var preferredSidebarWidth: CGFloat? = nil
+    static let defaultSidebarWidth: CGFloat = 344
+    var sidebarBounds: ClosedRange<Double> { 220...max(220, min(480, Double(size.width) - 520)) }
+    var sidebarWidth: CGFloat {
+        min(CGFloat(sidebarBounds.upperBound), max(CGFloat(sidebarBounds.lowerBound), preferredSidebarWidth ?? Self.defaultSidebarWidth))
+    }
     var inspectorWidth: CGFloat { min(306, max(276, size.width * 0.24)) }
     var supportsSidebar: Bool { size.width >= 900 }
     var popoverHeight: CGFloat { max(240, min(580, size.height - 100)) }
