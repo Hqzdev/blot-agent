@@ -24,10 +24,10 @@ struct MacComposerAccessMenu: View {
         } label: {
             ViewThatFits(in: .horizontal) {
                 HStack(spacing: 5) {
-                    BlotIcon(selection.menuGlyph, size: BlotIconSize.inline)
+                    BlotIcon(selection.menuGlyph, size: BlotIconSize.control)
                     Text(store.t(selection.menuTitle))
                 }.font(.system(size: 12)).fixedSize()
-                BlotIcon(selection.menuGlyph, size: BlotIconSize.inline)
+                BlotIcon(selection.menuGlyph, size: BlotIconSize.control)
             }.padding(.horizontal, 5).frame(minHeight: 26)
                 .accessibilityLabel(store.t(selection.menuTitle))
                 .help(store.t("Access mode"))
