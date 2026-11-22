@@ -22,11 +22,15 @@ enum MacChatTaskTopic: CaseIterable {
 
     var colors: (ink: Color, tint: Color) {
         let (ink, tint): (BlotColorPair, UInt32) = switch self {
+        case .agent: (.init(light: 0x0B6094FF, dark: 0x78CEFFFF), 0x1099EFFF)
+        case .documents: (.init(light: 0x1B4CAFFF, dark: 0xA3BCFFFF), 0x3867FFFF)
         case .tables: (.init(light: 0x066634FF, dark: 0x66E7A0FF), 0x08C557FF)
-        case .documents, .research: (.init(light: 0x1B55B5FF, dark: 0x96B9FFFF), 0x297CFFFF)
-        case .presentations, .websites: (.init(light: 0x7035B9FF, dark: 0xD3A7FFFF), 0xA059FFFF)
-        case .planning, .meetings: (.init(light: 0x934C05FF, dark: 0xFFB962FF), 0xF49521FF)
-        case .agent, .development: (.init(light: 0x0B6094FF, dark: 0x78CEFFFF), 0x1099EFFF)
+        case .presentations: (.init(light: 0x7035B9FF, dark: 0xD3A7FFFF), 0xA059FFFF)
+        case .websites: (.init(light: 0x006359FF, dark: 0x78EFE1FF), 0x0EC8B6FF)
+        case .planning: (.init(light: 0x934C05FF, dark: 0xFFB962FF), 0xF49521FF)
+        case .meetings: (.init(light: 0x9B2B64FF, dark: 0xFFABE0FF), 0xEF4595FF)
+        case .research: (.init(light: 0x6B5200FF, dark: 0xFDE17DFF), 0xEAC11AFF)
+        case .development: (.init(light: 0xA1312FFF, dark: 0xFFAA9FFF), 0xF35D56FF)
         }
         return (BlotColor.dynamic(ink), BlotColor.dynamic(.init(tint)))
     }
