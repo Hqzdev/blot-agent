@@ -265,11 +265,25 @@ final class LocalWorkspaceService: WorkspaceDevicePairingCommands, WorkspaceDevi
             let agentID = request.action == .saveAgent ? request.selectedAgentID : nil
             if request.action == .saveAgent && agentID == nil { throw WorkspaceStorageError.invalidParameters }
             let previous = snapshot.agents.first { $0.metadata.id == agentID }
+            var draft = WorkspaceAgentDraft(name: request.form.agent.name, instructions: request.form.agent.instructions,
+                avatarShape: request.form.agent.shape, avatarColor: request.form.agent.color,
+                modelID: request.form.agent.modelID, toolIDs: request.form.agent.toolIDs)
+            #if os(macOS)
+            if let previous {
+                draft.accessMode = previous.accessMode
+                if let configuration = snapshot.configurations?.first(where: { $0.metadata.id == previous.configurationId }) {
+                    draft.toolIDs = configuration.toolIds
+                }
+            } else if request.action == .createAgent {
+                draft.toolIDs = Set(draft.toolIDs).union([
+                    "file_read", "document_create", "memory_candidate", "page_list",
+                    "page_read", "page_create", "page_update", "desktop_replay"
+                ]).sorted()
+            }
+            #endif
             let service = WorkspaceAgentService(repository: repository, identity: identity)
             _ = try await service.save(commandID: request.commandID, agentID: agentID, expectedVersion: previous?.metadata.version ?? 0,
-                draft: .init(name: request.form.agent.name, instructions: request.form.agent.instructions,
-                    avatarShape: request.form.agent.shape, avatarColor: request.form.agent.color,
-                    modelID: request.form.agent.modelID, toolIDs: request.form.agent.toolIDs))
+                draft: draft)
         case .saveMemory:
             let service = WorkspaceMemoryService(repository: repository, identity: identity)
             if let id = request.selectedRecordID, let memory = snapshot.memories.first(where: { $0.metadata.id == id }) {
