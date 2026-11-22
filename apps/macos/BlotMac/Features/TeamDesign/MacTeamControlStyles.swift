@@ -13,6 +13,7 @@ struct MacTeamNavigationButton<Label: View>: View {
     let action: () -> Void
     @ViewBuilder let label: Label
     @FocusState private var focused: Bool
+    @Environment(\.macSidebarTracksHover) private var tracksHover
     @Environment(\.macTeamPressState) private var pressState
 
     var body: some View {
@@ -30,7 +31,8 @@ struct MacTeamNavigationButton<Label: View>: View {
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(BlotPlainButtonStyle(hoverIn: RoundedRectangle(cornerRadius: 14)))
+        .buttonStyle(tracksHover ? BlotPlainButtonStyle(showsHover: false) : BlotPlainButtonStyle(hoverIn: RoundedRectangle(cornerRadius: 14)))
+        .macSidebarHoverTarget()
         .focused($focused).focusEffectDisabled()
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)

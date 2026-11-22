@@ -207,7 +207,7 @@ private struct MacLiveTeamSidebar: View {
                         }
                     }
                 }.padding(.horizontal, 10).padding(.bottom, 16)
-            }.scrollIndicators(.hidden)
+            }.scrollIndicators(.hidden).macSidebarHoverSection(radius: 14)
             VStack(spacing: 6) {
                 MacTeamNavigationButton(selected: store.route == .marketplace, action: {
                     if store.route != .marketplace { store.navigate(.marketplace) }
@@ -227,7 +227,7 @@ private struct MacLiveTeamSidebar: View {
                         BlotIcon(.settings, size: BlotIconSize.control)
                     }
                 }
-            }.padding(.horizontal, 10).padding(.bottom, 12)
+            }.macSidebarHoverSection(radius: 14).padding(.horizontal, 10).padding(.bottom, 12)
         }
     }
     private func heading(_ text: String) -> some View {

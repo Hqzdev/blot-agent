@@ -63,7 +63,7 @@ struct MacWorkspaceSidebar: View {
                                         }, size: 18)
                                     }
                                 }.padding(.horizontal, 9).frame(height: 34).contentShape(Rectangle())
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(.plain).macSidebarHoverTarget()
                         }
                         ForEach(chats, id: \.metadata.id) { chat in chatRow(chat) }
                         if chats.isEmpty {
@@ -71,9 +71,9 @@ struct MacWorkspaceSidebar: View {
                                 .font(MacWorkspaceStyle.caption).foregroundStyle(WorkspaceStyle.secondary).padding(20)
                         }
                     }.padding(.horizontal, 8).padding(.bottom, 12)
-                }.scrollIndicators(.hidden)
+                }.scrollIndicators(.hidden).macSidebarHoverSection(radius: BlotRadius.control)
             }
-            footer
+            footer.macSidebarHoverSection(radius: BlotRadius.control)
         }.font(MacWorkspaceStyle.body).background(MacWorkspaceStyle.sidebar)
     }
 
@@ -123,10 +123,10 @@ struct MacWorkspaceSidebar: View {
                                 }
                             Text(store.t(chat.title)).font(.system(size: 10)).lineLimit(1).frame(width: 68)
                         }.padding(.vertical, 8)
-                    }.buttonStyle(.plain).contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+                    }.buttonStyle(.plain).macSidebarHoverTarget().contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
                 }
             }.padding(.horizontal, 8)
-        }.scrollIndicators(.hidden)
+        }.scrollIndicators(.hidden).macSidebarHoverSection(radius: 14)
     }
 
     private func chatAvatar(_ chat: BlotV3.Conversation, size: CGFloat) -> some View {
@@ -169,7 +169,7 @@ struct MacWorkspaceSidebar: View {
                 .background(store.route == .chat && store.selectedConversationID == chat.metadata.id ? BlotColor.selected : .clear,
                             in: RoundedRectangle(cornerRadius: BlotRadius.control))
                 .contentShape(Rectangle())
-        }.buttonStyle(.plain).help(chat.title)
+        }.buttonStyle(.plain).macSidebarHoverTarget().help(chat.title)
             .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
     }
 
@@ -194,7 +194,7 @@ struct MacWorkspaceSidebar: View {
             HStack {
                 footerButton(store.form.account.name.isEmpty ? "Account" : store.form.account.name, glyph: .person, route: .account)
                 Button { store.navigate(.settings) } label: { BlotIcon(.settings, size: 15).frame(width: 26, height: 26) }
-                    .buttonStyle(.plain).help(store.t("Settings")).accessibilityLabel(store.t("Settings"))
+                    .buttonStyle(.plain).macSidebarHoverTarget().help(store.t("Settings")).accessibilityLabel(store.t("Settings"))
             }
         }.padding(.horizontal, 16).padding(.top, 6).padding(.bottom, 12)
     }
@@ -203,6 +203,6 @@ struct MacWorkspaceSidebar: View {
         Button { store.navigate(route) } label: {
             HStack(spacing: 10) { BlotIcon(glyph, size: 17).frame(width: 22); Text(store.t(title)); Spacer(minLength: 0) }
                 .frame(height: 34).contentShape(Rectangle())
-        }.buttonStyle(.plain)
+        }.buttonStyle(.plain).macSidebarHoverTarget()
     }
 }
