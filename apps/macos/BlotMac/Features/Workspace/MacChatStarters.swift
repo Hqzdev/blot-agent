@@ -17,20 +17,13 @@ struct MacChatStarters: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 10) {
             ScrollViewReader { proxy in
                 HStack(spacing: 6) {
                     ScrollView(.horizontal) {
-                        HStack(spacing: 5) {
+                        HStack(spacing: 6) {
                             ForEach(MacChatTaskTopic.allCases, id: \.self) { topic in
-                                Button { choose(topic) } label: {
-                                    topicLabel(topic)
-                                        .font(.system(size: 12, weight: .medium))
-                                        .padding(.horizontal, 10).frame(height: 29)
-                                        .background(topic == selected ? BlotColor.selected : .clear, in: RoundedRectangle(cornerRadius: 8))
-                                }
-                                .buttonStyle(BlotPlainButtonStyle()).kHover(radius: 8).id(topic)
-                                .accessibilityAddTraits(selected == topic ? .isSelected : [])
+                                topicButton(topic)
                             }
                         }
                     }.scrollIndicators(.hidden)
@@ -41,46 +34,77 @@ struct MacChatStarters: View {
                                     selected = topic
                                     proxy.scrollTo(topic, anchor: .center)
                                 }
-                            } label: { topicLabel(topic) }
+                            } label: {
+                                topicLabel(topic)
+                            }.accessibilityAddTraits(selected == topic ? .isSelected : [])
                         }
                     } label: {
-                        BlotIcon(.more, size: BlotIconSize.control).frame(width: 30, height: 29)
+                        BlotIcon(.more, size: BlotIconSize.control).frame(width: 30, height: 34)
                     }.accessibilityLabel(russian ? "Все темы" : "All topics")
                 }
             }
             if let selected {
-                ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 6) { choices(selected) }.fixedSize(horizontal: true, vertical: false)
-                    VStack(alignment: .leading, spacing: 4) { choices(selected) }
+                VStack(spacing: 2) {
+                    ForEach(selected.examples(russian: russian, personal: examples), id: \.title) { example in
+                        exampleButton(example, topic: selected)
+                    }
                 }.id(selected).transition(.opacity)
             }
         }
     }
 
+    private func topicButton(_ topic: MacChatTaskTopic) -> some View {
+        let active = selected == topic
+        let shape = RoundedRectangle(cornerRadius: 10)
+        return Button {
+            withAnimation(selectionAnimation) { selected = active ? nil : topic }
+        } label: {
+            topicLabel(topic)
+                .font(.system(size: 13, weight: active ? .medium : .regular))
+                .foregroundStyle(active ? topic.accent : BlotColor.textSecondary)
+                .padding(.horizontal, 10).frame(height: 34)
+                .background(active ? topic.accent.opacity(0.12) : .clear, in: shape)
+                .overlay { shape.strokeBorder(active ? topic.accent.opacity(0.30) : BlotColor.hairline) }
+        }
+        .buttonStyle(BlotPlainButtonStyle()).kHover(radius: 10)
+        .id(topic)
+        .accessibilityAddTraits(active ? .isSelected : [])
+    }
+
     private func topicLabel(_ topic: MacChatTaskTopic) -> some View {
-        HStack(spacing: 6) {
-            BlotIcon(topic.glyph, size: BlotIconSize.inline)
+        Label {
             Text(topic.title(russian: russian))
+        } icon: {
+            BlotIcon(topic.glyph, size: BlotIconSize.inline)
         }
     }
 
-    private func choose(_ topic: MacChatTaskTopic) {
-        withAnimation(selectionAnimation) { selected = selected == topic ? nil : topic }
-    }
-
-    private func choices(_ topic: MacChatTaskTopic) -> some View {
-        ForEach(topic.examples(russian: russian, personal: examples), id: \.title) { example in
-            Button {
-                draft = example.prompt
-                inserted = example.prompt
-                focus()
-            } label: {
-                HStack(spacing: 6) {
-                    BlotIcon(.arrowUpLeft, size: BlotIconSize.inline)
-                    Text(example.title).lineLimit(2)
-                }.font(.system(size: 12)).padding(.horizontal, 8).padding(.vertical, 5)
-            }.buttonStyle(BlotPlainButtonStyle()).kHover(radius: 8).help(example.prompt)
-                .disabled(!draft.isEmpty && draft != inserted)
+    private func exampleButton(_ example: MacChatTaskExample, topic: MacChatTaskTopic) -> some View {
+        Button {
+            draft = example.prompt
+            inserted = example.prompt
+            focus()
+        } label: {
+            HStack(spacing: 10) {
+                BlotIcon(topic.glyph, size: BlotIconSize.control)
+                    .foregroundStyle(topic.accent)
+                    .frame(width: 28, height: 28)
+                    .background(topic.accent.opacity(0.12), in: RoundedRectangle(cornerRadius: 8))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(example.title)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(BlotColor.text)
+                    Text(example.prompt)
+                        .font(.system(size: 12))
+                        .foregroundStyle(BlotColor.textSecondary)
+                }.lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                BlotIcon(.chevronRight, size: BlotIconSize.inline)
+                    .foregroundStyle(BlotColor.textSecondary)
+            }
+            .padding(.horizontal, 8).padding(.vertical, 5)
         }
+        .buttonStyle(BlotPlainButtonStyle()).kHover(radius: 8)
+        .accessibilityLabel(example.title)
+        .disabled(!draft.isEmpty && draft != inserted)
     }
 }

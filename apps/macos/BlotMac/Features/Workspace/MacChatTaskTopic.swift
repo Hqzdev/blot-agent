@@ -1,5 +1,5 @@
 import BlotDesign
-import Foundation
+import SwiftUI
 
 enum MacChatTaskTopic: CaseIterable {
     case agent, documents, tables, presentations, websites, planning, meetings, research, development
@@ -19,6 +19,17 @@ enum MacChatTaskTopic: CaseIterable {
     }
 
     var glyph: BlotGlyph { label.glyph }
+
+    var accent: Color {
+        let pair: BlotColorPair = switch self {
+        case .tables: .init(light: 0x186649FF, dark: 0x88D9AFFF)
+        case .documents, .research: .init(light: 0x32599BFF, dark: 0xA8C6FFFF)
+        case .presentations, .websites: .init(light: 0x693DA1FF, dark: 0xD9C0FFFF)
+        case .planning, .meetings: .init(light: 0x875017FF, dark: 0xFFCA8DFF)
+        case .agent, .development: .init(light: 0x405A72FF, dark: 0xB0CBE1FF)
+        }
+        return BlotColor.dynamic(pair)
+    }
     func title(russian: Bool) -> String { russian ? label.ru : label.en }
 
     func examples(russian: Bool, personal: [MacChatTaskExample]) -> [MacChatTaskExample] {
