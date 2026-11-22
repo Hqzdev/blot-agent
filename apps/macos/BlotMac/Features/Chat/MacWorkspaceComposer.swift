@@ -11,6 +11,8 @@ struct MacWorkspaceComposer: View {
     var onSend: (() -> Void)? = nil
     @Environment(WorkspaceStore.self) private var store
     @State private var importingFiles = false
+    @State private var selection: TextSelection?
+    @State private var dismissedSkillDraft: String?
     @FocusState private var focused: Bool
     @AppStorage(MacTeamPreferenceKey.sendOnReturn) private var sendOnReturn = true
     @AppStorage(MacTeamPreferenceKey.composerHints) private var composerHints = true
@@ -45,10 +47,14 @@ struct MacWorkspaceComposer: View {
                         .foregroundStyle(WorkspaceStyle.ink).background(WorkspaceStyle.surface, in: Circle())
                 }
                     .help(store.t("Add attachment")).accessibilityLabel(store.t("Add attachment"))
-                TextField(placeholder, text: $store.form.composer.draft, axis: .vertical)
+                TextField(placeholder, text: $store.form.composer.draft, selection: $selection, axis: .vertical)
                     .font(.system(size: 13)).textFieldStyle(.plain).lineLimit(1...6)
                     .focused($focused).disabled(store.busy).accessibilityLabel(store.t("Message"))
                     .padding(.vertical, 7).onSubmit {
+                        if let query = skillQuery {
+                            if let skill = matchingSkills(query).first { insertSkill(skill.name, at: query) }
+                            return
+                        }
                         if !teamLayout || sendOnReturn { send() }
                         else { store.form.composer.draft += "\n" }
                     }
@@ -71,13 +77,16 @@ struct MacWorkspaceComposer: View {
                 .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 23))
                 .overlay(RoundedRectangle(cornerRadius: 23).strokeBorder(MacWorkspaceStyle.edge))
                 .shadow(color: .black.opacity(0.06), radius: 4, y: 1)
-            if showsStarters {
-                MacChatStarters(examples: taskExamples) { prompt in
-                    store.form.composer.draft = prompt
+            if let query = skillQuery {
+                MacComposerSkillSuggestions(matches: matchingSkills(query), russian: russian,
+                    select: { insertSkill($0, at: query) }, manage: { store.navigate(.skills) })
+            } else if showsStarters {
+                MacChatStarters(examples: taskExamples, russian: russian, draft: $store.form.composer.draft) {
+                    selection = TextSelection(insertionPoint: store.form.composer.draft.endIndex)
                     focused = true
                 }
-                .frame(maxWidth: .infinity)
-                .disabled(store.busy || !store.form.composer.draft.isEmpty)
+                .id(destinationChat?.metadata.id ?? destinationAgent?.metadata.id)
+                .disabled(store.busy)
             } else if teamLayout && composerHints {
                 Text(store.currentConversation?.kind == .group ? "Задайте общую задачу — команда распределит работу по ролям" : "Прикрепите файл или задайте агенту задачу сообщением")
                     .font(.system(size: 10)).foregroundStyle(.tertiary).padding(.horizontal, 14)
@@ -94,6 +103,14 @@ struct MacWorkspaceComposer: View {
             }
         }
         .task { focused = true }
+        .onChange(of: store.form.composer.draft) { _, draft in
+            if dismissedSkillDraft != draft { dismissedSkillDraft = nil }
+        }
+        .onKeyPress(.escape) {
+            guard skillQuery != nil else { return .ignored }
+            dismissedSkillDraft = store.form.composer.draft
+            return .handled
+        }
         .onChange(of: store.replyFocusRequest) { _, _ in focused = true }
     }
 
@@ -116,9 +133,32 @@ struct MacWorkspaceComposer: View {
         return MacChatTaskExample.suggestions(for: agent, skills: names, group: destinationChat?.kind == .group, russian: store.language == "ru")
     }
 
+    private var russian: Bool { store.language == "ru" }
+
     private var placeholder: String {
-        if let group = destinationChat, group.kind == .group { return store.t("Message group") + " «" + group.title + "»" }
-        return store.t("Message agent") + " " + (destinationAgent?.name ?? "Blot Agent")
+        russian ? "Опишите задачу или введите @ для скиллов" : "Describe a task or type @ for skills"
+    }
+
+    private var skillQuery: MacComposerSkillQuery? {
+        guard dismissedSkillDraft != store.form.composer.draft else { return nil }
+        return MacComposerSkillQuery(draft: store.form.composer.draft, selection: selection)
+    }
+
+    private func matchingSkills(_ query: MacComposerSkillQuery) -> [BlotV3.Skill] {
+        (store.snapshot.skills ?? []).filter { !$0.archived && (query.text.isEmpty || $0.name.localizedCaseInsensitiveContains(query.text)) }
+            .sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+    }
+
+    private func insertSkill(_ name: String, at query: MacComposerSkillQuery) {
+        var draft = store.form.composer.draft
+        let needsSpace = draft[query.range.upperBound...].first?.isWhitespace != true
+        let insertion = "@" + name + (needsSpace ? " " : "")
+        let offset = draft.distance(from: draft.startIndex, to: query.range.lowerBound) + insertion.count
+        draft.replaceSubrange(query.range, with: insertion)
+        store.form.composer.draft = draft
+        selection = TextSelection(insertionPoint: draft.index(draft.startIndex, offsetBy: offset))
+        dismissedSkillDraft = draft
+        focused = true
     }
 
     private var attachments: some View {

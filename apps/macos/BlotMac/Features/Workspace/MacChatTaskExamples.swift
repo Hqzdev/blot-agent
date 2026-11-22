@@ -16,7 +16,7 @@ struct MacChatTaskExample {
             ]
         }
         let assigned = skills.map { name in
-            Self(title: name, prompt: russian ? "Помоги применить навык «\(name)» к моей задаче. Что тебе нужно для начала?" : "Help me use the “\(name)” skill for my task. What do you need to get started?")
+            Self(title: name, prompt: russian ? "@\(name) Помоги применить этот скилл к моей задаче. Что тебе нужно для начала?" : "@\(name) Help me use this skill for my task. What do you need to get started?")
         }
         let catalog = agent.flatMap { agent in
             catalogProfiles.first { $0.identifiers.contains(agent.name) || $0.identifiers.contains(agent.instructions) }
