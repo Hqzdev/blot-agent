@@ -9,26 +9,34 @@ uv run blot --help
 scripts/run_tests.sh
 ```
 
-`blot` and `pilot-agent` invoke the same CLI. Existing provider configuration and project sessions remain compatible. Shared Blot account and GigaChat integration are planned separately. Run project commands from your code folder with `uv run --project /absolute/path/to/klin-agent/apps/terminal blot run`.
+Run project commands from your code folder with `uv run --project /absolute/path/to/klin-agent/apps/terminal blot run`.
 
 The install commands below use the monorepo subdirectory and become available remotely after this migration is published.
 
 ## Coding in a project
 
 ```bash
-blot setup
 cd path/to/your/project
-blot
+blot run
 blot "Find out why the login test fails"
 blot sessions list
 blot resume
 ```
 
-Run one of `blot` or `blot "your task"` to start a work session. The agent reads
+`blot run` opens the browser on first use and signs in to your Blot account. The
+server selects the GigaChat model and uses its own provider key. `blot login`
+and `blot logout` manage this session. The terminal requires a Blot server
+with the CLI model API enabled.
+
+Run `blot`, `blot run` or `blot "your task"` to start a work session. The agent reads
 project files and the root `AGENTS.md`. It asks before running shell commands
 and before editing an existing file with local changes. The command result
-shows the actual exit code. If you use the native install without Docker,
-select the local shell backend with `blot backend local`.
+shows the actual exit code. New account-based sessions use the local shell by
+default. Select Docker explicitly with `blot backend docker` to use a Docker sandbox.
+
+The browser sign-in runs in the native CLI. `blot run --provider anthropic`
+selects a previously configured personal provider explicitly. `blot run --pipeline`
+and `pilot-agent run` open the older Pilot pipeline.
 
 | In a coding session | Action |
 |---|---|
@@ -79,9 +87,9 @@ curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/termina
 ```
 
 Prefer to inspect first? Download `install.sh`, read it, run it.
-The installer prints a staged plan, writes full command output to a log, and
-starts `pilot-agent setup` automatically when an interactive terminal is
-available. Use `--skip-setup` or `--no-setup` to install only.
+The installer prints a staged plan and writes command output to a log.
+After installing the native CLI, run `blot run` in your project folder.
+The `--docker` option retains the older Pilot pipeline installer.
 
 Useful installer options:
 

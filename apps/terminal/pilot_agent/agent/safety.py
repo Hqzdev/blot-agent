@@ -88,7 +88,7 @@ BLOCKED_HOME_DIRS = {
     ".docker",
     ".azure",
 }
-BLOCKED_PILOT_HOME_FILES = {"credentials.yaml", ".env"}
+BLOCKED_PILOT_HOME_FILES = {"credentials.yaml", ".env", "blot-session.json"}
 
 
 def sanitize_text(value: str) -> str:
@@ -189,7 +189,9 @@ def _access_denial(
             f"file {resolved.name}."
         )
 
-    if _inside(resolved, pilot) and resolved.name in BLOCKED_PILOT_HOME_FILES:
+    if _inside(resolved, pilot) and (
+        resolved.name in BLOCKED_PILOT_HOME_FILES or resolved.name.startswith(".blot-session-")
+    ):
         action = "write" if write else "read"
         return f"Access denied: refusing to {action} Pilot Agent credential store {resolved.name}."
 

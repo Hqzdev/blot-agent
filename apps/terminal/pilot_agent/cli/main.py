@@ -38,6 +38,7 @@ from pilot_agent.agent.state import (
 from pilot_agent.agent.types import Message, Role
 from pilot_agent.backends import ExecutionBackend, backend_from_config
 from pilot_agent.cli.auth import PROVIDERS, list_models, provider_key_env, validate_provider_key
+from pilot_agent.cli.blot_account import AccountError, BlotAccount
 from pilot_agent.cli.coding import COMMANDS, CodingSession, CodingTasks
 from pilot_agent.cli.coding_tools import CodingProject
 from pilot_agent.cli.doctor import checks_to_json, has_failures, run_doctor_checks
@@ -69,6 +70,7 @@ from pilot_agent.config.schema import (
     user_config_path,
 )
 from pilot_agent.providers.base import Provider, from_config
+from pilot_agent.providers.blot import BlotProvider
 from pilot_agent.skills.registry import SkillRegistry
 from pilot_agent.tools.ask_user import AskUserTool
 from pilot_agent.tools.base import ToolRegistry, ToolSearchSettings
@@ -181,13 +183,9 @@ def run_coding_session(
     if resume_saved and task is None:
         emit("No matching saved task. Run blot sessions list in the project folder.")
         raise typer.Exit(1)
-    try:
-        cfg.resolve_key()
-    except RuntimeError:
-        if _interactive() and not _config_write_path().exists():
-            _ensure_config_for_run()
-            cfg = load_config_or_exit()
-        resolve_key_or_exit(cfg)
+    external_provider = cfg.sources.get("provider") == "cli"
+    if not external_provider and cfg.sources.get("backend") == "defaults":
+        cfg = cfg.model_copy(update={"backend": "local"})
     backend = backend_from_config(cfg, root)
     ui = UI(
         color=cfg.ui.color,
@@ -195,18 +193,58 @@ def run_coding_session(
         commands=COMMANDS,
     )
     try:
+        provider = coding_provider(cfg, ui, external_provider=external_provider)
         CodingSession(
-            project=CodingProject(root), provider=from_config(cfg), backend=backend,
+            project=CodingProject(root), provider=provider, backend=backend,
             config=cfg, ui=ui,
         ).run(task=task, prompt=instruction)
     except KeyboardInterrupt:
         ui.notice("Interrupted.")
         raise typer.Exit(130) from None
+    except typer.Exit:
+        raise
     except Exception as exc:
         ui.error(redact_sensitive_text(str(exc)))
         raise typer.Exit(1) from None
     finally:
         backend.cleanup()
+
+
+def coding_provider(cfg: PilotAgentConfig, ui: UI, *, external_provider: bool) -> Provider:
+    if external_provider:
+        resolve_key_or_exit(cfg)
+        return from_config(cfg)
+    account = BlotAccount()
+    try:
+        configuration = account.check_model_api()
+    except AccountError as exc:
+        if exc.status != 401 or not _interactive():
+            raise
+        account.sign_in(ui.notice)
+        configuration = account.check_model_api()
+    return BlotProvider(account, configuration)
+
+
+@app.command()
+def login() -> None:
+    """Sign in to your Blot account in a browser."""
+    try:
+        BlotAccount().sign_in(lambda message: typer.echo(message))
+    except (AccountError, OSError) as exc:
+        emit(f"Error: {exc}")
+        raise typer.Exit(1) from None
+    emit("Signed in to Blot.")
+
+
+@app.command()
+def logout() -> None:
+    """Revoke the saved Blot terminal session."""
+    try:
+        BlotAccount().sign_out()
+    except (AccountError, OSError) as exc:
+        emit(f"Error: {exc}")
+        raise typer.Exit(1) from None
+    emit("Signed out of Blot.")
 
 
 def render_config(cfg: PilotAgentConfig) -> None:
@@ -806,13 +844,21 @@ def status() -> None:
 
 @app.command()
 def run(
+    ctx: typer.Context,
     instruction: str | None = typer.Argument(None, help="Open a coding task with this prompt."),
     provider: str | None = typer.Option(None, "--provider"),
     model: str | None = typer.Option(None, "--model"),
+    pipeline: bool = typer.Option(False, "--pipeline", help="Run the older Pilot pipeline."),
 ) -> None:
-    if instruction is not None:
-        if not instruction.strip():
-            raise typer.BadParameter("Enter a non-empty task.", param_hint="instruction")
+    legacy = pipeline or (ctx.find_root().info_name == "pilot-agent" and instruction is None)
+    if instruction is not None and (pipeline or not instruction.strip()):
+        raise typer.BadParameter(
+            "Enter a non-empty coding task without --pipeline.", param_hint="instruction",
+        )
+    if not legacy:
+        if instruction is None and not _interactive():
+            emit("Run blot in a terminal or pass a coding task to blot run.")
+            raise typer.Exit(1)
         run_coding_session(load_config_or_exit(provider, model), instruction=instruction)
         return
     _ensure_config_for_run()

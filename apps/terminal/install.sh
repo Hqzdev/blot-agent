@@ -467,11 +467,7 @@ detect_install_mode() {
       MODE="native"
       ;;
     *)
-      if [ "$HAS_DOCKER" = true ]; then
-        MODE="docker"
-      else
-        MODE="native"
-      fi
+      MODE="native"
       ;;
   esac
 }
@@ -506,7 +502,7 @@ print_plan() {
   fi
 
   if [ "$MODE" = "docker" ]; then
-    mode_line="docker sandbox (recommended)"
+    mode_line="Docker (Pilot pipeline)"
     step_count=3
   elif [ "$HAS_UV" = true ]; then
     mode_line="native uv tool"
@@ -516,7 +512,9 @@ print_plan() {
     step_count=3
   fi
 
-  if [ "$RUN_SETUP" = true ]; then
+  if [ "$MODE" = "native" ]; then
+    setup_line="${ARROW} Blot account sign-in: run blot run in your project"
+  elif [ "$RUN_SETUP" = true ]; then
     setup_line="${ARROW} setup wizard: starts automatically after install when a terminal is available"
   else
     setup_line="${ARROW} setup wizard: skipped by option"
@@ -643,6 +641,9 @@ verify_command() {
 }
 
 run_setup_wizard() {
+  if [ "$MODE" = "native" ]; then
+    return 0
+  fi
   if [ "$RUN_SETUP" != true ]; then
     log_warn "Setup skipped. Run: pilot-agent setup"
     return 0
@@ -707,7 +708,11 @@ print_success() {
   say ""
   say "${CYAN}${BOLD}Next:${NC}"
   say "  cd <project-folder>"
-  say "  pilot-agent init && pilot-agent run"
+  if [ "$MODE" = "native" ]; then
+    say "  blot run"
+  else
+    say "  pilot-agent init && pilot-agent run"
+  fi
   say ""
 
   if ! echo ":$PATH:" | grep -q ":$BIN_DIR:"; then

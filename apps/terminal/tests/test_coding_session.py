@@ -78,7 +78,7 @@ def test_coding_prompt_edit_diff_and_resume_from_cli(
     (tmp_path / "AGENTS.md").write_text("Use descriptive variable names.", encoding="utf-8")
 
     runner = CliRunner()
-    result = runner.invoke(main.app, ["Add an example"])
+    result = runner.invoke(main.app, ["--provider", "anthropic", "Add an example"])
     assert result.exit_code == 0, result.output
     assert (tmp_path / "example.py").read_text() == "answer = 42\n"
     assert "Use descriptive variable names." in provider.requests[0][0]
@@ -86,7 +86,7 @@ def test_coding_prompt_edit_diff_and_resume_from_cli(
     task = CodingTasks(tmp_path).saved()[0]
     assert "+answer = 42" in task.diff.read_text()
     assert "Add an example" in runner.invoke(main.app, ["sessions", "list"]).output
-    assert runner.invoke(main.app, ["resume", task.id]).exit_code == 0
+    assert runner.invoke(main.app, ["resume", task.id, "--provider", "anthropic"]).exit_code == 0
     assert len(provider.requests) == 2
     assert not (tmp_path / ".pilot-agent" / "session.jsonl").exists()
 
@@ -177,7 +177,7 @@ def test_bare_blot_enters_the_coding_prompt(tmp_path: Path, monkeypatch: Any) ->
         return session
 
     monkeypatch.setattr(main, "CodingSession", interactive_session)
-    result = CliRunner().invoke(main.app, [])
+    result = CliRunner().invoke(main.app, ["--provider", "anthropic"])
 
     assert result.exit_code == 0, result.output
     assert CodingTasks(tmp_path).saved()[0].title() == "Inspect this project"

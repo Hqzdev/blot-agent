@@ -18,6 +18,7 @@ class ToolCall:
     id: str
     name: str
     arguments: dict[str, Any]
+    state_id: str | None = None
 
 
 @dataclass
@@ -99,6 +100,7 @@ def _decode_tool_call(data: dict[str, Any]) -> ToolCall:
         id=str(data["id"]),
         name=str(data["name"]),
         arguments=cast(dict[str, Any], data.get("arguments") or {}),
+        state_id=cast(str | None, data.get("state_id")),
     )
 
 

@@ -9,11 +9,8 @@ curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/termina
 The installer prints a staged plan before acting, writes command output to a log
 under `/tmp`, installs user-space dependencies without sudo, and places
 `blot` in `~/.local/bin`.
-When an interactive terminal is available, it immediately starts
-`pilot-agent setup` after installation. For install-only automation, pass
-`--skip-setup` / `--no-setup` or set `PILOT_AGENT_INSTALL_NO_SETUP=1`.
-Use `--native` to force uv tool install, `--docker` to require sandbox mode, and
-`--branch <name>` when testing a non-main installer branch.
+The default native install supports browser sign-in. Use `--docker` for the
+older Pilot pipeline installer, or `--branch <name>` to select another branch.
 
 First project:
 
@@ -25,7 +22,10 @@ blot "Find and fix the failing tests"
 Use `/diff` to see changes from the agent's file tools, `/plan` to switch to
 read-only planning, and `/quit` to exit. Return later with `blot resume`.
 
-`setup` asks for one thing at a time: provider, API key, model, and optional
+`blot run` opens a browser to sign in to your Blot account. The model uses the
+server's provider credentials. The terminal can sign out with `blot logout`.
+
+The older Pilot `setup` asks for provider, API key, model, and optional
 Vercel token. You can rerun it anytime with `pilot-agent setup --reconfigure`.
 Keys are stored in `~/.pilot-agent/credentials.yaml` with mode `0600`.
 You can skip setup in CI by setting env vars such as

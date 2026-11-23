@@ -439,7 +439,7 @@ def test_cli_run_missing_api_key_is_clear(monkeypatch: Any) -> None:
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     runner = CliRunner()
 
-    result = runner.invoke(app, ["run"])
+    result = runner.invoke(app, ["run", "--pipeline"])
 
     assert result.exit_code == 1
     assert "API key not found for anthropic" in result.output
