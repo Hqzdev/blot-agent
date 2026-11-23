@@ -249,7 +249,7 @@ private struct KMenuPanelView: View {
             ForEach(items) { item in
                 switch item.kind {
                 case .divider:
-                    HDivider().padding(.vertical, 4).padding(.horizontal, 6)
+                    WorkspaceMenuGap()
                 case .header:
                     Text(item.title)
                         .font(KFont.caption(.medium))
@@ -269,7 +269,7 @@ private struct KMenuPanelView: View {
         .padding(6)
         .frame(minWidth: minWidth, alignment: .leading)
         .fixedSize()
-        .kPopover()
+        .kPopover(radius: 16)
         .padding(EdgeInsets(top: inset.top, leading: inset.left, bottom: inset.bottom, trailing: inset.right))
     }
 }
@@ -293,12 +293,9 @@ private struct KMenuRow: View {
                     KIcon("check", size: 14, color: K.text)
                 }
             }
-            .padding(.horizontal, 10)
-            .frame(height: 30)
-            .contentShape(Rectangle())
-            .kHover(radius: K.rMd)
+
         }
-        .buttonStyle(KIconButtonStyle())
+        .buttonStyle(MacMenuRowStyle())
         .kFocusRing(radius: K.rMd)
         .accessibilityAddTraits(item.selected ? .isSelected : [])
     }

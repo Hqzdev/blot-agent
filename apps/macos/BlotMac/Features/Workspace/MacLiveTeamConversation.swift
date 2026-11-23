@@ -26,10 +26,6 @@ struct MacLiveTeamConversation: View {
     }
     private var messages: [BlotV3.Message] { Array(history.messages(in: store.currentVisibleMessages)) }
     private var reduced: Bool { reduceMotion || systemReduceMotion }
-    private var agent: BlotV3.AgentProfile? {
-        store.chatContent.agents.first { $0.metadata.id == (store.currentConversation?.agentId ?? store.selectedAgentID) }
-    }
-
     private var groupMembers: [BlotV3.AgentProfile] {
         let ids = Set((store.chatContent.participants).filter {
             $0.conversationId == store.selectedConversationID && $0.kind == .agent && !$0.removed
@@ -37,7 +33,27 @@ struct MacLiveTeamConversation: View {
         return store.chatContent.agents.filter { ids.contains($0.metadata.id) }
     }
 
+    private var isEmptyChat: Bool {
+        messages.isEmpty && store.currentReplyDraft == nil
+    }
+
+    private var welcome: some View {
+        VStack(spacing: 12) {
+            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 48) }
+            Group {
+                if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
+                else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
+                else { WorkspaceWelcomeGreeting() }
+            }.font(.system(size: 23, weight: .medium)).multilineTextAlignment(.center)
+            if store.chatContent.agents.isEmpty {
+                Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
+            }
+        }
+    }
+
     var body: some View {
+        let visibleMessages = messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }
+        let authorIDs = WorkspaceMessageSeries.authorIDs(in: visibleMessages)
         ScrollViewReader { proxy in
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: compactMessages ? 16 : 24) {
@@ -50,28 +66,22 @@ struct MacLiveTeamConversation: View {
                             _Concurrency.Task { await _Concurrency.Task.yield(); if let anchor { proxy.scrollTo(anchor, anchor: .top) } }
                         }.font(.callout).frame(maxWidth: .infinity)
                     }
-                    if messages.isEmpty, store.currentReplyDraft == nil {
-                        VStack(spacing: 16) {
-                            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: groupMembers, size: 68) }
-                            else if let agent { WorkspaceAvatarView(agent: agent, size: 68, animated: true) }
-                            else { WorkspaceAnimatedAvatar(size: 68) }
-                            Group {
-                                if store.currentConversation?.kind == .group { Text(store.t("Set a shared task for the team")) }
-                                else if store.chatContent.agents.isEmpty { Text("Создайте своего первого агента") }
-                                else { WorkspaceWelcomeGreeting() }
-                            }.font(.system(size: 25, weight: .medium)).multilineTextAlignment(.center)
-                            if store.chatContent.agents.isEmpty {
-                                Button("Создать агента") { store.navigate(.createAgent) }.buttonStyle(WorkspaceButtonStyle())
-                            }
-                        }.frame(maxWidth: .infinity).padding(.vertical, 100)
-                    }
-                    ForEach(messages.filter { timeline.visibleIDs.contains($0.metadata.id.uuidString) }, id: \.metadata.id) { message in
+                    ForEach(visibleMessages, id: \.metadata.id) { message in
                         Group {
                             if let plan = store.groupPlan(for: message) {
                                 WorkspaceGroupPlanCard(plan: plan, agents: store.chatContent.agents, skills: store.chatContent.skills, russian: store.language == "ru")
                             } else {
-                                MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
-                                    inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages)
+                                VStack(alignment: .leading, spacing: 5) {
+                                    MacLiveTeamMessage(message: message, arriving: timeline.entranceIDs.contains(message.metadata.id.uuidString),
+                                        inputFrame: sendInputFrame ?? inputFrame, compact: compactMessages, showsAuthor: authorIDs.contains(message.metadata.id))
+                                    if message.role == .assistant, message.delivery == .completed, !message.content.isEmpty,
+                                       store.chatContent.activities(for: message).isEmpty {
+                                        MacChatWorkStatus(title: store.language == "ru" ? "Готово" : "Done",
+                                            start: message.metadata.createdAt, end: message.metadata.updatedAt, russian: store.language == "ru")
+                                            .font(.callout).foregroundStyle(.secondary)
+                                            .accessibilityIdentifier("workspace.chat.reply-completed.\(message.metadata.id)")
+                                    }
+                                }
                             }
                         }
                             .id(message.metadata.id).transition(.identity)
@@ -144,10 +154,11 @@ struct MacLiveTeamConversation: View {
         .safeAreaInset(edge: .top, spacing: 0) { WorkspacePinnedGroupPlan().padding(.horizontal, 24).padding(.top, 6) }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             VStack(spacing: 8) {
+                if isEmptyChat { welcome.padding(.bottom, 12) }
                 WorkspaceFeedback()
-                MacWorkspaceComposer(teamLayout: true, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
-            }.frame(maxWidth: 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, 8)
-                .frame(maxWidth: .infinity).background(WorkspaceStyle.canvas)
+                MacWorkspaceComposer(teamLayout: true, showsStarters: isEmptyChat && !store.chatContent.agents.isEmpty, onInputFrameChange: { inputFrame = $0 }, onSend: { sendInputFrame = inputFrame })
+            }.frame(maxWidth: isEmptyChat ? 560 : 730).padding(.horizontal, 24).padding(.bottom, 18).padding(.top, isEmptyChat ? 62 : 8)
+                .frame(maxWidth: .infinity, maxHeight: isEmptyChat ? .infinity : nil).background(WorkspaceStyle.canvas)
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
         .kAnimation(MacTeamMessageMotion.receive, value: timeline.lastRevealedID)
@@ -160,8 +171,10 @@ private struct MacLiveTeamMessage: View {
     let arriving: Bool
     let inputFrame: CGRect?
     let compact: Bool
+    let showsAuthor: Bool
     @Environment(WorkspaceStore.self) private var store
     private var isUser: Bool { message.role == .user }
+    private var isGroup: Bool { store.currentConversation?.kind == .group }
     private var agent: BlotV3.AgentProfile? {
         store.chatContent.agents.first { $0.metadata.id == (message.authorAgentId ?? store.currentConversation?.agentId) }
     }
@@ -172,19 +185,20 @@ private struct MacLiveTeamMessage: View {
         HStack(alignment: .top) {
             if isUser { Spacer(minLength: 54) }
             VStack(alignment: .leading, spacing: 12) {
-                if !isUser {
+                if isGroup && !isUser && showsAuthor {
                     HStack(spacing: 9) {
                         if let agent { WorkspaceAvatarView(agent: agent, size: 22) }
                         Text(agent?.name ?? "Blot").font(.system(size: 11, weight: .semibold))
                             .foregroundStyle(agent.map { WorkspaceAvatarView.color($0.avatarColor) } ?? WorkspaceStyle.ink)
                     }
                 }
+                if !message.content.isEmpty || !message.artifactIds.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
                     if let id = message.replyToMessageId, let quoted = store.message(id), store.groupPlan(for: quoted) == nil {
                         WorkspaceQuotedMessage(message: quoted)
                     }
                     WorkspaceMessageText(text: message.content, markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.system(size: 13)).lineSpacing(4)
-                    WorkspaceMessagePlugins(message: message)
+                    if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
                     ForEach(message.artifactIds, id: \.self) { id in
                         if let artifact = store.chatContent.artifacts[id] {
                             Button { store.selectedRecordID = id; store.navigate(.file) } label: {
@@ -193,7 +207,8 @@ private struct MacLiveTeamMessage: View {
                         }
                     }
                 }.padding(.horizontal, 16).padding(.vertical, compact ? 9 : 12)
-                    .background(isUser ? MacTeamStyle.field : WorkspaceStyle.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 20))
+                    .foregroundStyle(WorkspaceStyle.ink)
+                    .background(isUser ? MacWorkspaceStyle.outgoingMessage : WorkspaceStyle.surface.opacity(0.6), in: RoundedRectangle(cornerRadius: 20))
                     .modifier(MacTeamPressMenu(secondaryClick: true) { close in
                         Group {
                             MacTeamMessageMenuLayout(choices: WorkspaceChatInteractions.reactions, react: { store.toggleReaction($0, to: message.metadata.id) },
@@ -206,19 +221,22 @@ private struct MacLiveTeamMessage: View {
                                     }
                                 }, close: close)
                             if message.role == .user {
-                                MacTeamNavigationButton(action: { store.retryResponse(to: message.metadata.id); close() }) {
+                                Button(action: { store.retryResponse(to: message.metadata.id); close() }) {
                                     BlotLabel(store.t("Retry response"), symbol: "arrow.clockwise")
-                                }.disabled(store.isReplying)
+                                }.buttonStyle(MacMenuRowStyle()).disabled(store.isReplying)
                             }
-                            Menu(store.t("Export")) {
+                            MacActionMenu(edge: .trailing, isSubmenu: true) {
                                 ForEach(WorkspaceExportFormat.allCases, id: \.self) { format in
                                     Button(format.rawValue.uppercased()) { store.exportMessage(message.metadata.id, format: format); close() }
                                 }
-                            }
+                            } label: { BlotLabel(store.t("Export"), symbol: "chevron.right") }
                         }
                     })
                     .modifier(MacTeamSwipeToReply { store.beginReply(to: message.metadata.id) })
                     .modifier(MacTeamMessageEntrance(animated: arriving && isUser, outgoing: true, inputFrame: inputFrame))
+                    .padding(.leading, isGroup && !isUser ? 30 : 0)
+                }
+                WorkspaceToolActivityView(message: message).padding(.leading, isGroup ? 30 : 0)
                 HStack(spacing: 5) {
                 ForEach(WorkspaceChatInteractions.reactions, id: \.self) { reaction in
                     let count = reactions.filter { $0.emoji == reaction }.count

@@ -123,7 +123,7 @@ struct MacWorkspaceSidebar: View {
                                 }
                             Text(store.t(chat.title)).font(.system(size: 10)).lineLimit(1).frame(width: 68)
                         }.padding(.vertical, 8)
-                    }.buttonStyle(.plain).contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+                    }.buttonStyle(.plain).macCommandMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
                 }
             }.padding(.horizontal, 8)
         }.scrollIndicators(.hidden)
@@ -170,7 +170,7 @@ struct MacWorkspaceSidebar: View {
                             in: RoundedRectangle(cornerRadius: BlotRadius.control))
                 .contentShape(Rectangle())
         }.buttonStyle(.plain).help(chat.title)
-            .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+            .macCommandMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
     }
 
     private var footer: some View {
@@ -178,7 +178,7 @@ struct MacWorkspaceSidebar: View {
             if !store.snapshot.agents.isEmpty {
                 HStack {
                     footerButton("Plugins", glyph: .puzzle, route: .connections)
-                    Menu {
+                    MacActionMenu {
                         BlotIconButton(store.t("Agents"), symbol: "person.2") { store.navigate(.agents) }
                         BlotIconButton(store.t("Create agent"), symbol: "plus") { store.navigate(.createAgent) }
                         BlotIconButton(store.t("Automations"), symbol: "calendar") { store.navigate(.schedules) }
@@ -188,7 +188,7 @@ struct MacWorkspaceSidebar: View {
                             BlotIconButton(store.t("Task details"), symbol: "list.bullet") { store.navigate(.running) }
                         }
                     } label: { BlotIcon(.more, size: 16).frame(width: 26, height: 26) }
-                        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().help(store.t("More"))
+                        .fixedSize().help(store.t("More"))
                 }
             }
             HStack {

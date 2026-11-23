@@ -77,7 +77,7 @@ struct WorkspacePairedDeviceCard: View {
                 .padding(.horizontal, 8).padding(.vertical, 5)
                 .background(device.revoked ? WorkspaceStyle.secondary.opacity(0.08) : Color.green.opacity(0.12), in: Capsule())
                 .fixedSize()
-            Menu {
+            DeviceActionsMenu {
                 Button { showingDetails = true } label: {
                     Label(ru ? "Об устройстве" : "Device details", systemImage: "info.circle")
                 }
@@ -91,7 +91,7 @@ struct WorkspacePairedDeviceCard: View {
                     Label(ru ? "Обновить статус" : "Refresh status", systemImage: "arrow.clockwise")
                 }.disabled(store.pairingCommands == nil)
                 if !device.revoked && device.id != store.snapshot.localDeviceID {
-                    Divider()
+                    WorkspaceMenuGap()
                     Button(role: .destructive) { confirmingRevoke = true } label: {
                         Label(ru ? "Отозвать доступ" : "Revoke access", systemImage: "xmark.shield")
                     }.disabled(store.pairingCommands == nil)
@@ -157,3 +157,9 @@ struct WorkspacePairedDeviceCard: View {
         }
     }
 }
+
+#if os(macOS)
+private typealias DeviceActionsMenu = MacActionMenu
+#else
+private typealias DeviceActionsMenu = Menu
+#endif

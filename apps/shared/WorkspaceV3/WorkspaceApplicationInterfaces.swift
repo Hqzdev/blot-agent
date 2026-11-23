@@ -19,7 +19,7 @@ protocol WorkspaceObservationService {
 
 @MainActor
 protocol WorkspaceExecutionService {
-    func responses(to message: BlotV3.Message) async throws -> AsyncThrowingStream<BlotV3.Message, Error>
+    func responses(to message: BlotV3.Message, profile: BlotInferenceProfile?) async throws -> AsyncThrowingStream<BlotV3.Message, Error>
     func cancelResponse(in conversationID: UUID) async throws -> WorkspaceSnapshot
     func stopAll() async
 }

@@ -15,35 +15,35 @@ struct ConversationToolbarMenu: View {
     private var archived: Bool { app.shell.archived.contains(item.id) }
 
     var body: some View {
-        Menu {
+        MacActionMenu {
             Button { title = item.title; renaming = true } label: { Label("Rename", systemImage: "pencil") }.disabled(item.kind != .chat)
                 .keyboardShortcut("r", modifiers: [.option, .command])
             Button { app.shell.togglePin(item.id) } label: {
                 Label(pinned ? "Unpin" : "Pin", systemImage: pinned ? "pin.slash" : "pin")
             }.disabled(archived).keyboardShortcut("p", modifiers: [.option, .command])
-            Divider()
+            WorkspaceMenuGap()
             Button {
                 let session = app.createSideChat(for: item)
                 openWindow(value: ConversationWindowRequest(id: session.id, title: session.title,
                     transcript: app.transcript(for: item), chatID: session.id))
             } label: { Label("New side chat", systemImage: "bubble.left.and.bubble.right") }
                 .keyboardShortcut("s", modifiers: [.option, .command])
-            Menu {
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Fork entire conversation") { app.forkConversation(item) }.disabled(item.kind != .chat)
             } label: { Label("Create fork", systemImage: "point.3.connected.trianglepath.dotted") }
             Button { scheduling = true } label: { Label("Add scheduled task…", systemImage: "clock") }
-            Divider()
+            WorkspaceMenuGap()
             ShareLink(item: app.transcript(for: item)) { Label("Share", systemImage: "square.and.arrow.up") }
-            Menu {
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Conversation") { copy(app.transcript(for: item)) }
                 Button("Title") { copy(item.title) }
                 Button("Conversation ID") { copy(item.id) }
             } label: { Label("Copy", systemImage: "doc.on.doc") }
-            Divider()
+            WorkspaceMenuGap()
             Button {
                 openWindow(value: ConversationWindowRequest(id: item.id, title: item.title, transcript: app.transcript(for: item)))
             } label: { Label("Open in new window", systemImage: "macwindow.on.rectangle") }
-            Menu {
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Chat") { app.openConversation(item) }
                 if item.kind != .chat {
                     Button("Review") { app.openConversation(item); app.showShellReview() }
@@ -54,7 +54,7 @@ struct ConversationToolbarMenu: View {
                     }
                 }
             } label: { Label("Open in", systemImage: "arrow.up.right") }
-            Divider()
+            WorkspaceMenuGap()
             Button {
                 if archived { app.shell.restore(item.id) } else { app.shell.archive(item.id) }
             } label: {
@@ -64,7 +64,7 @@ struct ConversationToolbarMenu: View {
             KIcon("ellipsis", size: 16, color: K.text2)
                 .frame(width: K.iconButtonSize, height: K.iconButtonSize).kHover(radius: K.rSm)
         }
-        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .fixedSize()
         .kFocusRing(radius: K.rSm).accessibilityLabel("Conversation actions").help("Conversation actions")
         .alert("Rename conversation", isPresented: $renaming) {
             TextField("Title", text: $title)

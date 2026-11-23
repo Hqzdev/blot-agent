@@ -56,14 +56,14 @@ struct MacTeamMessageMenuLayout: View {
                     .accessibilityAddTraits(selected(emoji) ? [.isSelected] : [])
             }
         }.padding(.vertical, 3)
-        Divider()
+        WorkspaceMenuGap()
         ForEach(MacTeamMessageAction.allCases, id: \.self) { action in
-            MacTeamNavigationButton {
+            Button {
                 perform(action)
                 close()
             } label: {
-                BlotLabel(action.rawValue, symbol: action.symbol, size: BlotIconSize.control).font(.system(size: 12))
-            }
+                BlotLabel(action.rawValue, symbol: action.symbol, size: BlotIconSize.control).font(.system(size: 13))
+            }.buttonStyle(MacMenuRowStyle())
         }
     }
 }

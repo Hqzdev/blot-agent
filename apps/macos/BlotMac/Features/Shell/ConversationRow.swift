@@ -60,7 +60,7 @@ struct ConversationRow: View {
             .fill(selected ? K.selected : hovered || focused != nil ? K.hover : .clear))
         .contentShape(Rectangle())
         .onHover { hovered = $0 }
-        .contextMenu {
+        .macCommandMenu {
             Button { title = item.title; renaming = true } label: { Label("Rename", systemImage: "pencil") }.disabled(item.kind != .chat)
             if !archived {
                 Button { app.shell.togglePin(item.id) } label: {
@@ -70,12 +70,12 @@ struct ConversationRow: View {
             Button {
                 if unread { app.shell.markRead(item.id) } else { app.shell.markUnread(item.id) }
             } label: { Label(unread ? "Mark as read" : "Mark as unread", systemImage: "eye") }
-            Divider()
-            Menu {
+            WorkspaceMenuGap()
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Title") { copy(item.title) }
                 Button("Conversation ID") { copy(item.id) }
             } label: { Label("Copy", systemImage: "doc.on.doc") }
-            Divider()
+            WorkspaceMenuGap()
             Button { toggleArchive() } label: {
                 Label(archived ? "Restore from archive" : "Archive",
                       systemImage: archived ? "arrow.uturn.backward" : "archivebox")

@@ -1,5 +1,6 @@
 import BlotDomain
 import Foundation
+import BlotWorkspace
 
 struct WorkspaceAccountForm {
     var browserRegistering = false
@@ -60,6 +61,7 @@ struct WorkspacePairForm { var code = "" }
 nonisolated struct WorkspaceComposerForm: Codable, Sendable {
     var draft = ""
     var attachments: [URL] = []
+    var inferenceProfile: BlotInferenceProfile?
     var replyToMessageID: UUID?
     var projectID: UUID? = nil
 }
