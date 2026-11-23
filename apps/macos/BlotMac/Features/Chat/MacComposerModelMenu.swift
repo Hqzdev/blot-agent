@@ -24,7 +24,7 @@ struct MacComposerModelMenu: View {
     private let extraInk = BlotColor.dynamic(.init(light: 0x62399DFF, dark: 0xD5BEFFFF))
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             MacActionMenu(edge: .top) {
                 ForEach(BlotModelTier.allCases, id: \.self) { item in
                     Button { rawTier = item.rawValue } label: { option(item.title, glyph: item.menuGlyph, checked: tier == item) }
@@ -47,7 +47,7 @@ struct MacComposerModelMenu: View {
             .font(.system(size: 13))
             .foregroundStyle(highlighted ? extraInk : BlotColor.textSecondary)
             .lineLimit(1)
-            .padding(.horizontal, 8)
+            .padding(.horizontal, 5)
             .frame(minHeight: 30)
     }
 
