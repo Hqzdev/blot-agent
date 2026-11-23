@@ -5,20 +5,17 @@ struct MacAgentMarketplaceLink: View {
     let open: () -> Void
 
     var body: some View {
-        Button(action: open) {
-            HStack(spacing: 13) {
-                HStack(spacing: 5) {
+        MacWorkspacePillButton(action: open) {
+            HStack(spacing: 8) {
+                HStack(spacing: 2) {
                     ForEach(MacDemoTemplates.all.prefix(4)) { template in
-                        MacCatalogAvatar(template: template, size: 24)
+                        MacCatalogAvatar(template: template, size: 16)
                     }
                 }
-                Text("Marketplace").font(.system(size: 14, weight: .semibold))
-                Spacer(minLength: 0)
-                BlotIcon(.chevronRight, size: BlotIconSize.inline)
-                    .foregroundStyle(WorkspaceStyle.secondary).accessibilityHidden(true)
-            }.teamCard().contentShape(RoundedRectangle(cornerRadius: 14))
+                Text("Marketplace")
+            }
         }
-        .buttonStyle(BlotPlainButtonStyle())
+        .fixedSize(horizontal: true, vertical: false)
         .accessibilityIdentifier("workspace.agent-marketplace.open")
     }
 }

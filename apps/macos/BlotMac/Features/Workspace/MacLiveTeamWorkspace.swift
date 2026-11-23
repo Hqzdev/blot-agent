@@ -88,7 +88,7 @@ struct MacLiveTeamWorkspace: View {
         GlassEffectContainer(spacing: 8) {
             ZStack {
                 HStack(spacing: 8) {
-                    if store.route == .marketplace {
+                    if [.marketplace, .agentMarketplace].contains(store.route) {
                         Text(store.t(store.route.title))
                             .font(.system(size: 17, weight: .semibold)).lineLimit(1)
                     } else {
@@ -101,7 +101,7 @@ struct MacLiveTeamWorkspace: View {
                     }
                 }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, 64)
                 HStack(spacing: 6) {
-                    if store.route == .marketplace {
+                    if [.marketplace, .agentMarketplace].contains(store.route) {
                         headerButton(store.t("Back"), glyph: .chevronLeft) { store.back() }
                     }
                     headerButton("Боковая панель", glyph: .layout) {
