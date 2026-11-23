@@ -73,6 +73,7 @@ struct MacMenuDismissStyle: PrimitiveButtonStyle {
 struct MacActionMenu<Actions: View, Label: View>: View {
     var edge: Edge = .bottom
     var isSubmenu = false
+    var width: CGFloat = 236
     @ViewBuilder let actions: () -> Actions
     @ViewBuilder let label: () -> Label
     @State private var presented = false
@@ -83,7 +84,7 @@ struct MacActionMenu<Actions: View, Label: View>: View {
             else { trigger.buttonStyle(.plain) }
         }
         .popover(isPresented: $presented, arrowEdge: edge) {
-            MacActionMenuPanel { actions().buttonStyle(MacMenuDismissStyle(close: { presented = false })) }
+            MacActionMenuPanel(width: width) { actions().buttonStyle(MacMenuDismissStyle(close: { presented = false })) }
         }
     }
 

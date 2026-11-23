@@ -6,49 +6,74 @@ struct MacComposerAccessMenu: View {
     @Binding var selection: BlotV3.AccessMode
     @Environment(WorkspaceStore.self) private var store
 
+    private var russian: Bool { store.language == "ru" }
+    private var selectedTitle: String {
+        ApprovalOption.allCases.first { $0.mode == selection }?.title(russian: russian) ?? store.t("Observe")
+    }
+
     var body: some View {
-        MacActionMenu(edge: .top) {
-            ForEach(BlotV3.AccessMode.allCases, id: \.self) { mode in
-                Button { selection = mode } label: {
-                    HStack {
-                        Label {
-                            Text(store.t(mode.menuTitle))
-                        } icon: {
-                            BlotIcon(mode.menuGlyph, size: BlotIconSize.control)
+        MacActionMenu(edge: .top, width: 310) {
+            ForEach(ApprovalOption.allCases, id: \.self) { option in
+                let selected = selection == option.mode
+                Button { selection = option.mode } label: {
+                    HStack(spacing: 10) {
+                        BlotIcon(option.glyph, size: BlotIconSize.control)
+                            .foregroundStyle(BlotColor.textSecondary)
+                            .accessibilityHidden(true)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(option.title(russian: russian))
+                            Text(option.detail(russian: russian))
+                                .font(.system(size: 12))
+                                .foregroundStyle(BlotColor.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                        Spacer(minLength: 8)
-                        if selection == mode { BlotIcon(.check, size: BlotIconSize.inline) }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        BlotIcon(.check, size: BlotIconSize.inline)
+                            .opacity(selected ? 1 : 0)
+                            .accessibilityHidden(true)
                     }
-                }.accessibilityAddTraits(selection == mode ? .isSelected : [])
+                    .padding(.vertical, 6)
+                    .accessibilityElement(children: .combine)
+                }.accessibilityAddTraits(selected ? .isSelected : [])
             }
         } label: {
-            ViewThatFits(in: .horizontal) {
-                HStack(spacing: 5) {
-                    BlotIcon(selection.menuGlyph, size: BlotIconSize.control)
-                    Text(store.t(selection.menuTitle))
-                }.font(.system(size: 12)).fixedSize()
-                BlotIcon(selection.menuGlyph, size: BlotIconSize.control)
-            }.padding(.horizontal, 5).frame(minHeight: 26)
-                .accessibilityLabel(store.t(selection.menuTitle))
-                .help(store.t("Access mode"))
-        }
+            Text(selectedTitle)
+                .font(.system(size: 13))
+                .lineLimit(1)
+                .padding(.horizontal, 5)
+                .frame(minHeight: 30)
+        }.help(store.t("Access mode"))
     }
 }
 
-private extension BlotV3.AccessMode {
-    var menuTitle: String {
+private enum ApprovalOption: CaseIterable {
+    case ask, trusted
+
+    var mode: BlotV3.AccessMode {
         switch self {
-        case .observe: "Observe"
-        case .ask_first: "Ask first"
-        case .trusted_scope: "Trusted scope"
+        case .ask: .ask_first
+        case .trusted: .trusted_scope
         }
     }
 
-    var menuGlyph: BlotGlyph {
+    var glyph: BlotGlyph {
         switch self {
-        case .observe: .eye
-        case .ask_first: .question
-        case .trusted_scope: .shieldCheck
+        case .ask: .question
+        case .trusted: .shieldCheck
+        }
+    }
+
+    func title(russian: Bool) -> String {
+        switch self {
+        case .ask: russian ? "Спрашивать разрешение" : "Ask for approval"
+        case .trusted: russian ? "Разрешать за меня" : "Approve for me"
+        }
+    }
+
+    func detail(russian: Bool) -> String {
+        switch self {
+        case .ask: russian ? "Подтверждать вручную действия, требующие разрешения." : "Confirm actions that require approval yourself."
+        case .trusted: russian ? "Автоматически разрешать действия в доверенной области." : "Allow actions within the trusted scope automatically."
         }
     }
 }
