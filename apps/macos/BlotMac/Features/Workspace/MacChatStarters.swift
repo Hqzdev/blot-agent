@@ -13,9 +13,8 @@ struct MacChatStarters: View {
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     @Environment(\.blotReduceMotion) private var reduceMotion
 
-    private var selectionAnimation: Animation? {
-        systemReduceMotion || reduceMotion ? nil : BlotInterfaceMotion.quick
-    }
+    private var motionEnabled: Bool { !systemReduceMotion && !reduceMotion }
+    private var selectionAnimation: Animation? { motionEnabled ? BlotInterfaceMotion.standard : nil }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -50,7 +49,14 @@ struct MacChatStarters: View {
                     ScrollView {
                         exampleRows(for: selected)
                     }
-                }.id(selected).transition(.opacity)
+                }.id(selected)
+                    .transition(.asymmetric(
+                        insertion: .modifier(
+                            active: MacStarterReveal(progress: 0),
+                            identity: MacStarterReveal(progress: 1)
+                        ),
+                        removal: .opacity
+                    ))
             }
         }
     }
@@ -77,7 +83,7 @@ struct MacChatStarters: View {
                 .padding(.horizontal, 10).frame(height: 34)
                 .background(colors.tint.opacity(active ? 0.26 : hovered ? 0.15 : 0), in: shape)
                 .overlay { shape.strokeBorder(active || hovered ? colors.tint.opacity(active ? 0.72 : 0.52) : BlotColor.hairline) }
-                .animation(selectionAnimation, value: hovered)
+                .animation(motionEnabled ? BlotInterfaceMotion.quick : nil, value: hovered)
         }
         .buttonStyle(BlotPlainButtonStyle())
         .onHover { inside in
@@ -123,5 +129,23 @@ struct MacChatStarters: View {
         .buttonStyle(BlotPlainButtonStyle()).kHover(radius: 8)
         .accessibilityLabel(example.title)
         .disabled(!draft.isEmpty && draft != inserted)
+    }
+}
+
+
+private struct MacStarterReveal: ViewModifier, Animatable {
+    var progress: CGFloat
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .offset(y: (progress - 1) * 2 * BlotInterfaceMotion.shift)
+            .mask(alignment: .top) {
+                Rectangle().scaleEffect(x: 1, y: progress, anchor: .top)
+            }
     }
 }
