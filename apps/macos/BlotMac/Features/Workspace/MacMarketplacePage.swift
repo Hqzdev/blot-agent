@@ -5,6 +5,7 @@ import SwiftUI
 
 /// The catalog uses the main workspace's navigation and authenticated session.
 struct MacMarketplacePage: View {
+    var showsAgents = false
     @Environment(WorkspaceStore.self) private var store
     @State private var detail: Detail?
     @State private var appleStatuses: [String: String] = [:]
@@ -38,9 +39,12 @@ struct MacMarketplacePage: View {
             } else if store.mode == .live && store.snapshot.ownerID == nil {
                 ContentUnavailableView("Войдите в Blot", systemImage: "person.crop.circle",
                     description: Text("Каталог доступен после входа в аккаунт."))
+            } else if showsAgents {
+                MacAgentMarketplace(selectTemplate: { detail = .template($0) })
             } else {
                 MacTeamMarketplaceContent(plugins: plugins,
                     selectPlugin: { detail = .plugin($0) }, selectTemplate: { detail = .template($0) },
+                    openAgentMarketplace: { store.navigate(.agentMarketplace) },
                     topInset: 0, pluginActionTitle: "Подробнее",
                     subtitle: "Готовые специалисты и приложения для вашей команды.")
             }
@@ -64,6 +68,7 @@ struct MacMarketplacePage: View {
         }
     }
     private func refreshAppleStatuses() async {
+        guard !showsAgents else { return }
         for plugin in ApplePluginID.allCases {
             if let deviceID = store.snapshot.localDeviceID,
                !AppleInvocationRecovery.pending(plugin: plugin, deviceID: deviceID, actions: store.snapshot.preparedActions ?? [], invocations: store.snapshot.toolInvocations ?? []).isEmpty {

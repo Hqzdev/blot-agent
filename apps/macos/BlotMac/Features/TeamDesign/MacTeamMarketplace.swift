@@ -18,6 +18,7 @@ struct MacTeamMarketplaceContent: View {
     let selectPlugin: (MacTeamPlugin) -> Void
     let selectTemplate: (MacDemoTemplate) -> Void
     var addPlugin: (() -> Void)?
+    var openAgentMarketplace: (() -> Void)?
     var topInset: CGFloat = 64
     var pluginActionTitle = "Подключить"
     var subtitle = "Подключите ваши приложения или пригласите готового специалиста."
@@ -50,40 +51,26 @@ struct MacTeamMarketplaceContent: View {
                         }.buttonStyle(WorkspaceButtonStyle()).fixedSize()
                     }
                 }
-                HStack(spacing: 9) {
-                    BlotIcon(symbol: "magnifyingglass", size: BlotIconSize.control).foregroundStyle(.secondary)
-                    TextField("Поиск приложений и шаблонов", text: $search).textFieldStyle(.plain)
-                }
-                .padding(12).background(WorkspaceStyle.surface.opacity(0.55), in: RoundedRectangle(cornerRadius: 10))
+                MacCatalogSearchField(prompt: WorkspaceCopy.text("Поиск приложений и шаблонов",
+                    language: locale.language.languageCode?.identifier ?? "en"), query: $search)
                 if !templates.isEmpty {
                     Text("Готовые специалисты").font(.system(size: 15, weight: .semibold))
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 14)], spacing: 14) {
-                        ForEach(templates) { item in template(item) }
-                    }
+                    MacCatalogTemplateGrid(templates: templates, select: selectTemplate)
+                }
+                if let openAgentMarketplace, search.isEmpty {
+                    MacAgentMarketplaceLink(open: openAgentMarketplace)
                 }
                 HStack {
                     Text("Приложения").font(.system(size: 15, weight: .semibold))
                     Spacer()
                     Text("\(filteredPlugins.count)").foregroundStyle(.tertiary)
                 }
-                ScrollView(.horizontal) {
-                    HStack(spacing: 6) {
-                        ForEach(
-                            ["Все", "Приложения Apple", "Работа", "Общение", "Финансы", "Пароли", "MCP", "Разработка", "Контент"],
-                            id: \.self
-                        ) { item in
-                            Button {
-                                category = item
-                            } label: {
-                                WorkspaceLocalizedText(item).font(.system(size: 11, weight: category == item ? .medium : .regular))
-                                    .padding(.horizontal, 12).padding(.vertical, 7)
-                                    .foregroundStyle(category == item ? BlotColor.onInverse : WorkspaceStyle.ink)
-                                    .background(
-                                        category == item ? BlotColor.inverse : WorkspaceStyle.surface, in: Capsule())
-                            }.buttonStyle(BlotPlainButtonStyle())
-                        }
-                    }
-                }.scrollIndicators(.hidden)
+                MacCatalogCategories(
+                    items: ["Все", "Приложения Apple", "Работа", "Общение", "Финансы", "Пароли", "MCP", "Разработка", "Контент"],
+                    selection: $category
+                ) { title in
+                    WorkspaceCopy.text(title, language: locale.language.languageCode?.identifier ?? "en")
+                }
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 270), spacing: 14)], spacing: 14) {
                     ForEach(filteredPlugins) { plugin in
                         Button {
@@ -123,20 +110,6 @@ struct MacTeamMarketplaceContent: View {
                 .kAnimation(KMotion.standard, value: filteredPlugins.map(\.id))
                 .padding(32).frame(maxWidth: 1040).frame(maxWidth: .infinity)
         }.contentMargins(.top, topInset, for: .scrollContent)
-    }
-    private func template(_ template: MacDemoTemplate) -> some View {
-        Button {
-            selectTemplate(template)
-        } label: {
-            VStack(alignment: .leading, spacing: 14) {
-                WorkspaceAvatar(
-                    shape: WorkspaceAvatar.ShapeKind(rawValue: template.shape) ?? .round,
-                    color: WorkspaceAvatarView.color(template.color), size: 46)
-                WorkspaceLocalizedText(template.name).font(.system(size: 14, weight: .medium))
-                WorkspaceLocalizedText(template.summary).font(.system(size: 11)).foregroundStyle(.secondary).lineLimit(2)
-                BlotLabel("Посмотреть шаблон", symbol: "arrow.up.right", size: BlotIconSize.inline).font(.system(size: 10)).foregroundStyle(WorkspaceStyle.ink)
-            }.frame(maxWidth: .infinity, alignment: .leading).teamCard(padding: 18)
-        }.buttonStyle(BlotPlainButtonStyle())
     }
 }
 

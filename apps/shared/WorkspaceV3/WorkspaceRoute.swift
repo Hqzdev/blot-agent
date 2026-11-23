@@ -9,7 +9,7 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
     #endif
     case usage, personalization, settingsProfile, settingsStorage, settingsUpdates
     #if os(macOS)
-    case marketplace
+    case marketplace, agentMarketplace
     #endif
     case settings, appSettings, account, models, permissions, connections, devices, pair, memory, mcp
     case browserSettings, browser, permissionRules, blocked, offline, appearance, notifications, language, recovery
@@ -52,6 +52,7 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
         case .settingsUpdates: "Updates"
         #if os(macOS)
         case .marketplace: "Apps and templates"
+        case .agentMarketplace: "Marketplace"
         #endif
         case .models: "AI models"
         case .permissions: "Permissions"

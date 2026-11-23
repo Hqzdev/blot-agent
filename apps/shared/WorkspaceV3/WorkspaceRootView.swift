@@ -43,6 +43,7 @@ struct WorkspacePage: View {
         #if os(macOS)
         if [.createAgent, .editAgent, .firstAgent].contains(route) { MacAgentCreationView(isEditing: route == .editAgent) }
         else if route == .marketplace { MacMarketplacePage() }
+        else if route == .agentMarketplace { MacMarketplacePage(showsAgents: true) }
         else if [.home, .chat, .newChat].contains(route) { MacWorkspaceChatPage(route: route) }
         else { scrollingPage(height: height) }
         #else
