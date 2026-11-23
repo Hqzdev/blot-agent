@@ -241,11 +241,7 @@ class PilotAgentInput:
         default: str | None,
         choices: list[str] | None,
     ) -> str:
-        if choices:
-            return Prompt.ask(
-                message or "",
-                password=password,
-                default=default or "",
-                choices=choices,
-            )
-        return Prompt.ask(message or "", password=password, default=default or "")
+        # stdin is already redirected here. A hidden Rich prompt would open /dev/tty.
+        return Prompt.ask(
+            message or "", default=default or "", choices=choices, show_default=not password,
+        )
