@@ -16,6 +16,7 @@ from pilot_agent.agent.types import Message, Role, ToolResult
 from pilot_agent.backends.base import ExecutionBackend
 from pilot_agent.cli.coding_tools import CodingProject, ProjectRead, ReviewedCommand, TrackedEdit
 from pilot_agent.cli.ui import UI
+from pilot_agent.cli.ui.coding_terminal import CodingTerminal
 from pilot_agent.config.schema import PilotAgentConfig
 from pilot_agent.providers.base import Provider
 from pilot_agent.tools.base import ToolRegistry, ToolSearchSettings
@@ -105,6 +106,7 @@ class CodingSession:
         self.backend = backend
         self.config = config
         self.ui = ui
+        self.terminal = CodingTerminal(ui.console, ui.input)
         self.tasks = CodingTasks(project.root)
         self.phase = WORK
         self.task = self.tasks.new()
@@ -114,8 +116,14 @@ class CodingSession:
     def run(self, *, task: CodingTask | None = None, prompt: str | None = None) -> None:
         with ProjectSessionLock(self.project.root):
             branch = self.project.git("branch", "--show-current")
-            where = f"{self.project.root.name} · {branch}" if branch else self.project.root.name
-            self.ui.notice(f"Blot · {where} · /help")
+            self.ui.renderer.coding = self.interactive
+            self.terminal.open(
+                project=self.project.root.name,
+                branch=branch,
+                model=self.provider.model,
+                backend=self.backend.name,
+                interactive=self.interactive,
+            )
             self._open(task or self.task)
             if prompt:
                 self._submit(prompt)
@@ -162,6 +170,7 @@ class CodingSession:
         history = read_message_log(task.journal)
         last_request = next((item for item in reversed(history) if item.role == Role.USER), None)
         self.phase = PLAN if last_request is not None and last_request.phase == PLAN.name else WORK
+        self.terminal.set_mode(planning=self.phase == PLAN)
         self.agent = AgentLoop(
             project_root=self.project.root,
             provider=self.provider,
@@ -226,10 +235,11 @@ class CodingSession:
             self.ui.notice("\n".join(f"{command:<9} {verb}" for command, verb in COMMANDS.items()))
         elif line == "/plan":
             self.phase = WORK if self.phase == PLAN else PLAN
+            self.terminal.set_mode(planning=self.phase == PLAN)
             self.ui.notice("Planning mode · read only" if self.phase == PLAN else "Coding mode")
         elif line == "/diff":
             if self.task.diff.exists():
-                self.ui.notice(self.task.diff.read_text(encoding="utf-8"))
+                self.terminal.diff(self.task.diff.read_text(encoding="utf-8"))
             else:
                 self.ui.notice("No file edits recorded for this task.")
             self.ui.notice("For changes from shell commands, check git diff.")

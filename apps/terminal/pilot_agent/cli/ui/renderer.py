@@ -91,15 +91,18 @@ class SpinnerContext(AbstractContextManager[Progress]):
 class Renderer:
     def __init__(self, console: Console):
         self.console = console
+        self.coding = False
 
     def render_agent(self, content: str) -> None:
         if content:
             self.console.print()
+            if self.coding:
+                self.console.print(Text("Blot", style="pilot_agent.coding.heading"))
             self.console.print(Markdown(content))
 
     def render_message(self, message: Message) -> None:
         self.render_agent(message.content)
-        if message.tool_calls:
+        if not self.coding and message.tool_calls:
             for call in message.tool_calls:
                 self.render_tool_call(call)
 
@@ -123,7 +126,12 @@ class Renderer:
         status_style = "pilot_agent.ok" if ok else "pilot_agent.err"
         name = "skill" if call.name == "load_skill" else call.name
         suffix = self._tool_suffix(call, result, exit_code)
-        line = Text(f"{g.TOOL} {name} · ", style="pilot_agent.muted")
+        if self.coding:
+            labels = {"bash": "Shell", "read_file": "Read", "list_files": "List",
+                      "write_file": "Write", "edit_file": "Edit"}
+            line = Text(f"  {g.BULLET} {labels.get(call.name, name)}  ", style="pilot_agent.coding")
+        else:
+            line = Text(f"{g.TOOL} {name} · ", style="pilot_agent.muted")
         arg_style = "pilot_agent.accent" if call.name == "load_skill" else "pilot_agent.muted"
         line.append(arg, style=arg_style)
         line.append(" · ", style="pilot_agent.muted")
@@ -188,6 +196,8 @@ class Renderer:
         return str(verdict) if verdict else "check"
 
     def _argument_width(self) -> int:
+        if self.coding:
+            return max(8, self.console.width - 34)
         width = shutil.get_terminal_size((100, 24)).columns
         return max(16, width - 45)
 
@@ -207,7 +217,7 @@ class UI:
         self.renderer = Renderer(self.console)
         self.status = StatusBar(self.console, enabled=show_status)
         self.input = PilotAgentInput(
-            history_path=history_path, skill_names=skill_names, commands=commands,
+            history_path=history_path, skill_names=skill_names, commands=commands, color=color,
         )
 
     def render(self, message: Message) -> None:

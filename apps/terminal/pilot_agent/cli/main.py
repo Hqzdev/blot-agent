@@ -190,7 +190,6 @@ def run_coding_session(
         resolve_key_or_exit(cfg)
     backend = backend_from_config(cfg, root)
     ui = UI(
-        console=console,
         color=cfg.ui.color,
         show_status=cfg.ui.show_token_counter,
         commands=COMMANDS,

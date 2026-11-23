@@ -3,25 +3,28 @@
 from __future__ import annotations
 
 import sys
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from prompt_toolkit import PromptSession
-from prompt_toolkit.application import Application
+from prompt_toolkit.application import Application, get_app
 from prompt_toolkit.completion import CompleteEvent, Completer, Completion
 from prompt_toolkit.document import Document
+from prompt_toolkit.filters import Condition
+from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import Window
 from prompt_toolkit.layout.controls import FormattedTextControl
+from prompt_toolkit.output import ColorDepth
 from prompt_toolkit.styles import Style
 from rich.prompt import Confirm, IntPrompt, Prompt
 
-from pilot_agent.cli.ui.theme import Palette, glyphs
+from pilot_agent.cli.ui.theme import Palette, color_enabled, glyphs
 
 SLASH_COMMANDS: dict[str, str] = {
     "/model": "switch model mid-session",
@@ -87,6 +90,8 @@ class PilotAgentInput:
     history_path: Path | None = None
     skill_names: list[str] | None = None
     commands: dict[str, str] | None = None
+    bottom_toolbar: Callable[[], FormattedText] | None = None
+    color: str = "auto"
 
     def __post_init__(self) -> None:
         self.completer = SlashCompleter(skill_names=self.skill_names, commands=self.commands)
@@ -99,6 +104,8 @@ class PilotAgentInput:
                 "choice.selected": f"bold {Palette.ACCENT}",
                 "choice.normal": Palette.USER,
                 "choice.hint": Palette.MUTED,
+                "bottom-toolbar": "noreverse",
+                "coding.mode": f"bold {Palette.CODING}",
             }
         )
 
@@ -117,14 +124,23 @@ class PilotAgentInput:
                 default=default,
                 choices=choices,
             )
-        prompt_message = message if message is not None else f"{glyphs().PROMPT} "
+        prompt_message: str | FormattedText = f"{glyphs().PROMPT} " if message is None else message
+        toolbar = self.bottom_toolbar if message is None else None
+        if toolbar is not None:
+            prompt_message = FormattedText([("class:coding.mode", f"{glyphs().PROMPT} ")])
         session: PromptSession[str] = PromptSession(
             history=FileHistory(str(self.history_path)) if self.history_path else None,
             completer=self.completer,
-            complete_while_typing=True,
+            complete_while_typing=(
+                Condition(lambda: get_app().current_buffer.text.startswith("/"))
+                if toolbar is not None else True
+            ),
+            reserve_space_for_menu=4 if toolbar is not None else 8,
             multiline=True,
             key_bindings=_bindings(),
             style=self.style,
+            bottom_toolbar=toolbar,
+            color_depth=ColorDepth.DEPTH_1_BIT if not color_enabled(self.color) else None,
         )
         answer = session.prompt(prompt_message, is_password=password, default=default or "")
         if choices and answer not in choices:

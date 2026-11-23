@@ -10,6 +10,7 @@ from rich.theme import Theme
 
 
 class Palette:
+    CODING = "#148378"
     ACCENT = "#00D4AA"
     ACCENT_DIM = "#0E8C75"
     OK = "#22C55E"
@@ -66,8 +67,12 @@ def glyphs() -> type[Glyphs] | type[AsciiGlyphs]:
     return Glyphs if unicode_enabled() else AsciiGlyphs
 
 
+CODING_HEADING = Style(color=Palette.CODING, bold=True)
+
 RICH_THEME = Theme(
     {
+        "pilot_agent.coding": Style(color=Palette.CODING),
+        "pilot_agent.coding.heading": CODING_HEADING,
         "pilot_agent.accent": Style(color=Palette.ACCENT),
         "pilot_agent.accent.dim": Style(color=Palette.ACCENT_DIM),
         "pilot_agent.ok": Style(color=Palette.OK),
