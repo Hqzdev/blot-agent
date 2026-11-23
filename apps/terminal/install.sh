@@ -15,7 +15,7 @@
 # an exact fix command and left to the user.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
 #
 # Or with options:
 #   curl -fsSL ... | bash -s -- --skip-setup --native
@@ -34,7 +34,7 @@ fi
 
 export UV_NO_CONFIG=1
 
-REPO_URL="${PILOT_AGENT_REPO_URL:-https://github.com/Hqzdev/pilot-agent.git}"
+REPO_URL="${PILOT_AGENT_REPO_URL:-https://github.com/Hqzdev/kiln-agent.git}"
 BRANCH="main"
 INSTALL_COMMIT=""
 PILOT_HOME="${PILOT_AGENT_HOME:-$HOME/.pilot-agent}"
@@ -586,11 +586,11 @@ install_uv() {
 
 native_install_spec() {
   if [ -n "$INSTALL_COMMIT" ]; then
-    printf 'git+%s@%s\n' "$REPO_URL" "$INSTALL_COMMIT"
+    printf 'git+%s@%s#subdirectory=apps/terminal\n' "$REPO_URL" "$INSTALL_COMMIT"
   elif [ "$BRANCH" != "main" ]; then
-    printf 'git+%s@%s\n' "$REPO_URL" "$BRANCH"
+    printf 'git+%s@%s#subdirectory=apps/terminal\n' "$REPO_URL" "$BRANCH"
   else
-    printf 'git+%s\n' "$REPO_URL"
+    printf 'git+%s#subdirectory=apps/terminal\n' "$REPO_URL"
   fi
 }
 
@@ -600,7 +600,7 @@ install_native() {
 }
 
 build_docker_image() {
-  docker compose -f "$SRC/docker-compose.yml" build
+  docker compose -f "$SRC/apps/terminal/docker-compose.yml" build
 }
 
 install_command_wrapper() {
@@ -608,13 +608,16 @@ install_command_wrapper() {
   cat > "$BIN_DIR/pilot-agent" <<EOF
 #!/usr/bin/env bash
 set -euo pipefail
-exec docker compose -f "$SRC/docker-compose.yml" run --rm \\
+exec docker compose -f "$SRC/apps/terminal/docker-compose.yml" run --rm \\
   -v "\$PWD":/workspace \\
   -e TERM="\${TERM:-xterm-256color}" \\
   -e PILOT_AGENT_HOME=/home/agent/.pilot-agent \\
   pilot-agent "\$@"
 EOF
   chmod +x "$BIN_DIR/pilot-agent"
+  if [ ! -e "$BIN_DIR/blot" ] && [ ! -L "$BIN_DIR/blot" ]; then
+    ln -s pilot-agent "$BIN_DIR/blot"
+  fi
 }
 
 pilot_agent_cmd() {

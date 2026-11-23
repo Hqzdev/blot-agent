@@ -37,8 +37,11 @@ SLASH_COMMANDS: dict[str, str] = {
 
 
 class SlashCompleter(Completer):
-    def __init__(self, *, skill_names: list[str] | None = None):
+    def __init__(
+        self, *, skill_names: list[str] | None = None, commands: dict[str, str] | None = None,
+    ):
         self.skill_names = skill_names or []
+        self.commands = SLASH_COMMANDS if commands is None else commands
 
     def get_completions(
         self,
@@ -55,7 +58,7 @@ class SlashCompleter(Completer):
             return
         if text.startswith("/"):
             prefix = text.lower()
-            for command, description in SLASH_COMMANDS.items():
+            for command, description in self.commands.items():
                 if command.startswith(prefix):
                     yield Completion(
                         command,
@@ -83,9 +86,10 @@ def _bindings() -> KeyBindings:
 class PilotAgentInput:
     history_path: Path | None = None
     skill_names: list[str] | None = None
+    commands: dict[str, str] | None = None
 
     def __post_init__(self) -> None:
-        self.completer = SlashCompleter(skill_names=self.skill_names or [])
+        self.completer = SlashCompleter(skill_names=self.skill_names, commands=self.commands)
         current = f"bg:{Palette.ACCENT_DIM} {Palette.USER}"
         self.style = Style.from_dict(
             {
@@ -130,8 +134,9 @@ class PilotAgentInput:
     def confirm(self, message: str, *, default: bool = False) -> bool:
         if not sys.stdin.isatty():
             return Confirm.ask(message, default=default)
-        answer = self.prompt(message, default="Y" if default else "n")
-        return answer.strip().lower() in {"y", "yes", "1", "true"}
+        choices = "[Y/n]" if default else "[y/N]"
+        answer = self.prompt(f"{message.rstrip()} {choices} ").strip().lower()
+        return answer in {"y", "yes", "1", "true"} if answer else default
 
     def ask_int(self, message: str, *, default: int, choices: list[str] | None = None) -> int:
         if not sys.stdin.isatty():

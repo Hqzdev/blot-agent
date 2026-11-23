@@ -3,12 +3,12 @@
 Install on Linux, macOS, or WSL2:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
 ```
 
 The installer prints a staged plan before acting, writes command output to a log
 under `/tmp`, installs user-space dependencies without sudo, and places
-`pilot-agent` in `~/.local/bin`.
+`blot` in `~/.local/bin`.
 When an interactive terminal is available, it immediately starts
 `pilot-agent setup` after installation. For install-only automation, pass
 `--skip-setup` / `--no-setup` or set `PILOT_AGENT_INSTALL_NO_SETUP=1`.
@@ -19,10 +19,11 @@ First project:
 
 ```bash
 cd path/to/project
-pilot-agent init
-pilot-agent doctor
-pilot-agent run
+blot "Find and fix the failing tests"
 ```
+
+Use `/diff` to see changes from the agent's file tools, `/plan` to switch to
+read-only planning, and `/quit` to exit. Return later with `blot resume`.
 
 `setup` asks for one thing at a time: provider, API key, model, and optional
 Vercel token. You can rerun it anytime with `pilot-agent setup --reconfigure`.

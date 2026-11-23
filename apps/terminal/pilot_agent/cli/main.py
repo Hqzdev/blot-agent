@@ -13,9 +13,10 @@ from collections.abc import Callable
 from importlib import metadata
 from operator import methodcaller
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
+from typer.core import TyperGroup
 
 from pilot_agent.agent.acceptance_blueprints import (
     get_blueprint,
@@ -25,6 +26,7 @@ from pilot_agent.agent.acceptance_blueprints import (
 from pilot_agent.agent.context import ContextManager
 from pilot_agent.agent.loop import AgentLoop, restore_phase_from_session
 from pilot_agent.agent.phases import PHASES
+from pilot_agent.agent.safety import redact_sensitive_text
 from pilot_agent.agent.state import (
     append_reentry_request,
     init_project_state,
@@ -36,6 +38,8 @@ from pilot_agent.agent.state import (
 from pilot_agent.agent.types import Message, Role
 from pilot_agent.backends import ExecutionBackend, backend_from_config
 from pilot_agent.cli.auth import PROVIDERS, list_models, provider_key_env, validate_provider_key
+from pilot_agent.cli.coding import COMMANDS, CodingSession, CodingTasks
+from pilot_agent.cli.coding_tools import CodingProject
 from pilot_agent.cli.doctor import checks_to_json, has_failures, run_doctor_checks
 from pilot_agent.cli.setup_wizard import run_setup_wizard
 from pilot_agent.cli.ui import UI
@@ -77,7 +81,24 @@ from pilot_agent.tools.skill_tools import LoadSkillTool, SaveSkillTool
 from pilot_agent.tools.web_fetch import WebFetchTool
 from pilot_agent.tools.web_search import WebSearchTool
 
-app = typer.Typer(help="Pilot Agent local MVP agent.")
+if TYPE_CHECKING:
+    from typer._click import Command, Context
+
+
+class CodingGroup(TyperGroup):
+    def resolve_command(
+        self, ctx: Context, args: list[str],
+    ) -> tuple[str | None, Command | None, list[str]]:
+        first = args[0]
+        if not first.startswith("-") and self.get_command(ctx, first) is None:
+            return super().resolve_command(ctx, ["run", "--", *args])
+        return super().resolve_command(ctx, args)
+
+
+app = typer.Typer(
+    cls=CodingGroup, invoke_without_command=True,
+    help='One coding agent for your current project. Start with blot or blot "your task".',
+)
 skills_app = typer.Typer(help="Manage skills.")
 config_app = typer.Typer(help="Manage configuration.")
 lessons_app = typer.Typer(help="Manage lessons.")
@@ -105,6 +126,7 @@ def emit(*objects: object) -> None:
 
 @app.callback()
 def root_options(
+    ctx: typer.Context,
     provider: Annotated[str | None, typer.Option("--provider", help="Provider override.")] = None,
     model: Annotated[str | None, typer.Option("--model", help="Model override.")] = None,
     config: Annotated[
@@ -123,6 +145,11 @@ def root_options(
     if no_color:
         os.environ["NO_COLOR"] = "1"
         console.no_color = True
+    if ctx.invoked_subcommand is None:
+        if _interactive():
+            run_coding_session(load_config_or_exit())
+        else:
+            typer.echo(ctx.get_help())
 
 
 def load_config_or_exit(provider: str | None = None, model: str | None = None) -> PilotAgentConfig:
@@ -143,6 +170,44 @@ def resolve_key_or_exit(cfg: PilotAgentConfig) -> None:
     except RuntimeError as exc:
         emit(f"Error: {exc}")
         raise typer.Exit(1) from None
+
+
+def run_coding_session(
+    cfg: PilotAgentConfig, *, instruction: str | None = None, task_id: str | None = None,
+    resume_saved: bool = False,
+) -> None:
+    root = Path.cwd().resolve()
+    task = CodingTasks(root).find(task_id) if resume_saved else None
+    if resume_saved and task is None:
+        emit("No matching saved task. Run blot sessions list in the project folder.")
+        raise typer.Exit(1)
+    try:
+        cfg.resolve_key()
+    except RuntimeError:
+        if _interactive() and not _config_write_path().exists():
+            _ensure_config_for_run()
+            cfg = load_config_or_exit()
+        resolve_key_or_exit(cfg)
+    backend = backend_from_config(cfg, root)
+    ui = UI(
+        console=console,
+        color=cfg.ui.color,
+        show_status=cfg.ui.show_token_counter,
+        commands=COMMANDS,
+    )
+    try:
+        CodingSession(
+            project=CodingProject(root), provider=from_config(cfg), backend=backend,
+            config=cfg, ui=ui,
+        ).run(task=task, prompt=instruction)
+    except KeyboardInterrupt:
+        ui.notice("Interrupted.")
+        raise typer.Exit(130) from None
+    except Exception as exc:
+        ui.error(redact_sensitive_text(str(exc)))
+        raise typer.Exit(1) from None
+    finally:
+        backend.cleanup()
 
 
 def render_config(cfg: PilotAgentConfig) -> None:
@@ -416,7 +481,7 @@ def update() -> None:
         old = _git_commit(source)
         subprocess.run(["git", "-C", str(source), "pull"], check=False)
         subprocess.run(
-            ["docker", "compose", "-f", str(source / "docker-compose.yml"), "build"],
+            ["docker", "compose", "-f", str(source / "apps/terminal/docker-compose.yml"), "build"],
             check=False,
         )
         new = _git_commit(source)
@@ -742,9 +807,15 @@ def status() -> None:
 
 @app.command()
 def run(
+    instruction: str | None = typer.Argument(None, help="Open a coding task with this prompt."),
     provider: str | None = typer.Option(None, "--provider"),
     model: str | None = typer.Option(None, "--model"),
 ) -> None:
+    if instruction is not None:
+        if not instruction.strip():
+            raise typer.BadParameter("Enter a non-empty task.", param_hint="instruction")
+        run_coding_session(load_config_or_exit(provider, model), instruction=instruction)
+        return
     _ensure_config_for_run()
     cfg = load_config_or_exit(provider=provider, model=model)
     resolve_key_or_exit(cfg)
@@ -755,9 +826,21 @@ def run(
 
 @app.command()
 def resume(
+    task_id: str | None = typer.Argument(None, help="Saved coding task ID."),
     provider: str | None = typer.Option(None, "--provider"),
     model: str | None = typer.Option(None, "--model"),
+    pipeline: bool = typer.Option(False, "--pipeline", help="Resume an older Pilot pipeline."),
 ) -> None:
+    if pipeline and task_id is not None:
+        raise typer.BadParameter("A task ID cannot be used with --pipeline.", param_hint="task_id")
+    root = Path.cwd().resolve()
+    if not pipeline and (
+        task_id is not None
+        or CodingTasks(root).find() is not None
+        or not session_path(root).exists()
+    ):
+        run_coding_session(load_config_or_exit(provider, model), task_id=task_id, resume_saved=True)
+        return
     _ensure_config_for_run()
     cfg = load_config_or_exit(provider=provider, model=model)
     resolve_key_or_exit(cfg)
@@ -1113,6 +1196,14 @@ def lessons_clear(force: bool = typer.Option(False, "--yes", "-y")) -> None:
 @sessions_app.command("list")
 def sessions_list() -> None:
     root = Path(".").resolve()
+    tasks = CodingTasks(root).saved()
+    if tasks:
+        coding_table = simple_table("task", "instruction")
+        for task in tasks:
+            coding_table.add_row(task.id, task.title())
+        emit(coding_table)
+    if tasks and not session_path(root).exists():
+        return
     table = simple_table("project", "phase", "turns", "status", "path")
     session = session_path(root)
     if session.exists():

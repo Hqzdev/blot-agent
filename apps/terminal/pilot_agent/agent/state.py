@@ -69,19 +69,26 @@ def write_session_record(
     project_root: Path,
     record: Message | SessionEvent | dict[str, Any],
 ) -> None:
-    pilot_agent_dir(project_root).mkdir(parents=True, exist_ok=True)
+    append_session_record(session_path(project_root), record)
+
+
+def append_session_record(path: Path, record: Message | SessionEvent | dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
     line = (
         to_json(record)
         if isinstance(record, (Message, SessionEvent))
         else json.dumps(record, ensure_ascii=False)
     )
     line = redact_sensitive_text(sanitize_text(line))
-    with session_path(project_root).open("a", encoding="utf-8") as handle:
+    with path.open("a", encoding="utf-8") as handle:
         handle.write(line + "\n")
 
 
 def read_session_messages(project_root: Path) -> list[Message]:
-    path = session_path(project_root)
+    return read_message_log(session_path(project_root))
+
+
+def read_message_log(path: Path) -> list[Message]:
     if not path.exists():
         return []
     messages: list[Message] = []

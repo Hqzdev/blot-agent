@@ -20,6 +20,7 @@ dependencies = [
 ]
 
 [project.scripts]
+blot = "pilot_agent.cli:app"
 pilot-agent = "pilot_agent.cli:app"
 
 [dependency-groups]

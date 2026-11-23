@@ -1,10 +1,53 @@
-# Pilot Agent
+# Blot terminal
 
-CLI agent: from idea to deployed MVP in one guided terminal session.
+Blot is a single coding agent for your current project. From the repository root:
+
+```bash
+cd apps/terminal
+UV_PYTHON_DOWNLOADS=never uv sync --all-groups --frozen
+uv run blot --help
+scripts/run_tests.sh
+```
+
+`blot` and `pilot-agent` invoke the same CLI. Existing provider configuration and project sessions remain compatible. Shared Blot account and GigaChat integration are planned separately. Run project commands from your code folder with `uv run --project /absolute/path/to/klin-agent/apps/terminal blot run`.
+
+The install commands below use the monorepo subdirectory and become available remotely after this migration is published.
+
+## Coding in a project
+
+```bash
+blot setup
+cd path/to/your/project
+blot
+blot "Find out why the login test fails"
+blot sessions list
+blot resume
+```
+
+Run one of `blot` or `blot "your task"` to start a work session. The agent reads
+project files and the root `AGENTS.md`. It asks before running shell commands
+and before editing an existing file with local changes. The command result
+shows the actual exit code. If you use the native install without Docker,
+select the local shell backend with `blot backend local`.
+
+| In a coding session | Action |
+|---|---|
+| `/plan` | Toggle planning mode, with read-only file tools. |
+| `/diff` | Review edits made through the agent's file tools. For changes made by shell commands, use Git. |
+| `/new` | Start another task in the same project. |
+| `/resume` | Choose a saved task. |
+| `/quit` | Exit the current session. |
+| `Ctrl+C` | Interrupt the current request and keep the task available to resume. |
+
+`blot resume <id>` opens a specific task. Tasks and their recorded edits live
+under `.pilot-agent/tasks/` in the current folder. Resuming restores the
+conversation and waits for an instruction. Interrupted tools are never replayed.
+
+## Pilot pipeline
 
 ![Pilot Agent banner](public/banner.png)
 
-[![CI](https://github.com/Hqzdev/pilot-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/Hqzdev/pilot-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/Hqzdev/kiln-agent/actions/workflows/terminal.yml/badge.svg)](https://github.com/Hqzdev/kiln-agent/actions/workflows/terminal.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-46a2f1.svg)](https://github.com/astral-sh/ruff)
@@ -32,7 +75,7 @@ work complete until verification has run.
 Linux, macOS, and WSL2:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
 ```
 
 Prefer to inspect first? Download `install.sh`, read it, run it.
@@ -43,9 +86,9 @@ available. Use `--skip-setup` or `--no-setup` to install only.
 Useful installer options:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash -s -- --skip-setup
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash -s -- --native
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/pilot-agent/main/install.sh | bash -s -- --docker --branch main
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --skip-setup
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --native
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --docker --branch main
 ```
 
 <details><summary>Windows</summary>
@@ -58,7 +101,7 @@ command above inside the WSL shell.
 <details><summary>Manual uv install</summary>
 
 ```bash
-uv tool install git+https://github.com/Hqzdev/pilot-agent
+uv tool install "git+https://github.com/Hqzdev/kiln-agent#subdirectory=apps/terminal"
 ```
 
 </details>
@@ -117,7 +160,7 @@ pilot-agent --verbose doctor
 pilot-agent --no-color doctor
 ```
 
-## Slash Commands
+## Pipeline Slash Commands
 
 | Command | Purpose |
 |---|---|
@@ -232,8 +275,8 @@ STATE.md / session.jsonl / lessons.md
 ## Contributing
 
 ```bash
-git clone https://github.com/Hqzdev/pilot-agent.git
-cd pilot-agent
+git clone https://github.com/Hqzdev/kiln-agent.git
+cd kiln-agent/apps/terminal
 ./setup-dev.sh
 ./pilot-agent --help
 ```

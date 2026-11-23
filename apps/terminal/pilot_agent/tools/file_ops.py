@@ -155,7 +155,7 @@ class ListFilesTool(Tool):
         return "\n".join(output)
 
     def _walk(self, path: Path, output: list[str], depth: int) -> None:
-        if depth > 3 or path.name in IGNORED:
+        if depth > 3 or path.name in IGNORED or path.is_symlink():
             return
         if path.name == "artifacts" and path.parent.name == ".pilot-agent":
             return

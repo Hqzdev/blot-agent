@@ -56,11 +56,16 @@ class LocalProcessHandle(ProcessHandle):
     def terminate(self) -> None:
         try:
             os.killpg(self.proc.pid, signal.SIGTERM)
-            self.proc.wait(timeout=3)
-        except (ProcessLookupError, subprocess.TimeoutExpired):
+        except ProcessLookupError:
+            self.proc.wait()
+            return
+        try:
+            output, _ = self.proc.communicate(timeout=3)
+        except subprocess.TimeoutExpired:
             with suppress(ProcessLookupError):
                 os.killpg(self.proc.pid, signal.SIGKILL)
-            self.proc.wait(timeout=3)
+            output, _ = self.proc.communicate(timeout=3)
+        self._buffer += output or ""
 
     def probe_http(self, url: str, expect_status: int) -> int | None:
         try:
@@ -86,28 +91,32 @@ class LocalBackend(ExecutionBackend):
         if env:
             merged_env.update(env)
         start = time.monotonic()
-        try:
-            proc = subprocess.run(
-                command,
-                cwd=Path(cwd),
-                env=merged_env,
-                shell=True,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                timeout=timeout_s,
-                check=False,
-            )
-            return ExecResult(proc.returncode, proc.stdout or "", time.monotonic() - start)
-        except subprocess.TimeoutExpired as exc:
-            output = exc.stdout or ""
-            if isinstance(output, bytes):
-                output = output.decode(errors="replace")
-            return ExecResult(
-                124,
-                f"command timed out after {timeout_s}s\n{output}",
-                time.monotonic() - start,
-            )
+        with subprocess.Popen(
+            command,
+            cwd=Path(cwd),
+            env=merged_env,
+            shell=True,
+            text=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            start_new_session=True,
+        ) as proc:
+            handle = LocalProcessHandle(proc)
+            try:
+                output, _ = proc.communicate(timeout=timeout_s)
+                return ExecResult(proc.returncode, output or "", time.monotonic() - start)
+            except KeyboardInterrupt:
+                handle.terminate()
+                raise
+            except subprocess.TimeoutExpired as exc:
+                handle.terminate()
+                partial_output = (exc.stdout or b"").decode(errors="replace")
+                return ExecResult(
+                    124,
+                    f"command timed out after {timeout_s}s\n{partial_output}",
+                    time.monotonic() - start,
+                )
 
     def spawn(self, command: str, cwd: str) -> ProcessHandle:
         ensure_command_allowed(command)

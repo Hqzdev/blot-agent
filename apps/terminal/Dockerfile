@@ -20,5 +20,5 @@ WORKDIR /workspace
 COPY --from=builder --chown=agent /app /app
 ENV PATH="/app/.venv/bin:$PATH" \
     PILOT_AGENT_HOME=/home/agent/.pilot-agent
-ENTRYPOINT ["pilot-agent"]
-CMD ["run"]
+ENTRYPOINT ["blot"]
+CMD []

@@ -117,14 +117,19 @@ class ToolRegistry:
         guardrails: ToolCallGuardrailController | None = None,
         hooks: RuntimeHooks | None = None,
         tool_search: ToolSearchSettings | None = None,
+        inline: bool = False,
+        artifact_scope: str | None = None,
     ):
         self.tools: dict[str, Tool] = {}
         self.entries: dict[str, ToolEntry] = {}
         self.project_root = project_root.resolve()
         self.artifacts_dir = self.project_root / ".pilot-agent" / "artifacts"
+        if artifact_scope is not None:
+            self.artifacts_dir /= artifact_scope
         self.guardrails = guardrails or ToolCallGuardrailController()
         self.hooks = hooks or RuntimeHooks()
         self.tool_search = tool_search or ToolSearchSettings()
+        self.inline = inline
         self._generation = 0
         self._check_cache: dict[str, tuple[float, bool]] = {}
         self._spec_cache: dict[tuple[tuple[str, ...] | None, int, int], list[ToolSpec]] = {}
@@ -211,17 +216,18 @@ class ToolRegistry:
         executor: concurrent.futures.ThreadPoolExecutor | None = None
         started_at = time.monotonic()
         try:
-            executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
-            future = executor.submit(
-                self.hooks.run_tool_execution_middleware,
-                call.name,
-                arguments,
-                lambda next_args: tool.execute(**next_args),
-                **context_data,
-                tool_call_id=call.id,
-            )
-            output = future.result(timeout=tool.timeout_s)
-            executor.shutdown(wait=True)
+            def invoke() -> Any:
+                return self.hooks.run_tool_execution_middleware(
+                    call.name, arguments, lambda next_args: tool.execute(**next_args),
+                    **context_data, tool_call_id=call.id,
+                )
+
+            if self.inline:
+                output = invoke()
+            else:
+                executor = concurrent.futures.ThreadPoolExecutor(max_workers=1)
+                output = executor.submit(invoke).result(timeout=tool.timeout_s)
+                executor.shutdown(wait=True)
             observed = self._result(call.id, str(output), is_error=False)
             self._emit_post_tool(
                 call,
@@ -248,6 +254,11 @@ class ToolRegistry:
                 executor.shutdown(wait=False, cancel_futures=True)
             result = self._result(call.id, f"tool timed out after {tool.timeout_s}s", is_error=True)
             self._emit_post_tool(call, arguments, result, status="error", context=context_data)
+        except (PermissionError, ValueError) as exc:
+            if executor is not None:
+                executor.shutdown(wait=True, cancel_futures=True)
+            result = self._result(call.id, str(exc), is_error=True)
+            self._emit_post_tool(call, arguments, result, status="error", context=context_data)
         except Exception:
             if executor is not None:
                 executor.shutdown(wait=True, cancel_futures=True)
@@ -262,7 +273,7 @@ class ToolRegistry:
         calls: list[ToolCall],
         context: Mapping[str, Any] | None = None,
     ) -> list[ToolExecution]:
-        if not self._should_parallelize(calls):
+        if self.inline or not self._should_parallelize(calls):
             return [self._execute_timed(call, context=context) for call in calls]
         max_workers = min(4, len(calls))
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:

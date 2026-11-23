@@ -201,11 +201,14 @@ class UI:
         show_status: bool = True,
         history_path: Path | None = None,
         skill_names: list[str] | None = None,
+        commands: dict[str, str] | None = None,
     ):
         self.console = console or create_console(color=color)
         self.renderer = Renderer(self.console)
         self.status = StatusBar(self.console, enabled=show_status)
-        self.input = PilotAgentInput(history_path=history_path, skill_names=skill_names or [])
+        self.input = PilotAgentInput(
+            history_path=history_path, skill_names=skill_names, commands=commands,
+        )
 
     def render(self, message: Message) -> None:
         self.renderer.render_message(message)

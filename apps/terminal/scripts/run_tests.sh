@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-export UV_CACHE_DIR="${UV_CACHE_DIR:-.uv-cache}"
+APP_DIRECTORY="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$APP_DIRECTORY"
+export UV_PYTHON_DOWNLOADS=never
 
 uv sync --all-groups --frozen
 
@@ -10,3 +12,4 @@ uv sync --all-groups --frozen
 .venv/bin/pytest
 .venv/bin/python -m compileall pilot_agent
 .venv/bin/python -m pilot_agent.cli --help >/dev/null
+.venv/bin/blot --help >/dev/null

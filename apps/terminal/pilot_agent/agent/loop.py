@@ -12,7 +12,12 @@ from pilot_agent.agent.iteration_budget import IterationBudget
 from pilot_agent.agent.memory import Memory, SkillOutcomeRecorder
 from pilot_agent.agent.phases import PHASES, Phase
 from pilot_agent.agent.session_lock import ProjectSessionLock
-from pilot_agent.agent.state import read_state, write_session_record
+from pilot_agent.agent.state import (
+    append_session_record,
+    read_state,
+    session_path,
+    write_session_record,
+)
 from pilot_agent.agent.types import (
     CompletionResponse,
     Message,
@@ -52,6 +57,7 @@ class AgentLoop:
         phase_name: str | None = "discovery",
         stack: list[str] | None = None,
         model_switcher: Callable[[str], Provider] | None = None,
+        journal: Path | None = None,
     ):
         self.project_root = project_root.resolve()
         self.provider = provider
@@ -75,6 +81,7 @@ class AgentLoop:
         self.loaded_skills: dict[str, set[str]] = {}
         self.model_switcher = model_switcher
         self.usage = SessionUsage()
+        self.journal = journal or session_path(self.project_root)
 
     def run(self, max_turns: int = 200) -> None:
         with ProjectSessionLock(self.project_root):
@@ -113,15 +120,29 @@ class AgentLoop:
     def run_turn(self) -> None:
         if self.phase is None:
             return
-        self.registry.guardrails.reset_for_turn()
         phase = self.phase
-        state_md = read_state(self.project_root)
+        if self.exchange(phase, state_md=read_state(self.project_root)):
+            return
+        user_input = self.ui.prompt_user()
+        if user_input.strip().startswith("/"):
+            self.handle_slash_command(user_input.strip())
+            return
+        self.record(Message(role=Role.USER, content=user_input, phase=phase.name))
+
+    def record(self, message: Message) -> None:
+        append_session_record(self.journal, message)
+        self.history.append(message)
+
+    def exchange(self, phase: Phase, *, state_md: str, project_context: str = "") -> bool:
+        self.registry.guardrails.reset_for_turn()
         system = build_system_prompt(
             phase.prompt,
             state_md,
             self.skills.index_for_prompt(phase.name, self.stack),
             self.memory.relevant_lessons(self.stack),
         )
+        if project_context:
+            system += f"\n\n{project_context}"
         messages = self.ctx.prepare(system, self.history)
         tools = self.registry.specs(phase.tools, context_window=self.provider.context_window)
         with self.ui.api_spinner() as progress:
@@ -135,28 +156,23 @@ class AgentLoop:
         )
         resp.message.tokens = usage.total_tokens
         resp.message.phase = phase.name
-        self.history.append(resp.message)
-        write_session_record(self.project_root, resp.message)
+        self.record(resp.message)
         self.ui.render(resp.message)
         if resp.stop_reason == "tool_use":
-            results, pin_tool_message = self._execute_tool_calls(phase, resp.message.tool_calls)
-            current_phase = self.phase.name if self.phase is not None else None
+            is_pipeline = phase is self.phase
+            results, pin_tool_message = self._execute_tool_calls(
+                phase, resp.message.tool_calls, enforce_allowlist=not is_pipeline
+            )
+            current_phase = (self.phase.name if self.phase else None) if is_pipeline else phase.name
             tool_msg = Message(
                 role=Role.TOOL,
                 tool_results=results,
                 pinned=pin_tool_message,
                 phase=current_phase,
             )
-            self.history.append(tool_msg)
-            write_session_record(self.project_root, tool_msg)
-        else:
-            user_input = self.ui.prompt_user()
-            if user_input.strip().startswith("/"):
-                self.handle_slash_command(user_input.strip())
-                return
-            user_msg = Message(role=Role.USER, content=user_input, phase=phase.name)
-            self.history.append(user_msg)
-            write_session_record(self.project_root, user_msg)
+            self.record(tool_msg)
+            return True
+        return False
 
     def _complete_with_hooks(
         self,
@@ -217,6 +233,8 @@ class AgentLoop:
         self,
         phase: Phase,
         calls: list[ToolCall],
+        *,
+        enforce_allowlist: bool = False,
     ) -> tuple[list[ToolResult], bool]:
         results: list[ToolResult] = []
         pin_tool_message = False
@@ -243,6 +261,10 @@ class AgentLoop:
                 results.append(result)
 
         for call in calls:
+            if enforce_allowlist and call.name not in phase.tools:
+                flush_pending()
+                results.append(ToolResult(call.id, "Tool unavailable in this mode", is_error=True))
+                continue
             if call.name == "complete_phase":
                 flush_pending()
                 results.append(self.advance_phase(call))
