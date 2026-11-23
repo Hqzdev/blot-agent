@@ -20,6 +20,9 @@ async function request(path, body) {
 export function LoginPage({ attempt, query, initialMode, initialError, googleEnabled, yandexEnabled }) {
   const { language } = useLocale();
   const copy = loginCopy[language];
+  const cliAttempt = attempt?.clientID === "blot-cli";
+  const terminalDescription = language === "ru" ? "Подтверди вход и вернись в терминал." : "Continue sign-in and return to your terminal.";
+  const terminalAction = language === "ru" ? "Продолжить в терминале" : "Continue in terminal";
   const [intent, setIntent] = useState(initialMode);
   const [step, setStep] = useState("providers");
   const [account, setAccount] = useState(null);
@@ -103,12 +106,12 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
   return <main id="main-content" className="auth-page" lang={language}>
     <section className="auth-panel" aria-labelledby="auth-title" aria-busy={busy || checking}>
       {checking ? <div className="auth-checking" role="status"><LoaderCircle size={20} className="auth-spinner" />{copy.checking}</div> : <>
-        <div className="auth-heading"><h1 id="auth-title">{title}</h1><p>{account ? attempt ? copy.nativeDescription : copy.accountDescription : step === "code" ? <>{copy.codeDescription} <strong>{email.trim()}</strong>. {copy.codeHint}</> : step === "providers" ? copy.choose : null}</p></div>
+        <div className="auth-heading"><h1 id="auth-title">{title}</h1><p>{account ? cliAttempt ? terminalDescription : attempt ? copy.nativeDescription : copy.accountDescription : step === "code" ? <>{copy.codeDescription} <strong>{email.trim()}</strong>. {copy.codeHint}</> : step === "providers" ? copy.choose : null}</p></div>
         {account ? <>
           <div className="auth-account"><span className="auth-check"><Check size={20} /></span><div><strong>{account.name}</strong><span>{account.email}</span></div></div>
           {!attempt && <div className="auth-platforms" role="group" aria-label={copy.device}><button type="button" aria-pressed={platform === "macos"} onClick={() => setPlatform("macos")}>Mac</button><button type="button" aria-pressed={platform === "ios"} onClick={() => setPlatform("ios")}>iPhone</button></div>}
-          <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? <><LoaderCircle className="auth-spinner" size={18} />{copy.opening}</> : <>{attempt ? copy.again : copy.open}<ArrowUpRight size={17} /></>}</button>
-          <p className="auth-help">{copy.openHelp}</p><Link className="auth-download" href="/beta">{copy.download}</Link>
+          <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? <><LoaderCircle className="auth-spinner" size={18} />{copy.opening}</> : <>{cliAttempt ? terminalAction : attempt ? copy.again : copy.open}<ArrowUpRight size={17} /></>}</button>
+          {!cliAttempt && <><p className="auth-help">{copy.openHelp}</p><Link className="auth-download" href="/beta">{copy.download}</Link></>}
           <button type="button" className="auth-text-button" disabled={busy} onClick={logout}>{copy.other}</button>
         </> : <>
           {step === "providers" ? <AuthProviders copy={copy} query={query} registering={registering} googleEnabled={googleEnabled} yandexEnabled={yandexEnabled} onEmail={() => changeStep("email")} onUnavailable={setError} /> : <>

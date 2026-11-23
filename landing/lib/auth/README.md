@@ -51,3 +51,18 @@ When opened directly, the signed-in page automatically opens `blot-agent-ios:/oa
 ## Validation
 
 Run `npm run test:auth` and `npm run build` from `landing/`. Tests use an embedded PostgreSQL engine for registration, verification attempt limits, password reset, refresh rotation, persistent rate limits, PKCE replay rejection, atomic backups and account isolation. Yandex tests cover callback state, PKCE, cancellation, response limits, client identity validation, account collisions, repeat sign-in and iPhone/Mac handoff with mocked provider HTTP responses. Swift cloud-backup tests verify multi-chunk transfer, project/chat restoration, offline edits and lost commit-response retries. Actual Google/Yandex consent, production email delivery and OS app opening require separate device verification.
+
+## Terminal sign-in and model API
+
+`blot run` opens the existing website sign-in with the `blot-cli` client ID.
+Its PKCE redirect is `http://127.0.0.1:<port>/oauth/blot`. The terminal exchanges
+the one-time code at `/v1/auth/browser/token` and uses its Blot session at
+`/v1/cli/model`. The model route authenticates against the built-in PostgreSQL
+account service and applies account and service request limits.
+
+Set `BLOT_GIGACHAT_AUTH_KEY` on the website deployment. Existing
+`GIGACHAT_AUTH_KEY` is also accepted. Optional settings are `BLOT_GIGACHAT_SCOPE`,
+`BLOT_GIGACHAT_MODEL`, `BLOT_GIGACHAT_CONTEXT_TOKENS` and
+`BLOT_GIGACHAT_OUTPUT_TOKENS`. The terminal receives model metadata and results.
+Deploy browser sign-in and the model route together to the Blot origin. For
+local testing set `BLOT_CLI_ORIGIN=http://127.0.0.1:<port>` in the terminal.

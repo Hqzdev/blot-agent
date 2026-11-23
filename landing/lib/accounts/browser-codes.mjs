@@ -1,10 +1,12 @@
 import { createHash } from "node:crypto";
 import { AuthError } from "../auth/errors.mjs";
+import { isCliCallback } from "../auth/cli-callback.mjs";
 import { digest, equal, randomToken, validToken } from "./security.mjs";
 
 const CLIENTS = { "blot-ios": "blot-agent-ios:/oauth/account", "blot-macos": "blot-agent-macos:/oauth/account" };
 const invalid = () => new AuthError("browser_authorization_invalid", 401);
 function validateClient(body) {
+  if (isCliCallback(body.clientID, body.redirectURI)) return;
   if (typeof body.clientID !== "string" || !Object.hasOwn(CLIENTS, body.clientID)
       || body.redirectURI !== CLIENTS[body.clientID]) throw invalid();
 }
