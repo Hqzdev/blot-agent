@@ -3,7 +3,7 @@
 Install on Linux, macOS, or WSL2:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash
 ```
 
 The installer prints a staged plan before acting, writes command output to a log

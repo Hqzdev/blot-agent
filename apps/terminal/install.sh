@@ -15,7 +15,7 @@
 # an exact fix command and left to the user.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash
 #
 # Or with options:
 #   curl -fsSL ... | bash -s -- --skip-setup --native
@@ -34,7 +34,7 @@ fi
 
 export UV_NO_CONFIG=1
 
-REPO_URL="${PILOT_AGENT_REPO_URL:-https://github.com/Hqzdev/kiln-agent.git}"
+REPO_URL="${PILOT_AGENT_REPO_URL:-https://github.com/Hqzdev/blot-agent.git}"
 BRANCH="main"
 INSTALL_COMMIT=""
 PILOT_HOME="${PILOT_AGENT_HOME:-$HOME/.pilot-agent}"

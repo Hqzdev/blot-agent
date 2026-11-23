@@ -47,7 +47,7 @@ conversation and waits for an instruction. Interrupted tools are never replayed.
 
 ![Pilot Agent banner](public/banner.png)
 
-[![CI](https://github.com/Hqzdev/kiln-agent/actions/workflows/terminal.yml/badge.svg)](https://github.com/Hqzdev/kiln-agent/actions/workflows/terminal.yml)
+[![CI](https://github.com/Hqzdev/blot-agent/actions/workflows/terminal.yml/badge.svg)](https://github.com/Hqzdev/blot-agent/actions/workflows/terminal.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](pyproject.toml)
 [![Ruff](https://img.shields.io/badge/lint-ruff-46a2f1.svg)](https://github.com/astral-sh/ruff)
@@ -75,7 +75,7 @@ work complete until verification has run.
 Linux, macOS, and WSL2:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash
 ```
 
 Prefer to inspect first? Download `install.sh`, read it, run it.
@@ -86,9 +86,9 @@ available. Use `--skip-setup` or `--no-setup` to install only.
 Useful installer options:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --skip-setup
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --native
-curl -fsSL https://raw.githubusercontent.com/Hqzdev/kiln-agent/main/apps/terminal/install.sh | bash -s -- --docker --branch main
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash -s -- --skip-setup
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash -s -- --native
+curl -fsSL https://raw.githubusercontent.com/Hqzdev/blot-agent/main/apps/terminal/install.sh | bash -s -- --docker --branch main
 ```
 
 <details><summary>Windows</summary>
@@ -101,7 +101,7 @@ command above inside the WSL shell.
 <details><summary>Manual uv install</summary>
 
 ```bash
-uv tool install "git+https://github.com/Hqzdev/kiln-agent#subdirectory=apps/terminal"
+uv tool install "git+https://github.com/Hqzdev/blot-agent#subdirectory=apps/terminal"
 ```
 
 </details>
@@ -275,8 +275,8 @@ STATE.md / session.jsonl / lessons.md
 ## Contributing
 
 ```bash
-git clone https://github.com/Hqzdev/kiln-agent.git
-cd kiln-agent/apps/terminal
+git clone https://github.com/Hqzdev/blot-agent.git
+cd blot-agent/apps/terminal
 ./setup-dev.sh
 ./pilot-agent --help
 ```
