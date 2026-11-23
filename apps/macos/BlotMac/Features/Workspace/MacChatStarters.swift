@@ -45,11 +45,20 @@ struct MacChatStarters: View {
                 }
             }
             if let selected {
-                VStack(spacing: 2) {
-                    ForEach(selected.examples(russian: russian, personal: examples), id: \.title) { example in
-                        exampleButton(example, topic: selected)
+                ViewThatFits(in: .vertical) {
+                    exampleRows(for: selected).fixedSize(horizontal: false, vertical: true)
+                    ScrollView {
+                        exampleRows(for: selected)
                     }
                 }.id(selected).transition(.opacity)
+            }
+        }
+    }
+
+    private func exampleRows(for topic: MacChatTaskTopic) -> some View {
+        VStack(spacing: 2) {
+            ForEach(topic.examples(russian: russian, personal: examples), id: \.title) { example in
+                exampleButton(example, topic: topic)
             }
         }
     }
