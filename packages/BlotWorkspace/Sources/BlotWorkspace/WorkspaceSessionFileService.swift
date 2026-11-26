@@ -25,6 +25,7 @@ public actor WorkspaceSessionFileService {
     private let repository: WorkspaceRepository
     private let identity: WorkspaceIdentity
     private let credentials: any WorkspaceCredentialStore
+    private let files: WorkspaceFileService
     private let makeExecutor: @Sendable () -> any NativeExecuting
     private let choose: @Sendable (String, String?) async throws -> WorkspaceDirectoryChoice?
     private var executor: (any NativeExecuting)?
@@ -32,10 +33,10 @@ public actor WorkspaceSessionFileService {
     private var scopes: [UUID: URL] = [:]
     private var suspended = false
     private var toolsSuspended = false
-    public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, credentials: any WorkspaceCredentialStore,
+    public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, credentials: any WorkspaceCredentialStore, files: WorkspaceFileService,
                 makeExecutor: @escaping @Sendable () -> any NativeExecuting,
                 choose: @escaping @Sendable (String, String?) async throws -> WorkspaceDirectoryChoice?) {
-        self.repository = repository; self.identity = identity; self.credentials = credentials
+        self.repository = repository; self.identity = identity; self.credentials = credentials; self.files = files
         self.makeExecutor = makeExecutor; self.choose = choose
     }
     private var key: String { "session-directories:" + identity.ownerID.uuidString + ":" + identity.workspaceID.uuidString + ":" + identity.deviceID.uuidString }
@@ -139,7 +140,60 @@ public actor WorkspaceSessionFileService {
         let operations: [String: NativeRequest.Operation] = ["workspace_list_files": .workspaceList, "workspace_read_file": .workspaceRead,
             "workspace_write_file": .workspaceWrite, "workspace_create_directory": .workspaceMkdir]
         guard let operation = operations[call.name] else { throw NativeExecutionError.invalidRequest }
-        return try await request(operation, root: root, parameters: parameters)
+        let result = try await request(operation, root: root, parameters: parameters)
+        guard call.name == "workspace_write_file", let hash = result.mcpFields["sha256"]?.mcpString,
+              let path = parameters["path"], let after = parameters["content"], let expected = parameters["expected_hash"] else { return result }
+        let id = WorkspaceLogicalID.make(kind: "FileChange", workspaceID: identity.workspaceID, parts: [actionID.uuidString])
+        let change = WorkspaceFileChange(id: id, actionID: actionID, sourceID: context.sourceMessageID, agentID: context.agentID!,
+            callID: call.id, path: path, directoryID: directoryID, before: result.mcpFields["previous_content"]?.mcpString,
+            after: after, expectedHash: expected, resultHash: hash)
+        _ = try await files.store(commandID: id, name: WorkspaceFileChange.artifactName(id), mediaType: "application/json", data: WorkspaceCoding.encode(change))
+        var output = result.mcpFields; output["previous_content"] = nil; output["change_artifact_id"] = .string(id.uuidString)
+        return .object(output)
+    }
+
+    public func fileChange(_ id: UUID) async throws -> WorkspaceFileChange {
+        let projection = try await repository.projection(identity: identity)
+        guard let artifact = projection.artifacts.first(where: { $0.metadata.id == id }), artifact.name == WorkspaceFileChange.artifactName(id), artifact.byteCount <= 160 * 1024 else { throw NativeExecutionError.accessDenied }
+        let change = try JSONDecoder().decode(WorkspaceFileChange.self, from: try await files.data(for: id))
+        guard change.id == id, WorkspaceFileChange.hash(change.after) == change.resultHash,
+              change.before.map({ WorkspaceFileChange.hash($0) == change.expectedHash }) ?? true,
+              change.actionID == WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: change.sourceID, callID: change.callID, scope: .sessionFile),
+              let source = projection.messages.first(where: { $0.metadata.id == change.sourceID }), source.role == .user,
+              let action = projection.actions.first(where: { $0.metadata.id == change.actionID }), action.toolId == "workspace_write_file",
+              action.execution.executorDeviceId == identity.deviceID,
+              let task = projection.tasks.first(where: { $0.metadata.id == action.execution.taskId }),
+              projection.configurations.contains(where: { $0.metadata.id == task.configurationId && $0.agentId == change.agentID }),
+              action.resource == "session-files:" + source.conversationId.uuidString,
+              let arguments = try? JSONDecoder().decode(ChatJSON.self, from: Data(action.parameters.utf8)),
+              arguments.mcpFields["path"]?.mcpString == change.path, arguments.mcpFields["content"]?.mcpString == change.after,
+              arguments.mcpFields["expected_hash"]?.mcpString == change.expectedHash,
+              (arguments.mcpFields["directory_id"]?.mcpString ?? "session") == change.directoryID,
+              projection.invocations.contains(where: { $0.preparedActionId == change.actionID && $0.state == .succeeded }) else { throw NativeExecutionError.accessDenied }
+        return change
+    }
+
+    public func readFileChange(_ id: UUID) async throws -> String {
+        let change = try await fileChange(id)
+        let projection = try await repository.projection(identity: identity)
+        guard let configuration = try WorkspaceAgentConfigurationResolver().resolve(agentID: change.agentID, projection: projection) else { throw NativeExecutionError.accessDenied }
+        let context = WorkspaceToolContext(sourceMessageID: change.sourceID, taskID: nil, allowedToolIDs: Set(configuration.toolIds), agentID: change.agentID)
+        let call = ChatToolCall(id: UUID().uuidString, name: "workspace_read_file", arguments: .object([
+            "path": .string(change.path), "directory_id": .string(change.directoryID)]))
+        let result = try await WorkspaceSessionFileTools(service: self, repository: repository, identity: identity).execute(call, context: context)
+        guard let content = result.mcpFields["content"]?.mcpString else { throw NativeExecutionError.accessDenied }
+        return content
+    }
+    public func undoFileChange(_ id: UUID) async throws {
+        let change = try await fileChange(id)
+        guard change.canUndo, let before = change.before else { throw NativeExecutionError.invalidRequest }
+        let projection = try await repository.projection(identity: identity)
+        guard let configuration = try WorkspaceAgentConfigurationResolver().resolve(agentID: change.agentID, projection: projection) else { throw NativeExecutionError.accessDenied }
+        let context = WorkspaceToolContext(sourceMessageID: change.sourceID, taskID: nil, allowedToolIDs: Set(configuration.toolIds), agentID: change.agentID)
+        let call = ChatToolCall(id: UUID().uuidString, name: "workspace_write_file", arguments: .object([
+            "path": .string(change.path), "directory_id": .string(change.directoryID), "content": .string(before), "expected_hash": .string(change.resultHash)]))
+        let result = try await WorkspaceSessionFileTools(service: self, repository: repository, identity: identity).execute(call, context: context)
+        guard result.mcpFields["state"]?.mcpString == "succeeded" else { throw NativeExecutionError.changed }
     }
     private func grantResult(_ grant: Grant) -> ChatJSON {
         .object(["directory_id": .string(grant.id.uuidString), "name": .string((grant.path as NSString).lastPathComponent), "state": .string("granted")])

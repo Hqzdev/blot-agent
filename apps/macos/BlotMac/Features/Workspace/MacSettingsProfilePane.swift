@@ -4,30 +4,19 @@ import SwiftUI
 
 struct MacSettingsProfilePane: View {
     @Environment(WorkspaceStore.self) private var store
-    private var activity: MacSettingsActivity { MacSettingsActivity(snapshot: store.snapshot) }
     var body: some View {
         VStack(spacing: 40) {
             VStack(spacing: 14) {
                 Text(initials).font(.system(size: 34, weight: .regular)).foregroundStyle(.white)
                     .frame(width: 104, height: 104).background(Color(red: 0.91, green: 0.29, blue: 0.23), in: Circle())
-                Text(store.accountDisplayName).font(.system(size: 25, weight: .medium))
-                Text(store.form.account.email).font(.system(size: 13)).foregroundStyle(.secondary)
+                Text(store.accountDisplayName).font(.system(size: 25, weight: .medium)).textSelection(.enabled)
+                Text(store.form.account.email).font(.system(size: 13)).foregroundStyle(.secondary).textSelection(.enabled)
             }.frame(maxWidth: .infinity).padding(.top, 4)
-            HStack(spacing: 0) {
-                metric("Токенов всего", value: activity.totalTokens)
-                Divider().frame(height: 36)
-                metric("За один вызов", value: activity.peakTokens)
-                Divider().frame(height: 36)
-                metric("Вызовов модели", value: activity.calls)
-                Divider().frame(height: 36)
-                metric("Активных дней", value: activity.activeDays)
-            }.padding(.vertical, 16).overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(MacTeamSettingsStyle.edge))
-            WorkspaceAccountDeletionButton()
             VStack(alignment: .leading, spacing: 16) {
                 Text("Ваша команда").font(.system(size: 14, weight: .medium))
                 if store.snapshot.agents.isEmpty {
                     VStack(spacing: 14) {
-                        Image(systemName: "person.2").font(.system(size: 30)).foregroundStyle(.secondary)
+                        BlotIcon(symbol: "person.2", size: 30).foregroundStyle(.secondary)
                         Text("Добавьте первого специалиста в команду").foregroundStyle(.secondary)
                         Button("Создать агента") { store.settingsRoute = nil; store.navigate(.createAgent) }
                             .buttonStyle(MacSettingsActionStyle())
@@ -50,22 +39,17 @@ struct MacSettingsProfilePane: View {
                     }
                 }
             }
-            MacSettingsTokenHeatmap(dailyTokens: activity.dailyTokens)
         }
     }
     private var initials: String {
         String(store.accountDisplayName.split(separator: " ").prefix(2).compactMap(\.first))
     }
-    private func metric(_ title: String, value: Int) -> some View {
-        VStack(spacing: 7) {
-            Text(value, format: .number.notation(.compactName)).monospacedDigit()
-            WorkspaceLocalizedText(title).font(.system(size: 12)).foregroundStyle(.secondary)
-        }.frame(maxWidth: .infinity)
-    }
 }
 
 struct MacSettingsTokenHeatmap: View {
     let dailyTokens: [Date: Int]
+    @Environment(\.locale) private var locale
+    private var russian: Bool { locale.language.languageCode?.identifier == "ru" }
     private var firstDay: Date {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
@@ -88,11 +72,12 @@ struct MacSettingsTokenHeatmap: View {
                             let date = Calendar.current.date(byAdding: .day, value: week * 7 + weekday, to: start) ?? start
                             let count = dailyTokens[date, default: 0]
                             RoundedRectangle(cornerRadius: 3).fill(color(count, maximum: maximum)).aspectRatio(1, contentMode: .fit)
-                                .help(date.formatted(date: .abbreviated, time: .omitted) + ": \(count) токенов")
+                                .help(date.formatted(.dateTime.day().month().year().locale(locale)) + (russian ? ": токенов \(count)" : ": \(count) tokens"))
                         }
                     }
                 }
-            }.accessibilityElement(children: .ignore).accessibilityLabel("Активность токенов за последние 12 месяцев")
+            }.accessibilityElement(children: .ignore)
+                .accessibilityLabel(russian ? "Активность токенов за последние 12 месяцев" : "Token activity over the last 12 months")
             HStack {
                 Text(start.formatted(.dateTime.month(.abbreviated)))
                 Spacer()

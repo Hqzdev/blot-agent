@@ -19,15 +19,15 @@ public final class BrowserDialog: Identifiable {
 
 extension BrowserPage {
     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable () -> Void) {
-        guard let owner, owner.dialog == nil else { completionHandler(); return }
+        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(); return }
         owner.dialog = BrowserDialog(kind: .alert, message: message, origin: frame.securityOrigin.host) { [weak owner] _ in owner?.dialog = nil; completionHandler() }
     }
     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (Bool) -> Void) {
-        guard let owner, owner.dialog == nil else { completionHandler(false); return }
+        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(false); return }
         owner.dialog = BrowserDialog(kind: .confirmation, message: message, origin: frame.securityOrigin.host) { [weak owner] value in owner?.dialog = nil; completionHandler(value != nil) }
     }
     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (String?) -> Void) {
-        guard let owner, owner.dialog == nil else { completionHandler(nil); return }
+        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(nil); return }
         owner.dialog = BrowserDialog(kind: .prompt, message: prompt, origin: frame.securityOrigin.host, input: defaultText ?? "") { [weak owner] value in owner?.dialog = nil; completionHandler(value) }
     }
 }

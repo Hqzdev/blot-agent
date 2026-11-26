@@ -9,10 +9,12 @@ public struct WorkspaceTaskExecution: Sendable {
     private let tools: WorkspaceToolRegistry
     private let maximumOutputTokens: Int
     private let authorize: (@Sendable (BlotV3.Task) async throws -> Void)?
+    private let isolatedContext: Bool
     public init(repository: WorkspaceRepository, identity: WorkspaceIdentity, pool: WorkspaceExecutorPool,
-                tools: WorkspaceToolRegistry, maximumOutputTokens: Int = 2048, authorize: (@Sendable (BlotV3.Task) async throws -> Void)? = nil) {
+                tools: WorkspaceToolRegistry, maximumOutputTokens: Int = 2048, authorize: (@Sendable (BlotV3.Task) async throws -> Void)? = nil, isolatedContext: Bool = false) {
         self.repository = repository; self.identity = identity; self.pool = pool; self.tools = tools
         self.maximumOutputTokens = maximumOutputTokens; self.authorize = authorize
+        self.isolatedContext = isolatedContext
     }
     public func run(taskID: UUID, model: any ChatModel, emit: @escaping @Sendable (BlotV3.Message) -> Void = { _ in }) async throws {
         try await run(taskID: taskID, makeModel: { _ in model }, emit: emit)
@@ -42,7 +44,9 @@ public struct WorkspaceTaskExecution: Sendable {
                 let response = try await WorkspaceResponseRecorder(repository: repository, identity: identity)
                     .begin(id: UUID(), replyingTo: source, agentID: configuration.agentId)
                 emit(response)
-                let messages = try WorkspaceContextBuilder().messages(for: source, projection: projection, configuration: configuration)
+                var contextProjection = projection
+                if isolatedContext { contextProjection.memories = []; contextProjection.summaries = [] }
+                let messages = try WorkspaceContextBuilder().messages(for: source, projection: contextProjection, configuration: configuration)
                 try await WorkspaceModelRuntime(repository: repository, identity: identity, pool: pool, tools: tools).generate(
                     source: source, responseID: response.metadata.id,
                     request: .init(messages: messages, maximumOutputTokens: maximumOutputTokens), model: model,
@@ -64,6 +68,12 @@ public struct WorkspaceTaskExecution: Sendable {
             let after = try await repository.projection(identity: identity)
             let failed = try WorkspaceTaskCheckpoint(taskID: taskID, projection: after).hasFailedResults
             try await lifecycle.finish(taskID: taskID, state: failed ? .failed : .completed, expectedVersion: executionVersion)
+            if tools.inlineCardsEnabled {
+                let resultID = WorkspaceLogicalID.make(kind: "TaskCard", workspaceID: identity.workspaceID, parts: [taskID.uuidString])
+                _ = try? await WorkspaceConversationCardService(repository: repository, identity: identity).create(id: resultID,
+                    sourceMessageID: source.metadata.id, operationID: taskID, agentID: configuration.agentId,
+                    content: WorkspaceTaskResultCard().content(task: task, projection: after, failed: failed))
+            }
         } catch {
             let state: BlotV3.TaskState = error is CancellationError || _Concurrency.Task.isCancelled || error as? WorkspaceTaskExecutionError == .uncertainToolResult ? .interrupted : .failed
             try? await lifecycle.finish(taskID: taskID, state: state, expectedVersion: executionVersion)

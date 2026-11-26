@@ -105,7 +105,8 @@ public enum PluginCatalog {
     public static let external: [PluginCatalogEntry] = [
         entry("gmail", "Gmail", "Поиск, чтение и подготовка писем.", "PluginGmail", "Общение", ["mail.read", "mail.draft"]),
         entry("calendar", "Google Calendar", "Встречи, события и расписание.", "PluginCalendar", "Работа", ["calendar.read", "calendar.write"]),
-        entry("drive", "Google Drive", "Документы и файлы вашей команды.", "PluginDrive", "Работа", ["files.read", "files.write"]),
+        entry("drive", "Google Drive", "Поиск, чтение и сохранение файлов.", "PluginDrive", "Работа", ["files.read", "files.write"]),
+        entry("teams", "Microsoft Teams", "Каналы и сообщения рабочей команды.", "PluginTeams", "Общение"),
         entry("slack", "Slack", "Каналы, сообщения и контекст команды.", "PluginSlack", "Общение"),
         entry("notion", "Notion", "Заметки, базы данных и проекты.", "PluginNotion", "Работа"),
         entry("quickbooks", "QuickBooks", "Операции, счета и финансовые отчёты.", "PluginQuickBooks", "Финансы"),
@@ -136,10 +137,12 @@ public struct AppleResource: Identifiable, Codable, Equatable, Sendable {
 }
 
 public enum AppleIntegrationError: Error, LocalizedError, Sendable {
+    case applicationRequired(String)
     case permissionDenied, unavailable, invalidArguments, missingResource, uncertainResult, canceled
     case system(String)
     public var errorDescription: String? {
         switch self {
+        case .applicationRequired(let name): "Для этой операции требуется запущенное приложение «\(name)». Ori не запускает внешние приложения автоматически."
         case .permissionDenied: "Нужно разрешение или подключение для этого агента."
         case .unavailable: "Это действие недоступно на данном устройстве."
         case .invalidArguments: "Проверьте параметры действия."

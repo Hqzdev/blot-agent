@@ -12,7 +12,7 @@ struct RunPlanView: View {
             let steps = plan.data.items("steps")
             if run.data.text("status") == "AWAITING_PLAN" {
                 DecisionCard(icon: "list", tint: K.text2, title: "Review the plan before work starts") {
-                    Text("Specialists start once you approve. To change scope, refine the goal below — Blot drafts a new version.")
+                    Text("Specialists start once you approve. To change scope, refine the goal below — Ori drafts a new version.")
                         .font(KFont.ui(13)).foregroundStyle(K.text2).lineSpacing(3)
                         .fixedSize(horizontal: false, vertical: true)
                     HStack {
@@ -52,9 +52,9 @@ struct RunPlanView: View {
         } else {
             SettingsGroup(title: "Plan") {
                 if ["PLANNING", "RUNNING"].contains(run.data.text("status")) {
-                    LoadingState(label: "Blot is drafting the plan…")
+                    LoadingState(label: "Ori is drafting the plan…")
                 } else {
-                    EmptyState(icon: "list", title: "No plan yet", detail: "The plan appears here once Blot has drafted it.")
+                    EmptyState(icon: "list", title: "No plan yet", detail: "The plan appears here once Ori has drafted it.")
                 }
             }
         }

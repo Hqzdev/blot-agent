@@ -37,9 +37,8 @@ public enum WorkspaceSkillAccess {
         guard matches.contains(where: \.assigned) else { throw WorkspaceSkillError.notAssigned }
     }
     public static func internalToolIDs(agentID: UUID?, projection: WorkspaceProjection) -> Set<String> {
-        guard let agentID else { return [] }
-        let assigned = Set(assignments(projection.grants).filter { $0.agentID == agentID && $0.assigned }.map(\.skillID))
-        return projection.skills.contains(where: { assigned.contains($0.metadata.id) && !$0.archived }) ? ["skill_list", "skill_run"] : []
+        guard let agentID, projection.agents.contains(where: { $0.metadata.id == agentID }) else { return [] }
+        return ["skill_list", "skill_read", "skill_create", "skill_run"]
     }
     static func require(revision: BlotV3.SkillRevision, agentID: UUID, configuration: BlotV3.AgentConfigurationRevision,
                         projection: WorkspaceProjection) throws {

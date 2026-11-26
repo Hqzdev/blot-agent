@@ -12,9 +12,9 @@ public struct MCPInspection: Sendable {
 public struct MCPAccess: Sendable, Identifiable {
     public let id: UUID
     public let name: String
+    public let pluginID: String?
     public let tools: [MCPTool]
     public let selectedTools: Set<String>
-    public let agentIDs: Set<UUID>
     public let enabled: Bool
 }
 
@@ -25,7 +25,8 @@ struct MCPLocalConnection: Codable, Sendable {
     let configuration: MCPConfiguration
     let tools: [MCPTool]
     var selectedTools: Set<String>
-    var agentIDs: Set<UUID>
+    // Keep the local credential format readable by earlier builds. Access is workspace-wide.
+    var agentIDs: Set<UUID> = []
     var enabled: Bool
     var toolIDs: [String] { tools.filter { selectedTools.contains($0.name) }.map { $0.toolID(connectionID: id, configurationID: configurationID) } }
 }
@@ -71,44 +72,40 @@ public actor WorkspaceMCPService {
         } catch { await client.close(); clients[id] = nil; throw error }
     }
     public func access() async throws -> [MCPAccess] {
-        try await load().map { .init(id: $0.id, name: $0.name, tools: $0.tools, selectedTools: $0.selectedTools, agentIDs: $0.agentIDs, enabled: $0.enabled) }
+        try await load().map { .init(id: $0.id, name: $0.name, pluginID: $0.configuration.pluginID, tools: $0.tools, selectedTools: $0.selectedTools, enabled: $0.enabled) }
     }
     @discardableResult
-    public func save(_ inspection: MCPInspection, selectedTools: Set<String>, agentIDs: Set<UUID>) async throws -> UUID {
+    public func save(_ inspection: MCPInspection, selectedTools: Set<String>) async throws -> UUID {
         try await saveConnection(.init(id: inspection.id, name: inspection.name, configurationID: inspection.configurationID,
-            configuration: inspection.configuration, tools: inspection.tools, selectedTools: selectedTools, agentIDs: agentIDs, enabled: false))
+            configuration: inspection.configuration, tools: inspection.tools, selectedTools: selectedTools, enabled: false))
         return inspection.id
     }
-    public func setAccess(id: UUID, selectedTools: Set<String>, agentIDs: Set<UUID>) async throws {
+    public func setAccess(id: UUID, selectedTools: Set<String>) async throws {
         guard var entry = try await load().first(where: { $0.id == id }) else { throw MCPError.unavailable }
-        entry.selectedTools = selectedTools; entry.agentIDs = agentIDs
+        entry.selectedTools = selectedTools
         try await saveConnection(entry)
     }
     private func saveConnection(_ entry: MCPLocalConnection) async throws {
         guard !mutating, !suspended else { throw MCPError.accessChanged }; mutating = true; defer { mutating = false }
-        guard !entry.selectedTools.isEmpty, !entry.agentIDs.isEmpty,
+        guard !entry.selectedTools.isEmpty,
               entry.selectedTools.isSubset(of: Set(entry.tools.map(\.name))) else { throw MCPError.configuration }
         var values = try await load()
         guard values.count < 30 || values.contains(where: { $0.id == entry.id }) else { throw MCPError.configuration }
-        let previous = values.first { $0.id == entry.id }
         var disabled = entry; disabled.enabled = false
         values.removeAll { $0.id == entry.id }; values.append(disabled)
         try await persist(values)
         await closeClients(connectionID: entry.id)
         guard !suspended else { throw MCPError.unavailable }
-        struct Input: Encodable { let id: UUID; let tools: [String]; let agents: [UUID] }
+        struct Input: Encodable { let id: UUID; let tools: [String] }
         let commandID = UUID()
         let command = try WorkspaceCommand(type: "mcp.save", workspaceID: identity.workspaceID,
-            payload: Input(id: entry.id, tools: entry.toolIDs.sorted(), agents: entry.agentIDs.sorted { $0.uuidString < $1.uuidString })).data()
+            payload: Input(id: entry.id, tools: entry.toolIDs.sorted())).data()
         _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             try tx.requireResolved(kind: "McpConnection", id: entry.id)
             let old = try tx.record(BlotV3.McpConnection.self, id: entry.id)
             let record = try BlotV3.McpConnection(metadata: tx.metadata(id: entry.id, now: Date(), replacing: old?.metadata), name: entry.name,
                 transport: entry.configuration.transport == .http ? "STREAMABLE_HTTP" : "STDIO",
                 endpoint: "device:" + tx.identity.deviceID.uuidString, toolIds: entry.toolIDs.sorted(), state: .connected)
-            for agentID in entry.agentIDs.union(previous?.agentIDs ?? []) {
-                try Self.updateAgent(tx, id: agentID, removing: Set((previous?.toolIDs ?? []) + (old?.toolIds ?? [])), adding: entry.agentIDs.contains(agentID) ? entry.toolIDs : [])
-            }
             try tx.put(record, expectedVersion: old?.metadata.version ?? 0)
             return entry.id
         }
@@ -120,31 +117,33 @@ public actor WorkspaceMCPService {
     }
     public func refresh(id: UUID) async throws {
         guard !mutating, !suspended, var entry = try await load().first(where: { $0.id == id }) else { throw MCPError.accessChanged }
+        let configuration = try await freshConfiguration(entry)
+        guard !mutating, !suspended, let current = try await load().first(where: { $0.id == id && $0.configurationID == entry.configurationID }) else { throw MCPError.accessChanged }
+        entry = current
         mutating = true; defer { mutating = false }
         // Refresh revokes all access before making a network request. The owner must select it again.
         entry.enabled = false
         var values = try await load(); values.removeAll { $0.id == id }; values.append(entry); try await persist(values)
         await closeClients(connectionID: id)
-        let client = try connect(entry.configuration); let sessionID = UUID(); clients[sessionID] = (id, client)
+        let client = try connect(configuration); let sessionID = UUID(); clients[sessionID] = (id, client)
         do {
             let tools = try await client.tools(); await client.close(); clients[sessionID] = nil
             guard !suspended else { throw MCPError.unavailable }
             try Self.checkCatalog(tools, configuration: entry.configuration)
             let fresh = MCPLocalConnection(id: id, name: entry.name, configurationID: UUID(), configuration: entry.configuration,
-                tools: tools, selectedTools: [], agentIDs: entry.agentIDs, enabled: false)
+                tools: tools, selectedTools: [], enabled: false)
             values.removeAll { $0.id == id }; values.append(fresh); try await persist(values)
         } catch { await client.close(); clients[sessionID] = nil; throw error }
     }
     public func disconnect(id: UUID) async throws {
         guard !mutating else { throw MCPError.accessChanged }; mutating = true; defer { mutating = false }
         var values = try await load()
-        guard let entry = values.first(where: { $0.id == id }) else { throw MCPError.unavailable }
+        guard values.contains(where: { $0.id == id }) else { throw MCPError.unavailable }
         values.removeAll { $0.id == id }; try await persist(values)
         await closeClients(connectionID: id)
         struct Input: Encodable { let id: UUID }
         let command = try WorkspaceCommand(type: "mcp.disconnect", workspaceID: identity.workspaceID, payload: Input(id: id)).data()
         _ = try await repository.execute(commandID: UUID(), command: command, identity: identity) { tx in
-            for agentID in entry.agentIDs { try Self.updateAgent(tx, id: agentID, removing: Set(entry.toolIDs), adding: []) }
             if let old = try tx.record(BlotV3.McpConnection.self, id: id) { try tx.delete(old) }
             return id
         }
@@ -157,25 +156,46 @@ public actor WorkspaceMCPService {
     func authorize(_ entry: MCPLocalConnection, tool: MCPTool, context: WorkspaceToolContext) async throws {
         guard !suspended, !mutating, let current = try await load().first(where: { $0.id == entry.id }), current.enabled,
               current.configurationID == entry.configurationID, current.tools.contains(tool), current.selectedTools.contains(tool.name),
-              let agentID = context.agentID, current.agentIDs.contains(agentID) else { throw MCPError.accessChanged }
+              let agentID = context.agentID else { throw MCPError.accessChanged }
         let name = tool.toolID(connectionID: entry.id, configurationID: entry.configurationID)
         let projection = try await repository.projection(identity: identity)
         guard let source = projection.messages.first(where: { $0.metadata.id == context.sourceMessageID }), source.metadata.ownerId == identity.ownerID,
               WorkspaceToolRestrictions(userRequest: source.content).allows(operation: "send"),
               WorkspaceToolRestrictions(userRequest: source.content).allows(operation: "update"),
               context.allowedToolIDs.contains(name),
-              try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection)?.toolIds.contains(name) == true,
-              let record = try await repository.record(BlotV3.McpConnection.self, id: entry.id, workspaceID: identity.workspaceID),
-              record.state == .connected, record.endpoint == "device:" + identity.deviceID.uuidString, record.toolIds.contains(name),
-              !projection.conflicts.contains(where: { !$0.resolved && ($0.recordId == entry.id || $0.recordId == agentID) }) else { throw MCPError.accessChanged }
+              try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection) != nil,
+              let record = projection.mcpConnections.first(where: { $0.metadata.id == entry.id }),
+              WorkspacePluginAccess.isActive(record, deviceID: identity.deviceID, projection: projection), record.toolIds.contains(name) else { throw MCPError.accessChanged }
         if let taskID = context.taskID {
             guard let task = projection.tasks.first(where: { $0.metadata.id == taskID }), task.execution.executorDeviceId == identity.deviceID,
                   !WorkspaceTaskService.terminal(task.state), task.state != .paused else { throw MCPError.accessChanged }
         }
     }
-    func open(_ entry: MCPLocalConnection) throws -> (UUID, MCPClient) {
+    func open(_ entry: MCPLocalConnection) async throws -> (UUID, MCPClient) {
         guard !suspended, !mutating, connections?.contains(where: { $0.id == entry.id && $0.enabled && $0.configurationID == entry.configurationID }) == true else { throw MCPError.accessChanged }
-        let id = UUID(), client = try connect(entry.configuration); clients[id] = (entry.id, client); return (id, client)
+        let configuration = try await freshConfiguration(entry)
+        guard !suspended, !mutating else { throw MCPError.accessChanged }
+        let id = UUID(), client = try connect(configuration); clients[id] = (entry.id, client); return (id, client)
+    }
+    func currentConfiguration(_ id: UUID) async throws -> MCPConfiguration {
+        guard let entry = try await load().first(where: { $0.id == id }) else { throw MCPError.accessChanged }
+        return entry.configuration
+    }
+    private func freshConfiguration(_ entry: MCPLocalConnection) async throws -> MCPConfiguration {
+        var values = try await load()
+        guard let index = values.firstIndex(where: { $0.id == entry.id && $0.configurationID == entry.configurationID }) else { throw MCPError.accessChanged }
+        var configuration = values[index].configuration
+        guard let oauth = configuration.oauth, oauth.expiresAt <= Date().addingTimeInterval(60) else { return configuration }
+        guard !mutating else { throw MCPError.accessChanged }
+        mutating = true; defer { mutating = false }
+        let (token, refreshed) = try await MCPOAuthClient().refresh(oauth)
+        guard !suspended else { throw MCPError.unavailable }
+        configuration.bearerToken = token; configuration.oauth = refreshed
+        let old = values[index]
+        values[index] = .init(id: old.id, name: old.name, configurationID: old.configurationID, configuration: configuration,
+            tools: old.tools, selectedTools: old.selectedTools, enabled: old.enabled)
+        try await persist(values)
+        return configuration
     }
     public func resolve(invocationID: UUID, succeeded: Bool) async throws {
         let projection = try await repository.projection(identity: identity)
@@ -196,21 +216,5 @@ public actor WorkspaceMCPService {
         let data = try WorkspaceCoding.encode(tools)
         let json = try JSONDecoder().decode(ChatJSON.self, from: data)
         guard !json.mcpContains(configuration.secrets) else { throw MCPError.protocolViolation }
-    }
-    private static func updateAgent(_ tx: WorkspaceTransaction, id: UUID, removing: Set<String>, adding: [String]) throws {
-        guard let agent = try tx.record(BlotV3.AgentProfile.self, id: id) else {
-            if adding.isEmpty { return }; throw WorkspaceStorageError.missingRecord
-        }
-        try tx.requireResolved(kind: "AgentProfile", id: id)
-        guard let configurationID = agent.configurationId else { throw WorkspaceStorageError.invalidRecord }
-        let configuration = try tx.require(BlotV3.AgentConfigurationRevision.self, id: configurationID)
-        let tools = Set(configuration.toolIds).subtracting(removing).union(adding).sorted()
-        guard tools.count <= 100 else { throw WorkspaceStorageError.invalidParameters }
-        let revisionID = UUID()
-        try tx.put(BlotV3.AgentConfigurationRevision(metadata: tx.metadata(id: revisionID, now: Date()), agentId: id,
-            revision: agent.metadata.version + 1, instructions: configuration.instructions, toolIds: tools, modelId: configuration.modelId), expectedVersion: 0)
-        try tx.put(BlotV3.AgentProfile(metadata: tx.metadata(id: id, now: Date(), replacing: agent.metadata), name: agent.name, roleId: agent.roleId,
-            avatarShape: agent.avatarShape, avatarColor: agent.avatarColor, instructions: agent.instructions, modelId: agent.modelId,
-            accessMode: agent.accessMode, configurationId: revisionID), expectedVersion: agent.metadata.version)
     }
 }

@@ -5,6 +5,7 @@ import SwiftUI
 struct MacAgentCreationView: View {
     var isEditing = false
     @Environment(WorkspaceStore.self) private var store
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @FocusState private var nameFocused: Bool
     @State private var nameGenerator = MacAgentNameGenerator()
     private let colors = ["brown", "red", "orange", "amber", "green", "teal", "blue", "purple", "pink", "gray"]
@@ -14,16 +15,29 @@ struct MacAgentCreationView: View {
         GeometryReader { geometry in
             ScrollView {
                 VStack(spacing: 0) {
-                    editor.padding(.top, max(32, geometry.size.height * 0.11))
+                    editor(width: geometry.size.width - 56).padding(.top, 28)
                     WorkspaceFeedback().font(MacWorkspaceStyle.caption).padding(.top, 12)
-                    if !isEditing { suggestions.padding(.top, max(48, geometry.size.height * 0.10)) }
+                    if !isEditing { suggestions.padding(.top, 32).frame(maxWidth: 1000) }
                 }.padding(.horizontal, 28).padding(.bottom, 24).frame(maxWidth: .infinity)
             }.scrollBounceBehavior(.basedOnSize)
         }
         .task { nameFocused = true }
     }
 
-    private var editor: some View {
+    @ViewBuilder private func editor(width: CGFloat) -> some View {
+        Group {
+            if width >= 720 {
+                HStack(alignment: .top, spacing: 28) {
+                    identityEditor.frame(width: 300)
+                    capabilitiesEditor.frame(minWidth: 320, maxWidth: .infinity)
+                }
+            } else {
+                VStack(spacing: 24) { identityEditor; capabilitiesEditor }
+            }
+        }.frame(maxWidth: 1000).frame(maxWidth: .infinity)
+    }
+
+    private var identityEditor: some View {
         @Bindable var store = store
         return VStack(spacing: 22) {
             ZStack {
@@ -31,12 +45,12 @@ struct MacAgentCreationView: View {
                     color: WorkspaceAvatarView.color(store.form.agent.color), size: 86)
                     .id(store.form.agent.shape + store.form.agent.color)
                     .transition(.scale(scale: 0.9).combined(with: .opacity))
-            }.frame(height: 96).animation(.easeInOut(duration: 0.18), value: store.form.agent.shape + store.form.agent.color)
+            }.frame(height: 96).kAnimation(KMotion.standard, value: store.form.agent.shape + store.form.agent.color)
             Button(action: randomizeIdentity) {
-                Label(store.language == "ru" ? "Случайный вариант" : "Randomize", systemImage: "shuffle")
+                BlotLabel(store.language == "ru" ? "Случайный вариант" : "Randomize", symbol: "shuffle", size: 16)
                     .font(MacWorkspaceStyle.caption)
             }
-            .buttonStyle(.bordered)
+            .buttonStyle(WorkspaceButtonStyle(.secondary))
             .disabled(store.busy)
             .help(store.language == "ru" ? "Выбрать случайные имя, цвет и форму" : "Choose a random name, color and shape")
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 12)], spacing: 10) {
@@ -68,12 +82,22 @@ struct MacAgentCreationView: View {
                     .accessibilityLabel(store.t("Name"))
                     .onSubmit { save() }
             }.padding(.top, 10)
+        }.padding(22).frame(maxWidth: .infinity)
+            .background(WorkspaceStyle.surface.opacity(0.45), in: RoundedRectangle(cornerRadius: 24))
+    }
+
+    private var capabilitiesEditor: some View {
+        @Bindable var store = store
+        return VStack(alignment: .leading, spacing: 24) {
             WorkspaceAgentRuntimeOptions()
-            DisclosureGroup(store.t("Instructions")) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(store.t("Instructions")).font(.system(size: 15, weight: .semibold))
                 TextField(store.t("What it does"), text: $store.form.agent.instructions, axis: .vertical)
-                    .textFieldStyle(.plain).lineLimit(3...6).font(MacWorkspaceStyle.body)
-                    .padding(10).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 18))
-            }.font(MacWorkspaceStyle.caption).foregroundStyle(WorkspaceStyle.secondary)
+                    .textFieldStyle(.plain).lineLimit(8...16).font(MacWorkspaceStyle.body)
+                    .padding(14).frame(maxWidth: .infinity, minHeight: 170, alignment: .topLeading)
+                    .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 20))
+                    .accessibilityLabel(store.t("Instructions"))
+            }
             Button(action: save) {
                 HStack(spacing: 7) {
                     if store.busy { ProgressView().controlSize(.mini) }
@@ -82,7 +106,8 @@ struct MacAgentCreationView: View {
                     .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 18))
             }.buttonStyle(.plain).disabled(store.busy || store.form.agent.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                 .opacity(store.form.agent.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
-        }.frame(maxWidth: 414).frame(maxWidth: .infinity)
+        }.padding(22).frame(maxWidth: .infinity, alignment: .leading)
+            .background(WorkspaceStyle.surface.opacity(0.3), in: RoundedRectangle(cornerRadius: 24))
     }
 
     private var suggestions: some View {
@@ -131,7 +156,14 @@ struct MacAgentCreationView: View {
     private func save() {
         guard !store.busy, !store.form.agent.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
         _Concurrency.Task {
-            if isEditing { await store.perform(.saveAgent, next: .agentProfile) }
+            if isEditing {
+                await store.perform(.saveAgent, next: panelNavigation == nil ? .agentProfile : nil)
+                if store.error == nil { panelNavigation?.open(.agentProfile) }
+            }
+            else if let panelNavigation {
+                await store.perform(.createAgent)
+                if store.error == nil { panelNavigation.open(.agentProfile) }
+            }
             else { await store.createDesktopAgentAndStartChat() }
         }
     }

@@ -42,7 +42,8 @@ public struct WorkspaceGroupService: Sendable {
             }
             for id in agentIDs { try Self.member(tx, conversationID: conversationID, participantID: id, kind: .agent, removed: false, now: now) }
             let updated = try BlotV3.Conversation(metadata: tx.metadata(id: conversationID, now: now, replacing: chat.metadata),
-                agentId: agentIDs.first, title: name, mobileOwned: chat.mobileOwned, pinned: chat.pinned, archived: chat.archived, kind: .group)
+                agentId: agentIDs.first, title: name, mobileOwned: chat.mobileOwned, pinned: chat.pinned, archived: chat.archived, kind: .group,
+                parentConversationId: chat.parentConversationId, parentMessageId: chat.parentMessageId)
             try tx.put(updated, expectedVersion: expectedVersion)
             return conversationID
         }
@@ -61,7 +62,7 @@ public struct WorkspaceGroupService: Sendable {
         }
     }
 
-    private static func member(_ tx: WorkspaceTransaction, conversationID: UUID, participantID: UUID,
+    static func member(_ tx: WorkspaceTransaction, conversationID: UUID, participantID: UUID,
                                kind: BlotV3.ParticipantKind, removed: Bool, now: Date) throws {
         let id = WorkspaceLogicalID.make(kind: "ConversationParticipant", workspaceID: tx.identity.workspaceID,
             parts: [conversationID.uuidString, participantID.uuidString, kind.rawValue])

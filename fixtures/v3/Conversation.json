@@ -12,5 +12,7 @@
   "mobileOwned": true,
   "pinned": true,
   "archived": true,
-  "kind": null
+  "kind": null,
+  "parentConversationId": null,
+  "parentMessageId": null
 }

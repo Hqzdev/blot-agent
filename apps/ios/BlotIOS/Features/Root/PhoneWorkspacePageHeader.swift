@@ -28,8 +28,8 @@ struct PhoneWorkspacePageHeader: View {
                         back: store.history.isEmpty ? nil : { store.back() }) {
             if route == .settings {
                 Button { store.navigate(.settingsProfile) } label: {
-                    PhoneProfileAvatar(data: store.profile.avatar, size: 36).frame(width: 44, height: 44)
-                }.buttonStyle(.plain).accessibilityLabel(store.settingsText("Profile"))
+                    PhoneProfileAvatar(data: store.profile.avatar, size: 36).frame(width: 44, height: 44).blotHitArea()
+                }.buttonStyle(BlotHitTargetButtonStyle()).accessibilityLabel(store.settingsText("Profile"))
             } else if route == .schedules {
                 PhoneGlassCircleButton(symbol: "plus", title: store.t("New schedule")) { store.navigate(.createSchedule) }
             } else if [.running, .result].contains(route) {
@@ -37,9 +37,8 @@ struct PhoneWorkspacePageHeader: View {
                     Button(store.t("Task details")) { store.navigate(.running) }
                     Button(store.t("Review prepared action")) { store.navigate(.approval) }
                     Button(store.t("Result")) { store.navigate(.result) }
-                    Button(store.t("View browser")) { store.navigate(.browser) }
                 } label: {
-                    BlotIcon(symbol: "ellipsis").frame(width: 44, height: 44)
+                    BlotIcon(symbol: "ellipsis").frame(width: 44, height: 44).blotHitArea()
                 }.accessibilityLabel(store.t("More options"))
             }
         }

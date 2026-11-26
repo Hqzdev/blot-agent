@@ -36,14 +36,14 @@ struct PhoneAuthenticationView: View {
         HStack(spacing: 12) {
             PhoneGlassCircleButton(symbol: "xmark", title: store.t("Close")) { close() }
             Spacer(minLength: 0)
-            Text("Blot Agent").font(.headline).lineLimit(1)
+            Text("Ori").font(.headline).lineLimit(1)
             Spacer(minLength: 0)
             Menu {
                 Button("Русский") { store.language = "ru" }
                 Button("English") { store.language = "en" }
             } label: {
                 BlotIcon(symbol: "rectangle.bottomthird.inset.filled").font(.title3)
-                    .frame(width: 44, height: 44).glassEffect(.regular.interactive(), in: .circle)
+                    .frame(width: 44, height: 44).blotChromeSurface(cornerRadius: 24)
             }.accessibilityLabel(store.t("Language"))
         }
     }
@@ -52,7 +52,7 @@ struct PhoneAuthenticationView: View {
         @Bindable var store = store
         return VStack(spacing: 26) {
             WorkspaceAvatar(size: 68)
-            Text(store.t("Sign in to Blot Agent")).font(.system(size: 25))
+            Text(store.t("Sign in to Ori")).font(.system(size: 25))
                 .multilineTextAlignment(.center).padding(.bottom, 14)
                 .accessibilityAddTraits(.isHeader)
             VStack(spacing: 20) {
@@ -119,7 +119,7 @@ struct PhoneAuthenticationView: View {
             Spacer()
             PhoneGlassCapsule {
                 HStack(spacing: 24) {
-                    ShareLink(item: "Blot Agent") {
+                    ShareLink(item: "Ori") {
                         BlotIcon(symbol: "square.and.arrow.up").font(.title2).frame(width: 28, height: 44)
                     }.buttonStyle(.plain).accessibilityLabel(store.t("Share"))
                     Button {
@@ -149,6 +149,60 @@ struct PhoneAuthenticationView: View {
         submission?.cancel()
         submitting = false
         store.dismissAuthentication()
+    }
+}
+
+struct PhoneVerificationActions: View {
+    @Environment(WorkspaceStore.self) private var store
+    @Environment(\.dynamicTypeSize) private var textSize
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+
+    var body: some View {
+        let layout = textSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 12)) : AnyLayout(HStackLayout(spacing: 12))
+        layout {
+            Button(role: .cancel) {
+                store.form.account.code = ""
+                store.form.account.password = ""
+                store.dismissAuthentication()
+            } label: {
+                Text(store.t("Cancel"))
+                    .font(.body.weight(.medium)).foregroundStyle(WorkspaceStyle.ink)
+                    .padding(.horizontal, 18)
+                    .frame(maxWidth: textSize.isAccessibilitySize ? .infinity : nil, minHeight: 48)
+                    .background(reduceTransparency ? BlotColor.panel : .clear, in: Capsule())
+                    .glassEffect(reduceTransparency ? .identity : .regular.interactive(), in: Capsule())
+                    .contentShape(Capsule())
+            }.buttonStyle(BlotPlainButtonStyle())
+
+            Button {
+                _Concurrency.Task { await store.perform(.verify) }
+            } label: {
+                HStack(spacing: 8) {
+                    if store.busy { ProgressView().controlSize(.small).tint(BlotColor.onInverse) }
+                    Text(store.t("Confirm sign-in"))
+                }
+            }.buttonStyle(PhoneAuthenticationPrimaryButtonStyle())
+        }
+        .disabled(store.busy)
+        .padding(.horizontal, 30).padding(.top, 8).padding(.bottom, 2)
+        .background(PhoneReferenceStyle.authentication.ignoresSafeArea(edges: .bottom))
+    }
+}
+
+struct PhoneAuthenticationPrimaryButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var enabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.body.weight(.medium)).multilineTextAlignment(.center)
+            .foregroundStyle(BlotColor.onInverse)
+            .padding(.horizontal, 12).padding(.vertical, 8)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(BlotColor.inverse, in: Capsule())
+            .overlay(Capsule().strokeBorder(WorkspaceStyle.secondary.opacity(0.15)).allowsHitTesting(false))
+            .shadow(color: .black.opacity(0.12), radius: 18, y: 6)
+            .contentShape(Capsule())
+            .opacity(enabled ? (configuration.isPressed ? 0.78 : 1) : 0.6)
     }
 }
 

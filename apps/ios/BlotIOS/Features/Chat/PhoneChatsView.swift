@@ -77,8 +77,8 @@ struct PhoneChatsView: View {
                 Button { _Concurrency.Task { await store.openAgentChat(agent.metadata.id) } } label: {
                     PhoneAgentRow(agent: agent)
                 }.buttonStyle(.plain)
-                    .contextMenu {
-                        BlotIconButton(store.t("Agent"), symbol: "person.crop.circle") { store.selectAgent(agent.metadata.id) }
+                    .workspaceContextActions {
+                        BlotIconButton(store.t("Agent"), symbol: "agent") { store.selectAgent(agent.metadata.id) }
                         BlotIconButton(store.t("Open chat"), symbol: "square.and.pencil") {
                             _Concurrency.Task { await store.startNewChat(with: agent.metadata.id) }
                         }
@@ -87,7 +87,7 @@ struct PhoneChatsView: View {
             case .conversation(let chat):
                 Button { store.openConversation(chat.metadata.id) } label: { PhoneConversationRow(conversation: chat) }
                     .buttonStyle(.plain)
-                    .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+                    .workspaceContextActions { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
                     .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                         // Confirmation does not remove the row. A destructive swipe would optimistically delete it in UIKit.
                         Button { store.pendingChatDeletionID = chat.metadata.id } label: {
@@ -129,7 +129,7 @@ struct PhoneChatsView: View {
             if abs(old - new) > 0.5 { store.navigation.recordOffset(new, for: scrollRoute) }
         }
         .overlay(alignment: .top) { header.padding(.horizontal, 18).padding(.top, 6) }
-        .workspaceGlassContainer()
+        .workspaceGlassContainer().environment(\.blotChatChrome, true)
         .sheet(isPresented: $creationMenuVisible, onDismiss: presentCreation) {
             PhoneCreationMenu(createAgent: { pendingCreation = .agent; creationMenuVisible = false },
                               createGroup: { pendingCreation = .group; creationMenuVisible = false })
@@ -151,7 +151,8 @@ struct PhoneChatsView: View {
                             BlotIcon(.person, size: 22).frame(width: 44, height: 44)
                         }
                     }
-                    .glassEffect(.regular.interactive(), in: .circle)
+                    .background(WorkspaceStyle.surface, in: Circle())
+                    .overlay(Circle().strokeBorder(BlotColor.hairline))
                     .contentShape(Circle())
                 }.buttonStyle(.plain).accessibilityLabel(store.settingsText("Profile"))
             }
@@ -203,7 +204,7 @@ struct PhoneChatsView: View {
                         }.padding(.top, 6)
                     }
                     .buttonStyle(.plain).accessibilityLabel(chat.title)
-                    .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+                    .workspaceContextActions { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
                 }
             }.padding(.vertical, 6)
         }.scrollIndicators(.hidden)

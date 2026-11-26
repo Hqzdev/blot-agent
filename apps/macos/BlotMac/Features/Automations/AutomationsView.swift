@@ -14,7 +14,7 @@ struct AutomationsView: View {
             } else {
                 EmptyState(icon: "clock",
                            title: app.workspace.rows("AUTOMATION").isEmpty ? "No schedules yet" : "Choose a schedule",
-                           detail: "A schedule starts a run on the days and time you choose. It works while Blot and this Mac are running.",
+                           detail: "A schedule starts a run on the days and time you choose. It works while Ori and this Mac are running.",
                            actionTitle: "New schedule", actionIcon: "plus") { creating = true }
                     .frame(maxHeight: .infinity)
             }

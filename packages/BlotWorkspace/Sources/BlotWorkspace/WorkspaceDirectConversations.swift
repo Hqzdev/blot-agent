@@ -7,7 +7,7 @@ public struct WorkspaceDirectConversations: Sendable {
     public let conversations: [BlotV3.Conversation]
 
     public init(_ conversations: [BlotV3.Conversation]) {
-        let direct = conversations.filter { $0.kind != .group }
+        let direct = conversations.filter { $0.kind != .group && $0.parentMessageId == nil }
         let families = Dictionary(grouping: direct, by: \.agentId)
         var aliases: [UUID: UUID] = [:]
         for family in families.values {
@@ -54,7 +54,8 @@ public struct WorkspaceDirectConversations: Sendable {
             let family = projection.conversations.filter { canonicalID($0.metadata.id) == chat.metadata.id }
             return try BlotV3.Conversation(metadata: chat.metadata, agentId: chat.agentId, title: chat.title,
                 mobileOwned: chat.mobileOwned, pinned: family.contains(where: \.pinned),
-                archived: family.allSatisfy(\.archived), kind: chat.kind)
+                archived: family.allSatisfy(\.archived), kind: chat.kind,
+                parentConversationId: chat.parentConversationId, parentMessageId: chat.parentMessageId)
         }
         result.messages = try messages(projection.messages)
         result.messages.sort {

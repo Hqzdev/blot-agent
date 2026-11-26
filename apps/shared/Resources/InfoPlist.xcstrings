@@ -8,7 +8,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Blot"
+            "value" : "Ori"
           }
         }
       }
@@ -20,7 +20,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "BlotIOS"
+            "value" : "Ori"
           }
         }
       }
@@ -31,13 +31,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot automates Mail and Notes only after you connect them."
+            "value" : "Ori automates Mail and Notes only after you connect them."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot управляет Почтой и Заметками только после их подключения."
+            "value" : "Ori управляет Почтой и Заметками только после их подключения."
           }
         }
       }
@@ -48,13 +48,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot uses Bluetooth to connect your trusted devices."
+            "value" : "Ori uses Bluetooth to connect your trusted devices."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot использует Bluetooth для подключения доверенных устройств."
+            "value" : "Ori использует Bluetooth для подключения доверенных устройств."
           }
         }
       }
@@ -65,13 +65,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot reads and updates the calendars you connect for your agents."
+            "value" : "Ori reads and updates the calendars you connect for your agents."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot читает и изменяет календари, которые вы подключили для агентов."
+            "value" : "Ori читает и изменяет календари, которые вы подключили для агентов."
           }
         }
       }
@@ -82,13 +82,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot uses the camera to attach photos and scan pairing QR codes."
+            "value" : "Ori uses the camera to attach photos and scan pairing QR codes."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot использует камеру для добавления фотографий и сканирования QR-кодов подключения."
+            "value" : "Ori использует камеру для добавления фотографий и сканирования QR-кодов подключения."
           }
         }
       }
@@ -99,13 +99,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot finds and updates contacts you allow your agents to use."
+            "value" : "Ori finds and updates contacts you allow your agents to use."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot находит и изменяет контакты, доступ к которым вы разрешили агентам."
+            "value" : "Ori находит и изменяет контакты, доступ к которым вы разрешили агентам."
           }
         }
       }
@@ -116,13 +116,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot connects your iPhone to the agent running on your Mac."
+            "value" : "Ori connects your iPhone to the agent running on your Mac."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot подключает iPhone к агенту, работающему на вашем Mac."
+            "value" : "Ori подключает iPhone к агенту, работающему на вашем Mac."
           }
         }
       }
@@ -133,13 +133,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot uses the microphone when you record a voice message."
+            "value" : "Ori uses the microphone when you record a voice message."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot использует микрофон для записи голосовых сообщений."
+            "value" : "Ori использует микрофон для записи голосовых сообщений."
           }
         }
       }
@@ -150,13 +150,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot saves photos to your library when you choose to save them."
+            "value" : "Ori saves photos to your library when you choose to save them."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot сохраняет фотографии в медиатеку по вашему выбору."
+            "value" : "Ori сохраняет фотографии в медиатеку по вашему выбору."
           }
         }
       }
@@ -167,13 +167,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot uses your photo library to attach selected photos to messages."
+            "value" : "Ori uses your photo library to attach selected photos to messages."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot использует медиатеку для добавления выбранных фотографий в сообщения."
+            "value" : "Ori использует медиатеку для добавления выбранных фотографий в сообщения."
           }
         }
       }
@@ -184,13 +184,25 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot manages reminders in the lists you connect."
+            "value" : "Ori manages reminders in the lists you connect."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot управляет напоминаниями в подключённых списках."
+            "value" : "Ori управляет напоминаниями в подключённых списках."
+          }
+        }
+      }
+    },
+    "NSSpeechRecognitionUsageDescription" : {
+      "comment" : "Privacy - Speech Recognition Usage Description",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Ori transcribes your speech into chat messages during a voice conversation."
           }
         }
       }

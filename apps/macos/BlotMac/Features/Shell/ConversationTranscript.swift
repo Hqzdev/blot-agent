@@ -6,7 +6,7 @@ enum ConversationTranscript {
         blocks.map { block in
             switch block {
             case .user(let text): "You: " + text
-            case .agent(let text): "Blot: " + text
+            case .agent(let text): "Ori: " + text
             case .note(_, let text): text
             case .steps(let rows): rows.map { $0.verb + " " + $0.target + " " + $0.meta }.joined(separator: "\n")
             case .terminal(let command, let exit, let lines):
@@ -26,7 +26,7 @@ extension AppState {
         case .task: body = UUID(uuidString: item.taskID).map { ConversationTranscript.text(transcriptBlocks($0)) } ?? ""
         case .chat:
             body = (workChat.session(item.taskID)?.messages ?? []).map {
-                ($0.fromUser ? "You: " : "Blot: ") + $0.text
+                ($0.fromUser ? "You: " : "Ori: ") + $0.text
             }.joined(separator: "\n\n")
         case .team:
             body = UUID(uuidString: item.taskID).map { ConversationTranscript.text(transcriptBlocks($0)) } ?? ""

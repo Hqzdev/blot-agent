@@ -22,7 +22,7 @@ final class WorkspaceScheduleHost {
     func setEnabled(_ enabled: Bool) {
         #if os(macOS)
         if enabled && activity == nil {
-            activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Blot scheduled tasks")
+            activity = ProcessInfo.processInfo.beginActivity(options: .userInitiatedAllowingIdleSystemSleep, reason: "Ori scheduled tasks")
         } else if !enabled, let current = activity {
             ProcessInfo.processInfo.endActivity(current); activity = nil
         }

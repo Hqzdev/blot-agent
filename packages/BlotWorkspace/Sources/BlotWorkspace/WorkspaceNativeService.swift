@@ -1,4 +1,5 @@
 import BlotDomain
+import CryptoKit
 import Foundation
 
 /// Device-only project bindings and authority. A replicated Project never grants command execution.
@@ -42,6 +43,23 @@ public actor WorkspaceNativeService {
     private func save(_ value: WorkspaceNativeState) async throws {
         guard !suspended else { throw NativeExecutionError.unavailable }
         try await credentials.write(WorkspaceCoding.encode(value), name: key); state = value
+    }
+    public func hasCommandApproval(project: WorkspaceNativeProject, context: WorkspaceToolContext, arguments: ChatJSON) async throws -> Bool {
+        let digest = SHA256.hash(data: try WorkspaceCoding.encode(arguments)).map { String(format: "%02x", $0) }.joined()
+        return try await load().exactApprovals?.contains { $0.projectID == project.id && $0.projectRevision == project.revision && $0.agentID == context.agentID && $0.argumentDigest == digest } ?? false
+    }
+    public func rememberCommandApproval(project: WorkspaceNativeProject, context: WorkspaceToolContext, arguments: ChatJSON) async throws {
+        guard let agentID = context.agentID, try await authorize("process_run", context: context).revision == project.revision else { throw NativeExecutionError.accessDenied }
+        let digest = SHA256.hash(data: try WorkspaceCoding.encode(arguments)).map { String(format: "%02x", $0) }.joined()
+        var value = try await load()
+        var approvals = value.exactApprovals ?? []
+        guard approvals.count < 128 else { throw NativeExecutionError.busy }
+        approvals.removeAll { $0.projectID == project.id && $0.agentID == agentID && $0.argumentDigest == digest }
+        approvals.append(.init(projectID: project.id, projectRevision: project.revision, agentID: agentID, argumentDigest: digest))
+        value.exactApprovals = approvals; try await save(value)
+    }
+    public func revokeCommandApprovals(projectID: UUID) async throws {
+        var value = try await load(); value.exactApprovals?.removeAll { $0.projectID == projectID }; try await save(value)
     }
     public func projects() async throws -> [WorkspaceNativeProject] { try await load().projects }
     public func selectedProject(conversationID: UUID) async throws -> UUID? { try await load().conversations[conversationID.uuidString] }

@@ -1,3 +1,4 @@
+import BlotWorkspace
 import BlotDomain
 import Foundation
 
@@ -23,6 +24,9 @@ struct WorkspaceAgentForm {
     var color = "orange"
 }
 struct WorkspaceScheduleForm {
+    var recordID: UUID?
+    var version = 0
+    var enabled = true
     var skillRevisionID: UUID?
     var timezone = TimeZone.current.identifier
     var oneTime = false
@@ -60,6 +64,7 @@ struct WorkspacePairForm { var code = "" }
 nonisolated struct WorkspaceComposerForm: Codable, Sendable {
     var draft = ""
     var attachments: [URL] = []
+    var inferenceProfile: BlotInferenceProfile?
     var replyToMessageID: UUID?
     var projectID: UUID? = nil
 }

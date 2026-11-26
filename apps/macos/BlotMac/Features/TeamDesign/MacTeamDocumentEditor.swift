@@ -30,7 +30,7 @@ struct MacTeamDocumentEditor: View {
                     TextField("Название документа", text: $title).font(.system(size: 19, weight: .medium))
                 }
                 HStack {
-                    Text(presentation.document.map { presentation.agent(for: $0.agentID).name } ?? "Blot")
+                    Text(presentation.document.map { presentation.agent(for: $0.agentID).name } ?? "Ori")
                         .foregroundStyle(.secondary)
                     Spacer()
                     MacTeamBadge(

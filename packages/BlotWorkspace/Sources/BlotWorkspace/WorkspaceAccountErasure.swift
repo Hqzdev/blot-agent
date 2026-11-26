@@ -28,18 +28,21 @@ public struct WorkspaceAccountErasure: Sendable {
             if FileManager.default.fileExists(atPath: directory.path) { locks.append(try WorkspaceProcessLock(directory: directory)) }
         }
         defer { _ = locks }
+        // Browser profile identifiers must still be readable when deleting their device-local stores.
+        try await removeAdditionalCredentials(intent.ownerID)
         if FileManager.default.fileExists(atPath: folder.path) { try FileManager.default.removeItem(at: folder) }
-        var prefixes = ["profile:" + intent.ownerID.uuidString, "mcp:" + intent.ownerID.uuidString + ":", "native-projects:" + intent.ownerID.uuidString + ":", "browser:" + intent.ownerID.uuidString + ":", "session-directories:" + intent.ownerID.uuidString + ":"]
+        var prefixes = ["team-bots:" + intent.ownerID.uuidString + ":", "messaging:" + intent.ownerID.uuidString + ":", "password-connect:" + intent.ownerID.uuidString, "google:" + intent.ownerID.uuidString + ":", "vault:" + intent.ownerID.uuidString, "card:" + intent.ownerID.uuidString + ":", "profile:" + intent.ownerID.uuidString, "mcp:" + intent.ownerID.uuidString + ":", "native-projects:" + intent.ownerID.uuidString + ":", "browser:" + intent.ownerID.uuidString + ":", "session-directories:" + intent.ownerID.uuidString + ":"]
         for workspace in intent.workspaceIDs {
             prefixes += ["device-keys:", "device-authority:", "device-trust-v2:"].map { $0 + workspace.uuidString + ":" }
             for prefix in prefixes.suffix(3) { try await credentials.remove(prefix + intent.deviceID.uuidString) }
         }
+        try await credentials.remove("password-connect:" + intent.ownerID.uuidString)
+        try await credentials.remove("vault:" + intent.ownerID.uuidString)
         try await credentials.remove("profile:" + intent.ownerID.uuidString)
         if let pruning = credentials as? any WorkspaceCredentialPruning { try await pruning.removeNames(prefixes: prefixes) }
         if let data = try await credentials.read("account-session"), let tokens = try? WorkspaceCoding.decode(WorkspaceCloudTokens.self, from: data), tokens.ownerID == intent.ownerID {
             try await credentials.remove("account-session")
         }
-        try await removeAdditionalCredentials(intent.ownerID)
         try FileManager.default.removeItem(at: marker)
     }
     private func accountFolder(_ owner: UUID) throws -> URL {

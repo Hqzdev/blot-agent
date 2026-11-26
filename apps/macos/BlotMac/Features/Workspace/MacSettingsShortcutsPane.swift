@@ -23,10 +23,10 @@ struct MacSettingsShortcutsPane: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 28) {
             HStack(spacing: 9) {
-                Image(systemName: "magnifyingglass").foregroundStyle(.secondary)
+                BlotIcon(symbol: "magnifyingglass").foregroundStyle(.secondary)
                 TextField("Поиск сочетаний клавиш", text: $search).textFieldStyle(.plain)
                 if !search.isEmpty {
-                    Button { search = "" } label: { Image(systemName: "xmark.circle.fill") }
+                    Button { search = "" } label: { BlotIcon(symbol: "xmark.circle.fill") }
                         .buttonStyle(.plain).accessibilityLabel("Очистить поиск")
                 }
             }.padding(.horizontal, 13).frame(height: 34)

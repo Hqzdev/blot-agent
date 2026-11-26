@@ -9,7 +9,7 @@ struct PhoneConversationIdentity {
 
     var isGroup: Bool { conversation?.kind == .group }
     var agent: BlotV3.AgentProfile? { agents.first { $0.metadata.id == conversation?.agentId } }
-    var title: String { isGroup ? conversation?.title ?? "" : agent?.name ?? "Blot Agent" }
+    var title: String { isGroup ? conversation?.title ?? "" : agent?.name ?? "Ori" }
     var members: [BlotV3.AgentProfile] {
         guard isGroup, let conversation else { return [] }
         let ids = Set(participants.filter {

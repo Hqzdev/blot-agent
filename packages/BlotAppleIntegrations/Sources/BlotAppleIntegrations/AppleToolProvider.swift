@@ -15,10 +15,11 @@ public struct AppleToolProvider: WorkspaceToolExecuting {
     public func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
         let projection = try await repository.projection(identity: identity)
         guard let agentID = context.agentID,
-              let source = projection.messages.first(where: { $0.metadata.id == context.sourceMessageID }) else { return [] }
+              let source = projection.messages.first(where: { $0.metadata.id == context.sourceMessageID }),
+              (try? WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection)) != nil else { return [] }
         let restrictions = WorkspaceToolRestrictions(userRequest: source.content)
         var available: [ChatToolDefinition] = []
-        for connection in projection.connections where connection.deviceId == identity.deviceID && connection.state == .connected && (connection.agentIds ?? []).contains(agentID) {
+        for connection in projection.connections where WorkspacePluginAccess.isAppleActive(connection, deviceID: identity.deviceID, projection: projection) {
             guard let id = connection.pluginId.flatMap(ApplePluginID.init(rawValue:)),
                   await controller.accessible(id, resources: connection.resourceIds ?? []) else { continue }
             let cached = await discovery.contains(id, context: context)
@@ -63,14 +64,20 @@ public struct AppleToolProvider: WorkspaceToolExecuting {
             guard !resources.isEmpty else { throw AppleIntegrationError.missingResource }
             return .array(resources.map { appleObject(["id": $0.id, "name": $0.name]) })
         }
-        if !tool.writes { return try await controller.execute(tool, arguments: call.arguments) }
+        if !tool.writes {
+            if try await WorkspaceRuleService(repository: repository, identity: identity).requiresReview(toolID: call.name,
+                resource: connection.metadata.id.uuidString + "/" + (a["resource_id"] ?? ""), agentID: context.agentID, default: false) {
+                guard try await controller.interactions.confirm(title: tool.plugin.name, details: String(decoding: JSONEncoder().encode(call.arguments), as: UTF8.self)) else { throw AppleIntegrationError.canceled }
+            }
+            return try await controller.execute(tool, arguments: call.arguments)
+        }
         guard let source = try await repository.record(BlotV3.Message.self, id: context.sourceMessageID, workspaceID: identity.workspaceID),
               source.metadata.ownerId == identity.ownerID, let agentID = context.agentID else { throw AppleIntegrationError.permissionDenied }
         let actionID = stableID(source: context.sourceMessageID, callID: call.id)
         let permission = WorkspacePermissionService(repository: repository, identity: identity)
         if let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) {
             guard action.toolId == call.name, action.resource == connection.metadata.id.uuidString + "/" + (a["resource_id"] ?? ""),
-                  let saved = action.parameters.data(using: .utf8), try JSONDecoder().decode(ChatJSON.self, from: saved) == call.arguments else { throw AppleIntegrationError.invalidArguments }
+                  let saved = action.parameters.data(using: .utf8), Self.callArguments(try JSONDecoder().decode(ChatJSON.self, from: saved)) == call.arguments else { throw AppleIntegrationError.invalidArguments }
             let projection = try await repository.projection(identity: identity)
             if let invocation = projection.invocations.first(where: { $0.preparedActionId == actionID }), invocation.state == .succeeded,
                let result = invocation.result, let data = result.data(using: .utf8) { return try JSONDecoder().decode(ChatJSON.self, from: data) }
@@ -85,10 +92,11 @@ public struct AppleToolProvider: WorkspaceToolExecuting {
                 conversationID: source.conversationId, agentID: agentID, goal: tool.definition.description,
                 executorDeviceID: identity.deviceID, runnable: false)
         }
-        let preview = try await controller.preview(tool, arguments: call.arguments)
-        let parameters = String(decoding: try JSONEncoder().encode(call.arguments), as: UTF8.self)
+        var preview = try await controller.preview(tool, arguments: call.arguments)
+        var parameters = String(decoding: try JSONEncoder().encode(tool.plugin == .mail && tool.operation == "send" ? ChatJSON.object(["arguments": call.arguments, "review": preview ?? .null]) : call.arguments), as: UTF8.self)
         let resourceName: String
-        if tool.needsConfirmation {
+        if try await WorkspaceRuleService(repository: repository, identity: identity).requiresReview(toolID: call.name,
+            resource: connection.metadata.id.uuidString + "/" + (a["resource_id"] ?? ""), agentID: context.agentID, default: tool.needsConfirmation) {
             resourceName = try await controller.resources(tool.plugin, selected: [a.required("resource_id")]).first?.name ?? tool.plugin.name
         } else { resourceName = tool.plugin.name }
         let mailNotice = tool.plugin == .mail && tool.operation == "send" ? "Проверьте вложения в открытом черновике в Почте: API не предоставляет их полный просмотр.\n\n" : ""
@@ -97,11 +105,35 @@ public struct AppleToolProvider: WorkspaceToolExecuting {
             draft: .init(toolID: call.name, resource: connection.metadata.id.uuidString + "/" + (a["resource_id"] ?? ""),
                 parametersJSON: parameters, consequences: String(decoding: (AppleActionReview.title(tool) + "\n" + details).utf8.prefix(3500), as: UTF8.self)),
             expiresAt: Date().addingTimeInterval(600))
-        guard let action = try await repository.record(BlotV3.PreparedAction.self, id: id, workspaceID: identity.workspaceID) else { throw AppleIntegrationError.uncertainResult }
+        guard var action = try await repository.record(BlotV3.PreparedAction.self, id: id, workspaceID: identity.workspaceID) else { throw AppleIntegrationError.uncertainResult }
         if tool.needsConfirmation {
             do {
-                let accepted = try await controller.interactions.confirm(title: AppleActionReview.title(tool), details: details)
-                guard accepted else { throw AppleIntegrationError.canceled }
+                if context.inlineCards, tool.plugin == .mail, tool.operation == "send", let draft = Self.mailDraft(preview) {
+                    let response = try await WorkspaceConversationCardService(repository: repository, identity: identity).review(action: action, context: context, content: .email(draft))
+                    guard try await controller.preview(tool, arguments: call.arguments) == preview else { throw AppleIntegrationError.system("Черновик изменился. Подготовьте отправку заново.") }
+                    if response.action == "discard" {
+                        try await controller.discardMailDraft(arguments: call.arguments)
+                        throw AppleIntegrationError.canceled
+                    }
+                    guard response.action == "send", let raw = response.value else { throw AppleIntegrationError.canceled }
+                    let reviewed = try JSONDecoder().decode(WorkspaceCardContent.MailDraft.self, from: Data(raw.utf8))
+                    guard reviewed.sender == draft.sender else { throw AppleIntegrationError.invalidArguments }
+                    if reviewed != draft {
+                        try await controller.reviseMailDraft(arguments: call.arguments, draft: reviewed)
+                        preview = try await controller.preview(tool, arguments: call.arguments)
+                        parameters = String(decoding: try JSONEncoder().encode(ChatJSON.object(["arguments": call.arguments, "review": preview ?? .null])), as: UTF8.self)
+                        _ = try await permission.prepare(commandID: UUID(), taskID: taskID, actionID: id, expectedVersion: action.metadata.version,
+                            draft: .init(toolID: call.name, resource: action.resource, parametersJSON: parameters,
+                                consequences: String((mailNotice + reviewed.subject + "\n" + reviewed.recipient + "\n" + reviewed.body).prefix(4096))), expiresAt: action.expiresAt)
+                        guard let revised = try await repository.record(BlotV3.PreparedAction.self, id: id, workspaceID: identity.workspaceID) else { throw AppleIntegrationError.uncertainResult }
+                        action = revised
+                    }
+                } else {
+                    let accepted = context.inlineCards
+                        ? try await WorkspaceConversationCardService(repository: repository, identity: identity).review(action: action, context: context, title: AppleActionReview.title(tool), details: details)
+                        : try await controller.interactions.confirm(title: AppleActionReview.title(tool), details: details)
+                    guard accepted else { throw AppleIntegrationError.canceled }
+                }
             } catch {
                 try? await permission.deny(commandID: UUID(), actionID: id, expectedVersion: action.metadata.version)
                 if context.taskID == nil { try? await WorkspaceTaskService(repository: repository, identity: identity).cancel(commandID: UUID(), taskID: taskID) }
@@ -123,27 +155,40 @@ public struct AppleToolProvider: WorkspaceToolExecuting {
             return result
         } catch {
             try? await permission.finish(commandID: UUID(), invocationID: outcome.resultID, state: .unknown)
+            if context.inlineCards, tool.plugin == .mail, tool.operation == "send", let draft = Self.mailDraft(preview) {
+                _ = try? await WorkspaceConversationCardService(repository: repository, identity: identity).create(id: UUID(), sourceMessageID: context.sourceMessageID,
+                    operationID: id, agentID: context.agentID, content: .mailFailure(.init(draft: draft,
+                        detail: "Почта не подтвердила отправку. Черновик сохранён; проверьте папку «Отправленные» перед повтором.", outcomeUnknown: true)))
+            }
             if error is CancellationError { throw error }
             throw AppleIntegrationError.uncertainResult
         }
+    }
+    private static func callArguments(_ saved: ChatJSON) -> ChatJSON {
+        if case .object(let values) = saved, let original = values["arguments"], values["review"] != nil { return original }
+        return saved
+    }
+    private static func mailDraft(_ preview: ChatJSON?) -> WorkspaceCardContent.MailDraft? {
+        guard case .object(let values) = preview,
+              case .string(let sender) = values["sender"], case .string(let recipient) = values["recipient"],
+              case .string(let subject) = values["subject"], case .string(let body) = values["body"] else { return nil }
+        return .init(sender: sender, recipient: recipient, subject: subject, body: body)
     }
     private func authorize(_ tool: AppleTool, arguments a: AppleArguments, context: WorkspaceToolContext) async throws -> BlotV3.Connection {
         let projection = try await repository.projection(identity: identity)
         guard let source = projection.messages.first(where: { $0.metadata.id == context.sourceMessageID }), source.metadata.ownerId == identity.ownerID,
               WorkspaceToolRestrictions(userRequest: source.content).allows(operation: tool.operation),
               let agentID = context.agentID,
-              let configuration = try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection),
-              configuration.toolIds.contains(tool.definition.name), context.allowedToolIDs.contains(tool.definition.name),
+              try WorkspaceAgentConfigurationResolver().resolve(agentID: agentID, projection: projection) != nil,
+              context.allowedToolIDs.contains(tool.definition.name),
               let connection = projection.connections.first(where: {
-                  $0.pluginId == tool.plugin.rawValue && $0.deviceId == identity.deviceID && $0.state == .connected &&
-                  ($0.agentIds ?? []).contains(agentID) && (context.connectionID == nil || $0.metadata.id == context.connectionID)
+                  $0.pluginId == tool.plugin.rawValue && WorkspacePluginAccess.isAppleActive($0, deviceID: identity.deviceID, projection: projection)
+                      && (context.connectionID == nil || $0.metadata.id == context.connectionID)
               }), await controller.accessible(tool.plugin, resources: connection.resourceIds ?? []) else { throw AppleIntegrationError.permissionDenied }
         if tool.writes, !AppleInvocationRecovery.pending(plugin: tool.plugin, deviceID: identity.deviceID, actions: projection.actions, invocations: projection.invocations).isEmpty {
             throw AppleIntegrationError.uncertainResult
         }
         if tool.operation != "resources", !(connection.resourceIds ?? []).contains(try a.required("resource_id")) { throw AppleIntegrationError.permissionDenied }
-        guard !projection.conflicts.contains(where: { !$0.resolved && ($0.recordId == connection.metadata.id || $0.recordId == agentID) }),
-              projection.grants.contains(where: { $0.kind == .rule && !$0.revoked && $0.resource == connection.metadata.id.uuidString && $0.scope == tool.plugin.rawValue && $0.operationClass == "apple.resource.write" }) else { throw AppleIntegrationError.permissionDenied }
         if !tool.needsConfirmation {
             let operation = ["list", "read", "search", "resources"].contains(tool.operation) ? "read" : tool.operation == "reply" ? "create" : tool.operation
             guard (connection.allowedOperations ?? []).contains(operation) else { throw AppleIntegrationError.permissionDenied }

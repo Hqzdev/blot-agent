@@ -1,7 +1,7 @@
 import BlotDesign
 import SwiftUI
 
-/// Blot Work: a conversation with Blot or one of the user's GPTs, stored on the Blot server.
+/// Ori Work: a conversation with Ori or one of the user's GPTs, stored on the Ori server.
 struct WorkChatView: View {
     @Environment(AppState.self) private var app
 
@@ -23,14 +23,14 @@ struct WorkChatView: View {
                             }
                             if chat.messages.isEmpty && !chat.isSending {
                                 EmptyState(icon: "message-square", title: "Начните разговор",
-                                           detail: "Напишите Blot в поле ниже.")
+                                           detail: "Напишите Ori в поле ниже.")
                             }
                             ForEach(chat.visibleMessages) { message in
                                 Group {
                                     if message.fromUser { UserBubble(text: message.text) }
                                     else {
                                         VStack(alignment: .leading, spacing: 6) {
-                                            Text(chat.assistant?.name ?? "Blot").font(KFont.label()).foregroundStyle(K.text3)
+                                            Text(chat.assistant?.name ?? "Ori").font(KFont.label()).foregroundStyle(K.text3)
                                             AgentText(text: message.text)
                                         }
                                     }
@@ -40,7 +40,7 @@ struct WorkChatView: View {
                             if chat.isSending {
                                 HStack(spacing: KSpace.sm) {
                                     TypingDots()
-                                    Text("\(chat.assistant?.name ?? "Blot") пишет…").font(KFont.ui(13)).foregroundStyle(K.text3)
+                                    Text("\(chat.assistant?.name ?? "Ori") пишет…").font(KFont.ui(13)).foregroundStyle(K.text3)
                                 }
                                 .transition(.opacity)
                             }
@@ -65,7 +65,7 @@ struct WorkChatView: View {
                 StartConversationView()
             }
             if app.currentWorkChat != nil || app.workChat.selectedProject != nil {
-                Composer(text: $app.workChatDraft, placeholder: "Напишите Blot…",
+                Composer(text: $app.workChatDraft, placeholder: "Напишите Ori…",
                          petContext: app.currentWorkChat == nil ? nil : app.activeBlotContext,
                          sending: app.currentWorkChat?.isSending ?? false,
                          onStop: app.currentWorkChat?.isSending == true ? { app.currentWorkChat?.cancel() } : nil,

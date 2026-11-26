@@ -20,15 +20,18 @@ struct MacMessageBubble: View {
                     Button { showMessage(quoted.metadata.id) } label: { WorkspaceQuotedMessage(message: quoted) }
                         .buttonStyle(.plain).padding(.horizontal, 12)
                 }
+                if !message.content.isEmpty || !message.artifactIds.isEmpty {
                 WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser,
                     agents: store.chatContent.agents, skills: store.chatContent.skills)
                     .font(.system(size: 14)).lineSpacing(3)
                     .padding(.horizontal, 12).padding(.vertical, 10)
-                    .foregroundStyle(isUser ? BlotColor.onInverse : WorkspaceStyle.ink)
-                    .background(isUser ? BlotColor.inverse : WorkspaceStyle.surface,
+                    .foregroundStyle(WorkspaceStyle.ink)
+                    .background(isUser ? MacWorkspaceStyle.outgoingMessage : WorkspaceStyle.surface,
                                 in: RoundedRectangle(cornerRadius: BlotRadius.panel))
-                    .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
-                WorkspaceMessagePlugins(message: message).padding(.horizontal, 12)
+                    .macCommandMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
+                }
+                if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message).padding(.horizontal, 12) }
+                WorkspaceToolActivityView(message: message)
                 if let reaction = metadata?.reaction {
                     Button { store.toggleReaction(reaction, to: message.metadata.id) } label: {
                         Text(reaction).font(.system(size: 16)).padding(.horizontal, 7).padding(.vertical, 3)

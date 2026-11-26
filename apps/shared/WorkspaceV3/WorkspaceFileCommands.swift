@@ -3,6 +3,12 @@ import Foundation
 
 @MainActor
 protocol WorkspaceFileCommands: WorkspaceObservationService {
+    func workspaceFileChange(_ id: UUID) async throws -> WorkspaceFileChange
+    func readWorkspaceFileChange(_ id: UUID) async throws -> String
+    func undoWorkspaceFileChange(_ id: UUID) async throws
+    func previewWorkspaceDocument(_ document: WorkspaceEditableDocument) async throws -> URL
+    func editableWorkspaceDocument(_ id: UUID) async throws -> WorkspaceEditableDocument?
+    func saveWorkspaceDocument(_ document: WorkspaceEditableDocument, commandID: UUID) async throws -> WorkspaceEditableDocument
     func importWorkspaceFile(_ source: URL) async throws -> UUID
     func readWorkspaceFile(_ id: UUID, startPage: Int, pageCount: Int) async throws -> WorkspaceExtractedText
 }

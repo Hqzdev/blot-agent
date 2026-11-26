@@ -136,3 +136,37 @@ private struct CompactionFixture {
     #expect(saved.summaries.isEmpty)
     #expect(await model.requests.isEmpty)
 }
+
+@Test func compactionHas250kCeilingAndHonorsSmallerProviderWindow() {
+    let large = WorkspaceContextLimits(contextWindowTokens: 1_000_000)
+    #expect(large.trigger(maximumCharacters: 1_000_000, outputTokens: 2048, budgetTokens: 1_000_000) == 250_000)
+    let small = WorkspaceContextLimits(contextWindowTokens: 32_768)
+    #expect(small.trigger(maximumCharacters: 1_000_000, outputTokens: 2048, budgetTokens: 1_000_000) < 32_768 - 2048)
+    #expect(small.requestBudget(1_000_000) == 32_768)
+    #expect(large.trigger(maximumCharacters: 1_000_000, outputTokens: 2048, budgetTokens: 20_000) < 20_000)
+}
+
+@Test func historyAbove250kIsCompactedWithoutDeletingOriginals() async throws {
+    let fixture = try await CompactionFixture(messages: (0..<28).map { "Entry \($0): " + String(repeating: "context ", count: 1300) })
+    defer { cleanupWorkspaceTestStorage(fixture.directory) }
+    let model = SummaryModel()
+    let before = try await fixture.repository.records(BlotV3.Message.self, workspaceID: fixture.identity.workspaceID)
+    let result = try await WorkspaceContextCompactor(repository: fixture.repository, identity: fixture.identity, pool: .init()).prepare(
+        source: fixture.source, responseID: fixture.responseID, configuration: nil, model: model, modelID: "test",
+        maximumCharacters: 1_000_000, maximumOutputTokens: 2048, budgetTokenLimit: 1_000_000, contextWindowTokens: 1_000_000)
+    #expect(!result.summaries.isEmpty)
+    #expect(try await fixture.repository.records(BlotV3.Message.self, workspaceID: fixture.identity.workspaceID) == before)
+    #expect(await model.requests.first?.messages.first?.content.contains("точные ссылки") == true)
+}
+
+@Test func localDocumentRequestsRequireRealCreationWhileCloudRequestsStaySeparate() {
+    for request in ["Создай таблицу CSV", "Сделай презентацию", "Создай без Google документ PDF", "Create a local presentation"] {
+        let policy = WorkspaceCapabilityPolicy(userRequest: request)
+        #expect(policy.createsLocalDocument)
+        #expect(policy.requiredTool(initial: "document_create", results: []) == "document_create")
+        #expect(policy.requiredTool(initial: "document_create", results: [("document_create", .object(["artifact_id": .string(UUID().uuidString)]))]) == nil)
+    }
+    for request in ["Как создать документ?", "Создай документ в Google Drive", "Ничего не создавай, прочитай таблицу"] {
+        #expect(!WorkspaceCapabilityPolicy(userRequest: request).createsLocalDocument)
+    }
+}

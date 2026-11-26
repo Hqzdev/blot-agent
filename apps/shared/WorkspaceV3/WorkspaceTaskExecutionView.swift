@@ -4,12 +4,16 @@ import BlotWorkspace
 import SwiftUI
 
 struct WorkspaceTaskExecutionView: View {
+    var taskID: UUID? = nil
     @Environment(WorkspaceStore.self) private var store
     @State private var goal = ""
     @State private var executorID: UUID?
     @State private var projectID: UUID?
     private var tasks: [BlotV3.Task] {
-        let tasks = (store.snapshot.tasks ?? []).filter { $0.conversationId == store.selectedConversationID }
+        let tasks = (store.snapshot.tasks ?? []).filter { task in
+            if let taskID { return task.metadata.id == taskID }
+            return task.conversationId == store.selectedConversationID
+        }
             .sorted { $0.metadata.createdAt > $1.metadata.createdAt }
         #if os(iOS)
         if let selected = tasks.first(where: { $0.metadata.id == store.selectedRecordID }) { return [selected] }
@@ -21,19 +25,13 @@ struct WorkspaceTaskExecutionView: View {
             WorkspaceHeading(title: "Tasks")
             WorkspaceNativeProjectButton()
             TextField(store.language == "ru" ? "Что нужно сделать?" : "What needs to be done?", text: $goal, axis: .vertical)
-                .textFieldStyle(.roundedBorder).lineLimit(2...6)
+                .textFieldStyle(WorkspacePanelTextFieldStyle()).lineLimit(2...6)
             if store.deviceCommands != nil, store.currentConversation?.kind != .group {
-                Picker(store.language == "ru" ? "Где выполнить" : "Run on", selection: $executorID) {
-                    Text(store.language == "ru" ? "Это устройство" : "This device").tag(Optional<UUID>.none)
-                    ForEach((store.snapshot.pairedDevices ?? []).filter { !$0.revoked && $0.kind == .desktop }) { device in Text(device.name).tag(Optional(device.id)) }
-                }
+                WorkspaceChoice(title: store.language == "ru" ? "Где выполнить" : "Run on", selection: $executorID,
+                    options: [.init(nil, store.language == "ru" ? "Это устройство" : "This device")] + (store.snapshot.pairedDevices ?? []).filter { !$0.revoked && $0.kind == .desktop }.map { .init(Optional($0.id), $0.name) })
             }
-            Picker(store.language == "ru" ? "Проект" : "Project", selection: $projectID) {
-                Text(store.language == "ru" ? "Без проекта" : "No project").tag(Optional<UUID>.none)
-                ForEach((store.snapshot.projects ?? []).filter { $0.repositoryPath == "device:" + (executorID ?? store.snapshot.localDeviceID ?? UUID()).uuidString }, id: \.metadata.id) { project in
-                    Text(project.name).tag(Optional(project.metadata.id))
-                }
-            }
+            WorkspaceChoice(title: store.language == "ru" ? "Проект" : "Project", selection: $projectID,
+                options: [.init(nil, store.language == "ru" ? "Без проекта" : "No project")] + (store.snapshot.projects ?? []).filter { $0.repositoryPath == "device:" + (executorID ?? store.snapshot.localDeviceID ?? UUID()).uuidString }.map { .init(Optional($0.metadata.id), $0.name) })
             .onChange(of: executorID) { _, _ in projectID = nil }
             Button(store.t("Start")) {
                 let submitted = goal
@@ -47,14 +45,21 @@ struct WorkspaceTaskExecutionView: View {
                     if let revisionID = task.skillRevisionId,
                        let revision = store.snapshot.skillRevisions?.first(where: { $0.metadata.id == revisionID }),
                        let skill = store.snapshot.skills?.first(where: { $0.metadata.id == revision.skillId }) {
-                        Label(skill.name, systemImage: "shippingbox").foregroundStyle(.purple)
+                        BlotLabel(skill.name, symbol: "shippingbox").foregroundStyle(.purple)
                         Text(revision.metadata.createdAt, format: .dateTime.day().month().hour().minute().second()).font(.caption).foregroundStyle(.secondary)
                     }
-                    Text(task.goal).font(.headline).textSelection(.enabled)
+                    if let title = operationTitle(for: task) {
+                        Text(title).font(.headline)
+                        DisclosureGroup(store.language == "ru" ? "Подробности" : "Details") {
+                            Text(task.goal).font(.caption).textSelection(.enabled)
+                        }
+                    } else {
+                        Text(task.goal).font(.headline).textSelection(.enabled)
+                    }
                     WorkspaceTaskStateLabel(state: task.state).font(.callout).foregroundStyle(.secondary)
                     let local = task.execution.executorDeviceId == store.snapshot.localDeviceID && (task.executionMode == .local_owned || task.executionMode == .delegated)
                     if !local, task.executionMode == .delegated {
-                        Text(store.language == "ru" ? "Ожидает выбранный Mac. Blot на Mac должен быть открыт; результат появится после синхронизации." : "Waiting for the selected Mac. Blot must be open there; results appear after sync.").font(.caption).foregroundStyle(.secondary)
+                        Text(store.language == "ru" ? "Ожидает выбранный Mac. Ori на Mac должен быть открыт; результат появится после синхронизации." : "Waiting for the selected Mac. Ori must be open there; results appear after sync.").font(.caption).foregroundStyle(.secondary)
                     }
                     if !local, task.execution.originDeviceId == store.snapshot.localDeviceID, ![.completed, .failed, .canceled].contains(task.state) {
                         Button(store.t("Stop task"), role: .destructive) { control(.stop, task: task) }.disabled(store.busy)
@@ -67,7 +72,7 @@ struct WorkspaceTaskExecutionView: View {
                                 Button(store.t("Resume")) { control(.start, task: task) }
                             }
                             Button(store.t("Stop task"), role: .destructive) { control(.stop, task: task) }
-                        }.buttonStyle(.bordered).disabled(store.busy)
+                        }.buttonStyle(WorkspaceButtonStyle(.secondary)).disabled(store.busy)
                     }
                     if task.state == .interrupted {
                         Text(store.language == "ru" ? "Прогресс сохранён. Если результат внешнего действия неизвестен, сначала проверьте его в подключении приложения." : "Progress is saved. Resolve any unknown external action outcome in its app connection before continuing.")
@@ -77,6 +82,18 @@ struct WorkspaceTaskExecutionView: View {
             }
             WorkspaceFeedback()
         }.frame(maxWidth: 780, alignment: .leading).frame(maxWidth: .infinity)
+    }
+    private func operationTitle(for task: BlotV3.Task) -> String? {
+        let ru = store.language == "ru"
+        switch task.goal {
+        case "Файлы сессии · workspace_write_file": return ru ? "Сохранение файла" : "Save file"
+        case "drive_create":
+            guard store.snapshot.preparedActions?.contains(where: {
+                $0.execution.taskId == task.metadata.id && $0.toolId == task.goal
+            }) == true else { return nil }
+            return ru ? "Создание файла в Google Drive" : "Create file in Google Drive"
+        default: return nil
+        }
     }
     private func control(_ action: WorkspaceAction, task: BlotV3.Task) {
         store.selectedRecordID = task.metadata.id

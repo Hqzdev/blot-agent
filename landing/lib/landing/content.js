@@ -1,3 +1,5 @@
+import subscriptionPlans from "../../../contracts/subscription-plans.json";
+
 export const roles = [
   { id: "sales-outbound", name: "Sales Outbound", color: "#54b9a6", description: "Generate pipeline overnight. Researches accounts, scores contacts with intent, drafts email and LinkedIn in your voice, and leaves a review list for you to approve.", task: "Research the accounts in my sheet and draft outreach in my voice.", result: "The 36 drafts are ready for review. Each includes the account research, recipient, and opening line. Nothing goes out until you approve." },
   { id: "talent-scout", name: "Talent Scout", color: "#885cf5", description: "Keep your talent pipeline moving. Runs screen-to-offer: sources, drafts outreach in your voice, skips profiles already in the ATS, and handles scheduling once you approve.", task: "Find candidates for our open engineering role. Skip anyone already in the ATS.", result: "I found 12 matching candidates and checked them against the ATS. The shortlist and personalized outreach are ready for your review." },
@@ -25,11 +27,13 @@ export const features = [
   { title: "Connect the Bots", body: "Put a few Bots in the same thread and they pass work between themselves. You watch them take action instead of approving every step." },
 ];
 
-export const individualPlans = [
-  { name: "Premium", price: 30, intro: "Includes:", features: ["Ori’s own computer", "Signs into your tools", "Routines on a schedule", "Work anywhere: desktop, mobile, and more", "Weekly Ori usage included"] },
-  { name: "Super", price: 100, intro: "Everything in Premium, plus:", features: ["3.5× Premium usage", "Priority model access at peak times"] },
-  { name: "Ultra", price: 200, intro: "Everything in Super, plus:", features: ["12× Premium usage", "Earliest access to all products & models"] },
+const individualPlanFeatures = [
+  { name: "Premium", intro: "Includes:", features: ["Ori’s own computer", "Signs into your tools", "Routines on a schedule", "Work anywhere: desktop, mobile, and more", "Weekly Ori usage included"] },
+  { name: "Super", intro: "Everything in Premium, plus:", features: ["3.5× Premium usage", "Priority model access at peak times"] },
+  { name: "Ultra", intro: "Everything in Super, plus:", features: ["12× Premium usage", "Earliest access to all products & models"] },
 ];
+
+export const individualPlans = individualPlanFeatures.map(plan => ({ ...plan, price: subscriptionPlans.find(tier => tier.name === plan.name).amountMinor / 100 }));
 
 export const teamFeatures = ["Ori’s own computer", "Routines on a schedule", "Centralized billing and admin", "Team marketplace for skills and plugins", "Shared usage analytics", "Team-wide privacy settings", "SAML/OIDC SSO", "Mix-and-match seat types"];
 export const enterpriseFeatures = ["Invoice/PO billing", "SCIM", "Granular spend controls", "Group-level settings and spend limits", "Auto-run, browser, and network controls", "Repository, model, and MCP access controls", "Audit logs and service accounts", "Access, network, and audit controls for Ori", "Priority support"];

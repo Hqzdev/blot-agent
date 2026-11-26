@@ -5,6 +5,8 @@ import SwiftUI
 
 /// The catalog uses the main workspace's navigation and authenticated session.
 struct MacMarketplacePage: View {
+    var showsAgents = false
+    @Environment(\.workspacePanelNavigation) private var panelNavigation
     @Environment(WorkspaceStore.self) private var store
     @State private var detail: Detail?
     @State private var appleStatuses: [String: String] = [:]
@@ -26,6 +28,7 @@ struct MacMarketplacePage: View {
             plugin.accounts = store.snapshot.connections.filter {
                 ($0.pluginId == item.id || $0.service == item.name) && $0.state == .connected && ($0.pluginId == nil || $0.deviceId == store.snapshot.localDeviceID)
             }.map(\.accountName)
+            if store.snapshot.localConnectedPluginIDs?.contains(item.id) == true { plugin.accounts.append(item.name) }
             if ApplePluginID(rawValue: item.id) != nil { plugin.connectionStatus = appleStatuses[item.id] ?? "Подключить" }
             return plugin
         }
@@ -36,18 +39,23 @@ struct MacMarketplacePage: View {
             if store.isRestoringSession {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             } else if store.mode == .live && store.snapshot.ownerID == nil {
-                ContentUnavailableView("Войдите в Blot", systemImage: "person.crop.circle",
-                    description: Text("Каталог доступен после входа в аккаунт."))
+                ContentUnavailableView {
+                    BlotLabel("Войдите в Ori", symbol: "person.crop.circle", size: 40)
+                } description: {
+                    Text("Каталог доступен после входа в аккаунт.")
+                }
+            } else if showsAgents {
+                MacAgentMarketplace(selectTemplate: { detail = .template($0) })
             } else {
                 MacTeamMarketplaceContent(plugins: plugins,
                     selectPlugin: { detail = .plugin($0) }, selectTemplate: { detail = .template($0) },
-                    topInset: 0, pluginActionTitle: "Подробнее",
-                    subtitle: "Готовые специалисты и приложения для вашей команды.")
+                    openAgentMarketplace: openAgentMarketplace,
+                    showsHeading: panelNavigation == nil, topInset: 0, pluginActionTitle: "Подробнее")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
-        .sheet(item: $detail) { item in
+        .workspacePanelSheet(item: $detail) { item in
             switch item {
             case .plugin(let plugin): MacMarketplacePluginDetail(plugin: plugin).environment(store)
             case .template(let template): MacMarketplaceTemplateDetail(template: template).environment(store)
@@ -63,7 +71,13 @@ struct MacMarketplacePage: View {
             }
         }
     }
+    private func openAgentMarketplace() {
+        if let panelNavigation { panelNavigation.open(.agentMarketplace) }
+        else { store.navigate(.agentMarketplace) }
+    }
+
     private func refreshAppleStatuses() async {
+        guard !showsAgents else { return }
         for plugin in ApplePluginID.allCases {
             if let deviceID = store.snapshot.localDeviceID,
                !AppleInvocationRecovery.pending(plugin: plugin, deviceID: deviceID, actions: store.snapshot.preparedActions ?? [], invocations: store.snapshot.toolInvocations ?? []).isEmpty {

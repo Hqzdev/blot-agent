@@ -2,7 +2,7 @@ import BlotAPI
 import BlotDesign
 import SwiftUI
 
-/// «13 · Skills» detail: header with version, when Blot uses the skill, and its instruction.
+/// «13 · Skills» detail: header with version, when Ori uses the skill, and its instruction.
 struct SkillDetailView: View {
     @Environment(AppState.self) private var app
     let item: WorkspaceRow
@@ -26,7 +26,7 @@ struct SkillDetailView: View {
                 ]}
             }
 
-            SettingsGroup(title: "When Blot uses it") {
+            SettingsGroup(title: "When Ori uses it") {
                 SettingsRow(title: "Enabled", detail: "Loaded into new sessions of the roles below.") {
                     KToggle(isOn: Binding(get: { enabled }, set: { app.setSkill(item, enabled: $0) }))
                         .accessibilityLabel("Skill enabled")

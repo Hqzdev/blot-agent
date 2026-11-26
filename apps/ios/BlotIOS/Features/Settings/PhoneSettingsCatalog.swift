@@ -12,7 +12,7 @@ enum PhoneSettingsCatalog {
     static let groups = ["Workspace", "Personal", "Integrations"]
     static let items: [Item] = [
         .init(route: .files, title: "Files", detail: "Workspace files, attachments and agent results.", symbol: "folder", group: "Workspace"),
-        .init(route: .appSettings, title: "General", detail: "App language and permissions.", symbol: "gearshape", group: "Personal"),
+        .init(route: .appSettings, title: "General", detail: "App language, voice recognition and permissions.", symbol: "gearshape", group: "Personal"),
         .init(route: .notifications, title: "Notifications", detail: "Events your agents notify you about.", symbol: "bell", group: "Personal"),
         .init(route: .settingsProfile, title: "Profile", detail: "Your profile, token activity and account actions.", symbol: "person.crop.circle", group: "Personal"),
         .init(route: .appearance, title: "Appearance", detail: "Theme, motion and interface density.", symbol: "sun.max", group: "Personal"),

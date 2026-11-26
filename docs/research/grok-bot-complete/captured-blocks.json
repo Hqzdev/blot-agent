@@ -1,0 +1,86 @@
+[
+  {
+    "title": "Bots take initiative and get work done",
+    "file": "screenshots/02-official-feature-1.jpg",
+    "rect": {
+      "height": 442,
+      "width": 354,
+      "x": 16,
+      "y": 2446
+    },
+    "bytes": 21193,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  },
+  {
+    "title": "Every Bot has its own computer",
+    "file": "screenshots/03-official-feature-2.jpg",
+    "rect": {
+      "height": 442,
+      "width": 354,
+      "x": 401,
+      "y": 2446
+    },
+    "bytes": 24430,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  },
+  {
+    "title": "Show a Bot how it’s done",
+    "file": "screenshots/04-official-feature-3.jpg",
+    "rect": {
+      "height": 466,
+      "width": 354,
+      "x": 16,
+      "y": 2920
+    },
+    "bytes": 22912,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  },
+  {
+    "title": "Invite a Bot to your meetings",
+    "file": "screenshots/05-official-feature-4.jpg",
+    "rect": {
+      "height": 466,
+      "width": 354,
+      "x": 401,
+      "y": 2920
+    },
+    "bytes": 30156,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  },
+  {
+    "title": "Bots work with your team, and each other",
+    "file": "screenshots/06-official-feature-5.jpg",
+    "rect": {
+      "height": 494,
+      "width": 354,
+      "x": 16,
+      "y": 3418
+    },
+    "bytes": 27955,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  },
+  {
+    "title": "Bots get smarter over time",
+    "file": "screenshots/07-official-feature-6.jpg",
+    "rect": {
+      "height": 494,
+      "width": 354,
+      "x": 401,
+      "y": 3418
+    },
+    "bytes": 22054,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16"
+  }
+]

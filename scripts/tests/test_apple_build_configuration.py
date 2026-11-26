@@ -21,10 +21,22 @@ class AppleConfigurationTests(unittest.TestCase):
         self.assertEqual(value['AccountServiceURL'], 'https://example.com')
         self.assertNotIn('server-only-secret', repr(value))
         self.assertIn('ProviderCA', value)
+        self.assertNotIn('AuthorizationKey', value['GigaChat'])
 
     def test_release_is_rejected_without_including_secret_values(self):
         with self.assertRaisesRegex(ValueError, 'personal Debug'):
             config.configuration(self.environment(), 'Release')
+
+    def test_public_beta_embeds_no_personal_model_credential(self):
+        env = dict(self.environment(), BLOT_DISTRIBUTION='public-beta')
+        value = config.configuration(env, 'Release')
+        self.assertEqual(value['Profile'], 'public-beta')
+        self.assertNotIn('AuthorizationKey', value['GigaChat'])
+        with self.assertRaises(ValueError):
+            config.configuration(env, 'Release', direct_provider=True)
+        env['BLOT_ACCOUNT_SERVICE_URL'] = 'http://127.0.0.1'
+        with self.assertRaisesRegex(ValueError, 'HTTPS'):
+            config.configuration(env, 'Release')
 
     def test_missing_and_invalid_parameters_report_only_names(self):
         for name, value in [('BLOT_GIGACHAT_AUTH_KEY', 'sensitive-invalid-key'), ('BLOT_AUTH_URL', 'http://example.com/login'),
@@ -32,7 +44,7 @@ class AppleConfigurationTests(unittest.TestCase):
             env = self.environment()
             env[name] = value
             with self.assertRaises(ValueError) as error:
-                config.configuration(env, 'Debug')
+                config.configuration(env, 'Debug', direct_provider=True)
             self.assertNotIn(value, str(error.exception))
 
     def test_dotenv_is_data_and_process_values_override_file(self):
@@ -58,6 +70,31 @@ class AppleConfigurationTests(unittest.TestCase):
         env['BLOT_GOOGLE_MACOS_CLIENT_ID'] = '123-test.apps.googleusercontent.com'
         with self.assertRaisesRegex(ValueError, 'both'):
             config.configuration(env, 'Debug')
+
+    def test_google_desktop_credentials_are_platform_specific_and_never_use_web_secret(self):
+        clients = {'macOS': '123-mac.apps.googleusercontent.com', 'iOS': '123-ios.apps.googleusercontent.com'}
+        env = {'BLOT_GOOGLE_WEB_CLIENT_SECRET': 'web-secret', 'BLOT_GOOGLE_MACOS_CLIENT_SECRET': 'native-secret'}
+        mac = config.google_oauth_configuration(env, clients, 'macosx')
+        self.assertEqual(mac['Clients']['macOS']['RedirectURI'], 'http://127.0.0.1/oauthredirect')
+        self.assertEqual(mac['Clients']['macOS']['ClientSecret'], 'native-secret')
+        ios = config.google_oauth_configuration(env, clients, 'iphoneos')
+        self.assertNotIn('ClientSecret', ios['Clients']['macOS'])
+        self.assertNotIn('web-secret', repr(mac))
+
+    def test_google_desktop_json_must_match_registered_client(self):
+        import json
+        clients = {'macOS': '123-mac.apps.googleusercontent.com'}
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'native.json'
+            path.write_text(json.dumps({'installed': {'client_id': clients['macOS'], 'client_secret': 'fixture-secret'}}))
+            env = {'BLOT_GOOGLE_MACOS_CLIENT_JSON': str(path)}
+            self.assertEqual(config.google_oauth_configuration(env, clients)['Clients']['macOS']['ClientSecret'], 'fixture-secret')
+            path.write_text(json.dumps({'web': {'client_id': clients['macOS'], 'client_secret': 'web-secret'}}))
+            with self.assertRaisesRegex(ValueError, 'Desktop'):
+                config.google_oauth_configuration(env, clients)
+            path.write_text(json.dumps({'installed': {'client_id': 'other', 'client_secret': 'other-secret'}}))
+            with self.assertRaisesRegex(ValueError, 'does not match'):
+                config.google_oauth_configuration(env, clients)
 
     def test_packaged_app_allows_manual_ca_validation_only_for_provider_hosts(self):
         env = self.environment()

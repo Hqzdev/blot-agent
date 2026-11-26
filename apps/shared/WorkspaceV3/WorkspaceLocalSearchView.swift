@@ -11,7 +11,11 @@ struct WorkspaceLocalSearchView: View {
         @Bindable var store = store
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
+                #if os(macOS)
+                WorkspaceField(title: "Search messages", text: $store.form.search.query)
+                #else
                 WorkspaceField(title: "Search", text: $store.form.search.query)
+                #endif
                 ForEach(messages, id: \.metadata.id) { message in
                     Button {
                         store.openConversation(message.conversationId)

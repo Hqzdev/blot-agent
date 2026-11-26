@@ -49,8 +49,7 @@ struct WorkspaceStatusView: View {
             HStack {
                 Spacer()
                 Button { showingDetails.toggle() } label: {
-                    Label(error == nil ? "Ожидает подтверждения" : "Проверьте подключение",
-                          systemImage: error == nil ? "clock" : "exclamationmark.triangle")
+                    BlotLabel(error == nil ? "Ожидает подтверждения" : "Проверьте подключение", symbol: error == nil ? "clock" : "exclamationmark.triangle", size: 16)
                 }
                 .buttonStyle(KButtonStyle(kind: .standard))
                 .popover(isPresented: $showingDetails, arrowEdge: .bottom) {

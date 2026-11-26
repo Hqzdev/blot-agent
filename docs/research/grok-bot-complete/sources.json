@@ -1,0 +1,254 @@
+[
+  {
+    "title": "Approvals, security, and privacy",
+    "url": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Create and manage Bots",
+    "url": "https://docs.x.ai/grok-bot/bots",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Message and collaborate",
+    "url": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Use the computer and apps",
+    "url": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Manage Grok Bot computers",
+    "url": "https://docs.x.ai/grok-bot/computers",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Deep links",
+    "url": "https://docs.x.ai/grok-bot/deep-links",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Deploy Grok Bot to your organization",
+    "url": "https://docs.x.ai/grok-bot/deployment",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Frequently asked questions",
+    "url": "https://docs.x.ai/grok-bot/faq",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Files and results",
+    "url": "https://docs.x.ai/grok-bot/files-and-results",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Get started",
+    "url": "https://docs.x.ai/grok-bot/get-started",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "How Grok Bot Works",
+    "url": "https://docs.x.ai/grok-bot/how-grok-bot-works",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Configure identity and access",
+    "url": "https://docs.x.ai/grok-bot/identity-and-access",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot inference hooks",
+    "url": "https://docs.x.ai/grok-bot/inference-hooks",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "When Your Bot Takes Initiative",
+    "url": "https://docs.x.ai/grok-bot/initiative",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Add a Bot to Your Meetings",
+    "url": "https://docs.x.ai/grok-bot/meetings",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Use Grok Bot in Microsoft Teams",
+    "url": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot for Mobile",
+    "url": "https://docs.x.ai/grok-bot/mobile",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Set up Okta Verify and FastPass",
+    "url": "https://docs.x.ai/grok-bot/okta-fastpass",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot",
+    "url": "https://docs.x.ai/grok-bot/overview",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Connect to private networks",
+    "url": "https://docs.x.ai/grok-bot/private-networks",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Configure TLS-inspecting proxies",
+    "url": "https://docs.x.ai/grok-bot/proxies",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot security",
+    "url": "https://docs.x.ai/grok-bot/security",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot security FAQ",
+    "url": "https://docs.x.ai/grok-bot/security-faq",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Settings and notifications",
+    "url": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Skills and routines",
+    "url": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Tag @bot on X",
+    "url": "https://docs.x.ai/grok-bot/tag-on-x",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Team Bots",
+    "url": "https://docs.x.ai/grok-bot/team-bots",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot for teams and enterprises",
+    "url": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Troubleshooting",
+    "url": "https://docs.x.ai/grok-bot/troubleshooting",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Use Cases",
+    "url": "https://docs.x.ai/grok-bot/use-cases",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Vault and secure sign-in",
+    "url": "https://docs.x.ai/grok-bot/vault",
+    "checked": "2026-11-16",
+    "type": "official-documentation"
+  },
+  {
+    "title": "Grok Bot overview",
+    "url": "https://x.ai/bot",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Marketplace",
+    "url": "https://x.ai/bot/marketplace",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "dr eggbot",
+    "url": "https://x.ai/bot/marketplace/bots/dr-eggbot-v2",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Guides",
+    "url": "https://x.ai/bot/guides",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Changelog",
+    "url": "https://x.ai/changelog/bot",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Grok Bot 1.0",
+    "url": "https://x.ai/news/grok-bot-1-0",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Designing Grok Bot",
+    "url": "https://x.ai/news/designing-grok-bot",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Designing Grok Bot with Grok Bot",
+    "url": "https://x.ai/bot/guides/designing-grok-bot-with-grok-bot",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Brand Guidelines",
+    "url": "https://x.ai/legal/brand-guidelines",
+    "checked": "2026-11-16",
+    "type": "official-public-page"
+  },
+  {
+    "title": "Kevin Stratvert / David DeWinter",
+    "url": "https://www.youtube.com/watch?v=G6AwOYT-Gbw",
+    "type": "prior-video-review",
+    "checked": "использован существующий разбор"
+  },
+  {
+    "title": "Charlie Chang",
+    "url": "https://www.youtube.com/watch?v=q1IwR88mhaA",
+    "type": "prior-video-review",
+    "checked": "использован существующий разбор"
+  }
+]

@@ -48,17 +48,16 @@ struct ProductModeMenuCard: View {
                 } label: {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Blot \(product.rawValue)").font(KFont.ui(15, .medium)).foregroundStyle(K.text)
+                            Text("Ori \(product.rawValue)").font(KFont.ui(15, .medium)).foregroundStyle(K.text)
                             Text(product.subtitle).font(KFont.ui(13)).foregroundStyle(K.text2)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                         if app.product == product { KIcon("check", size: 16, color: K.text) }
                     }
-                    .padding(.horizontal, 12).padding(.vertical, 10).contentShape(Rectangle())
-                    .kHover(radius: 10, active: app.product == product)
-                }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: 10).accessibilityAddTraits(app.product == product ? .isSelected : [])
+                    .padding(.vertical, 4)
+                }.buttonStyle(MacMenuRowStyle()).kFocusRing(radius: 7).accessibilityAddTraits(app.product == product ? .isSelected : [])
             }
         }
         .padding(6).frame(width: 300)
-        .kPopover(radius: K.rXl)
+        .kPopover(radius: 16)
     }
 }

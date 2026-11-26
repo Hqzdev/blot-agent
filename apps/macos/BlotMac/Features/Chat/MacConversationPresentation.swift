@@ -96,7 +96,7 @@ final class MacConversationPresentation {
         })
         return snapshot.messages.filter { related.contains($0.conversationId) }.map { message in
             let agentID = snapshot.conversations.first { $0.metadata.id == message.conversationId }?.agentId
-            let name = snapshot.agents.first { $0.metadata.id == agentID }?.name ?? "Blot Agent"
+            let name = snapshot.agents.first { $0.metadata.id == agentID }?.name ?? "Ori"
             return "\(name), \(message.role.rawValue): \(String(message.content.prefix(2000)))"
         }
     }

@@ -12,6 +12,7 @@ enum WorkspaceBrowserProfile {
         return UUID(uuid: (bytes[0],bytes[1],bytes[2],bytes[3],bytes[4],bytes[5],bytes[6],bytes[7],bytes[8],bytes[9],bytes[10],bytes[11],bytes[12],bytes[13],bytes[14],bytes[15]))
     }
     static func erase(_ directory: URL) async {
+        await WorkspaceBrowserController.eraseSavedProfiles(directory: directory)
         let data = WKWebsiteDataStore(forIdentifier: identifier(directory))
         await data.removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
     }
@@ -20,6 +21,12 @@ enum WorkspaceBrowserProfile {
 @MainActor @Observable
 final class WorkspaceBrowserState {
     var controller: WorkspaceBrowserController?
+    var activeSession: WorkspaceBrowserSessionKey = .workspace
+
+    func selectSession(_ session: WorkspaceBrowserSessionKey) {
+        activeSession = session
+        controller?.activateSession(session)
+    }
 }
 
 @MainActor
@@ -32,6 +39,14 @@ private final class WorkspaceBrowserDriver: WorkspaceBrowserExecuting {
     func execute(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {
         guard let browser = try resolve(true) else { throw WorkspaceBrowserError.unavailable }; return try await browser.execute(command, binding: binding)
     }
+    func browserProfiles() async -> [WorkspaceBrowserProfileInfo] { (try? resolve(true))?.profiles ?? [] }
+    func copyCookies(_ transfer: WorkspaceCardContent.CookieTransfer) async throws -> Int {
+        guard let browser = try resolve(true) else { throw WorkspaceBrowserError.unavailable }; return try await browser.copyCookies(transfer)
+    }
+    func beginManual(session: WorkspaceBrowserSessionKey, tabID: UUID) async throws {
+        guard let browser = try resolve(true) else { throw WorkspaceBrowserError.unavailable }; try await browser.beginManual(session: session, tabID: tabID)
+    }
+    func endManual(session: WorkspaceBrowserSessionKey) async { await (try? resolve(false))?.endManual(session: session) }
     func stop(scope: WorkspaceBrowserScope?) async { (try? resolve(false))?.stop(scope: scope) }
 }
 
@@ -47,6 +62,7 @@ extension LocalWorkspaceService: WorkspaceBrowserProviding {
         if let browserController = browserSession.controller { return browserController }
         let profile = WorkspaceBrowserProfile.identifier(browserProfileDirectory)
         let controller = makeBrowser(profile, browserDirectory)
+        controller.activateSession(browserSession.activeSession)
         browserSession.controller = controller; return controller
     }
     func browserService() async throws -> WorkspaceBrowserService {

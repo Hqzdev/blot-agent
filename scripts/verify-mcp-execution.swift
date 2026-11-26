@@ -68,7 +68,7 @@ for line in sys.stdin:
 """#
         let inspection = try await mcp.inspect(name: "Independent stdio MCP", configuration: .init(transport: .stdio,
             endpoint: "/usr/bin/python3", arguments: ["-u", "-c", script], workingDirectory: directory.path, timeout: 5, trustedLocalProcess: true))
-        let connectionID = try await mcp.save(inspection, selectedTools: ["echo"], agentIDs: [agent])
+        let connectionID = try await mcp.save(inspection, selectedTools: ["echo"])
         require(try await service.currentSnapshot().mcpConnections.count == 1)
         let sourceID = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: "Use MCP")
         let source = try await repository.record(BlotV3.Message.self, id: sourceID, workspaceID: identity.workspaceID)!

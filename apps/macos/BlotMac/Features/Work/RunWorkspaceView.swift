@@ -2,7 +2,7 @@ import BlotAPI
 import BlotDesign
 import SwiftUI
 
-/// A task (Blot Code) or team run (Motes): header with status and run controls, open decisions,
+/// A task (Ori Code) or team run (Motes): header with status and run controls, open decisions,
 /// three sections — conversation, plan & tasks, results & Git — and a composer to refine the goal.
 struct RunWorkspaceView: View {
     @Environment(AppState.self) private var app
@@ -61,7 +61,7 @@ struct RunWorkspaceView: View {
                 .kAnimation(value: tab)
                 if !status.isTerminal {
                     Composer(text: $refinement,
-                             placeholder: "Refine the goal or constraints — Blot drafts a new plan version",
+                             placeholder: "Refine the goal or constraints — Ori drafts a new plan version",
                              canSend: app.workspace.commands.active.isEmpty, sending: steering,
                              showsApproval: true, status: steerError, statusTone: .error) { steer(run) }
                         .composerPlacement()
@@ -139,7 +139,7 @@ struct RunWorkspaceView: View {
                         "goal": .string(run.data.text("goal") + "\n\nУточнение пользователя:\n" + refinement),
                     ]), row: run)
                 refinement = ""
-                app.toasts.show("Sent — Blot is drafting a new plan version")
+                app.toasts.show("Sent — Ori is drafting a new plan version")
             } catch { steerError = error.localizedDescription }
         }
     }

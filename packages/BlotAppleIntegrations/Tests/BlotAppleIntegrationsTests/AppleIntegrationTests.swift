@@ -69,7 +69,7 @@ private struct TestWorkspace {
         let agent = try await WorkspaceAgentService(repository: repository, identity: identity).save(commandID: UUID(),
             draft: .init(name: "Agent", instructions: "Use selected calendars"))
         let connection = try await WorkspaceConnectionService(repository: repository, identity: identity).save(pluginID: "apple.calendar", name: "Календарь",
-            resources: ["selected"], agentIDs: [agent], toolIDs: AppleToolCatalog.tools(for: .calendar).map { $0.definition.name })
+            resources: ["selected"])
         let chat = WorkspaceChatService(repository: repository, identity: identity)
         let conversation = try await chat.createConversation(commandID: UUID(), title: "Test", agentID: agent)
         let source = try await chat.sendMessage(commandID: UUID(), conversationID: conversation, content: content)
@@ -108,8 +108,6 @@ private struct TestWorkspace {
         allowedToolIDs: workspace.context.allowedToolIDs, agentID: workspace.agent)
     #expect(try await provider.availableDefinitions(context: anotherTurn).map(\.name) == ["apple_calendar_resources"])
     let colleague = try await WorkspaceAgentService(repository: workspace.repository, identity: workspace.identity).save(commandID: UUID(), draft: .init(name: "Colleague", instructions: "Help"))
-    try await WorkspaceConnectionService(repository: workspace.repository, identity: workspace.identity).save(pluginID: "apple.calendar", name: "Calendar", resources: ["selected"],
-        agentIDs: [workspace.agent, colleague], toolIDs: Array(workspace.context.allowedToolIDs))
     let anotherMember = WorkspaceToolContext(sourceMessageID: workspace.source, taskID: nil,
         allowedToolIDs: workspace.context.allowedToolIDs, agentID: colleague)
     #expect(try await provider.availableDefinitions(context: anotherMember).map(\.name) == ["apple_calendar_resources"])
@@ -201,7 +199,21 @@ private struct TestWorkspace {
 }
 
 #if os(macOS)
-@Test func fixedAppleScriptsCompileWithoutExecutingOrRequestingAccess() async throws { try await AppleAutomation().compileScripts() }
+@MainActor @Test func automationDoesNotLaunchClosedAppsEvenWhenAccessIsRequested() async throws {
+    let automation = AppleAutomation(running: { _ in false })
+    #expect(throws: AppleIntegrationError.self) { try automation.requireRunning(.shortcuts) }
+    for plugin in [ApplePluginID.mail, .notes] {
+        #expect(await automation.authorized(plugin) == false)
+        #expect(await automation.authorized(plugin, request: true) == false)
+        await #expect(throws: AppleIntegrationError.self) { _ = try await automation.resources(plugin) }
+    }
+    #expect(throws: AppleIntegrationError.self) { try automation.compileScripts() }
+}
+@MainActor @Test func fixedAppleScriptsCompileOnlyIfBothAppsAreAlreadyRunning() throws {
+    let automation = AppleAutomation()
+    guard automation.isRunning(.notes), automation.isRunning(.mail) else { return }
+    try automation.compileScripts()
+}
 #endif
 
 @Test func legacyConnectionsDecodeWithoutAppleFields() throws {

@@ -23,3 +23,11 @@ for file in sorted((root / 'fixtures/v3').rglob('*.json')):
     Draft202012Validator(record_schema, format_checker=FormatChecker()).validate(json.loads(file.read_text()))
     count += 1
 print(f'PASS: {count} fixtures, all schema definitions and secret-field boundaries')
+for file in sorted((root / 'packages/BlotChatSync/fixtures').glob('*.json')):
+    snapshot = json.loads(file.read_text())
+    for record in snapshot['records']:
+        if record.get('payload') is None: continue
+        record_schema = dict(schema, **{'$ref': '#/$defs/' + record['kind']})
+        record_schema.pop('oneOf', None)
+        Draft202012Validator(record_schema, format_checker=FormatChecker()).validate(json.loads(record['payload']))
+print('PASS: shared web/Apple chat payloads match generated v3 schemas')

@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 struct PhonePasswordEditor: View {
@@ -22,13 +23,13 @@ struct PhonePasswordEditor: View {
                             SecureField(store.settingsText("Repeat new password"), text: $confirmation).textContentType(.newPassword)
                             Text(store.settingsText("Changing your password signs you out. Sign in again with the new password."))
                                 .font(.footnote).foregroundStyle(.secondary)
-                            Button(store.t("Save")) { submitPassword() }.buttonStyle(.borderedProminent)
+                            Button(store.t("Save")) { submitPassword() }.buttonStyle(WorkspaceButtonStyle(.primary))
                                 .disabled(password.count < 8 || password != confirmation || code.count != 6)
                         } else {
-                            Button(store.settingsText("Send verification code")) { requestCode() }.buttonStyle(.borderedProminent)
+                            Button(store.settingsText("Send verification code")) { requestCode() }.buttonStyle(WorkspaceButtonStyle(.primary))
                         }
                         if submitting { ProgressView() }
-                    }.padding(16).textFieldStyle(.roundedBorder)
+                    }.padding(16).textFieldStyle(BlotTextFieldStyle())
                 }
                 WorkspaceFeedback()
             }.disabled(submitting)

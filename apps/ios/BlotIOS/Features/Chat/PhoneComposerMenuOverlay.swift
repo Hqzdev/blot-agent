@@ -99,7 +99,8 @@ private struct PhoneComposerMenuSurface: View {
         .opacity(expanded ? 1 : 0)
         .frame(width: expanded ? size.width : 44, height: expanded ? size.height : 44, alignment: .bottomLeading)
         .clipShape(RoundedRectangle(cornerRadius: expanded ? 44 : 22, style: .continuous))
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: expanded ? 44 : 22))
+        .blotChromeSurface(cornerRadius: expanded ? 28 : 22)
+        .environment(\.blotChatChrome, !expanded)
         .offset(x: expanded ? 0 : origin.width, y: expanded ? 0 : origin.height)
         .accessibilityElement(children: .contain)
         .accessibilityAction(.escape) {

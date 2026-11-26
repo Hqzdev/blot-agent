@@ -15,35 +15,35 @@ struct ConversationToolbarMenu: View {
     private var archived: Bool { app.shell.archived.contains(item.id) }
 
     var body: some View {
-        Menu {
-            Button { title = item.title; renaming = true } label: { Label("Rename", systemImage: "pencil") }.disabled(item.kind != .chat)
+        MacActionMenu {
+            Button { title = item.title; renaming = true } label: { BlotLabel("Rename", symbol: "pencil", size: 16) }.disabled(item.kind != .chat)
                 .keyboardShortcut("r", modifiers: [.option, .command])
             Button { app.shell.togglePin(item.id) } label: {
-                Label(pinned ? "Unpin" : "Pin", systemImage: pinned ? "pin.slash" : "pin")
+                BlotLabel(pinned ? "Unpin" : "Pin", symbol: pinned ? "pin.slash" : "pin", size: 16)
             }.disabled(archived).keyboardShortcut("p", modifiers: [.option, .command])
-            Divider()
+            WorkspaceMenuGap()
             Button {
                 let session = app.createSideChat(for: item)
                 openWindow(value: ConversationWindowRequest(id: session.id, title: session.title,
                     transcript: app.transcript(for: item), chatID: session.id))
-            } label: { Label("New side chat", systemImage: "bubble.left.and.bubble.right") }
+            } label: { BlotLabel("New side chat", symbol: "bubble.left.and.bubble.right", size: 16) }
                 .keyboardShortcut("s", modifiers: [.option, .command])
-            Menu {
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Fork entire conversation") { app.forkConversation(item) }.disabled(item.kind != .chat)
-            } label: { Label("Create fork", systemImage: "point.3.connected.trianglepath.dotted") }
-            Button { scheduling = true } label: { Label("Add scheduled task…", systemImage: "clock") }
-            Divider()
-            ShareLink(item: app.transcript(for: item)) { Label("Share", systemImage: "square.and.arrow.up") }
-            Menu {
+            } label: { BlotLabel("Create fork", symbol: "point.3.connected.trianglepath.dotted", size: 16) }
+            Button { scheduling = true } label: { BlotLabel("Add scheduled task…", symbol: "clock", size: 16) }
+            WorkspaceMenuGap()
+            ShareLink(item: app.transcript(for: item)) { BlotLabel("Share", symbol: "square.and.arrow.up", size: 16) }.buttonStyle(MacMenuRowStyle())
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Conversation") { copy(app.transcript(for: item)) }
                 Button("Title") { copy(item.title) }
                 Button("Conversation ID") { copy(item.id) }
-            } label: { Label("Copy", systemImage: "doc.on.doc") }
-            Divider()
+            } label: { BlotLabel("Copy", symbol: "doc.on.doc", size: 16) }
+            WorkspaceMenuGap()
             Button {
                 openWindow(value: ConversationWindowRequest(id: item.id, title: item.title, transcript: app.transcript(for: item)))
-            } label: { Label("Open in new window", systemImage: "macwindow.on.rectangle") }
-            Menu {
+            } label: { BlotLabel("Open in new window", symbol: "macwindow.on.rectangle", size: 16) }
+            MacActionMenu(edge: .trailing, isSubmenu: true) {
                 Button("Chat") { app.openConversation(item) }
                 if item.kind != .chat {
                     Button("Review") { app.openConversation(item); app.showShellReview() }
@@ -53,18 +53,18 @@ struct ConversationToolbarMenu: View {
                         app.shell.previewSource = nil; app.shell.rightVisible = true; app.shell.expandedSources = true
                     }
                 }
-            } label: { Label("Open in", systemImage: "arrow.up.right") }
-            Divider()
+            } label: { BlotLabel("Open in", symbol: "arrow.up.right", size: 16) }
+            WorkspaceMenuGap()
             Button {
                 if archived { app.shell.restore(item.id) } else { app.shell.archive(item.id) }
             } label: {
-                Label(archived ? "Restore from archive" : "Archive", systemImage: archived ? "arrow.uturn.backward" : "archivebox")
+                BlotLabel(archived ? "Restore from archive" : "Archive", symbol: archived ? "arrow.uturn.backward" : "archivebox", size: 16)
             }.keyboardShortcut("a", modifiers: [.shift, .command])
         } label: {
             KIcon("ellipsis", size: 16, color: K.text2)
                 .frame(width: K.iconButtonSize, height: K.iconButtonSize).kHover(radius: K.rSm)
         }
-        .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize()
+        .fixedSize()
         .kFocusRing(radius: K.rSm).accessibilityLabel("Conversation actions").help("Conversation actions")
         .alert("Rename conversation", isPresented: $renaming) {
             TextField("Title", text: $title)

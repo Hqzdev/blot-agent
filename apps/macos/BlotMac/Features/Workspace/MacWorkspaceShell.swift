@@ -73,7 +73,7 @@ struct MacWorkspaceShell: View {
                 Button { _Concurrency.Task { await store.newChat(with: store.currentConversation?.agentId) } } label: { BlotIcon(.compose, size: 15) }
                     .buttonStyle(.plain).help(store.t("New chat")).accessibilityLabel(store.t("New chat")).disabled(store.busy)
                 if let chat = store.currentConversation {
-                    Menu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) } label: { BlotIcon(.more, size: 15) }
+                    WorkspaceMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) } label: { BlotIcon(.more, size: 15) }
                         .menuStyle(.borderlessButton).menuIndicator(.hidden).fixedSize().accessibilityLabel(store.t("Chat actions"))
                 }
                 Button { store.inspectorVisible.toggle() } label: { BlotIcon(.computer, size: 16) }

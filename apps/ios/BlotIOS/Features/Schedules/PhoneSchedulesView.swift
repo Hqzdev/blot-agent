@@ -61,7 +61,8 @@ struct PhoneSchedulesView: View {
             if store.mode == .live {
                 WorkspaceScheduleRunSummary(schedule: schedule)
                 Button(store.t("Run now")) { store.runScheduleManually(schedule.metadata.id) }
-                    .buttonStyle(.bordered).disabled(store.busy)
+                    .buttonStyle(WorkspaceButtonStyle(.secondary)).disabled(store.busy)
+                WorkspaceRoutineActions(schedule: schedule)
             }
         }.padding(PhonePageLayout.rowInset)
     }

@@ -18,7 +18,7 @@ struct WorkspaceEvidenceView: View {
     }
 
     var body: some View {
-        KSheet(title, subtitle: "Record from the Blot server", width: 760) {
+        KSheet(title, subtitle: "Record from the Ori server", width: 760) {
             if let row = app.workspace.find(evidence.kind, evidence.id) {
                 VStack(alignment: .leading, spacing: 6) {
                     KeyValueRow(label: "ID", value: evidence.id.uuidString, mono: true)

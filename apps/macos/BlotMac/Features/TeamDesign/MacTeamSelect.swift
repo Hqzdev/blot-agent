@@ -15,48 +15,16 @@ struct MacTeamSelect<Value: Hashable>: View {
     @Binding var selection: Value
     let options: [MacTeamOption<Value>]
     var showsTitle = true
-    @State private var expanded = false
-
+    @Environment(\.locale) private var locale
     var body: some View {
-        HStack(spacing: 20) {
-            if showsTitle {
-                WorkspaceLocalizedText(title)
-                Spacer(minLength: 8)
-            }
-            Button {
-                expanded.toggle()
-            } label: {
-                HStack(spacing: 10) {
-                    WorkspaceLocalizedText(options.first { $0.value == selection }?.title ?? title).lineLimit(1)
-                    BlotIcon(.chevronDown, size: BlotIconSize.inline).rotationEffect(.degrees(expanded ? 180 : 0))
-                        .foregroundStyle(WorkspaceStyle.ink)
-                }.font(.system(size: 12, weight: .medium))
-                    .padding(.horizontal, 12).padding(.vertical, 9)
-                    .background(MacTeamStyle.field, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-                    .contentShape(RoundedRectangle(cornerRadius: 11, style: .continuous))
-            }.buttonStyle(BlotPlainButtonStyle())
-                .kAnimation(KMotion.quick, value: expanded)
-                .accessibilityLabel(Text(LocalizedStringKey(title)))
-                .accessibilityValue(Text(LocalizedStringKey(options.first { $0.value == selection }?.title ?? "")))
-                .popover(isPresented: $expanded, arrowEdge: .bottom) {
-                    VStack(spacing: 3) {
-                        ForEach(options, id: \.value) { option in
-                            MacTeamNavigationButton(selected: selection == option.value) {
-                                selection = option.value
-                                expanded = false
-                            } label: {
-                                HStack(spacing: 24) {
-                                    WorkspaceLocalizedText(option.title)
-                                    Spacer(minLength: 8)
-                                    BlotIcon(symbol: "checkmark", size: BlotIconSize.inline)
-                                        .opacity(selection == option.value ? 1 : 0)
-                                }.font(.system(size: 12))
-                            }
-                        }
-                    }.padding(6).frame(minWidth: 200).background(MacTeamStyle.panel)
-                }
-        }
+        WorkspaceChoice(title: localized(title), selection: $selection,
+            options: options.map { .init($0.value, localized($0.title)) }, showsTitle: showsTitle)
+            .frame(minWidth: 140, idealWidth: 220, maxWidth: 300)
     }
+    private func localized(_ text: String) -> String {
+        WorkspaceCopy.text(text, language: locale.language.languageCode?.identifier ?? "en")
+    }
+
 }
 
 extension MacTeamSelect where Value == String {

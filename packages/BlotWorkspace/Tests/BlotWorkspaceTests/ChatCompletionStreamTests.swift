@@ -114,3 +114,21 @@ private func event(_ payload: String, parser: inout ChatCompletionStreamParser) 
     #expect(messages[0]["role"] as? String == "user")
     #expect(messages[0]["content"] as? String == "Hello")
 }
+
+@Test func exactToolSelectionUsesNativeProviderFieldsAndPreservesLegacyRequests() throws {
+    let definition = ChatToolDefinition(name: "inspect", description: "Inspect", parameters: .object([:]))
+    let request = ChatModelRequest(messages: [.init(role: "user", content: "Inspect this")], tools: [definition], requiredTool: "inspect")
+    let giga = try ModelRequestEncoder.gigaChat(request, model: "GigaChat")
+    #expect((giga["function_call"] as? [String: String])?["name"] == "inspect")
+    let compatible = try ModelRequestEncoder.compatible(request, model: "compatible")
+    let choice = try #require(compatible["tool_choice"] as? [String: Any])
+    #expect(choice["type"] as? String == "function")
+    #expect((choice["function"] as? [String: String])?["name"] == "inspect")
+    for tools in [[], [definition]] {
+        let invalid = ChatModelRequest(messages: [], tools: tools, requiredTool: "unavailable")
+        #expect(throws: ChatModelError.invalidConfiguration) { _ = try ModelRequestEncoder.gigaChat(invalid, model: "GigaChat") }
+        #expect(throws: ChatModelError.invalidConfiguration) { _ = try ModelRequestEncoder.compatible(invalid, model: "compatible") }
+    }
+    let old = try JSONDecoder().decode(ChatModelRequest.self, from: Data(#"{"messages":[],"tools":[],"maximumOutputTokens":64}"#.utf8))
+    #expect(old.requiredTool == nil)
+}

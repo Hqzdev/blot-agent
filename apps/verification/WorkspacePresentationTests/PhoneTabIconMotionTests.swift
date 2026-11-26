@@ -1,64 +1,67 @@
 import BlotDesign
-import Observation
 import SwiftUI
 import UIKit
 import XCTest
 
 @MainActor
 final class PhoneTabIconMotionTests: XCTestCase {
-    func testEachIconMovesReplaysAndSettles() async throws {
-        try XCTSkipIf(UIAccessibility.isReduceMotionEnabled, "Motion is disabled by the device accessibility setting")
-        let previousIdleTimer = UIApplication.shared.isIdleTimerDisabled
-        UIApplication.shared.isIdleTimerDisabled = true
-        defer { UIApplication.shared.isIdleTimerDisabled = previousIdleTimer }
+    func testRepeatedTabSelectionKeepsArtworkStill() async throws {
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previous = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
         defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
-        let kinds: [PhoneTabIcon.Kind] = [.chats, .calendar, .overview, .settings]
-        for (index, kind) in kinds.enumerated() {
-            let probe = PhoneIconMotionProbe()
-            window.rootViewController = nil
-            let host = UIHostingController(rootView: PhoneIconMotionFixture(kind: kind, probe: probe))
-            window.rootViewController = host
-            host.loadViewIfNeeded()
-            window.makeKeyAndVisible()
-            try await waitUntilActive()
-            try await pause(window, milliseconds: 250)
-            let idle = capture(window)
-            probe.activation += 1
-            try await pause(window, milliseconds: 230)
-            let moving = capture(window)
-            XCTAssertNotEqual(idle.pngData(), moving.pngData(), "Icon \(index) must animate its artwork")
-            attach(moving, name: "Tab icon \(index) · impact")
-            probe.activation += 1
-            try await pause(window, milliseconds: 220)
-            attach(capture(window), name: "Tab icon \(index) · repeated selection")
-            try await pause(window, milliseconds: 900)
-            let settled = capture(window)
-            try await pause(window, milliseconds: 140)
-            XCTAssertEqual(settled.pngData(), capture(window).pngData(), "Icon \(index) must stop after selection")
-            probe.activation += 1
-            try await pause(window, milliseconds: 230)
-            XCTAssertNotEqual(settled.pngData(), capture(window).pngData(), "Icon \(index) must replay on another tap")
+        let store = WorkspaceStore(mode: .preview, route: .chats)
+        window.rootViewController = UIHostingController(rootView: PhoneTabBar().environment(store).background(Color.white))
+        window.makeKeyAndVisible()
+        try await waitUntilActive()
+        for route in [WorkspaceRoute.schedules, .overview, .settings, .chats] {
+            store.selectTab(route)
+            try await pause(window, milliseconds: 450)
+            let track = try XCTUnwrap(selectionTrack(in: window))
+            let selection = track.convert(track.capsule.frame, to: window)
+            let artwork = selection.insetBy(dx: 8, dy: 8)
+            let idle = capture(artwork, in: window).pngData()
+            store.selectTab(route)
+            store.navigation.activateTab(route)
+            try await pause(window, milliseconds: 180)
+            XCTAssertEqual(idle, capture(artwork, in: window).pngData(), "Reselecting a tab must keep its artwork still")
         }
     }
 
-    func testAppReducedMotionKeepsIconsStill() async throws {
+    func testSelectionPassesThroughIntermediatePositionsInBothDirections() async throws {
+        try XCTSkipIf(UIAccessibility.isReduceMotionEnabled, "System Reduce Motion is enabled")
         let scene = try XCTUnwrap(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let previous = scene.windows.first(where: \.isKeyWindow)
         let window = UIWindow(windowScene: scene)
         defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
-        let probe = PhoneIconMotionProbe()
-        window.rootViewController = UIHostingController(rootView: PhoneIconMotionFixture(kind: .overview, probe: probe,
-            appReduceMotion: true))
+        let store = WorkspaceStore(mode: .preview, route: .chats)
+        window.rootViewController = UIHostingController(rootView: WorkspaceRootView(store: store))
         window.makeKeyAndVisible()
         try await waitUntilActive()
-        try await pause(window, milliseconds: 150)
-        let idle = capture(window)
-        probe.activation += 1
-        try await pause(window, milliseconds: 230)
-        XCTAssertEqual(idle.pngData(), capture(window).pngData())
+        try await pause(window, milliseconds: 500)
+        let track = try XCTUnwrap(selectionTrack(in: window))
+        for route in [WorkspaceRoute.settings, .chats] {
+            let start = track.capsule.frame.midX
+            store.selectTab(route)
+            var samples: [CGFloat] = []
+            for _ in 0..<20 {
+                try await pause(window, milliseconds: 25)
+                if let frame = track.capsule.layer.presentation()?.frame { samples.append(frame.midX) }
+            }
+            XCTAssertTrue(selectionTrack(in: window) === track)
+            let end = track.capsule.frame.midX
+            XCTAssertGreaterThan(abs(end - start), 50)
+            let middle = samples.filter { $0 > min(start, end) + 2 && $0 < max(start, end) - 2 }
+            XCTAssertGreaterThan(Set(middle.map { Int($0.rounded()) }).count, 2, "Rendered x positions: \(samples)")
+        }
+    }
+
+    private func selectionTrack(in view: UIView) -> PhoneTabSelectionIndicator.Track? {
+        if let track = view as? PhoneTabSelectionIndicator.Track { return track }
+        for child in view.subviews {
+            if let track = selectionTrack(in: child) { return track }
+        }
+        return nil
     }
 
     private func pause(_ window: UIWindow, milliseconds: Int) async throws {
@@ -76,34 +79,11 @@ final class PhoneTabIconMotionTests: XCTestCase {
                           "The physical test app must be in the foreground to capture animation")
     }
 
-    private func capture(_ window: UIWindow) -> UIImage {
-        UIGraphicsImageRenderer(bounds: window.bounds).image { _ in
+    private func capture(_ rect: CGRect, in window: UIWindow) -> UIImage {
+        UIGraphicsImageRenderer(size: rect.size).image { context in
+            context.cgContext.translateBy(x: -rect.minX, y: -rect.minY)
             window.drawHierarchy(in: window.bounds, afterScreenUpdates: true)
         }
     }
 
-    private func attach(_ image: UIImage, name: String) {
-        let attachment = XCTAttachment(image: image)
-        attachment.name = name
-        attachment.lifetime = .keepAlways
-        add(attachment)
-    }
-}
-
-@MainActor @Observable
-private final class PhoneIconMotionProbe {
-    var activation = 0
-}
-
-private struct PhoneIconMotionFixture: View {
-    let kind: PhoneTabIcon.Kind
-    let probe: PhoneIconMotionProbe
-    var appReduceMotion = false
-
-    var body: some View {
-        PhoneTabIcon(kind: kind, activation: probe.activation).scaleEffect(4)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .foregroundStyle(.black).background(.white)
-            .environment(\.blotReduceMotion, appReduceMotion)
-    }
 }

@@ -57,7 +57,7 @@ private struct SideChatContent: View {
                         if message.fromUser { UserBubble(text: message.text) }
                         else {
                             VStack(alignment: .leading, spacing: 6) {
-                                Text("Blot").font(KFont.label()).foregroundStyle(K.text3)
+                                Text("Ori").font(KFont.label()).foregroundStyle(K.text3)
                                 AgentText(text: message.text)
                             }
                         }
@@ -65,7 +65,7 @@ private struct SideChatContent: View {
                     if session.isSending {
                         HStack(spacing: KSpace.sm) {
                             TypingDots()
-                            Text("Blot is writing…").font(KFont.ui(13)).foregroundStyle(K.text3)
+                            Text("Ori is writing…").font(KFont.ui(13)).foregroundStyle(K.text3)
                         }
                     }
                 }

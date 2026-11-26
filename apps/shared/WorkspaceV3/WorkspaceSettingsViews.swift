@@ -5,6 +5,7 @@ import SwiftUI
 
 struct WorkspaceSettingsView: View {
     let route: WorkspaceRoute
+    var embedded = false
     @State private var keyProvider: String?
     @State private var editingMemoryID: UUID?
     #if os(macOS)
@@ -17,14 +18,16 @@ struct WorkspaceSettingsView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
             #if os(macOS)
-            HStack(spacing: 10) {
-                BlotIcon(MacSettingsCatalog.glyph(for: route), size: 22)
-                Text(store.t(route.title)).font(.system(size: 24, weight: .semibold)).accessibilityAddTraits(.isHeader)
+            if !embedded {
+                HStack(spacing: 10) {
+                    BlotIcon(MacSettingsCatalog.glyph(for: route), size: 22)
+                    Text(store.t(route.title)).font(.system(size: 24, weight: .semibold)).accessibilityAddTraits(.isHeader)
+                }
             }
             #endif
             if !store.unresolvedConflicts.isEmpty {
                 Button { store.conflictsVisible = true } label: {
-                    Label(store.t("Review conflicting changes"), systemImage: "arrow.triangle.branch")
+                    BlotLabel(store.t("Review conflicting changes"), symbol: "arrow.triangle.branch")
                 }.buttonStyle(WorkspaceButtonStyle(.secondary))
             }
             content
@@ -33,6 +36,13 @@ struct WorkspaceSettingsView: View {
     }
     @ViewBuilder private var content: some View {
         switch route {
+        #if os(macOS)
+        case .settingsProfile: MacSettingsProfilePane()
+        case .settingsStorage: MacSettingsStoragePane()
+        case .settingsUpdates: WorkspaceUpdatesView()
+        case .usage: MacSettingsUsagePane()
+        case .personalization: MacSettingsPersonalizationPane()
+        #endif
         case .account: account
         case .models: models
         case .permissions: permissions
@@ -53,6 +63,7 @@ struct WorkspaceSettingsView: View {
     }
     private var general: some View {
         VStack(alignment: .leading, spacing: 24) {
+            WorkspaceTeamBotsButton()
             #if os(iOS)
             WorkspaceLink(title: "Account", route: .account, symbol: "person.crop.circle")
             WorkspaceCard {
@@ -66,14 +77,14 @@ struct WorkspaceSettingsView: View {
                 WorkspaceLink(title: "Language", route: .language, symbol: "character.bubble") }
             #else
             settingRow("Language") { language }
-            settingRow("Show Blot in the menu bar") { WorkspaceV3ActionButton(title: "Configure", action: .saveSetting, kind: .secondary) }
+            settingRow("Show Ori in the menu bar") { WorkspaceV3ActionButton(title: "Configure", action: .saveSetting, kind: .secondary) }
             Divider()
             settingRow("Default model") { WorkspaceLocalizedText(store.mode == .live ? "Compatible API" : "GigaChat") }
             settingRow("Run tasks on") { Text(store.t("This computer")) }
             settingRow("Ask before significant actions") { BlotIcon(symbol: "checkmark.shield") }
             settingRow("Keep working after closing the window") { WorkspaceV3ActionButton(title: "Configure", action: .saveSetting, kind: .secondary) }
             #endif
-            Text(store.t("Blot · Version 3 preview")).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
+            Text(store.t("Ori · Version 3 preview")).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
         }
     }
     private var account: some View {
@@ -92,12 +103,21 @@ struct WorkspaceSettingsView: View {
     }
     private var models: some View {
         VStack(alignment: .leading, spacing: 24) {
-            WorkspaceHeading(title: "Choose a model", subtitle: "Default model for new chats.")
+            if !embedded { WorkspaceHeading(title: "Choose a model", subtitle: "Default model for new chats.") }
+            #if os(macOS)
+            MacTeamSettingsSection(title: "Default model for the composer") {
+                MacTeamSettingsRow(title: "Model", detail: "Select a Ori model or use the model assigned to the agent.") {
+                    MacComposerModelMenu()
+                }
+            }
+            WorkspaceLocalizedText("Optional API key").font(.headline)
+            #else
             WorkspaceCard {
-                BlotLabel("Blot Agent", symbol: "bubble.left").font(.headline)
+                BlotLabel("Ori", symbol: "bubble.left").font(.headline)
                 Text(store.t(store.isPreview ? "Trial access is set up. You can start without your own key." : "GigaChat connects directly from this device. The key is managed by this personal build.")).foregroundStyle(WorkspaceStyle.secondary)
             }
             Text(store.t("YOUR API KEY")).font(.caption.monospaced()).foregroundStyle(WorkspaceStyle.secondary)
+            #endif
             ForEach(store.mode == .live ? ["Compatible API"] : ["OpenAI", "Anthropic", "Gemini", "xAI", "Compatible API"], id: \.self) { name in
                 settingRow(name) { Button(store.t("Add key")) { keyProvider = name }.buttonStyle(WorkspaceButtonStyle(.secondary)) }
             }
@@ -114,7 +134,9 @@ struct WorkspaceSettingsView: View {
                     Button(store.t("Cancel")) { self.keyProvider = nil; store.form.model.secret = "" }.buttonStyle(WorkspaceRowButtonStyle())
                 }
             }
+            #if os(iOS)
             Text(store.t("Existing chats keep their model. Agent settings take priority.")).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
+            #endif
         }
     }
     private var permissions: some View {
@@ -123,18 +145,15 @@ struct WorkspaceSettingsView: View {
             WorkspaceHeading(title: "Permissions", subtitle: "New agents start in Ask first mode.")
             WorkspaceCard {
                 Text(store.t("Default mode")).font(.headline)
-                Picker(store.t("Access mode"), selection: $store.form.preferences.accessMode) {
-                    Text(store.t("Observe")).tag(BlotV3.AccessMode.observe)
-                    Text(store.t("Ask first")).tag(BlotV3.AccessMode.ask_first)
-                    Text(store.t("Trusted scope")).tag(BlotV3.AccessMode.trusted_scope)
-                }.pickerStyle(.segmented)
+                WorkspaceChoice(title: store.t("Access mode"), selection: $store.form.preferences.accessMode,
+                    options: [.init(.observe, store.t("Observe")), .init(.ask_first, store.t("Ask first")), .init(.trusted_scope, store.t("Trusted scope"))])
                 #if os(iOS)
                 WorkspaceV3ActionButton(title: "Save", action: .saveSetting, kind: .quiet)
                     .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 #else
                 WorkspaceV3ActionButton(title: "Save", action: .saveSetting, kind: .secondary)
                 #endif
-                Text(store.t("Blot shows changes and asks before anything significant."))
+                Text(store.t("Ori shows changes and asks before anything significant."))
             }
             WorkspaceSessionDirectoriesView()
             settingRow("Send, publish and delete") { Text(store.t("Required")) }
@@ -157,7 +176,7 @@ struct WorkspaceSettingsView: View {
             }
             WorkspaceLink(title: "MCP server", route: .mcp)
             WorkspaceCard { Text(store.t("You control access")).font(.headline)
-                Text(store.t("Signing in to Blot grants no service access. Each connection’s permissions can be changed or revoked.")).foregroundStyle(WorkspaceStyle.secondary) }
+                Text(store.t("Signing in to Ori grants no service access. Each connection’s permissions can be changed or revoked.")).foregroundStyle(WorkspaceStyle.secondary) }
         }
     }
     private var visibleDevices: [BlotV3.Device] {
@@ -219,10 +238,10 @@ struct WorkspaceSettingsView: View {
     private var pair: some View {
         @Bindable var store = store
         return VStack(alignment: .leading, spacing: 24) {
-            WorkspaceHeading(title: "Link your devices", subtitle: "Open Blot on your computer: Settings → Devices → Add iPhone.")
+            WorkspaceHeading(title: "Link your devices", subtitle: "Open Ori on your computer: Settings → Devices → Add iPhone.")
             ZStack { RoundedRectangle(cornerRadius: 24).fill(BlotColor.inverse); BlotIcon(symbol: "viewfinder", size: 90).font(.system(size: 90)).foregroundStyle(BlotColor.onInverse) }.frame(height: 250)
             WorkspaceCard { BlotLabel(store.t("Confirm on your computer"), symbol: "checkmark.shield")
-                Text(store.t("After scanning, compare the code on both devices and allow the connection in Blot on your computer.")).foregroundStyle(WorkspaceStyle.secondary) }
+                Text(store.t("After scanning, compare the code on both devices and allow the connection in Ori on your computer.")).foregroundStyle(WorkspaceStyle.secondary) }
             WorkspaceField(title: "Connection code", text: $store.form.pair.code)
             WorkspaceV3ActionButton(title: "Connect", action: .connect)
         }
@@ -230,8 +249,10 @@ struct WorkspaceSettingsView: View {
     private var memory: some View {
         @Bindable var store = store
         return VStack(alignment: .leading, spacing: 22) {
+            WorkspaceMemoryImportButton()
             ForEach(store.snapshot.memories, id: \.metadata.id) { item in
                 WorkspaceCard { Text(store.t(item.content)); Text(store.t("Source: conversation")).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
+                    WorkspaceMemoryReview(memory: item)
                     Button(store.t("Edit")) { editingMemoryID = item.metadata.id; store.selectedRecordID = item.metadata.id; store.form.memory.content = item.content }.buttonStyle(WorkspaceButtonStyle(.secondary))
                     if store.mode == .live {
                         Button(store.t("Delete"), role: .destructive) { store.deleteMemory(item.metadata.id) }
@@ -249,29 +270,17 @@ struct WorkspaceSettingsView: View {
     private var mcp: some View { WorkspaceMCPSettingsView() }
     private var browserSettings: some View { WorkspaceBrowserSettingsView() }
     private var rules: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            WorkspaceHeading(title: "Permission rules", subtitle: "Saved rules apply only to their exact operation and scope.")
-            if store.isPreview {
-                ForEach(["Create reports", "Read calendar", "Send email", "Run tests"], id: \.self) { title in
-                    settingRow(title) { WorkspaceV3ActionButton(title: "Revoke", action: .saveSetting, kind: .destructive) }
-                }
-            } else { WorkspaceDataState(state: .empty) }
-            Text(store.t("Push, delete, publish and deploy always require a separate confirmation by default.")).foregroundStyle(WorkspaceStyle.secondary)
-        }
+        WorkspaceRulesView()
     }
     private var appearance: some View {
         VStack(alignment: .leading, spacing: 24) {
-            Picker(store.t("Theme"), selection: $theme) {
-                Text(store.t("System")).tag(ThemePreference.system)
-                Text(store.t("Light")).tag(ThemePreference.light)
-                Text(store.t("Dark")).tag(ThemePreference.dark)
-            }.pickerStyle(.segmented)
+            WorkspaceChoice(title: store.t("Theme"), selection: $theme, options: [.init(.system, store.t("System")), .init(.light, store.t("Light")), .init(.dark, store.t("Dark"))])
             Toggle(store.t("Reduce Motion"), isOn: $reduceMotion)
         }
     }
     private var language: some View {
         @Bindable var store = store
-        return Picker(store.t("Language"), selection: $store.languageSelection) { Text(store.t("System default")).tag("system"); Text("Русский").tag("ru"); Text("English").tag("en") }.pickerStyle(.segmented)
+        return WorkspaceChoice(title: store.t("Language"), selection: $store.languageSelection, options: [.init("system", store.t("System default")), .init("ru", "Русский"), .init("en", "English")])
     }
     private var notifications: some View {
         VStack(alignment: .leading, spacing: 20) {

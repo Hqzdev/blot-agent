@@ -1,6 +1,6 @@
-# Blot website
+# Ori website
 
-Next.js App Router website. The `/` route implements the approved Blot landing in `../agent.pen`, with interaction and motion references from `https://x.ai/bot`. Existing documentation, workspace, contact, privacy, beta, and changelog routes remain available.
+Next.js App Router website. The `/` route implements the approved Ori landing in `../agent.pen`, with interaction and motion references from `https://x.ai/bot`. Existing documentation, workspace, contact, privacy, beta, and changelog routes remain available.
 
 ```sh
 npm install
@@ -39,7 +39,7 @@ Email registration asks for a name and email, then a six-digit code. Sign-in ask
 - `lib/landing/pet-motion.json` contains 120 recorded SVG poses and observed timestamps, derived from the existing design catalog. This is a recording of the observed animation, not the reference site's complete animation engine.
 - `public/blot/visuals` isolates the source feature illustrations in decorative frames so their imported styles do not affect existing product pages. All assets and fonts are local. Parent viewport visibility pauses the illustration timelines.
 
-The video and its player are intentionally excluded. The header and footer use the existing Blot logo. The favicon uses the selected mascot vector.
+The video and its player are intentionally excluded. The header and footer use the existing Ori logo. The favicon uses the selected mascot vector.
 
 ## Navigation and release wiring
 

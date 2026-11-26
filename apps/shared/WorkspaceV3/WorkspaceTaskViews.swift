@@ -9,11 +9,18 @@ struct WorkspaceTaskView: View {
         switch route {
         case .home: home
         case .chats: chats
+        #if os(macOS)
+        case .archivedChats: archivedChats
+        #endif
         case .search: search
         case .newChat: newChat
         case .running:
+            #if os(macOS)
+            WorkspaceTaskExecutionView()
+            #else
             if store.mode == .live { WorkspaceTaskExecutionView() }
             else { running }
+            #endif
         case .approval: approval
         case .result: result
         case .file: document
@@ -24,15 +31,39 @@ struct WorkspaceTaskView: View {
         default: conversation
         }
     }
+    #if os(macOS)
+    private var archivedChats: some View {
+        let chats = store.snapshot.conversations.filter(\.archived)
+            .sorted { $0.metadata.updatedAt > $1.metadata.updatedAt }
+        return VStack(alignment: .leading, spacing: 18) {
+            WorkspaceHeading(title: "Archive", subtitle: "Restore chats to return them to your sidebar.")
+            if chats.isEmpty {
+                Text(store.language == "ru" ? "В архиве пока нет чатов" : "No archived chats")
+                    .foregroundStyle(WorkspaceStyle.secondary)
+            }
+            ForEach(chats, id: \.metadata.id) { chat in
+                HStack(spacing: 12) {
+                    BlotIcon(.archiveBox, size: BlotIconSize.control).foregroundStyle(WorkspaceStyle.secondary)
+                    Text(chat.title).lineLimit(1)
+                    Spacer(minLength: 6)
+                    Button(store.language == "ru" ? "Восстановить" : "Restore") {
+                        store.setChatArchived(chat.metadata.id, archived: false)
+                    }.buttonStyle(WorkspaceButtonStyle(.secondary)).disabled(store.busy)
+                }
+            }
+            WorkspaceFeedback()
+        }
+    }
+    #endif
     private var home: some View {
         VStack(spacing: 30) {
             Spacer(minLength: 30)
             WorkspaceAvatar(size: 100)
             WorkspaceWelcomeGreeting().font(.system(size: 34)).multilineTextAlignment(.center)
-            Text(store.t("Give Blot a task — it assembles the team and delivers the result."))
+            Text(store.t("Give Ori a task — it assembles the team and delivers the result."))
                 .foregroundStyle(WorkspaceStyle.secondary).multilineTextAlignment(.center)
             WorkspaceComposer().padding(.top, 10)
-            Text(store.t("Ask first · Access to Blot Workspace folder")).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
+            Text(store.t("Ask first · Access to Ori Workspace folder")).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
             HStack(alignment: .top, spacing: 16) {
                 suggestion("Research", detail: "Compare services and summarize", symbol: "magnifyingglass")
                 suggestion("Create", detail: "Draft a mockup or document", symbol: "rectangle.split.2x1")
@@ -133,7 +164,7 @@ struct WorkspaceTaskView: View {
         #if os(macOS)
         HStack(alignment: .top, spacing: 28) {
             runningOverview
-            WorkspaceCard { Text(store.t("Plan")).font(.title2); steps; Spacer(minLength: 100); Text(store.t("Blot Workspace · This computer")).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }.frame(width: 260)
+            WorkspaceCard { Text(store.t("Plan")).font(.title2); steps; Spacer(minLength: 100); Text(store.t("Ori Workspace · This computer")).font(.caption).foregroundStyle(WorkspaceStyle.secondary) }.frame(width: 260)
         }
         #else
         runningOverview
@@ -163,7 +194,12 @@ struct WorkspaceTaskView: View {
             #endif
             HStack { WorkspaceV3ActionButton(title: store.taskPaused ? "Resume" : "Pause", action: .pause, kind: .secondary)
                 WorkspaceV3ActionButton(title: "Stop task", action: .stop, next: .chat, kind: .destructive) }
-            if store.isPreview { WorkspaceLink(title: "Review prepared action", route: .approval); WorkspaceLink(title: "View browser", route: .browser) }
+            if store.isPreview {
+                WorkspaceLink(title: "Review prepared action", route: .approval)
+                #if os(macOS)
+                WorkspaceLink(title: "View browser", route: .browser)
+                #endif
+            }
             WorkspaceFeedback()
             #if os(macOS)
             WorkspaceComposer()
@@ -194,7 +230,7 @@ struct WorkspaceTaskView: View {
             WorkspaceV3ActionButton(title: "Yes", action: .approve, next: .result)
             WorkspaceV3ActionButton(title: "No", action: .deny, next: .chat, kind: .quiet)
             WorkspaceV3ActionButton(title: "Yes, don’t ask again", action: .grantRule, next: .permissionRules, kind: .quiet)
-            Text(store.t("Sends from your Gmail, can’t be unsent.\nMacBook Pro · requested by Blot CEO · expires in 10 min"))
+            Text(store.t("Sends from your Gmail, can’t be unsent.\nMacBook Pro · requested by Ori CEO · expires in 10 min"))
                 .font(.footnote).foregroundStyle(WorkspaceStyle.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
             WorkspaceFeedback()
         }.frame(maxWidth: 820).frame(maxWidth: .infinity)

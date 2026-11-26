@@ -9,5 +9,6 @@ enum MacWorkspaceStyle {
     static let body = Font.system(size: 13)
     static let caption = Font.system(size: 12)
     static let sidebar = BlotColor.dynamic(.init(light: 0xF6F6F6FF, dark: 0x161616FF))
+    static let outgoingMessage = BlotColor.dynamic(.init(light: 0xF0F2F5FF, dark: 0x30343AFF))
     static let edge = BlotColor.dynamic(.init(light: 0x00000010, dark: 0xFFFFFF0D))
 }

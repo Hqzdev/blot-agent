@@ -17,6 +17,10 @@ struct WorkspaceAuthView: View {
         switch route {
         case .welcome: PhoneWelcomeView()
         case .signIn, .createAccount: PhoneAuthenticationView(initialRoute: route)
+        case .verifyEmail:
+            ScrollView { verification.padding(24).frame(maxWidth: 520) }.frame(maxWidth: .infinity)
+                .safeAreaInset(edge: .bottom, spacing: 0) { PhoneVerificationActions() }
+                .background(PhoneReferenceStyle.authentication.ignoresSafeArea())
         case .firstAgent: PhoneFirstAgentView()
         default: ScrollView { form.padding(24).frame(maxWidth: 520) }.frame(maxWidth: .infinity)
         }
@@ -55,7 +59,7 @@ struct WorkspaceAuthView: View {
             WorkspaceAvatar(size: 60)
             WorkspaceHeading(title: registering ? "Let’s get started" : "Welcome back",
                 subtitle: registering ? "One account for phone and computer." : "Sign in to continue with your team.")
-            
+
             if registering { WorkspaceField(title: "Your name", text: $store.form.account.name) }
             WorkspaceField(title: "Email", text: $store.form.account.email)
                 #if os(iOS)
@@ -91,13 +95,9 @@ struct WorkspaceAuthView: View {
                 .keyboardType(.numberPad)
                 #endif
             WorkspaceFeedback()
-            WorkspaceV3ActionButton(title: "Verify", action: .verify, next: {
-                #if os(macOS)
-                .firstRun
-                #else
-                .firstAgent
-                #endif
-            }())
+            #if os(macOS)
+            WorkspaceV3ActionButton(title: "Verify", action: .verify, next: .firstRun)
+            #endif
             WorkspaceV3ActionButton(title: "Resend code", action: .resendVerification, kind: .quiet)
             Button(store.t("Change email address")) { store.navigate(.createAccount) }.buttonStyle(WorkspaceRowButtonStyle())
         }.padding(.vertical, 70)
@@ -117,20 +117,20 @@ struct WorkspaceAuthView: View {
     private var setup: some View {
         @Bindable var store = store
         return VStack(alignment: .leading, spacing: 30) {
-            WorkspaceHeading(title: "Set up your workspace", subtitle: "Blot runs tasks on this computer. You decide what it can access.")
+            WorkspaceHeading(title: "Set up your workspace", subtitle: "Ori runs tasks on this computer. You decide what it can access.")
             WorkspaceCard {
-                BlotLabel("Blot Workspace", symbol: "folder").font(.title2)
+                BlotLabel("Ori Workspace", symbol: "folder").font(.title2)
                 Text("~/Documents/Blot Workspace").font(.system(.callout, design: .monospaced))
                 Text(store.t("Agents only touch files inside the selected folder.")).foregroundStyle(WorkspaceStyle.secondary)
                 WorkspaceV3ActionButton(title: "Choose folder", action: .saveSetting, kind: .secondary)
             }
             WorkspaceCard {
                 BlotLabel(store.t("Ask first"), symbol: "checkmark.circle").font(.title2)
-                Text(store.t("Blot shows changes and asks before anything significant.")).foregroundStyle(WorkspaceStyle.secondary)
+                Text(store.t("Ori shows changes and asks before anything significant.")).foregroundStyle(WorkspaceStyle.secondary)
             }
             Toggle(store.t("Keep working after the window closes"), isOn: $store.form.preferences.backgroundWork)
             WorkspaceFeedback()
-            WorkspaceV3ActionButton(title: "Open Blot", action: .saveSetting, next: .home)
+            WorkspaceV3ActionButton(title: "Open Ori", action: .saveSetting, next: .home)
         }
     }
 }

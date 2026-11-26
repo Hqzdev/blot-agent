@@ -9,6 +9,7 @@ Set these variables in the website's deployment environment. For local developme
 | Variable | Purpose |
 | --- | --- |
 | `DATABASE_URL` | Pooled PostgreSQL connection string, injected by the Neon integration in Vercel. Enables the built-in service. |
+| `BLOT_POSTGRES_URL` | Preferred server-only PostgreSQL connection, including a Supabase integration connected with prefix `BLOT`. Overrides legacy `DATABASE_URL`; the web application and its migrations use the same priority. |
 | `BLOT_CLOUD_ORIGIN` | Optional legacy Java account-service origin; `BLOT_ACCOUNT_SERVICE_URL` is an alias. Used only when `DATABASE_URL` is absent. |
 | `BLOT_AUTH_CHALLENGE_SECRET` | Optional independent secret for email-code HMACs. Defaults to a domain-separated key derived from the session secret. |
 | `BLOT_WEB_SESSION_SECRET` | At least 24 random characters for encrypted browser cookies. Falls back to the Google web client secret, then the Yandex web client secret. |
@@ -21,9 +22,11 @@ Set these variables in the website's deployment environment. For local developme
 
 Google settings are optional for email sign-in. Google sign-in requests only `openid email profile`; Gmail and Calendar permissions are separate. Production has no localhost account-service fallback.
 
+Supabase PostgreSQL connections verify TLS using the bundled public Supabase CA and hostname validation. The database's public account tables enable row-level security without public policies; the trusted server connection owns account access. `landing/vercel.json` applies additive account migrations and verifies the schema and synthetic native PKCE handoff before building. Synthetic verification runs in a transaction that is always rolled back. Supabase Auth is not used; the existing Google callback remains unchanged.
+
 Yandex sign-in requires the built-in PostgreSQL service (`DATABASE_URL`); the legacy Java service does not implement this provider. Register a web application in [Yandex OAuth](https://oauth.yandex.ru/), set the callback above and enable `login:info` and `login:email`. For local development, register `http://localhost:3000/auth/yandex/callback` and use that exact value in `BLOT_YANDEX_WEB_REDIRECT_URI`. The button appears when all three Yandex values and `DATABASE_URL` are configured. The server exchanges the authorization code with S256 PKCE, then fetches the profile from `https://login.yandex.ru/info` using the OAuth authorization header and checks that `client_id` matches. See Yandex's [authorization code flow](https://yandex.ru/dev/id/doc/ru/codes/code-url) and [profile API](https://yandex.ru/dev/id/doc/ru/user-information).
 
-Each provider uses its own encrypted ten-minute attempt cookie and checks the callback state. Yandex access and refresh tokens are neither persisted nor sent to the browser; only the Blot session is stored in an HttpOnly cookie. Provider subjects identify accounts across repeat sign-ins. A matching email on another account returns a linking error without merging accounts; use the original sign-in method. Registration and login use the same provider flow, including the existing native PKCE handoff.
+Each provider uses its own encrypted ten-minute attempt cookie and checks the callback state. Yandex access and refresh tokens are neither persisted nor sent to the browser; only the Ori session is stored in an HttpOnly cookie. Provider subjects identify accounts across repeat sign-ins. A matching email on another account returns a linking error without merging accounts; use the original sign-in method. Registration and login use the same provider flow, including the existing native PKCE handoff.
 
 The built-in service preserves `/v1/auth/register`, `verify`, `login`, `me`, `password/request`, `password/reset`, `refresh`, `logout`, `revoke-sessions`, `browser/code` and `browser/token`. Google identity verification is internal to the website callback and verifies signature, issuer, audience, expiry, nonce and verified email. Set `BLOT_SMTP_HOST`, `BLOT_SMTP_PORT`, `BLOT_SMTP_USERNAME`, `BLOT_SMTP_PASSWORD` and `BLOT_SMTP_FROM` in Vercel for verification and recovery. SMTP requires TLS. Passwords use scrypt; only hashed session tokens and keyed email-code digests persist. Rate limits persist in PostgreSQL across function instances.
 
@@ -44,10 +47,25 @@ The app opens `/login` with `response_type=code`, `client_id`, `redirect_uri`, r
 | `blot-ios` | `blot-agent-ios:/oauth/account` |
 | `blot-macos` | `blot-agent-macos:/oauth/account` |
 
-After successful sign-in or email verification, the page automatically issues the native authorization code and redirects to Blot. The same return happens when an authenticated browser session is restored. A retry control is available only as a fallback if the browser blocks automatic app opening. The callback carries only a one-time code and the original state. The app exchanges the code and its private PKCE verifier at `/v1/auth/browser/token`. This endpoint is also proxied through the website origin. Session tokens never appear in a callback URL or browser JavaScript.
+After successful sign-in or email verification, the page automatically issues the native authorization code and redirects to Ori. The same return happens when an authenticated browser session is restored. A retry control is available only as a fallback if the browser blocks automatic app opening. The callback carries only a one-time code and the original state. The app exchanges the code and its private PKCE verifier at `/v1/auth/browser/token`. This endpoint is also proxied through the website origin. Session tokens never appear in a callback URL or browser JavaScript.
 
 When opened directly, the signed-in page automatically opens `blot-agent-ios:/oauth/start` or `blot-agent-macos:/oauth/start`. The app starts its own PKCE attempt, then returns through the flow above. Both app URL schemes and the native browser authorization handler must be included in the installed app.
 
 ## Validation
 
 Run `npm run test:auth` and `npm run build` from `landing/`. Tests use an embedded PostgreSQL engine for registration, verification attempt limits, password reset, refresh rotation, persistent rate limits, PKCE replay rejection, atomic backups and account isolation. Yandex tests cover callback state, PKCE, cancellation, response limits, client identity validation, account collisions, repeat sign-in and iPhone/Mac handoff with mocked provider HTTP responses. Swift cloud-backup tests verify multi-chunk transfer, project/chat restoration, offline edits and lost commit-response retries. Actual Google/Yandex consent, production email delivery and OS app opening require separate device verification.
+
+## Terminal sign-in and model API
+
+`blot run` opens the existing website sign-in with the `blot-cli` client ID.
+Its PKCE redirect is `http://127.0.0.1:<port>/oauth/blot`. The terminal exchanges
+the one-time code at `/v1/auth/browser/token` and uses its Ori session at
+`/v1/cli/model`. The model route authenticates against the built-in PostgreSQL
+account service and applies account and service request limits.
+
+Set `BLOT_GIGACHAT_AUTH_KEY` on the website deployment. Existing
+`GIGACHAT_AUTH_KEY` is also accepted. Optional settings are `BLOT_GIGACHAT_SCOPE`,
+`BLOT_GIGACHAT_MODEL`, `BLOT_GIGACHAT_CONTEXT_TOKENS` and
+`BLOT_GIGACHAT_OUTPUT_TOKENS`. The terminal receives model metadata and results.
+Deploy browser sign-in and the model route together to the Ori origin. For
+local testing set `BLOT_CLI_ORIGIN=http://127.0.0.1:<port>` in the terminal.

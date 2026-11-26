@@ -103,7 +103,7 @@ public actor WorkspaceDeviceAuthority {
         guard let peer = state.peers[id], !peer.revoked else { throw WorkspaceStorageError.permissionDenied }; return peer
     }
     func signDelegation(_ data: Data, version: Int = 1) async throws -> Data {
-        guard version == 1 || version == 2 else { throw WorkspaceStorageError.permissionDenied }
+        guard (1...3).contains(version) else { throw WorkspaceStorageError.permissionDenied }
         return try await keys.signProof(domain: "BLOT-TASK-DELEGATION-" + String(version), ids: [identity.ownerID, identity.workspaceID], values: [data])
     }
     private func packet(kind: String, id: UUID, target: UUID?, name: String, proof: Data, expires: Date) async throws -> String {

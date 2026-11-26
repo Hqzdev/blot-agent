@@ -28,6 +28,9 @@ public struct MCPConfiguration: Codable, Equatable, Sendable {
     public var workingDirectory: String
     public var environment: [String: String]
     public var bearerToken: String
+    public var httpHeaders: [String: String]?
+    public var oauth: MCPOAuthCredentials?
+    public var pluginID: String?
     public var timeout: Double
     public var trustedLocalProcess: Bool
     public var executableBookmark: Data?
@@ -38,6 +41,18 @@ public struct MCPConfiguration: Codable, Equatable, Sendable {
         self.environment = environment; self.bearerToken = bearerToken; self.timeout = timeout; self.trustedLocalProcess = trustedLocalProcess
     }
     public func validate() throws {
+        if let oauth {
+            guard transport == .http, MCPOAuthClient.matches(resource: oauth.resource, endpoint: endpoint), oauth.tokenEndpoint.scheme == "https",
+                  !oauth.clientID.isEmpty, !bearerToken.isEmpty else { throw MCPError.configuration }
+        }
+        let headers = httpHeaders ?? [:]
+        let reserved = Set(["host", "connection", "content-length", "content-type", "accept", "mcp-session-id", "mcp-protocol-version", "cookie"])
+        guard headers.count <= 20, Set(headers.keys.map { $0.lowercased() }).count == headers.count,
+              headers.allSatisfy({ key, value in
+                  key.range(of: #"^[A-Za-z0-9!#$%&'*+.^_`|~-]{1,100}$"#, options: .regularExpression) != nil &&
+                  !reserved.contains(key.lowercased()) && value.utf8.count <= 8192 && !value.contains(where: { $0.isNewline || $0 == "\0" }) &&
+                  (key.lowercased() != "authorization" || bearerToken.isEmpty)
+              }), transport == .http || headers.isEmpty else { throw MCPError.configuration }
         guard (1...300).contains(timeout), endpoint.utf8.count <= 2048, arguments.count <= 100,
               arguments.allSatisfy({ $0.utf8.count <= 8192 && !$0.contains("\0") }),
               environment.count <= 50, environment.allSatisfy({ key, value in
@@ -57,7 +72,7 @@ public struct MCPConfiguration: Codable, Equatable, Sendable {
             #endif
         }
     }
-    var secrets: [String] { ([bearerToken] + Array(environment.values)).filter { !$0.isEmpty } }
+    var secrets: [String] { ([bearerToken, oauth?.refreshToken ?? ""] + Array(environment.values) + Array((httpHeaders ?? [:]).values)).filter { !$0.isEmpty } }
 }
 
 public struct MCPTool: Codable, Equatable, Sendable, Identifiable {

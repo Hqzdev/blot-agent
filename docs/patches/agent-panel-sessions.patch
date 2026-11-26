@@ -1,0 +1,1882 @@
+diff --git a/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift b/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
+--- a/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
++++ b/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
+@@ -37,7 +37,7 @@
+                 Label(store.language == "ru" ? "Случайный вариант" : "Randomize", systemImage: "shuffle")
+                     .font(MacWorkspaceStyle.caption)
+             }
+-            .buttonStyle(.bordered)
++            .buttonStyle(WorkspaceButtonStyle(.secondary))
+             .disabled(store.busy)
+             .help(store.language == "ru" ? "Выбрать случайные имя, цвет и форму" : "Choose a random name, color and shape")
+             LazyVGrid(columns: [GridItem(.adaptive(minimum: 30), spacing: 12)], spacing: 10) {
+diff --git a/apps/macos/BlotMac/Features/TeamDesign/MacTeamComponents.swift b/apps/macos/BlotMac/Features/TeamDesign/MacTeamComponents.swift
+--- a/apps/macos/BlotMac/Features/TeamDesign/MacTeamComponents.swift
++++ b/apps/macos/BlotMac/Features/TeamDesign/MacTeamComponents.swift
+@@ -76,7 +76,7 @@
+
+ struct MacTeamSheetHeader: View {
+     let title: String
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     var body: some View {
+         HStack {
+             WorkspaceLocalizedText(title).font(.system(size: 16, weight: .semibold))
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacBrowserSplitView.swift b/apps/macos/BlotMac/Features/Workspace/MacBrowserSplitView.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacBrowserSplitView.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacBrowserSplitView.swift
+@@ -4,11 +4,11 @@
+ /// Bounds both panes, including when the window shrinks after a drag.
+ struct MacBrowserSplitLayout {
+     static let minimumWidth: CGFloat = 760
+-    static let minimumChatWidth: CGFloat = 420
++    static let minimumChatWidth: CGFloat = 336
+     static let dividerWidth: CGFloat = 8
+     let width: CGFloat
+     func browserWidth(_ requested: CGFloat) -> CGFloat {
+-        let maximum = min(1000, max(0, width - Self.minimumChatWidth - Self.dividerWidth))
++        let maximum = max(0, width - Self.minimumChatWidth - Self.dividerWidth)
+         return min(maximum, max(min(300, maximum), requested.isFinite ? requested : 500))
+     }
+ }
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamWorkspace.swift
+@@ -48,7 +48,7 @@
+
+     private func workspace(layout: MacWorkspaceLayout) -> some View {
+         let showsBrowser = store.browser?.presented == true && isConversation
+-        let showsSidebar = layout.supportsSidebar && store.sidebarVisible && !showsBrowser
++        let showsSidebar = layout.supportsSidebar && store.sidebarVisible
+         return HStack(spacing: 0) {
+             if showsSidebar {
+                 MacLiveTeamSidebar().frame(width: layout.sidebarWidth).background(MacTeamStyle.sidebar).transition(.kPanel(.leading))
+@@ -79,19 +79,26 @@
+     private func header(layout: MacWorkspaceLayout, showsSidebar: Bool) -> some View {
+         GlassEffectContainer(spacing: 8) {
+             ZStack {
+-                HStack(spacing: 8) {
+-                    if store.route == .marketplace {
+-                        Text(store.t(store.route.title))
+-                            .font(.system(size: 17, weight: .semibold)).lineLimit(1)
+-                    } else {
++                ViewThatFits(in: .horizontal) {
++                    HStack(spacing: 8) {
++                        if store.route == .marketplace {
++                            Text(store.t(store.route.title))
++                                .font(.system(size: 17, weight: .semibold)).lineLimit(1)
++                        } else {
++                            if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
++                            else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
++                            Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
++                                .font(.system(size: 17, weight: .semibold)).lineLimit(1)
++                                .padding(.horizontal, 16).padding(.vertical, 6)
++                                .glassEffect(.regular, in: .capsule)
++                        }
++                    }
++                    if isConversation {
+                         if store.currentConversation?.kind == .group { MacLiveTeamGroupAvatar(agents: members, size: 36) }
+                         else if let agent { WorkspaceAvatarView(agent: agent, size: 36) }
+-                        Text(store.currentConversation?.title ?? agent?.name ?? "Blot")
+-                            .font(.system(size: 17, weight: .semibold)).lineLimit(1)
+-                            .padding(.horizontal, 16).padding(.vertical, 6)
+-                            .glassEffect(.regular, in: .capsule)
+-                    }
+-                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, 64)
++                    }
++                    Color.clear.frame(width: 0, height: 0)
++                }.padding(.leading, showsSidebar ? 100 : 200).padding(.trailing, isConversation ? 104 : 64)
+                 HStack(spacing: 6) {
+                     if store.route == .marketplace {
+                         headerButton(store.t("Back"), glyph: .chevronLeft) { store.back() }
+@@ -125,8 +132,7 @@
+                     if isConversation { WorkspaceVoiceButton() }
+                     if isConversation {
+                         headerButton("Инструменты", glyph: .inspector) {
+-                            if store.browser?.presented == true { store.browser?.presented = false }
+-                            else { store.showTools() }
++                            store.toggleToolsPanel()
+                         }
+                     }
+                 }.padding(.leading, showsSidebar ? 18 : 108).padding(.trailing, 18)
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
+@@ -6,7 +6,7 @@
+ struct MacMarketplacePluginDetail: View {
+     let plugin: MacTeamPlugin
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @Environment(\.macSheetSize) private var sheetSize
+     @State private var confirmingDisconnect = false
+@@ -55,7 +55,7 @@
+             HStack {
+                 Spacer()
+                 Button(accounts.isEmpty ? "Подключить" : "Подключено") { confirmingDisconnect = true }
+-                    .buttonStyle(.borderedProminent).controlSize(.large)
++                    .buttonStyle(WorkspaceButtonStyle()).controlSize(.large)
+                     .tint(accounts.isEmpty ? WorkspaceStyle.ink : .green)
+                     .disabled(accounts.isEmpty || store.busy || disconnecting)
+                 Spacer()
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift b/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
+@@ -4,7 +4,7 @@
+ struct MacMarketplaceTemplateDetail: View {
+     let template: MacDemoTemplate
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @Environment(\.macSheetSize) private var sheetSize
+     @State private var commandID = UUID()
+diff --git a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+--- a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
++++ b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+@@ -7,7 +7,7 @@
+ struct ApplePluginConnectionView: View {
+     let plugin: ApplePluginID
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     #if os(macOS)
+     @Environment(\.macSheetSize) private var sheetSize
+@@ -47,7 +47,7 @@
+                     Text("Доступ получат все текущие агенты команды. Результаты запросов могут передаваться выбранной вами модели. Отправка и удаление требуют отдельного подтверждения.")
+                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
+                     if plugin == .shortcuts {
+-                        TextField("Название команды", text: $shortcutName).textFieldStyle(.roundedBorder)
++                        TextField("Название команды", text: $shortcutName).textFieldStyle(WorkspacePanelTextFieldStyle())
+                         Text("При подключении команда выполнится один раз для проверки. Её действия могут изменить данные.")
+                             .font(.caption).foregroundStyle(.secondary)
+                     }
+@@ -65,7 +65,7 @@
+                         WorkspaceLocalizedText(busy ? "Подождите…" : connected ? "Подключено" : "Подключить")
+                     }.frame(minWidth: 150)
+                 }
+-                .buttonStyle(.borderedProminent).controlSize(.large)
++                .buttonStyle(WorkspaceButtonStyle()).controlSize(.large)
+                 .tint(connected ? .green : WorkspaceStyle.ink)
+                 .disabled(busy || !plugin.available || store.appleIntegrations == nil || (!connected && store.snapshot.agents.isEmpty))
+                 .help(connected ? "Отключить приложение" : "Разрешить доступ и подключить приложение")
+diff --git a/apps/shared/WorkspaceV3/MCPConfigurationFields.swift b/apps/shared/WorkspaceV3/MCPConfigurationFields.swift
+--- a/apps/shared/WorkspaceV3/MCPConfigurationFields.swift
++++ b/apps/shared/WorkspaceV3/MCPConfigurationFields.swift
+@@ -10,14 +10,16 @@
+     @State private var picking = MCPPath.executable
+     @State private var importing = false
+     private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
++    private var transports: [WorkspaceChoiceOption<MCPConfiguration.Transport>] {
++        #if os(macOS)
++        [.init(.http, "Streamable HTTP"), .init(.stdio, "stdio")]
++        #else
++        [.init(.http, "Streamable HTTP")]
++        #endif
++    }
+     var body: some View {
+         VStack(alignment: .leading, spacing: 16) {
+-            Picker(text("Транспорт", "Transport"), selection: $configuration.transport) {
+-                Text("Streamable HTTP").tag(MCPConfiguration.Transport.http)
+-                #if os(macOS)
+-                Text("stdio").tag(MCPConfiguration.Transport.stdio)
+-                #endif
+-            }.pickerStyle(.segmented)
++            WorkspaceChoice(title: text("Транспорт", "Transport"), selection: $configuration.transport, options: transports)
+             if configuration.transport == .http {
+                 TextField("https://server.example/mcp", text: $configuration.endpoint)
+                 SecureField(text("Bearer-токен (если нужен)", "Bearer token (optional)"), text: $configuration.bearerToken)
+@@ -36,7 +38,7 @@
+                 Toggle(text("Я доверяю этой программе", "I trust this executable"), isOn: $configuration.trustedLocalProcess)
+                 Text(text("Программа получает только заданные переменные среды и доступ в рамках системной песочницы Blot. MCP сам по себе не изолирует программу.", "The executable receives only the specified environment and access allowed by Blot’s system sandbox. MCP itself does not isolate a process.")).font(.caption).foregroundStyle(.secondary)
+             }
+-            Stepper(value: $configuration.timeout, in: 5...300, step: 5) { Text(text("Таймаут: ", "Timeout: ") + String(Int(configuration.timeout)) + text(" с", " s")) }
++            WorkspaceCounter(title: text("Таймаут, с", "Timeout, s"), value: Binding(get: { Int(configuration.timeout) }, set: { configuration.timeout = Double($0) }), range: 5...300, step: 5)
+         }
+         .onChange(of: configuration.transport) { _, _ in
+             configuration.endpoint = ""; configuration.arguments = []; configuration.environment = [:]; configuration.workingDirectory = ""
+diff --git a/apps/shared/WorkspaceV3/WorkspaceAgentRuntimeOptions.swift b/apps/shared/WorkspaceV3/WorkspaceAgentRuntimeOptions.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceAgentRuntimeOptions.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceAgentRuntimeOptions.swift
+@@ -6,10 +6,8 @@
+     var body: some View {
+         @Bindable var store = store
+         DisclosureGroup(store.t("Model and tools")) {
+-            Picker(store.t("Model"), selection: $store.form.agent.modelID) {
+-                Text("GigaChat").tag("gigachat")
+-                Text(store.t("Compatible API")).tag("compatible")
+-            }
++            WorkspaceChoice(title: store.t("Model"), selection: $store.form.agent.modelID,
++                options: [.init("gigachat", "GigaChat"), .init("compatible", store.t("Compatible API"))])
+             ForEach([("file_read", "Read attached files"), ("document_create", "Create documents"),
+                      ("memory_candidate", "Propose memories")], id: \.0) { id, label in
+                 Toggle(store.t(label), isOn: Binding(get: { store.form.agent.toolIDs.contains(id) }, set: { enabled in
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserSettingsView.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserSettingsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserSettingsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserSettingsView.swift
+@@ -1,4 +1,5 @@
+ import BlotDomain
++import BlotDesign
+ import BlotAppleIntegrations
+ import BlotWorkspace
+ import SwiftUI
+@@ -42,7 +43,8 @@
+             Text(ru ? "Сайты открываются внутри приложения. Разрешения ниже действуют только для агентов на этом устройстве. Нажатия и ввод подтверждаются отдельно." : "Websites open inside the app. These agent permissions apply only on this device. Clicks and typing require separate confirmation.").foregroundStyle(.secondary)
+             Button(ru ? "Открыть браузер" : "Open browser") { store.showBrowser() }.disabled(store.browserCommands == nil)
+             Text(ru ? "Разрешённые сайты — по одному HTTPS-адресу на строку" : "Allowed sites — one HTTPS address per line").font(.headline)
+-            TextEditor(text: $origins).font(.body.monospaced()).frame(minHeight: 90, maxHeight: 180).border(.secondary.opacity(0.3))
++            TextEditor(text: $origins).font(.body.monospaced()).scrollContentBackground(.hidden).padding(12).frame(minHeight: 90, maxHeight: 180)
++                .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12)).accessibilityLabel(ru ? "Разрешённые сайты" : "Allowed websites")
+             Text("https://example.com").font(.caption).foregroundStyle(.secondary)
+             if let url = store.browser?.selectedTab?.url, let origin = try? WorkspaceBrowserURL.origin(url) {
+                 Button(ru ? "Добавить текущий сайт и агентов чата" : "Add current site and chat agents") {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+@@ -13,11 +13,40 @@
+     var path: [WorkspaceToolDestination] = []
+     var fileID: UUID?
+     var taskID: UUID?
++    var dismissDetail: WorkspacePanelDismissAction?
+     func open(_ route: WorkspaceRoute) { path.append(.page(route)) }
++}
++
++@MainActor
++final class WorkspacePanelNavigationRegistry {
++    private var values: [UUID: WorkspacePanelNavigation] = [:]
++    private let empty = WorkspacePanelNavigation()
++    func navigation(for tab: BrowserTab?) -> WorkspacePanelNavigation {
++        guard let tab else { return empty }
++        if let value = values[tab.id] { return value }
++        let value = WorkspacePanelNavigation()
++        if let page = tab.localPage, let destination = WorkspaceToolDestination(identifier: page) { value.path = [destination] }
++        values[tab.id] = value; return value
++    }
++    func reset(_ tab: BrowserTab?, to destination: WorkspaceToolDestination?) {
++        let value = navigation(for: tab)
++        value.fileID = nil; value.taskID = nil; value.path = destination.map { [$0] } ?? []
++    }
++    func retain(_ ids: Set<UUID>) { values = values.filter { ids.contains($0.key) } }
++    func clear() { values.removeAll() }
+ }
+
+ enum WorkspaceToolDestination: Hashable {
+     case page(WorkspaceRoute), projects, details
++    var identifier: String {
++        switch self { case .projects: "projects"; case .details: "details"; case .page(let route): "page:" + route.rawValue }
++    }
++    init?(identifier: String) {
++        if identifier == "projects" { self = .projects }
++        else if identifier == "details" { self = .details }
++        else if identifier.hasPrefix("page:"), let route = WorkspaceRoute(rawValue: String(identifier.dropFirst(5))), !route.isAuthentication { self = .page(route) }
++        else { return nil }
++    }
+     var symbol: String {
+         switch self {
+         case .projects: "terminal"
+@@ -69,47 +98,77 @@
+     }
+ }
+
+-/// No WebView, page requests or integration discovery are created for a blank tab.
++/// A blank tab is a local launch surface: no site request or plugin discovery runs here.
+ struct WorkspaceBrowserStartPage: View {
+     let controller: WorkspaceBrowserController
+     let select: (WorkspaceToolDestination) -> Void
+     @Environment(WorkspaceStore.self) private var store
++    @State private var more = false
+     private var ru: Bool { store.language == "ru" }
++    private var featured: [WorkspaceToolDestination] { Array(WorkspaceToolDestination.tools.prefix(5)) }
++    private var sites: [BrowserTab] { Array(controller.sessionTabs.filter { $0.url != nil }.suffix(6)) }
+     var body: some View {
+         ScrollView {
+             VStack(alignment: .leading, spacing: 28) {
+-                Text(ru ? "Инструменты" : "Tools").font(.headline)
+-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 180), spacing: 8)], spacing: 8) {
+-                    ForEach(WorkspaceToolDestination.tools, id: \.self) { tool in
+-                        Button { select(tool) } label: {
+-                            Label(tool.title(russian: ru), systemImage: tool.symbol)
+-                                .font(.system(size: 13, weight: .medium)).frame(maxWidth: .infinity, minHeight: 32, alignment: .leading)
+-                                .padding(12).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12))
+-                                .contentShape(RoundedRectangle(cornerRadius: 12))
+-                        }.buttonStyle(.plain).accessibilityIdentifier("workspace.tools.\(tool.symbol)")
+-                    }
++                VStack(alignment: .leading, spacing: 6) {
++                    Text(ru ? "Инструменты" : "Tools").font(.system(size: 16, weight: .semibold))
++                    Text(ru ? "Откройте нужное рядом с разговором" : "Keep what you need beside the conversation")
++                        .font(.system(size: 12)).foregroundStyle(WorkspaceStyle.secondary)
+                 }
+-                if !controller.tabs.filter({ $0.url != nil }).isEmpty {
+-                    Text(ru ? "Открытые сайты" : "Open websites").font(.headline)
+-                    ForEach(Array(controller.tabs.filter { $0.url != nil }.suffix(6))) { tab in
+-                        Button {
+-                            do { try controller.select(tab.id) } catch { controller.error = error.localizedDescription }
+-                        } label: {
+-                            HStack(spacing: 10) {
+-                                Image(systemName: "globe").foregroundStyle(.secondary)
+-                                VStack(alignment: .leading, spacing: 3) {
+-                                    Text(tab.title).lineLimit(1)
+-                                    Text(tab.url?.host ?? "").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+-                                }
+-                                Spacer(minLength: 0)
+-                            }.padding(.vertical, 6).contentShape(Rectangle())
+-                        }.buttonStyle(.plain)
+-                    }
++                LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: 8)], spacing: 8) {
++                    ForEach(featured, id: \.self) { tool in toolCard(tool) }
++                    Button { more.toggle() } label: {
++                        HStack(spacing: 12) {
++                            Image(systemName: "square.grid.2x2").frame(width: 20).foregroundStyle(WorkspaceStyle.secondary)
++                            Text(ru ? "Ещё инструменты" : "More tools")
++                            Spacer(minLength: 0)
++                            Image(systemName: more ? "chevron.up" : "chevron.down").font(.system(size: 10))
++                        }.panelToolCard()
++                    }.buttonStyle(WorkspaceRowButtonStyle(padding: 0)).accessibilityValue(more ? (ru ? "Развёрнуто" : "Expanded") : (ru ? "Свёрнуто" : "Collapsed"))
++                    if more { ForEach(Array(WorkspaceToolDestination.tools.dropFirst(5)), id: \.self) { tool in toolCard(tool) } }
+                 }
+-                Text(ru ? "Введите адрес или запрос в строке сверху — результаты Google откроются здесь." : "Enter an address or search above — Google results open here.")
+-                    .font(.callout).foregroundStyle(.secondary)
++                if !sites.isEmpty {
++                    Text(ru ? "Открытые сайты" : "Open websites").font(.system(size: 14, weight: .semibold)).padding(.top, 6)
++                    ScrollView(.horizontal) {
++                        HStack(alignment: .top, spacing: 12) {
++                            ForEach(sites) { tab in
++                                Button {
++                                    do { try controller.select(tab.id) } catch { controller.error = error.localizedDescription }
++                                } label: {
++                                    VStack(spacing: 12) {
++                                        Text(String((tab.url?.host ?? "").prefix(1)).uppercased()).font(.system(size: 18, weight: .semibold))
++                                            .frame(width: 42, height: 42).background(WorkspaceStyle.surface, in: Circle())
++                                        Text(tab.title).font(.system(size: 12)).lineLimit(1)
++                                        Text(tab.url?.host ?? "").font(.system(size: 10)).foregroundStyle(WorkspaceStyle.secondary).lineLimit(1)
++                                    }.frame(width: 112).padding(.vertical, 10).contentShape(RoundedRectangle(cornerRadius: 12))
++                                }.buttonStyle(WorkspaceRowButtonStyle(padding: 0))
++                            }
++                        }
++                    }.scrollIndicators(.hidden)
++                }
++                Text(ru ? "Адрес или запрос — в строке сверху. Результаты Google откроются в этой вкладке." : "Enter an address or search above. Google results open in this tab.")
++                    .font(.system(size: 12)).foregroundStyle(WorkspaceStyle.secondary).fixedSize(horizontal: false, vertical: true)
+             }.padding(24).frame(maxWidth: 900, alignment: .leading).frame(maxWidth: .infinity, alignment: .topLeading)
+         }.accessibilityIdentifier("workspace.browser.start")
++    }
++    private func toolCard(_ tool: WorkspaceToolDestination) -> some View {
++        Button { select(tool) } label: {
++            HStack(spacing: 12) {
++                Image(systemName: tool.symbol).frame(width: 20).foregroundStyle(WorkspaceStyle.secondary)
++                Text(tool.title(russian: ru)).lineLimit(2)
++                Spacer(minLength: 0)
++                Image(systemName: "chevron.right").font(.system(size: 9)).foregroundStyle(WorkspaceStyle.secondary)
++            }.panelToolCard()
++        }.buttonStyle(WorkspaceRowButtonStyle(padding: 0)).accessibilityIdentifier("workspace.tools.\(tool.symbol)")
++    }
++}
++
++private extension View {
++    func panelToolCard() -> some View {
++        self.font(.system(size: 13, weight: .medium)).padding(.horizontal, 14).padding(.vertical, 12)
++            .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
++            .background(WorkspaceStyle.surface.opacity(0.65), in: RoundedRectangle(cornerRadius: 14))
++            .contentShape(RoundedRectangle(cornerRadius: 14))
+     }
+ }
+
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserStore.swift
+@@ -1,24 +1,39 @@
+ import BlotAppleIntegrations
++import BlotDomain
+ import BlotWorkspace
+ import Foundation
+
+ @MainActor
+ extension WorkspaceStore {
+     var browserCommands: (any WorkspaceBrowserProviding)? { (serviceForBrowser as? any WorkspaceBrowserProviding) }
++    var browserSessionKey: WorkspaceBrowserSessionKey {
++        if let chat = currentConversation, chat.kind == .group { return .group(chat.metadata.id) }
++        return (currentConversation?.agentId ?? selectedAgentID).map { .agent($0) } ?? .workspace
++    }
+     var browser: WorkspaceBrowserController? { browserCommands?.browserSession.controller ?? guestBrowser.controller }
+     @discardableResult func ensureBrowser() -> WorkspaceBrowserController {
+-        if let controller = browserCommands?.workspaceBrowser { return controller }
+-        if let controller = guestBrowser.controller { return controller }
++        if let controller = browserCommands?.workspaceBrowser { controller.activateSession(browserSessionKey); return controller }
++        if let controller = guestBrowser.controller { controller.activateSession(browserSessionKey); return controller }
+         let controller = WorkspaceBrowserController(profileID: UUID(), ephemeral: true)
+-        guestBrowser.controller = controller; return controller
++        guestBrowser.controller = controller; controller.activateSession(browserSessionKey); return controller
+     }
+     func showBrowser() {
+-        presentBrowser(ensureBrowser())
++        let controller = ensureBrowser()
++        if controller.selectedTab?.localPage != nil { try? controller.newTab() }
++        presentBrowser(controller)
++    }
++    func toggleToolsPanel() {
++        let controller = ensureBrowser()
++        if controller.presented { controller.presented = false; return }
++        do {
++            if controller.sessionTabs.isEmpty { try controller.newTab() }
++            presentBrowser(controller)
++        } catch { self.error = error.localizedDescription }
+     }
+     func showTools() {
+         let controller = ensureBrowser()
+         do {
+-            if let blank = controller.tabs.first(where: { $0.url == nil }) { try controller.select(blank.id) }
++            if let blank = controller.sessionTabs.first(where: { $0.url == nil && ($0.localPage == nil || $0.localPage == "start") }) { try controller.select(blank.id) }
+             else { try controller.newTab() }
+             presentBrowser(controller)
+         } catch { self.error = error.localizedDescription }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+@@ -19,14 +19,58 @@
+     @State private var preview: URL?
+     @State private var pendingNavigation: (() throws -> Void)?
+     @State private var navigationTab: UUID?
+-    @State private var toolNavigation = WorkspacePanelNavigation()
++    @State private var menuVisible = false
++    @FocusState private var addressFocused: Bool
++    private var toolNavigation: WorkspacePanelNavigation { store.panelNavigations.navigation(for: controller.selectedTab) }
+     private var ru: Bool { store.language == "ru" }
+     private func text(_ ru: String, _ en: String) -> String { self.ru ? ru : en }
+     var body: some View {
+-        NavigationStack {
+         VStack(spacing: 0) {
++            tabs
+             toolbar
+-            if !controller.tabs.isEmpty { tabs }
++            Divider().opacity(0.45)
++            NavigationStack { page }.id(controller.selectedID)
++        }
++        .environment(\.workspacePanelNavigation, toolNavigation)
++        .workspacePanelControls()
++        .background(WorkspaceStyle.canvas)
++        .task(id: controller.activeSession) {
++            if controller.sessionTabs.isEmpty { work { try controller.newTab() } }
++            else if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } }
++        }
++        .onChange(of: controller.selectedID, initial: true) { _, _ in address = controller.selectedTab?.url?.absoluteString ?? ""; menuVisible = false; showsDownloads = false; preview = nil; pendingNavigation = nil; closing = nil; systemAuthentication = false }
++        .onChange(of: controller.tabs.map(\.id), initial: true) { _, ids in store.panelNavigations.retain(Set(ids)) }
++        .onChange(of: toolNavigation.path) { _, path in
++            if path.isEmpty, controller.selectedTab?.localPage != nil, let id = controller.selectedID {
++                work { _ = try controller.openLocalPage("start", title: text("Новая вкладка", "New tab"), replacing: id) }
++            }
++        }
++        .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
++        .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
++            Button(text("Покинуть без сохранения", "Leave without saving"), role: .destructive) {
++                if let action = pendingNavigation, let id = navigationTab, controller.selectedID == id {
++                    controller.discardForm(id); pendingNavigation = nil; work(action)
++                } else { pendingNavigation = nil }
++            }
++        }
++        .confirmationDialog(text("На странице есть несохранённая форма. Закрыть вкладку?", "This page has an unsaved form. Close the tab?"), isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }), titleVisibility: .visible) {
++            Button(text("Закрыть без сохранения", "Close without saving"), role: .destructive) { if let id = closing { work { try controller.close(id, discard: true) } }; closing = nil }
++        }
++        .alert(text("Системный вход", "System sign-in"), isPresented: $systemAuthentication) {
++            Button(text("Открыть внешний браузер", "Open external browser")) { openSystemAuthentication() }
++            Button(text("Отмена", "Cancel"), role: .cancel) {}
++        } message: { Text(text("Будет открыт браузер macOS/iOS только для этого входа. Его cookies не копируются в Blot.", "The system browser will open for this sign-in. Its cookies are not copied into Blot.")) }
++        .alert(controller.dialog?.origin ?? "", isPresented: Binding(get: { controller.dialog != nil }, set: { if !$0 { controller.dialog?.finish(accepted: false) } })) {
++            if let dialog = controller.dialog {
++                if dialog.kind == .prompt { TextField(text("Ответ", "Response"), text: Binding(get: { dialog.input }, set: { dialog.input = $0 })) }
++                if dialog.kind != .alert { Button(text("Отмена", "Cancel"), role: .cancel) { dialog.finish(accepted: false) } }
++                Button("OK") { dialog.finish(accepted: true) }
++            }
++        } message: { Text(controller.dialog?.message ?? "") }
++        .accessibilityIdentifier("workspace.browser")
++    }
++    private var page: some View {
++        VStack(spacing: 0) {
+             if let center = store.appleIntegrations?.interactions, let pending = center.pending, pending.kind == .confirmation {
+                 VStack(alignment: .leading, spacing: 8) {
+                     Text(pending.title).font(.headline)
+@@ -53,85 +97,85 @@
+             } else { empty }
+             if let error = controller.error { Text(error).font(.caption).foregroundStyle(.red).padding(8) }
+         }
+-        .workspacePanelSheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
+-        }
+-        .environment(\.workspacePanelNavigation, compact ? toolNavigation : nil)
+-        .background(WorkspaceStyle.canvas)
+-        .task { if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } } }
+-        .onChange(of: controller.selectedID, initial: true) { _, _ in toolNavigation.path.removeAll(); address = controller.selectedTab?.url?.absoluteString ?? "" }
+-        .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
+-        .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
+-            Button(text("Покинуть без сохранения", "Leave without saving"), role: .destructive) {
+-                if let action = pendingNavigation, let id = navigationTab, controller.selectedID == id {
+-                    controller.discardForm(id); pendingNavigation = nil; work(action)
+-                } else { pendingNavigation = nil }
+-            }
+-        }
+-        .confirmationDialog(text("На странице есть несохранённая форма. Закрыть вкладку?", "This page has an unsaved form. Close the tab?"), isPresented: Binding(get: { closing != nil }, set: { if !$0 { closing = nil } }), titleVisibility: .visible) {
+-            Button(text("Закрыть без сохранения", "Close without saving"), role: .destructive) { if let id = closing { work { try controller.close(id, discard: true) } }; closing = nil }
+-        }
+-        .alert(text("Системный вход", "System sign-in"), isPresented: $systemAuthentication) {
+-            Button(text("Открыть внешний браузер", "Open external browser")) { openSystemAuthentication() }
+-            Button(text("Отмена", "Cancel"), role: .cancel) {}
+-        } message: { Text(text("Будет открыт браузер macOS/iOS только для этого входа. Его cookies не копируются в Blot.", "The system browser will open for this sign-in. Its cookies are not copied into Blot.")) }
+-        .alert(controller.dialog?.origin ?? "", isPresented: Binding(get: { controller.dialog != nil }, set: { if !$0 { controller.dialog?.finish(accepted: false) } })) {
+-            if let dialog = controller.dialog {
+-                if dialog.kind == .prompt { TextField(text("Ответ", "Response"), text: Binding(get: { dialog.input }, set: { dialog.input = $0 })) }
+-                if dialog.kind != .alert { Button(text("Отмена", "Cancel"), role: .cancel) { dialog.finish(accepted: false) } }
+-                Button("OK") { dialog.finish(accepted: true) }
+-            }
+-        } message: { Text(controller.dialog?.message ?? "") }
+-        .accessibilityIdentifier("workspace.browser")
++        .workspacePanelSheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 280, minHeight: 260).padding(20).quickLookPreview($preview) }
+     }
+     private var toolbar: some View {
+         HStack(spacing: 8) {
+-            button("chevron.left", text("Назад", "Back"), disabled: toolNavigation.path.isEmpty && controller.selectedTab?.canGoBack != true) {
+-                if !toolNavigation.path.isEmpty { toolNavigation.path.removeLast() }
+-                else if let id = controller.selectedID { try controller.back(id) }
+-            }
+-            button("chevron.right", text("Вперёд", "Forward"), disabled: !toolNavigation.path.isEmpty || controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
+-            TextField(text("Поиск Google или адрес", "Search Google or enter a URL"), text: $address).textFieldStyle(.roundedBorder).onSubmit(openAddress)
++            HStack(spacing: 0) {
++                button("chevron.left", text("Назад", "Back"), disabled: toolNavigation.dismissDetail == nil && toolNavigation.path.isEmpty && controller.selectedTab?.canGoBack != true) {
++                    if let dismiss = toolNavigation.dismissDetail { dismiss() }
++                    else if !toolNavigation.path.isEmpty { toolNavigation.path.removeLast() }
++                    else if let id = controller.selectedID { try controller.back(id) }
++                }
++                button("chevron.right", text("Вперёд", "Forward"), disabled: !toolNavigation.path.isEmpty || controller.selectedTab?.canGoForward != true) { if let id = controller.selectedID { try controller.back(id, forward: true) } }
++                Rectangle().fill(WorkspaceStyle.secondary.opacity(0.2)).frame(width: 1, height: 16)
++                button(controller.selectedTab?.loading == true ? "xmark" : "arrow.clockwise", text("Обновить или остановить", "Reload or stop"), disabled: controller.selectedTab?.url == nil) { if let id = controller.selectedID { try controller.reload(id) } }
++            }.background(WorkspaceStyle.surface, in: Capsule())
++            TextField(text("Поиск Google или адрес", "Search Google or enter a URL"), text: $address)
++                .textFieldStyle(.plain).focused($addressFocused).onSubmit(openAddress)
++                .padding(.horizontal, 14).frame(minWidth: 40, minHeight: 36)
++                .background(WorkspaceStyle.surface, in: Capsule())
++                .overlay(Capsule().strokeBorder(WorkspaceStyle.ink.opacity(addressFocused ? 0.3 : 0.08)))
+                 .accessibilityIdentifier("workspace.browser.address")
+-            button(controller.selectedTab?.loading == true ? "xmark" : "arrow.clockwise", text("Обновить или остановить", "Reload or stop")) { if let id = controller.selectedID { try controller.reload(id) } }
+-            Menu {
+-                Button(text("Новая вкладка", "New tab")) { work { try controller.newTab() }; address = "" }
+-                Button(text("Все инструменты", "All tools")) { store.showTools(); toolNavigation.path.removeAll() }
+-                Button(text("Загрузки", "Downloads")) { showsDownloads = true }
+-                Button(text("Доступ агентов", "Agent access")) { toolNavigation.path = [.page(.browserSettings)] }
+-            } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
+-            button("xmark", text("Вернуться к чату", "Return to chat")) {
+-                controller.presented = false
+-                if store.route == .browser { store.back() }
+-            }
+-        }.padding(10)
++            button("arrow.down.to.line", text("Загрузки", "Downloads")) { showsDownloads = true }
++                .background(WorkspaceStyle.surface, in: Circle())
++            Button { menuVisible.toggle() } label: { Image(systemName: "ellipsis").frame(width: 34, height: 34).contentShape(Circle()) }
++                .buttonStyle(.plain).background(WorkspaceStyle.surface, in: Circle()).accessibilityLabel(text("Меню панели", "Panel menu"))
++                .popover(isPresented: $menuVisible, arrowEdge: .bottom) { panelMenu }
++        }.padding(.horizontal, 12).padding(.vertical, 10)
++    }
++    private var panelMenu: some View {
++        VStack(alignment: .leading, spacing: 4) {
++            menuRow("plus", text("Новая вкладка", "New tab")) { work { try controller.newTab() } }
++            menuRow("square.grid.2x2", text("Все инструменты", "All tools")) { store.showTools() }
++            menuRow("globe.badge.shield.half.filled", text("Доступ браузера", "Browser access")) { openTool(.page(.browserSettings)) }
++            Divider().padding(.vertical, 4)
++            menuRow("sidebar.right", text("Закрыть правую панель", "Close right panel")) { controller.presented = false; if store.route == .browser { store.back() } }
++        }.padding(8).frame(width: 236).background(WorkspaceStyle.canvas).presentationCompactAdaptation(.popover)
++    }
++    private func menuRow(_ symbol: String, _ title: String, action: @escaping () -> Void) -> some View {
++        Button { menuVisible = false; action() } label: {
++            Label(title, systemImage: symbol).font(.system(size: 13)).frame(maxWidth: .infinity, minHeight: 34, alignment: .leading)
++                .padding(.horizontal, 10).contentShape(RoundedRectangle(cornerRadius: 10))
++        }.buttonStyle(WorkspaceRowButtonStyle(padding: 0))
+     }
+     private var tabs: some View {
+-        ScrollView(.horizontal) {
+-            HStack(spacing: 6) {
+-                ForEach(controller.tabs) { tab in
+-                    HStack(spacing: 6) {
+-                        Button { work { try controller.select(tab.id) } } label: {
+-                            Text((tab.unsaved ? "• " : "") + tab.title).lineLimit(1).frame(maxWidth: 160)
+-                        }.buttonStyle(.plain)
+-                        Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.caption2) }.buttonStyle(.plain).accessibilityLabel(text("Закрыть вкладку", "Close tab"))
+-                    }.padding(.horizontal, 10).padding(.vertical, 7).background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 8))
+-                }
+-                Button { work { try controller.newTab() } } label: { Image(systemName: "plus").frame(width: 28, height: 28) }
+-                    .buttonStyle(.plain).accessibilityLabel(text("Новая вкладка", "New tab"))
+-            }.padding(.horizontal, 10)
+-        }.scrollIndicators(.hidden)
+-    }
+-    private var empty: some View {
+-        WorkspaceBrowserStartPage(controller: controller) {
+-            toolNavigation.fileID = nil; toolNavigation.taskID = nil; toolNavigation.path = [$0]
++        HStack(spacing: 6) {
++            ScrollView(.horizontal) {
++                HStack(spacing: 6) {
++                    ForEach(controller.sessionTabs) { tab in
++                        HStack(spacing: 7) {
++                            Button { work { try controller.select(tab.id) } } label: {
++                                HStack(spacing: 7) {
++                                    Image(systemName: tab.localPage.flatMap { WorkspaceToolDestination(identifier: $0) }?.symbol ?? "globe").foregroundStyle(WorkspaceStyle.secondary)
++                                    Text(tab.localPage == nil && tab.url == nil ? text("Новая вкладка", "New tab") : (tab.unsaved ? "• " : "") + tab.title).lineLimit(1)
++                                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
++                            }.buttonStyle(.plain)
++                            Button { do { try controller.close(tab.id) } catch WorkspaceBrowserError.unsavedChanges { closing = tab.id } catch { controller.error = error.localizedDescription } } label: { Image(systemName: "xmark").font(.system(size: 10, weight: .medium)).frame(width: 22, height: 26).contentShape(Rectangle()) }
++                                .buttonStyle(.plain).foregroundStyle(WorkspaceStyle.secondary).accessibilityLabel(text("Закрыть вкладку", "Close tab") + " " + tab.title)
++                        }.font(.system(size: 12)).padding(.leading, 12).padding(.trailing, 4).frame(width: 166, height: 36)
++                            .background(controller.selectedID == tab.id ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 12))
++                            .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(WorkspaceStyle.ink.opacity(controller.selectedID == tab.id ? 0.08 : 0)))
++                    }
++                }
++            }.scrollIndicators(.hidden)
++            button("plus", text("Новая вкладка", "New tab")) { try controller.newTab() }
++        }.padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 2)
++    }
++    private var empty: some View { WorkspaceBrowserStartPage(controller: controller, select: openTool) }
++    private func openTool(_ destination: WorkspaceToolDestination) {
++        work {
++            let blank = controller.selectedTab.flatMap { $0.url == nil && ($0.localPage == nil || $0.localPage == "start") ? $0.id : nil }
++            let id = try controller.openLocalPage(destination.identifier, title: destination.title(russian: ru), replacing: blank)
++            store.panelNavigations.reset(controller.tabs.first { $0.id == id }, to: destination)
+         }
+     }
+     private var downloads: some View {
+         VStack(alignment: .leading, spacing: 12) {
+             HStack { Text(text("Загрузки", "Downloads")).font(.headline); Spacer(); Button(text("Закрыть", "Close")) { showsDownloads = false } }
+-            if controller.downloads.isEmpty { Text(text("Загрузок пока нет", "No downloads yet")).foregroundStyle(.secondary) }
++            if controller.sessionDownloads.isEmpty { Text(text("Загрузок пока нет", "No downloads yet")).foregroundStyle(.secondary) }
+             ScrollView {
+-                ForEach(controller.downloads) { item in
++                ForEach(controller.sessionDownloads) { item in
+                     HStack {
+                         VStack(alignment: .leading) { Text(item.name); Text(item.error ?? item.state).font(.caption).foregroundStyle(.secondary) }
+                         Spacer()
+@@ -159,7 +203,7 @@
+         catch { controller.error = error.localizedDescription }
+     }
+     private func button(_ image: String, _ title: String, disabled: Bool = false, action: @escaping () throws -> Void) -> some View {
+-        Button { work(action) } label: { Image(systemName: image).frame(width: 22, height: 24) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
++        Button { work(action) } label: { Image(systemName: image).font(.system(size: 12, weight: .medium)).frame(width: 30, height: 34).contentShape(Rectangle()) }.buttonStyle(.plain).disabled(disabled).accessibilityLabel(title)
+     }
+     private func openSystemAuthentication() {
+         guard let url = controller.selectedTab?.authenticationURL, WorkspaceBrowserURL.isRestrictedAuthentication(url) else { return }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+@@ -5,7 +5,7 @@
+ struct WorkspaceGroupEditor: View {
+     let conversationID: UUID?
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var draft: WorkspaceGroupDraft
+     @State private var query = ""
+diff --git a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceLocalFileView.swift
+@@ -33,10 +33,8 @@
+                     }
+                 }
+                 if let file = file, file.mediaType == "application/pdf" || file.mediaType.hasPrefix("image/") {
+-                    Stepper(value: $page, in: 1...(read?.totalPages ?? 1_000)) {
+-                        Text(ru ? "Страница \(page)" : "Page \(page)")
+-                        if let read { Text(ru ? "Всего: \(read.totalPages)" : "Total: \(read.totalPages)").font(.caption).foregroundStyle(.secondary) }
+-                    }
++                    WorkspaceCounter(title: ru ? "Страница" : "Page", value: $page, range: 1...(read?.totalPages ?? 1_000))
++                    if let read { Text(ru ? "Всего: \(read.totalPages)" : "Total: \(read.totalPages)").font(.caption).foregroundStyle(.secondary) }
+                 }
+                 if let read {
+                     if read.usedOCR { Label(ru ? "Текст распознан на устройстве" : "Text recognized on this device", systemImage: "text.viewfinder").font(.caption).foregroundStyle(.secondary) }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift b/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
+@@ -87,7 +87,7 @@
+     let agents: [BlotV3.AgentProfile]
+     let russian: Bool
+     let commands: (any WorkspaceMCPProviding)?
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var name = ""
+     @State private var configuration = MCPConfiguration()
+@@ -123,7 +123,7 @@
+                     }
+                     if busy { ProgressView() }
+                     if let error { Text(error).foregroundStyle(.red).textSelection(.enabled) }
+-                }.textFieldStyle(.roundedBorder).padding(24).disabled(busy)
++                }.textFieldStyle(WorkspacePanelTextFieldStyle()).padding(24).disabled(busy)
+             }
+             .navigationTitle(text("Подключение MCP", "MCP connection"))
+             .safeAreaInset(edge: .top, spacing: 0) {
+@@ -203,6 +203,6 @@
+             ForEach(agents, id: \.metadata.id) { agent in
+                 Toggle(agent.name, isOn: Binding(get: { selectedAgents.contains(agent.metadata.id) }, set: { if $0 { selectedAgents.insert(agent.metadata.id) } else { selectedAgents.remove(agent.metadata.id) } }))
+             }
+-        }.toggleStyle(.switch)
+-    }
+-}
++        }.toggleStyle(WorkspacePanelToggleStyle())
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift b/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
+@@ -39,10 +39,8 @@
+             Button(text("Подключить папку…", "Connect folder…")) { importing = true }.buttonStyle(WorkspaceButtonStyle()).disabled(busy)
+             #endif
+             if store.selectedConversationID != nil {
+-                Picker(text("Проект этого чата", "Project for this chat"), selection: $selectedID) {
+-                    Text(text("Без проекта", "No project")).tag(Optional<UUID>.none)
+-                    ForEach(projects) { project in Text(project.name).tag(Optional(project.id)) }
+-                }.disabled(busy)
++                WorkspaceChoice(title: text("Проект этого чата", "Project for this chat"), selection: $selectedID,
++                    options: [.init(nil, text("Без проекта", "No project"))] + projects.map { .init(Optional($0.id), $0.name) }).disabled(busy)
+                 .onChange(of: selectedID) { _, value in select(value) }
+             }
+             ForEach(projects) { project in
+@@ -180,7 +178,7 @@
+     let agents: [BlotV3.AgentProfile]
+     let russian: Bool
+     let commands: (any WorkspaceNativeProviding)?
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var selected: Set<UUID> = []
+     @State private var trusted: Set<String> = []
+@@ -193,7 +191,7 @@
+     @State private var error: String?
+     var body: some View {
+         NavigationStack {
+-            Form {
++            WorkspacePanelForm {
+                 Text(folder.lastPathComponent).font(.headline)
+                 Text(folder.path).font(.caption).textSelection(.enabled)
+                 Toggle(russian ? "Доверяю выполнению кода проекта на этом Mac" : "Trust executing this project’s code on this Mac", isOn: $trustCLI)
+@@ -217,7 +215,7 @@
+                 }
+                 if let error { Text(error).foregroundStyle(.red) }
+                 Button(russian ? "Подключить проект" : "Connect project") { connect() }.disabled(busy || !trustCLI || selected.isEmpty)
+-            }.formStyle(.grouped).disabled(busy)
++            }.disabled(busy)
+             .navigationTitle(russian ? "Доступ к проекту" : "Project access")
+             .safeAreaInset(edge: .top, spacing: 0) {
+                 if panelNavigation != nil { WorkspacePanelFormHeader(title: russian ? "Доступ к проекту" : "Project access") { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
+diff --git a/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift b/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift
+--- a/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift
++++ b/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift
+@@ -1,4 +1,21 @@
+ import SwiftUI
++
++extension EnvironmentValues {
++    @Entry var workspacePanelDismiss: WorkspacePanelDismissAction? = nil
++}
++
++nonisolated struct WorkspacePanelDismissAction: Equatable {
++    let id: UUID
++    let perform: @MainActor () -> Void
++    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
++    @MainActor func callAsFunction() { perform() }
++}
++
++@propertyWrapper struct WorkspacePresentationDismiss: DynamicProperty {
++    @Environment(\.dismiss) private var nativeDismiss
++    @Environment(\.workspacePanelDismiss) private var panelDismiss
++    var wrappedValue: () -> Void { { if let panelDismiss { panelDismiss() } else { nativeDismiss() } } }
++}
+
+ /// Tool details use the pane's navigation stack; standalone screens retain their normal sheets.
+ extension View {
+@@ -16,28 +33,50 @@
+     @Binding var item: Item?
+     let onDismiss: (() -> Void)?
+     let destination: (Item) -> Destination
++    @State private var dismissalID = UUID()
+     @Environment(\.workspacePanelNavigation) private var panel
+     func body(content: Content) -> some View {
+         if panel != nil {
+             content.navigationDestination(isPresented: Binding(get: { item != nil }, set: { shown in
+                 if !shown, item != nil { item = nil; onDismiss?() }
+-            })) { if let item { destination(item) } }
++            })) {
++                if let item {
++                    destination(item).environment(\.workspacePanelDismiss, .init(id: dismissalID, perform: { close() })).workspacePanelDetailChrome()
++                        .onAppear { panel?.dismissDetail = .init(id: dismissalID, perform: { close() }) }.onDisappear { panel?.dismissDetail = nil }
++                }
++            }
+         } else { content.sheet(item: $item, onDismiss: onDismiss, content: destination) }
+     }
++    private func close() { guard item != nil else { return }; item = nil; onDismiss?() }
+ }
+
+ private struct WorkspacePanelPresentation<Destination: View>: ViewModifier {
+     @Binding var isPresented: Bool
+     let onDismiss: (() -> Void)?
+     let destination: () -> Destination
++    @State private var dismissalID = UUID()
+     @Environment(\.workspacePanelNavigation) private var panel
+     func body(content: Content) -> some View {
+         if panel != nil {
+             content.navigationDestination(isPresented: Binding(get: { isPresented }, set: { shown in
+                 let dismissed = isPresented && !shown; isPresented = shown
+                 if dismissed { onDismiss?() }
+-            }), destination: destination)
++            })) {
++                destination().environment(\.workspacePanelDismiss, .init(id: dismissalID, perform: { close() })).workspacePanelDetailChrome()
++                    .onAppear { panel?.dismissDetail = .init(id: dismissalID, perform: { close() }) }.onDisappear { panel?.dismissDetail = nil }
++            }
+         } else { content.sheet(isPresented: $isPresented, onDismiss: onDismiss, content: destination) }
++    }
++    private func close() { guard isPresented else { return }; isPresented = false; onDismiss?() }
++}
++
++private extension View {
++    @ViewBuilder func workspacePanelDetailChrome() -> some View {
++        #if os(macOS)
++        self.navigationBarBackButtonHidden(true).toolbarVisibility(.hidden, for: .windowToolbar)
++        #else
++        self.navigationBarBackButtonHidden(true)
++        #endif
+     }
+ }
+
+@@ -47,7 +86,17 @@
+     @ViewBuilder let actions: () -> Actions
+     var body: some View {
+         VStack(spacing: 0) {
+-            HStack(spacing: 10) { Text(title).font(.headline).lineLimit(2); Spacer(minLength: 8); actions() }.padding(14)
++            ViewThatFits(in: .horizontal) {
++                HStack(spacing: 12) {
++                    Text(title).font(.headline).lineLimit(1).fixedSize()
++                    Spacer(minLength: 0)
++                    HStack(spacing: 8, content: actions).fixedSize()
++                }
++                VStack(alignment: .leading, spacing: 12) {
++                    Text(title).font(.headline)
++                    HStack { Spacer(minLength: 0); HStack(spacing: 8, content: actions).fixedSize() }
++                }
++            }.padding(14)
+             Divider()
+         }
+     }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSchedulePolicyLabel.swift b/apps/shared/WorkspaceV3/WorkspaceSchedulePolicyLabel.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSchedulePolicyLabel.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSchedulePolicyLabel.swift
+@@ -6,7 +6,9 @@
+     @Environment(WorkspaceStore.self) private var store
+     var body: some View { Text(title) }
+     private var title: String {
+-        let russian = store.language == "ru"
++        Self.title(policy, russian: store.language == "ru")
++    }
++    static func title(_ policy: BlotV3.MissedRunPolicy, russian: Bool) -> String {
+         switch policy {
+         case .coalesce: return russian ? "Один запуск за всё пропущенное" : "One combined missed run"
+         case .catch_up: return russian ? "Догнать пропущенные запуски" : "Catch up missed runs"
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift b/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSettingsViews.swift
+@@ -123,11 +123,8 @@
+             WorkspaceHeading(title: "Permissions", subtitle: "New agents start in Ask first mode.")
+             WorkspaceCard {
+                 Text(store.t("Default mode")).font(.headline)
+-                Picker(store.t("Access mode"), selection: $store.form.preferences.accessMode) {
+-                    Text(store.t("Observe")).tag(BlotV3.AccessMode.observe)
+-                    Text(store.t("Ask first")).tag(BlotV3.AccessMode.ask_first)
+-                    Text(store.t("Trusted scope")).tag(BlotV3.AccessMode.trusted_scope)
+-                }.pickerStyle(.segmented)
++                WorkspaceChoice(title: store.t("Access mode"), selection: $store.form.preferences.accessMode,
++                    options: [.init(.observe, store.t("Observe")), .init(.ask_first, store.t("Ask first")), .init(.trusted_scope, store.t("Trusted scope"))])
+                 #if os(iOS)
+                 WorkspaceV3ActionButton(title: "Save", action: .saveSetting, kind: .quiet)
+                     .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift b/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
+@@ -5,7 +5,7 @@
+ struct WorkspaceSkillRunner: View {
+     let skill: BlotV3.Skill
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var revisionID: UUID?
+     @State private var agentID: UUID?
+@@ -22,16 +22,13 @@
+     }
+     var body: some View {
+         NavigationStack {
+-            Form {
++            WorkspacePanelForm {
+                 Section {
+-                    Picker(ru ? "Версия" : "Revision", selection: $revisionID) {
+-                        ForEach(revisions, id: \.metadata.id) { version in
+-                            Text(version.metadata.createdAt, format: .dateTime.day().month().hour().minute().second()).tag(Optional(version.metadata.id))
+-                        }
+-                    }.onChange(of: revisionID) { _, _ in values = [:] }
+-                    Picker(ru ? "Агент" : "Agent", selection: $agentID) {
+-                        ForEach(agents, id: \.metadata.id) { agent in Text(agent.name).tag(Optional(agent.metadata.id)) }
+-                    }
++                    WorkspaceChoice(title: ru ? "Версия" : "Revision", selection: $revisionID,
++                        options: revisions.map { .init(Optional($0.metadata.id), $0.metadata.createdAt.formatted(.dateTime.day().month().hour().minute().second().locale(Locale(identifier: store.language)))) })
++                        .onChange(of: revisionID) { _, _ in values = [:] }
++                    WorkspaceChoice(title: ru ? "Агент" : "Agent", selection: $agentID,
++                        options: agents.map { .init(Optional($0.metadata.id), $0.name) })
+                     if agents.isEmpty { Text(ru ? "Назначьте навык агенту в настройках навыка." : "Assign the skill to an agent in its settings.").foregroundStyle(.secondary) }
+                 }
+                 if let revision { Section(ru ? "Инструкция" : "Instructions") { Text(revision.instructions).textSelection(.enabled) } }
+@@ -46,7 +43,7 @@
+                     Text(ru ? "Выбранная версия и параметры сохранятся в задаче." : "The selected revision and parameters are saved with the task.").font(.caption).foregroundStyle(.secondary)
+                 }.disabled(agentID == nil || revision == nil)
+                 if let failure { Text(failure).foregroundStyle(.red) }
+-            }.formStyle(.grouped).disabled(busy)
++            }.disabled(busy)
+             .navigationTitle(skill.name)
+             .safeAreaInset(edge: .top, spacing: 0) {
+                 if panelNavigation != nil { WorkspacePanelFormHeader(title: skill.name) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift b/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
+@@ -1,3 +1,4 @@
++import BlotDesign
+ import BlotDomain
+ import BlotWorkspace
+ import SwiftUI
+@@ -26,8 +27,8 @@
+                 Button { editor = .init(skill: nil) } label: { Label(ru ? "Создать" : "Create", systemImage: "plus") }
+                     .disabled(store.skillCommands == nil)
+             }
+-            TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(.roundedBorder)
+-            Toggle(ru ? "Архив" : "Archive", isOn: $archived).toggleStyle(.switch)
++            TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(WorkspacePanelTextFieldStyle())
++            Toggle(ru ? "Архив" : "Archive", isOn: $archived).toggleStyle(WorkspacePanelToggleStyle())
+             if skills.isEmpty { Text(ru ? "Здесь появятся сохранённые инструкции с параметрами для ваших агентов." : "Saved instructions with parameters for your agents will appear here.").foregroundStyle(.secondary) }
+             ForEach(skills, id: \.metadata.id) { skill in
+                 WorkspaceCard {
+@@ -38,7 +39,7 @@
+                     HStack {
+                         Button(ru ? "Изменить" : "Edit") { editor = .init(skill: skill) }
+                         if !skill.archived { Button(ru ? "Запустить" : "Run") { runner = .init(skill: skill) } }
+-                    }.buttonStyle(.bordered)
++                    }.buttonStyle(WorkspaceButtonStyle(.secondary))
+                 }
+             }
+         }
+@@ -52,7 +53,7 @@
+ struct WorkspaceSkillEditor: View {
+     let skill: BlotV3.Skill?
+     @Environment(WorkspaceStore.self) private var store
+-    @Environment(\.dismiss) private var dismiss
++    @WorkspacePresentationDismiss private var dismiss
+     @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var name = ""
+     @State private var instructions = ""
+@@ -69,18 +70,17 @@
+     }
+     var body: some View {
+         NavigationStack {
+-            Form {
++            WorkspacePanelForm {
+                 Section(ru ? "Инструкция" : "Instructions") {
+                     TextField(ru ? "Название" : "Name", text: $name)
+-                    TextEditor(text: $instructions).frame(minHeight: 150)
++                    TextEditor(text: $instructions).scrollContentBackground(.hidden).padding(10).frame(minHeight: 150).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12)).accessibilityLabel(ru ? "Инструкция" : "Instructions")
+                     Text(ru ? "Для подстановки используйте {{parameter}}. Значения задаются при запуске." : "Use {{parameter}} for values supplied when running.").font(.caption).foregroundStyle(.secondary)
+                 }
+                 Section(ru ? "Параметры" : "Parameters") {
+                     ForEach(parameters.indices, id: \.self) { index in
+-                        HStack {
+-                            TextField("parameter", text: Binding(get: { parameters[index].name }, set: { parameters[index] = .init(name: $0, required: parameters[index].required) }))
+-                            Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
+-                            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }.buttonStyle(.borderless)
++                        ViewThatFits(in: .horizontal) {
++                            HStack(spacing: 12) { parameterField(index); parameterOptions(index).fixedSize() }
++                            VStack(alignment: .leading, spacing: 12) { parameterField(index); parameterOptions(index) }
+                         }
+                     }
+                     Button(ru ? "Добавить параметр" : "Add parameter") { parameters.append(.init(name: "")) }.disabled(parameters.count >= 32)
+@@ -117,7 +117,7 @@
+                     }
+                 }
+                 if let failure { Text(failure).foregroundStyle(.red) }
+-            }.formStyle(.grouped).disabled(busy)
++            }.disabled(busy)
+             .navigationTitle(ru ? "Настройка навыка" : "Skill settings")
+             .safeAreaInset(edge: .top, spacing: 0) {
+                 if panelNavigation != nil { WorkspacePanelFormHeader(title: ru ? "Настройка навыка" : "Skill settings") { cancelButton; saveButton } }
+@@ -137,12 +137,23 @@
+             }
+         }
+     }
++    private func parameterField(_ index: Int) -> some View {
++        TextField("parameter", text: Binding(get: { parameters[index].name }, set: { parameters[index] = .init(name: $0, required: parameters[index].required) }))
++            .frame(minWidth: 110).accessibilityLabel(ru ? "Название параметра" : "Parameter name")
++    }
++    private func parameterOptions(_ index: Int) -> some View {
++        HStack(spacing: 12) {
++            Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
++            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }
++                .buttonStyle(.plain).accessibilityLabel(ru ? "Удалить параметр" : "Remove parameter")
++        }
++    }
+     private var cancelButton: some View { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
+     private var saveButton: some View {
+         Button(store.t("Save")) { perform { commands in
+             _ = try await commands.saveSkill(id: skill?.metadata.id, version: skill?.metadata.version ?? 0, name: name,
+                 instructions: instructions, parameters: parameters, tools: tools.sorted())
+-        } }.disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
++        } }.buttonStyle(WorkspaceButtonStyle()).disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+     }
+     private func perform(close: Bool = true, _ action: @escaping @MainActor (any WorkspaceSkillCommands) async throws -> Void) {
+         guard !busy, let commands = store.skillCommands else { return }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -14,6 +14,7 @@
+     private let service: any WorkspaceService
+     var serviceForBrowser: (any WorkspaceCommandService)? { commands }
+     let guestBrowser = WorkspaceBrowserState()
++    let panelNavigations = WorkspacePanelNavigationRegistry()
+     let voice: VoiceConversationSession
+     let voicePreferences: WorkspaceVoicePreferences
+     var nativeCommands: (any WorkspaceNativeProviding)? { service as? any WorkspaceNativeProviding }
+@@ -86,7 +87,7 @@
+     @ObservationIgnored private let authenticationLog = Logger(subsystem: "dev.blot.authentication", category: "BrowserHandoff")
+     private(set) var snapshot = WorkspaceSnapshot() {
+         didSet {
+-            if snapshot.ownerID != oldValue.ownerID { voice.end(); guestBrowser.controller?.shutdown(); guestBrowser.controller = nil }
++            if snapshot.ownerID != oldValue.ownerID { voice.end(); guestBrowser.controller?.shutdown(); guestBrowser.controller = nil; panelNavigations.clear() }
+             let previousActivityIDs = chatContent.activityMessageIDs
+             chatContent.update(snapshot, previous: oldValue)
+             if snapshot.messages != oldValue.messages || previousActivityIDs != chatContent.activityMessageIDs {
+@@ -144,10 +145,13 @@
+                 restoringComposer = true
+                 form.composer = selectedConversationID.flatMap { conversationDrafts[$0] } ?? WorkspaceComposerForm()
+                 restoringComposer = false
+-            }
+-        }
+-    }
+-    var selectedAgentID: UUID?
++                browser?.activateSession(browserSessionKey)
++            }
++        }
++    }
++    var selectedAgentID: UUID? {
++        didSet { if currentConversation == nil { browser?.activateSession(browserSessionKey) } }
++    }
+     var selectedRecordID: UUID?
+     var inspectorVisible = false
+     var sidebarVisible = true
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+@@ -25,19 +25,13 @@
+             WorkspaceHeading(title: "Tasks")
+             WorkspaceNativeProjectButton()
+             TextField(store.language == "ru" ? "Что нужно сделать?" : "What needs to be done?", text: $goal, axis: .vertical)
+-                .textFieldStyle(.roundedBorder).lineLimit(2...6)
++                .textFieldStyle(WorkspacePanelTextFieldStyle()).lineLimit(2...6)
+             if store.deviceCommands != nil, store.currentConversation?.kind != .group {
+-                Picker(store.language == "ru" ? "Где выполнить" : "Run on", selection: $executorID) {
+-                    Text(store.language == "ru" ? "Это устройство" : "This device").tag(Optional<UUID>.none)
+-                    ForEach((store.snapshot.pairedDevices ?? []).filter { !$0.revoked && $0.kind == .desktop }) { device in Text(device.name).tag(Optional(device.id)) }
+-                }
++                WorkspaceChoice(title: store.language == "ru" ? "Где выполнить" : "Run on", selection: $executorID,
++                    options: [.init(nil, store.language == "ru" ? "Это устройство" : "This device")] + (store.snapshot.pairedDevices ?? []).filter { !$0.revoked && $0.kind == .desktop }.map { .init(Optional($0.id), $0.name) })
+             }
+-            Picker(store.language == "ru" ? "Проект" : "Project", selection: $projectID) {
+-                Text(store.language == "ru" ? "Без проекта" : "No project").tag(Optional<UUID>.none)
+-                ForEach((store.snapshot.projects ?? []).filter { $0.repositoryPath == "device:" + (executorID ?? store.snapshot.localDeviceID ?? UUID()).uuidString }, id: \.metadata.id) { project in
+-                    Text(project.name).tag(Optional(project.metadata.id))
+-                }
+-            }
++            WorkspaceChoice(title: store.language == "ru" ? "Проект" : "Project", selection: $projectID,
++                options: [.init(nil, store.language == "ru" ? "Без проекта" : "No project")] + (store.snapshot.projects ?? []).filter { $0.repositoryPath == "device:" + (executorID ?? store.snapshot.localDeviceID ?? UUID()).uuidString }.map { .init(Optional($0.metadata.id), $0.name) })
+             .onChange(of: executorID) { _, _ in projectID = nil }
+             Button(store.t("Start")) {
+                 let submitted = goal
+@@ -71,7 +65,7 @@
+                                 Button(store.t("Resume")) { control(.start, task: task) }
+                             }
+                             Button(store.t("Stop task"), role: .destructive) { control(.stop, task: task) }
+-                        }.buttonStyle(.bordered).disabled(store.busy)
++                        }.buttonStyle(WorkspaceButtonStyle(.secondary)).disabled(store.busy)
+                     }
+                     if task.state == .interrupted {
+                         Text(store.language == "ru" ? "Прогресс сохранён. Если результат внешнего действия неизвестен, сначала проверьте его в подключении приложения." : "Progress is saved. Resolve any unknown external action outcome in its app connection before continuing.")
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+@@ -217,10 +217,10 @@
+             WorkspaceHeading(title: "Start the morning with a clear plan", subtitle: "Set what to do, when to run and where to show the result.")
+             WorkspaceField(title: "Name", text: $store.form.schedule.name)
+             WorkspaceCard {
+-                DatePicker(store.t("Run time"), selection: $store.form.schedule.time, displayedComponents: .hourAndMinute)
++                WorkspacePanelDateField(title: store.t("Run time"), date: $store.form.schedule.time)
+                 if store.mode == .live {
+                     Toggle(store.t("One-time"), isOn: $store.form.schedule.oneTime)
+-                    if store.form.schedule.oneTime { DatePicker(store.t("Date"), selection: $store.form.schedule.time, displayedComponents: .date) }
++                    if store.form.schedule.oneTime { WorkspacePanelDateField(title: store.t("Date"), date: $store.form.schedule.time, calendarOnly: true) }
+                     WorkspaceField(title: "Time zone", text: $store.form.schedule.timezone)
+                 } else { Text("Asia/Yekaterinburg · UTC+5").font(.caption).foregroundStyle(WorkspaceStyle.secondary) }
+             }
+@@ -240,20 +240,14 @@
+             }
+             WorkspaceField(title: "What to do", text: $store.form.schedule.goal, multiline: true)
+             if store.mode == .live {
+-                Picker(store.t("Agent"), selection: $store.form.schedule.agentID) {
+-                    Text(store.t("Not selected")).tag(nil as UUID?)
+-                    ForEach(store.snapshot.agents, id: \.metadata.id) { agent in Text(agent.name).tag(Optional(agent.metadata.id)) }
+-                }
+-                Picker(store.t("Run tasks on"), selection: $store.form.schedule.deviceID) {
+-                    Text(store.t("Not selected")).tag(nil as UUID?)
+-                    if let id = store.snapshot.localDeviceID { Text(store.t("This device")).tag(Optional(id)) }
+-                    ForEach(store.snapshot.devices, id: \.metadata.id) { device in Text(device.name).tag(Optional(device.metadata.id)) }
+-                }
+-                Picker(store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy) {
+-                    ForEach(BlotV3.MissedRunPolicy.allCases, id: \.self) { policy in WorkspaceSchedulePolicyLabel(policy: policy).tag(policy) }
+-                }
++                WorkspaceChoice(title: store.t("Agent"), selection: $store.form.schedule.agentID,
++                    options: [.init(nil, store.t("Not selected"))] + store.snapshot.agents.map { .init(Optional($0.metadata.id), $0.name) })
++                WorkspaceChoice(title: store.t("Run tasks on"), selection: $store.form.schedule.deviceID,
++                    options: [.init(nil, store.t("Not selected"))] + (store.snapshot.localDeviceID.map { [.init(Optional($0), store.t("This device"))] } ?? []) + store.snapshot.devices.filter { $0.metadata.id != store.snapshot.localDeviceID }.map { .init(Optional($0.metadata.id), $0.name) })
++                WorkspaceChoice(title: store.t("Missed runs"), selection: $store.form.schedule.missedRunPolicy,
++                    options: BlotV3.MissedRunPolicy.allCases.map { .init($0, WorkspaceSchedulePolicyLabel.title($0, russian: store.language == "ru")) })
+                 if store.form.schedule.missedRunPolicy == .catch_up {
+-                    Stepper(store.t("Maximum catch-up runs") + ": \(store.form.schedule.maximumCatchUpRuns)", value: $store.form.schedule.maximumCatchUpRuns, in: 1...100)
++                    WorkspaceCounter(title: store.t("Maximum catch-up runs"), value: $store.form.schedule.maximumCatchUpRuns, range: 1...100)
+                 }
+             }
+             WorkspaceCard { WorkspaceLink(title: "Agent", route: .agents); WorkspaceLink(title: "Computer", route: .devices)
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserDialog.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserDialog.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserDialog.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserDialog.swift
+@@ -19,15 +19,15 @@
+
+ extension BrowserPage {
+     func webView(_ webView: WKWebView, runJavaScriptAlertPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable () -> Void) {
+-        guard let owner, owner.dialog == nil else { completionHandler(); return }
++        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(); return }
+         owner.dialog = BrowserDialog(kind: .alert, message: message, origin: frame.securityOrigin.host) { [weak owner] _ in owner?.dialog = nil; completionHandler() }
+     }
+     func webView(_ webView: WKWebView, runJavaScriptConfirmPanelWithMessage message: String, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (Bool) -> Void) {
+-        guard let owner, owner.dialog == nil else { completionHandler(false); return }
++        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(false); return }
+         owner.dialog = BrowserDialog(kind: .confirmation, message: message, origin: frame.securityOrigin.host) { [weak owner] value in owner?.dialog = nil; completionHandler(value != nil) }
+     }
+     func webView(_ webView: WKWebView, runJavaScriptTextInputPanelWithPrompt prompt: String, defaultText: String?, initiatedByFrame frame: WKFrameInfo, completionHandler: @escaping @MainActor @Sendable (String?) -> Void) {
+-        guard let owner, owner.dialog == nil else { completionHandler(nil); return }
++        guard let owner, owner.activeSession == tab.sessionKey, owner.dialog == nil else { completionHandler(nil); return }
+         owner.dialog = BrowserDialog(kind: .prompt, message: prompt, origin: frame.securityOrigin.host, input: defaultText ?? "") { [weak owner] value in owner?.dialog = nil; completionHandler(value) }
+     }
+ }
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserExecution.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserExecution.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserExecution.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserExecution.swift
+@@ -17,14 +17,14 @@
+             let origin = try WorkspaceBrowserURL.origin(url)
+             guard command.origins.contains("*") || command.origins.contains(origin) else { throw WorkspaceBrowserError.denied }
+             if let tab = tabs.first(where: { $0.id == command.id }) {
+-                guard tab.scope == command.scope, tab.initialURL == url, !tab.stopped else { throw WorkspaceBrowserError.denied }
++                guard tab.scope == command.scope, tab.sessionKey == command.sessionKey, tab.initialURL == url, !tab.stopped else { throw WorkspaceBrowserError.denied }
+                 return .init(tabID: tab.id, documentID: tab.documentID, url: url.absoluteString)
+             }
+             return .init(tabID: command.id, documentID: command.id, url: url.absoluteString)
+         }
+         let tab = try ownedTab(arguments, command: command)
+         if pages[tab.id] == nil, command.name == "browser_snapshot", command.origins.contains("*") {
+-            try select(tab.id); try await pages[tab.id]?.waitForLoad()
++            try activatePage(tab); try await pages[tab.id]?.waitForLoad()
+         }
+         guard pages[tab.id] != nil, !tab.loading, let url = tab.url else { throw WorkspaceBrowserError.stalePage }
+         if WorkspaceBrowserCatalog.requiresConfirmation(command.name) {
+@@ -39,10 +39,11 @@
+     public func execute(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {
+         guard !stopped else { throw WorkspaceBrowserError.unavailable }
+         let arguments = try AppleArguments(command.arguments)
++        let selectedID = selectedID(in: command.sessionKey)
+         if command.name == "browser_tabs" {
+             guard try await prepare(command) == binding else { throw WorkspaceBrowserError.stalePage }
+             let visible = tabs.filter { tab in
+-                guard let url = tab.url, let origin = try? WorkspaceBrowserURL.origin(url), command.origins.contains("*") || command.origins.contains(origin) else { return false }
++                guard tab.sessionKey == command.sessionKey, let url = tab.url, let origin = try? WorkspaceBrowserURL.origin(url), command.origins.contains("*") || command.origins.contains(origin) else { return false }
+                 return tab.scope == nil || tab.scope == command.scope || (command.origins.contains("*") && selectedID == tab.id)
+             }
+             return .value(.object(["tabs": .array(visible.map { tab in
+@@ -55,7 +56,7 @@
+             if let existing = tabs.first(where: { $0.id == binding.tabID }) { tab = existing }
+             else {
+                 guard tabs.count < 32 else { throw WorkspaceBrowserError.busy }
+-                tab = BrowserTab(id: binding.tabID, url: URL(string: binding.url), scope: command.scope, origins: command.origins)
++                tab = BrowserTab(id: binding.tabID, url: URL(string: binding.url), scope: command.scope, origins: command.origins, sessionKey: command.sessionKey)
+                 try createPage(tab); tabsAppend(tab); pages[tab.id]?.load(URL(string: binding.url)!)
+             }
+             guard let page = pages[tab.id] else { throw WorkspaceBrowserError.stalePage }
+@@ -99,11 +100,12 @@
+         }
+     }
+     private func ownedTab(_ arguments: AppleArguments, command: WorkspaceBrowserCommand) throws -> BrowserTab {
++        let selectedID = selectedID(in: command.sessionKey)
+         let id: UUID?
+         if let raw = arguments["tab_id"] { id = UUID(uuidString: raw) }
+         else { id = command.name == "browser_snapshot" ? selectedID : nil }
+         let automaticRead = command.name == "browser_snapshot" && command.origins.contains("*")
+-        guard let id, let tab = tabs.first(where: { $0.id == id }),
++        guard let id, let tab = tabs.first(where: { $0.id == id }), tab.sessionKey == command.sessionKey,
+               (tab.scope == command.scope || (tab.scope == nil && (selectedID == id || automaticRead) && command.name == "browser_snapshot") || (selectedID == id && automaticRead)),
+               (!tab.stopped || automaticRead), let url = tab.url,
+               (try command.origins.contains("*") || command.origins.contains(WorkspaceBrowserURL.origin(url))) else { throw WorkspaceBrowserError.denied }
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserPage.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserPage.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserPage.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserPage.swift
+@@ -159,7 +159,7 @@
+     func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for navigationAction: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+         guard let url = navigationAction.request.url, let owner, owner.permits(url, tab: tab) else { return nil }
+         do {
+-            let child = BrowserTab(url: url, scope: tab.scope, origins: tab.allowedOrigins)
++            let child = BrowserTab(url: url, scope: tab.scope, origins: tab.allowedOrigins, sessionKey: tab.sessionKey)
+             try owner.createPage(child); owner.tabsAppend(child); owner.pages[child.id]?.load(url)
+         } catch { tab.error = error.localizedDescription }
+         return nil
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserTab.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserTab.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserTab.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/BrowserTab.swift
+@@ -6,6 +6,8 @@
+ @MainActor @Observable
+ public final class BrowserTab: Identifiable {
+     public let id: UUID
++    public internal(set) var sessionKey: WorkspaceBrowserSessionKey
++    public internal(set) var localPage: String?
+     let initialURL: URL?
+     public internal(set) var title = "Новая вкладка"
+     public internal(set) var url: URL?
+@@ -24,13 +26,14 @@
+     @ObservationIgnored var allowedOrigins: Set<String> = []
+     @ObservationIgnored var lastUsed = Date()
+     @ObservationIgnored var stopped = false
+-    init(id: UUID = UUID(), url: URL? = nil, scope: WorkspaceBrowserScope? = nil, origins: Set<String> = []) {
+-        self.id = id; self.url = url; initialURL = url; self.scope = scope; allowedOrigins = origins
++    init(id: UUID = UUID(), url: URL? = nil, scope: WorkspaceBrowserScope? = nil, origins: Set<String> = [], sessionKey: WorkspaceBrowserSessionKey = .workspace, localPage: String? = nil) {
++        self.id = id; self.url = url; initialURL = url; self.scope = scope; allowedOrigins = origins; self.sessionKey = sessionKey; self.localPage = localPage
+     }
+ }
+
+ @MainActor @Observable
+ public final class BrowserDownload: Identifiable {
++    public let sessionKey: WorkspaceBrowserSessionKey
+     public let id = UUID()
+     public internal(set) var name = "Загрузка"
+     public internal(set) var state = "running"
+@@ -38,5 +41,5 @@
+     public internal(set) var error: String?
+     @ObservationIgnored let download: WKDownload
+     @ObservationIgnored let tabID: UUID
+-    init(_ download: WKDownload, tabID: UUID) { self.download = download; self.tabID = tabID }
++    init(_ download: WKDownload, tabID: UUID, sessionKey: WorkspaceBrowserSessionKey) { self.download = download; self.tabID = tabID; self.sessionKey = sessionKey }
+ }
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/WorkspaceBrowserController.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/WorkspaceBrowserController.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/WorkspaceBrowserController.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/WorkspaceBrowserController.swift
+@@ -6,7 +6,11 @@
+ @MainActor @Observable
+ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
+     public private(set) var tabs: [BrowserTab] = []
+-    public private(set) var selectedID: UUID?
++    public private(set) var activeSession: WorkspaceBrowserSessionKey = .workspace
++    private var selections: [WorkspaceBrowserSessionKey: UUID] = [:]
++    public var selectedID: UUID? { selections[activeSession] }
++    public var sessionTabs: [BrowserTab] { tabs.filter { $0.sessionKey == activeSession } }
++    @ObservationIgnored private var migratingLegacyTabs = false
+     public var presented = false
+     public var error: String?
+     public var dialog: BrowserDialog?
+@@ -31,33 +35,64 @@
+         dataStore = ephemeral ? .nonPersistent() : WKWebsiteDataStore(forIdentifier: profileID)
+         stateURL = directory?.appendingPathComponent("BrowserTabs.json")
+         downloadsDirectory = (directory ?? FileManager.default.temporaryDirectory.appendingPathComponent("BlotBrowser-" + profileID.uuidString)).appendingPathComponent("Downloads", isDirectory: true)
+-        if let stateURL, let data = try? Data(contentsOf: stateURL), data.count <= 128 * 1024, let urls = try? JSONDecoder().decode([URL].self, from: data) {
+-            tabs = urls.prefix(32).compactMap { url in (try? WorkspaceBrowserURL.validated(url.absoluteString)).map { BrowserTab(url: $0) } }
+-            selectedID = tabs.first?.id
+-        }
+-    }
++        if let stateURL, let data = try? Data(contentsOf: stateURL), data.count <= 512 * 1024 {
++            if let saved = try? JSONDecoder().decode(BrowserSavedSession.self, from: data), saved.version == 2 {
++                var ids: Set<UUID> = []
++                tabs = saved.tabs.prefix(32).compactMap { item in
++                    guard ids.insert(item.id).inserted, item.localPage == nil || item.localPage!.utf8.count <= 100,
++                          item.url == nil || (try? WorkspaceBrowserURL.validated(item.url!.absoluteString)) != nil else { return nil }
++                    let tab = BrowserTab(id: item.id, url: item.url, sessionKey: item.sessionKey, localPage: item.localPage)
++                    tab.title = String(item.title.prefix(200)); return tab
++                }
++                for selection in saved.selections where tabs.contains(where: { $0.id == selection.tabID && $0.sessionKey == selection.key }) {
++                    selections[selection.key] = selection.tabID
++                }
++            } else if let urls = try? JSONDecoder().decode([URL].self, from: data) {
++                tabs = urls.prefix(32).compactMap { url in (try? WorkspaceBrowserURL.validated(url.absoluteString)).map { BrowserTab(url: $0) } }
++                selections[.workspace] = tabs.first?.id; migratingLegacyTabs = !tabs.isEmpty
++            }
++        }
++    }
++    public func activateSession(_ key: WorkspaceBrowserSessionKey) {
++        guard key != activeSession else { return }
++        if migratingLegacyTabs, key != .workspace {
++            for tab in tabs where tab.sessionKey == .workspace { tab.sessionKey = key }
++            selections[key] = selections.removeValue(forKey: .workspace); migratingLegacyTabs = false
++        }
++        dialog?.finish(accepted: false); dialog = nil
++        activeSession = key
++        if selections[key] == nil { selections[key] = sessionTabs.first?.id }
++        saveTabs()
++    }
++    func selectedID(in session: WorkspaceBrowserSessionKey) -> UUID? { selections[session] }
+     public var selectedTab: BrowserTab? { tabs.first { $0.id == selectedID } }
++    public var sessionDownloads: [BrowserDownload] { downloads.filter { $0.sessionKey == activeSession } }
+     public var liveTabCount: Int { pages.count }
+     public func webView(for id: UUID) -> WKWebView? { pages[id]?.view }
+     @discardableResult public func open(_ raw: String) throws -> UUID {
+         guard !stopped, tabs.count < 32 else { throw WorkspaceBrowserError.busy }
+         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+         let url = try WorkspaceBrowserURL.validated(text.contains("://") ? text : "https://" + text)
+-        let tab = BrowserTab(url: url); try createPage(tab)
+-        tabs.append(tab); selectedID = tab.id; presented = true
++        let tab = BrowserTab(url: url, sessionKey: activeSession); try createPage(tab)
++        tabs.append(tab); selections[activeSession] = tab.id; presented = true
+         pages[tab.id]?.load(url); saveTabs(); return tab.id
+     }
+     public func select(_ id: UUID) throws {
+         guard !stopped, let tab = tabs.first(where: { $0.id == id }) else { throw WorkspaceBrowserError.unavailable }
+-        let wasLive = pages[id] != nil
+-        if tab.url != nil { try createPage(tab) }; selectedID = id; tab.lastUsed = Date()
+-        if !wasLive, let url = tab.url { pages[id]?.load(url) }
++        guard tab.sessionKey == activeSession else { throw WorkspaceBrowserError.denied }
++        try activatePage(tab); selections[activeSession] = id; saveTabs()
++    }
++    func activatePage(_ tab: BrowserTab) throws {
++        let wasLive = pages[tab.id] != nil
++        if tab.url != nil { try createPage(tab) }; tab.lastUsed = Date()
++        if !wasLive, let url = tab.url { pages[tab.id]?.load(url) }
+     }
+     public func navigate(_ raw: String, tabID: UUID) throws {
+         guard let tab = tabs.first(where: { $0.id == tabID }), !tab.unsaved else { throw WorkspaceBrowserError.unsavedChanges }
+         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+         let url = try WorkspaceBrowserURL.validated(text.contains("://") ? text : "https://" + text)
+         try select(tabID)
++        tab.localPage = nil
+         try createPage(tab)
+         guard permits(url, tab: tab) else { throw WorkspaceBrowserError.denied }
+         tab.stopped = false; pages[tabID]?.load(url)
+@@ -69,7 +104,10 @@
+         pages.removeValue(forKey: id)?.detach(); busyTabs.remove(id)
+         for item in downloads where item.tabID == id && item.state == "running" { item.download.cancel(nil); item.state = "canceled" }
+         tabs.removeAll { $0.id == id }
+-        if selectedID == id { selectedID = tabs.last?.id; if let selectedID { try? select(selectedID) } }
++        if selections[tab.sessionKey] == id {
++            selections[tab.sessionKey] = tabs.last { $0.sessionKey == tab.sessionKey }?.id
++            if tab.sessionKey == activeSession, let selectedID { try? select(selectedID) }
++        }
+         saveTabs()
+     }
+     public func back(_ id: UUID, forward: Bool = false) throws {
+@@ -91,12 +129,21 @@
+         dialog?.finish(accepted: false); dialog = nil
+         stopped = true; stop(scope: nil)
+         for item in downloads where item.state == "running" { item.download.cancel(nil); item.state = "canceled" }
+-        for page in pages.values { page.detach() }; pages.removeAll(); tabs.removeAll(); selectedID = nil; presented = false
++        for page in pages.values { page.detach() }; pages.removeAll(); tabs.removeAll(); selections.removeAll(); presented = false
+     }
+     public func resume() { stopped = false }
+     public func newTab() throws {
+         guard !stopped, tabs.count < 32 else { throw WorkspaceBrowserError.busy }
+-        tabsAppend(BrowserTab())
++        tabsAppend(BrowserTab(sessionKey: activeSession))
++    }
++    @discardableResult public func openLocalPage(_ page: String, title: String, replacing id: UUID? = nil) throws -> UUID {
++        guard !stopped, page.utf8.count <= 100 else { throw WorkspaceBrowserError.unavailable }
++        if let id, let tab = sessionTabs.first(where: { $0.id == id && $0.url == nil }) {
++            tab.localPage = page; tab.title = title; selections[activeSession] = id; saveTabs(); return id
++        }
++        guard tabs.count < 32 else { throw WorkspaceBrowserError.busy }
++        let tab = BrowserTab(sessionKey: activeSession, localPage: page); tab.title = title
++        tabsAppend(tab); return tab.id
+     }
+     public func discardForm(_ id: UUID) { tabs.first { $0.id == id }?.unsaved = false }
+     func permits(_ url: URL, tab: BrowserTab) -> Bool {
+@@ -115,22 +162,40 @@
+     func saveTabs() {
+         guard let stateURL else { return }
+         do {
+-            let urls = tabs.filter { $0.scope == nil }.compactMap { $0.url.flatMap(WorkspaceBrowserURL.restorable) }
++            let records = tabs.filter { $0.scope == nil }.map { tab in
++                BrowserSavedSession.Tab(id: tab.id, sessionKey: tab.sessionKey, url: tab.url.flatMap(WorkspaceBrowserURL.restorable), localPage: tab.localPage, title: String(tab.title.prefix(200)))
++            }
++            let saved = BrowserSavedSession(version: 2, tabs: records, selections: selections.map { .init(key: $0.key, tabID: $0.value) })
+             try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+-            try JSONEncoder().encode(urls).write(to: stateURL, options: .atomic)
++            try JSONEncoder().encode(saved).write(to: stateURL, options: .atomic)
+         } catch { self.error = "Не удалось сохранить список вкладок." }
+     }
+     func tabsAppend(_ tab: BrowserTab) {
+         guard tabs.count < 32 else { pages.removeValue(forKey: tab.id)?.detach(); error = WorkspaceBrowserError.busy.localizedDescription; return }
+-        tabs.append(tab); selectedID = tab.id; presented = true; saveTabs()
++        tabs.append(tab); selections[tab.sessionKey] = tab.id
++        if tab.sessionKey == activeSession { presented = true }; saveTabs()
+     }
+     func beginDownload(_ download: WKDownload, tabID: UUID) {
+         if downloadHandler == nil { downloadHandler = BrowserDownloadHandler(owner: self) }
+         if downloads.count >= 100 { downloads.removeAll { $0.state != "running" } }
+-        let item = BrowserDownload(download, tabID: tabID); downloads.append(item); download.delegate = downloadHandler
++        let item = BrowserDownload(download, tabID: tabID, sessionKey: tabs.first { $0.id == tabID }?.sessionKey ?? activeSession); downloads.append(item); download.delegate = downloadHandler
+     }
+     public func cancelDownload(_ id: UUID) {
+         guard let item = downloads.first(where: { $0.id == id }), item.state == "running" else { return }
+         item.download.cancel(nil); item.state = "canceled"
+     }
+ }
++
++private struct BrowserSavedSession: Codable {
++    let version: Int
++    let tabs: [Tab]
++    let selections: [Selection]
++    struct Tab: Codable {
++        let id: UUID
++        let sessionKey: WorkspaceBrowserSessionKey
++        let url: URL?
++        let localPage: String?
++        let title: String
++    }
++    struct Selection: Codable { let key: WorkspaceBrowserSessionKey; let tabID: UUID }
++}
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserService.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserService.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserService.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserService.swift
+@@ -50,6 +50,7 @@
+         let scope: WorkspaceBrowserScope
+         let origins: Set<String>
+         let tools: Set<String>
++        let sessionKey: WorkspaceBrowserSessionKey
+     }
+     public func availableDefinitions(context: WorkspaceToolContext) async throws -> [ChatToolDefinition] {
+         do {
+@@ -61,7 +62,7 @@
+     public func authorize(_ name: String, context: WorkspaceToolContext) async throws -> WorkspaceBrowserCommand {
+         let authorization = try await authorization(context)
+         guard authorization.tools.contains(name) else { throw WorkspaceBrowserError.denied }
+-        return .init(id: UUID(), name: name, arguments: .object([:]), scope: authorization.scope, origins: authorization.origins)
++        return .init(id: UUID(), name: name, arguments: .object([:]), scope: authorization.scope, origins: authorization.origins, sessionKey: authorization.sessionKey)
+     }
+     private func authorization(_ context: WorkspaceToolContext) async throws -> Authorization {
+         guard !suspended, let agentID = context.agentID else { throw WorkspaceBrowserError.denied }
+@@ -93,7 +94,9 @@
+                 tools.formIntersection(revision.toolIds); id = task.parentTaskId
+             }
+         }
+-        return Authorization(scope: .init(sourceID: context.sourceMessageID, taskID: context.taskID, agentID: agentID), origins: automaticAccess ? ["*"] : access.origins, tools: tools)
++        let group = projection.conversations.first { $0.metadata.id == source.conversationId && $0.kind == .group }
++        return Authorization(scope: .init(sourceID: context.sourceMessageID, taskID: context.taskID, agentID: agentID), origins: automaticAccess ? ["*"] : access.origins, tools: tools,
++            sessionKey: group.map { .group($0.metadata.id) } ?? .agent(agentID))
+     }
+     public func prepare(_ command: WorkspaceBrowserCommand) async throws -> WorkspaceBrowserBinding { try await driver.prepare(command) }
+     public func perform(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTools.swift
+@@ -24,7 +24,7 @@
+     private func perform(_ call: ChatToolCall, context: WorkspaceToolContext) async throws -> ChatJSON {
+         let authorized = try await service.authorize(call.name, context: context)
+         let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id, scope: .browser)
+-        let command = WorkspaceBrowserCommand(id: actionID, name: call.name, arguments: call.arguments, scope: authorized.scope, origins: authorized.origins)
++        let command = WorkspaceBrowserCommand(id: actionID, name: call.name, arguments: call.arguments, scope: authorized.scope, origins: authorized.origins, sessionKey: authorized.sessionKey)
+         if !WorkspaceBrowserCatalog.requiresConfirmation(call.name) {
+             let binding = try await service.prepare(command)
+             return try await result(service.perform(command, binding: binding), call: call, context: context)
+diff --git a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
+--- a/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
++++ b/packages/BlotWorkspace/Sources/BlotWorkspace/WorkspaceBrowserTypes.swift
+@@ -67,14 +67,19 @@
+     public let agentID: UUID
+     public init(sourceID: UUID, taskID: UUID?, agentID: UUID) { self.sourceID = sourceID; self.taskID = taskID; self.agentID = agentID }
+ }
++public enum WorkspaceBrowserSessionKey: Codable, Hashable, Sendable {
++    case workspace, agent(UUID), group(UUID)
++}
++
+ public struct WorkspaceBrowserCommand: Sendable {
+     public let id: UUID
+     public let name: String
+     public let arguments: ChatJSON
+     public let scope: WorkspaceBrowserScope
+     public let origins: Set<String>
+-    public init(id: UUID, name: String, arguments: ChatJSON, scope: WorkspaceBrowserScope, origins: Set<String>) {
+-        self.id = id; self.name = name; self.arguments = arguments; self.scope = scope; self.origins = origins
++    public let sessionKey: WorkspaceBrowserSessionKey
++    public init(id: UUID, name: String, arguments: ChatJSON, scope: WorkspaceBrowserScope, origins: Set<String>, sessionKey: WorkspaceBrowserSessionKey = .workspace) {
++        self.id = id; self.name = name; self.arguments = arguments; self.scope = scope; self.origins = origins; self.sessionKey = sessionKey
+     }
+ }
+ public struct WorkspaceBrowserBinding: Codable, Equatable, Sendable {
+diff --git a/packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceBrowserTests.swift b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceBrowserTests.swift
+--- a/packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceBrowserTests.swift
++++ b/packages/BlotWorkspace/Tests/BlotWorkspaceTests/WorkspaceBrowserTests.swift
+@@ -140,3 +140,15 @@
+     #expect(tools.contains { $0.name == "browser_snapshot" })
+     await automatic.suspend(); await f.service.suspend()
+ }
++
++@Test func browserAuthorizationRoutesDirectAndGroupCommandsToTheirOwnSession() async throws {
++    let f = try await BrowserFixture(); defer { cleanupWorkspaceTestStorage(f.folder) }
++    let direct = try await f.service.authorize("browser_tabs", context: f.context)
++    #expect(direct.sessionKey == .agent(f.agent))
++    let other = try await WorkspaceAgentService(repository: f.repository, identity: f.identity).save(commandID: UUID(), draft: .init(name: "Colleague", instructions: "Help"))
++    let group = try await WorkspaceGroupService(repository: f.repository, identity: f.identity).create(commandID: UUID(), title: "Group", agentIDs: [f.agent, other])
++    let source = try await WorkspaceChatService(repository: f.repository, identity: f.identity).sendMessage(commandID: UUID(), conversationID: group, content: "Inspect the website")
++    let grouped = try await f.service.authorize("browser_tabs", context: .init(sourceMessageID: source, taskID: nil, allowedToolIDs: Set(WorkspaceBrowserCatalog.toolIDs), agentID: f.agent))
++    #expect(grouped.sessionKey == .group(group))
++    #expect(grouped.scope.agentID == direct.scope.agentID)
++}
+diff --git a/scripts/verify-browser-execution.swift b/scripts/verify-browser-execution.swift
+--- a/scripts/verify-browser-execution.swift
++++ b/scripts/verify-browser-execution.swift
+@@ -39,16 +39,41 @@
+             try await Task.sleep(for: .milliseconds(20))
+         }
+     }
++    static func verifySessions(origin: String) async throws {
++        let browser = WorkspaceBrowserController(profileID: UUID(), ephemeral: true)
++        defer { browser.shutdown() }
++        let first = WorkspaceBrowserSessionKey.agent(UUID()), second = WorkspaceBrowserSessionKey.agent(UUID())
++        browser.activateSession(first)
++        let a = try browser.open(origin + "/page")
++        try await wait { browser.selectedTab?.loading == false }
++        browser.activateSession(second)
++        let b = try browser.open(origin + "/second")
++        try await wait { browser.selectedTab?.loading == false }
++        let scope = WorkspaceBrowserScope(sourceID: UUID(), taskID: nil, agentID: UUID())
++        let readA = WorkspaceBrowserCommand(id: UUID(), name: "browser_snapshot", arguments: .object([:]), scope: scope, origins: ["*"], sessionKey: first)
++        let result = fields(value(try await browser.execute(readA, binding: browser.prepare(readA))))
++        precondition(string(result["tab_id"]) == a.uuidString && string(result["text"]).contains("Local test page"))
++        precondition(browser.activeSession == second && browser.selectedID == b)
++        let cross = WorkspaceBrowserCommand(id: UUID(), name: "browser_snapshot", arguments: .object(["tab_id": .string(b.uuidString)]), scope: scope, origins: ["*"], sessionKey: first)
++        do { _ = try await browser.prepare(cross); preconditionFailure("read another agent session") } catch WorkspaceBrowserError.denied {}
++        let openA = WorkspaceBrowserCommand(id: UUID(), name: "browser_open", arguments: .object(["url": .string(origin + "/page")]), scope: scope, origins: ["*"], sessionKey: first)
++        _ = try await browser.execute(openA, binding: browser.prepare(openA))
++        precondition(browser.activeSession == second && browser.selectedID == b && browser.liveTabCount <= 2)
++        let list = WorkspaceBrowserCommand(id: UUID(), name: "browser_tabs", arguments: .object([:]), scope: scope, origins: ["*"], sessionKey: second)
++        guard case .array(let tabs) = fields(value(try await browser.execute(list, binding: browser.prepare(list))))["tabs"] else { preconditionFailure("missing tabs") }
++        precondition(tabs.count == 1 && string(fields(tabs[0])["tab_id"]) == b.uuidString)
++        print("PASS: background agent reads/opens only its own session, does not select another agent's page, and shares the two-WebView budget")
++    }
+     static func verify() async throws {
+         for window in [760.0, 900, 1280, 1920, 2560] {
+             let layout = MacBrowserSplitLayout(width: window)
+             for requested in [-100.0, 300, 500, 2000, .infinity, .nan] {
+                 let width = layout.browserWidth(requested)
+-                precondition(width.isFinite && width >= 300 && width <= 1000)
++                precondition(width.isFinite && width >= 300 && width <= window - MacBrowserSplitLayout.minimumChatWidth - MacBrowserSplitLayout.dividerWidth)
+                 precondition(window - width - MacBrowserSplitLayout.dividerWidth >= MacBrowserSplitLayout.minimumChatWidth)
+             }
+         }
+-        print("PASS: browser divider bounds preserve at least 420 points for the chat across window sizes and extreme saved widths")
++        print("PASS: browser divider bounds preserve at least 336 points for the chat across window sizes and extreme saved widths")
+         guard CommandLine.arguments.count == 2 else { throw WorkspaceBrowserError.invalidURL }
+         let origin = "http://127.0.0.1:" + CommandLine.arguments[1]
+         let directory = FileManager.default.temporaryDirectory.appendingPathComponent("BlotBrowserVerification-" + UUID().uuidString)
+@@ -122,6 +147,10 @@
+         try await wait { browser.downloads.contains { $0.state == "completed" } }
+         let downloaded = try String(contentsOf: downloadURL, encoding: .utf8)
+         precondition(downloaded == "Blot browser download verified\n")
++        precondition(!browser.sessionDownloads.isEmpty)
++        browser.activateSession(.agent(UUID()))
++        precondition(browser.sessionDownloads.isEmpty)
++        browser.activateSession(.workspace)
+         print("PASS: actual WKDownload writes only to the chosen destination and remains in the app download list")
+
+         let slow = command("browser_open", ["url": .string(origin + "/slow")])
+@@ -153,6 +182,7 @@
+         try pinned.select(pinned.tabs.first!.id)
+         do { _ = try await pinned.execute(active, binding: selectedBinding); preconditionFailure("switched tab reused old binding") } catch WorkspaceBrowserError.stalePage {}
+         print("PASS: selected manual tab is readable with the allowed origin; writes, other origins and stale selection are denied")
++        try await verifySessions(origin: origin)
+         try await BrowserModelVerification.run(origin: origin, directory: directory)
+         try await BrowserModelVerification.selectedTab(origin: origin, directory: directory, group: false)
+         try await BrowserModelVerification.selectedTab(origin: origin, directory: directory, group: true)
+diff --git a/scripts/verify-browser-model.swift b/scripts/verify-browser-model.swift
+--- a/scripts/verify-browser-model.swift
++++ b/scripts/verify-browser-model.swift
+@@ -48,6 +48,7 @@
+             mcpCredentials: BrowserModelCredentials(), makeBrowser: { id, folder in WorkspaceBrowserController(profileID: id, directory: folder, ephemeral: true) },
+             automaticBrowserAccess: automatic, makeModel: { _ in BrowserVerificationModel(origin: origin) })
+         _ = try await service.load()
++        service.workspaceBrowser.activateSession(.agent(agent))
+         if !automatic { try await service.browserService().configure(agents: [agent], origins: [origin]) }
+         let sourceID = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: "Open the approved test page and click Change status after confirmation")
+         let source = try await repository.record(BlotV3.Message.self, id: sourceID, workspaceID: identity.workspaceID)!
+@@ -89,6 +90,7 @@
+             mcpCredentials: BrowserModelCredentials(), makeBrowser: { id, folder in WorkspaceBrowserController(profileID: id, directory: folder, ephemeral: true) },
+             automaticBrowserAccess: automatic, makeModel: { _ in SelectedBrowserVerificationModel() })
+         _ = try await service.load()
++        service.workspaceBrowser.activateSession(group ? .group(chat) : .agent(agent))
+         _ = try service.workspaceBrowser.open(origin + "/page")
+         let deadline = ContinuousClock.now.advanced(by: .seconds(8))
+         while service.workspaceBrowser.selectedTab?.loading == true {
+diff --git a/apps/shared/WorkspaceV3/WorkspacePanelControls.swift b/apps/shared/WorkspaceV3/WorkspacePanelControls.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspacePanelControls.swift
+@@ -0,0 +1,124 @@
++import BlotDesign
++import SwiftUI
++
++/// Forms share Blot's surfaces and spacing while retaining native text editing and accessibility.
++struct WorkspacePanelForm<Content: View>: View {
++    @ViewBuilder let content: Content
++    @Environment(\.workspacePanelNavigation) private var panel
++    var body: some View {
++        if panel != nil {
++            ScrollView {
++                VStack(alignment: .leading, spacing: 24) {
++                    Group(sections: content) { sections in
++                        ForEach(sections) { section in
++                            VStack(alignment: .leading, spacing: 12) {
++                                section.header.font(.system(size: 12, weight: .semibold)).foregroundStyle(WorkspaceStyle.secondary)
++                                VStack(alignment: .leading, spacing: 16) { section.content }
++                                    .frame(maxWidth: .infinity, alignment: .leading).padding(18)
++                                    .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 18))
++                                section.footer.font(.caption).foregroundStyle(WorkspaceStyle.secondary)
++                            }
++                        }
++                    }
++                }.padding(20)
++            }.background(WorkspaceStyle.canvas).workspacePanelControls()
++        } else { Form { content }.formStyle(.grouped) }
++    }
++}
++
++extension View {
++    @ViewBuilder func workspacePanelControls() -> some View {
++        #if os(macOS)
++        self.teamControls()
++        #else
++        self.buttonStyle(WorkspaceButtonStyle(.secondary)).tint(WorkspaceStyle.ink)
++        #endif
++    }
++}
++
++struct WorkspacePanelTextFieldStyle: TextFieldStyle {
++    @Environment(\.workspacePanelNavigation) private var panel
++    @ViewBuilder func _body(configuration: TextField<Self._Label>) -> some View {
++        #if os(macOS)
++        if panel != nil { configuration.textFieldStyle(MacTeamTextFieldStyle()) }
++        else { configuration.textFieldStyle(.roundedBorder) }
++        #else
++        configuration.textFieldStyle(.roundedBorder)
++        #endif
++    }
++}
++
++struct WorkspacePanelToggleStyle: ToggleStyle {
++    @ViewBuilder func makeBody(configuration: Configuration) -> some View {
++        #if os(macOS)
++        Toggle(isOn: configuration.$isOn) { configuration.label }.toggleStyle(MacTeamSwitchStyle())
++        #else
++        Toggle(isOn: configuration.$isOn) { configuration.label }.toggleStyle(.switch)
++        #endif
++    }
++}
++
++struct WorkspaceChoiceOption<Value: Hashable>: Identifiable {
++    let value: Value
++    let title: String
++    var id: Value { value }
++    init(_ value: Value, _ title: String) { self.value = value; self.title = title }
++}
++
++/// A product-styled choice list; the full selected value remains readable in a narrow pane.
++struct WorkspaceChoice<Value: Hashable>: View {
++    let title: String
++    @Binding var selection: Value
++    let options: [WorkspaceChoiceOption<Value>]
++    @State private var expanded = false
++    @Environment(\.isEnabled) private var enabled
++    var body: some View {
++        VStack(alignment: .leading, spacing: 7) {
++            Text(title).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
++            Button { expanded.toggle() } label: {
++                HStack(spacing: 10) {
++                    Text(options.first { $0.value == selection }?.title ?? "—").multilineTextAlignment(.leading)
++                    Spacer(minLength: 4)
++                    Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .medium)).foregroundStyle(WorkspaceStyle.secondary)
++                }.padding(12).frame(maxWidth: .infinity, minHeight: 38, alignment: .leading)
++                    .background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
++                    .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(BlotColor.edge))
++                    .contentShape(RoundedRectangle(cornerRadius: 12))
++            }.buttonStyle(.plain).opacity(enabled ? 1 : 0.45)
++                .accessibilityLabel(title).accessibilityValue(options.first { $0.value == selection }?.title ?? "—")
++                .popover(isPresented: $expanded, arrowEdge: .bottom) {
++                    ScrollView {
++                        LazyVStack(spacing: 3) {
++                            ForEach(options) { option in
++                                Button { selection = option.value; expanded = false } label: {
++                                    HStack(spacing: 12) {
++                                        Text(option.title).multilineTextAlignment(.leading)
++                                        Spacer(minLength: 12)
++                                        Image(systemName: "checkmark").opacity(option.value == selection ? 1 : 0)
++                                    }.font(.system(size: 13)).padding(11).frame(maxWidth: .infinity, alignment: .leading)
++                                        .background(option.value == selection ? WorkspaceStyle.surface : .clear, in: RoundedRectangle(cornerRadius: 10))
++                                        .contentShape(RoundedRectangle(cornerRadius: 10))
++                                }.buttonStyle(.plain).accessibilityAddTraits(option.value == selection ? [.isSelected] : [])
++                            }
++                        }.padding(8)
++                    }.frame(idealWidth: 280, maxHeight: 320).background(WorkspaceStyle.canvas).presentationCompactAdaptation(.popover)
++                }
++        }
++    }
++}
++
++struct WorkspaceCounter: View {
++    let title: String
++    @Binding var value: Int
++    let range: ClosedRange<Int>
++    var step = 1
++    var body: some View {
++        HStack {
++            Text(title).font(.callout)
++            Spacer()
++            Button { value = max(range.lowerBound, value - step) } label: { Image(systemName: "minus") }.disabled(value <= range.lowerBound).accessibilityLabel("−\(step)")
++            Text(value.formatted()).monospacedDigit().frame(minWidth: 24)
++            Button { value = min(range.upperBound, value + step) } label: { Image(systemName: "plus") }.disabled(value >= range.upperBound).accessibilityLabel("+\(step)")
++        }.workspacePanelControls()
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspacePanelDateField.swift b/apps/shared/WorkspaceV3/WorkspacePanelDateField.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspacePanelDateField.swift
+@@ -0,0 +1,68 @@
++import BlotDesign
++import SwiftUI
++
++/// Compact date and time entry uses the same choices and calendar surface as the pane.
++struct WorkspacePanelDateField: View {
++    let title: String
++    @Binding var date: Date
++    var calendarOnly = false
++    @State private var expanded = false
++    @State private var month = Date()
++    @Environment(\.workspacePanelNavigation) private var panel
++    @Environment(\.calendar) private var sourceCalendar
++    @Environment(WorkspaceStore.self) private var store
++    private var ru: Bool { store.language == "ru" }
++    private var calendar: Calendar { var value = sourceCalendar; value.locale = Locale(identifier: store.language); return value }
++    var body: some View {
++        if panel == nil { DatePicker(title, selection: $date, displayedComponents: calendarOnly ? .date : .hourAndMinute) }
++        else if calendarOnly {
++            Button { month = date; expanded = true } label: {
++                HStack { Text(title); Spacer(); Text(date, format: .dateTime.day().month().year()); Image(systemName: "calendar") }
++                    .padding(12).frame(maxWidth: .infinity).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
++            }.buttonStyle(.plain).popover(isPresented: $expanded, arrowEdge: .bottom) { calendarPage }
++        } else {
++            HStack(alignment: .top, spacing: 10) {
++                WorkspaceChoice(title: title, selection: component(.hour), options: (0..<24).map { .init($0, String(format: "%02d", $0)) })
++                WorkspaceChoice(title: ru ? "Минуты" : "Minutes", selection: component(.minute), options: (0..<60).map { .init($0, String(format: "%02d", $0)) })
++            }
++        }
++    }
++    private func component(_ unit: Calendar.Component) -> Binding<Int> {
++        Binding(get: { calendar.component(unit, from: date) }, set: { if let value = calendar.date(bySetting: unit, value: $0, of: date) { date = value } })
++    }
++    private var calendarPage: some View {
++        VStack(spacing: 16) {
++            HStack {
++                Button { moveMonth(-1) } label: { Image(systemName: "chevron.left") }.accessibilityLabel(ru ? "Предыдущий месяц" : "Previous month")
++                Spacer()
++                Text(month.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: store.language)))).font(.headline)
++                Spacer()
++                Button { moveMonth(1) } label: { Image(systemName: "chevron.right") }.accessibilityLabel(ru ? "Следующий месяц" : "Next month")
++            }
++            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
++                ForEach(0..<7, id: \.self) { index in
++                    Text(calendar.veryShortStandaloneWeekdaySymbols[(calendar.firstWeekday - 1 + index) % 7]).font(.caption).foregroundStyle(WorkspaceStyle.secondary)
++                }
++                ForEach(Array(days.enumerated()), id: \.offset) { _, day in
++                    if let day {
++                        Button { select(day) } label: {
++                            Text(calendar.component(.day, from: day).formatted()).monospacedDigit().frame(width: 30, height: 30)
++                                .foregroundStyle(calendar.isDate(day, inSameDayAs: date) ? BlotColor.onInverse : WorkspaceStyle.ink)
++                                .background(calendar.isDate(day, inSameDayAs: date) ? BlotColor.inverse : .clear, in: Circle())
++                        }.buttonStyle(.plain).accessibilityLabel(day.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: store.language))))
++                    } else { Color.clear.frame(width: 30, height: 30) }
++                }
++            }
++        }.padding(16).frame(width: 280).background(WorkspaceStyle.canvas).workspacePanelControls().presentationCompactAdaptation(.popover)
++    }
++    private var days: [Date?] {
++        guard let start = calendar.dateInterval(of: .month, for: month)?.start, let range = calendar.range(of: .day, in: .month, for: start) else { return [] }
++        let offset = (calendar.component(.weekday, from: start) - calendar.firstWeekday + 7) % 7
++        return Array(repeating: nil, count: offset) + range.map { calendar.date(byAdding: .day, value: $0 - 1, to: start) }
++    }
++    private func moveMonth(_ amount: Int) { if let next = calendar.date(byAdding: .month, value: amount, to: month) { month = next } }
++    private func select(_ day: Date) {
++        let time = calendar.dateComponents([.hour, .minute], from: date)
++        if let next = calendar.date(bySettingHour: time.hour ?? 0, minute: time.minute ?? 0, second: 0, of: day) { date = next; expanded = false }
++    }
++}
+diff --git a/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/BrowserSessionTests.swift b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/BrowserSessionTests.swift
+new file mode 100644
+--- /dev/null
++++ b/packages/BlotAppleIntegrations/Tests/BlotAppleIntegrationsTests/BrowserSessionTests.swift
+@@ -0,0 +1,57 @@
++import BlotWorkspace
++import Foundation
++import Testing
++@testable import BlotAppleIntegrations
++
++@Test @MainActor func agentTabsRestoreSelectionAndNeverMixWithOtherAgentsOrGroups() throws {
++    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("blot-session-" + UUID().uuidString)
++    defer { try? FileManager.default.removeItem(at: folder) }
++    let first = WorkspaceBrowserSessionKey.agent(UUID()), second = WorkspaceBrowserSessionKey.agent(UUID()), group = WorkspaceBrowserSessionKey.group(UUID())
++    let browser = WorkspaceBrowserController(profileID: UUID(), directory: folder, ephemeral: true)
++    defer { browser.shutdown() }
++    browser.activateSession(first)
++    let files = try browser.openLocalPage("page:files", title: "Files")
++    let skills = try browser.openLocalPage("page:skills", title: "Skills")
++    try browser.select(files)
++    browser.activateSession(second)
++    #expect(browser.sessionTabs.isEmpty)
++    let memory = try browser.openLocalPage("page:memory", title: "Memory")
++    browser.activateSession(group)
++    let tasks = try browser.openLocalPage("page:running", title: "Tasks")
++    browser.activateSession(first)
++    #expect(browser.selectedID == files)
++    #expect(browser.sessionTabs.map(\.id) == [files, skills])
++    #expect(throws: WorkspaceBrowserError.denied) { try browser.select(memory) }
++    #expect(browser.liveTabCount == 0)
++
++    let restored = WorkspaceBrowserController(profileID: UUID(), directory: folder, ephemeral: true)
++    defer { restored.shutdown() }
++    restored.activateSession(first)
++    #expect(restored.selectedID == files)
++    #expect(restored.sessionTabs.map(\.localPage) == ["page:files", "page:skills"])
++    try restored.close(files)
++    #expect(restored.selectedID == skills)
++    restored.activateSession(second)
++    #expect(restored.selectedID == memory)
++    restored.activateSession(group)
++    #expect(restored.sessionTabs.map(\.id) == [tasks])
++    #expect(restored.liveTabCount == 0)
++}
++
++@Test @MainActor func legacyTabHistoryIsAdoptedOnceWithoutLeakingToEveryAgent() throws {
++    let folder = FileManager.default.temporaryDirectory.appendingPathComponent("blot-legacy-tabs-" + UUID().uuidString)
++    defer { try? FileManager.default.removeItem(at: folder) }
++    try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
++    try JSONEncoder().encode([URL(string: "https://example.com/docs")!]).write(to: folder.appendingPathComponent("BrowserTabs.json"))
++    let browser = WorkspaceBrowserController(profileID: UUID(), directory: folder, ephemeral: true)
++    defer { browser.shutdown() }
++    let first = WorkspaceBrowserSessionKey.agent(UUID())
++    browser.activateSession(first)
++    #expect(browser.sessionTabs.count == 1)
++    #expect(browser.selectedTab?.url?.path == "/docs")
++    browser.activateSession(.agent(UUID()))
++    #expect(browser.sessionTabs.isEmpty)
++    browser.activateSession(first)
++    #expect(browser.sessionTabs.count == 1)
++    #expect(browser.liveTabCount == 0)
++}

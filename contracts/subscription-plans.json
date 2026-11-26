@@ -1,0 +1,5 @@
+[
+  { "id": "premium", "name": "Premium", "amountMinor": 250000, "currency": "RUB" },
+  { "id": "super", "name": "Super", "amountMinor": 500000, "currency": "RUB" },
+  { "id": "ultra", "name": "Ultra", "amountMinor": 1000000, "currency": "RUB" }
+]

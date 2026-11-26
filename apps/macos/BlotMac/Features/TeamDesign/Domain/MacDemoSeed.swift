@@ -4,7 +4,7 @@ enum MacDemoSeed {
     static func make() -> MacDemoState {
         let agents: [MacDemoAgent] = [
             .init(
-                id: "chief", name: "Blot", role: "Координатор",
+                id: "chief", name: "Ori", role: "Координатор",
                 instructions: "Координируй команду, собирай короткие обзоры. Согласовывай отправку писем.",
                 color: "purple", avatarShape: "round", preview: "Утренний обзор готов", unread: true),
             .init(
@@ -115,7 +115,7 @@ enum MacDemoSeed {
                     allowSend: true),
                 .init(id: "calendar", pluginID: "calendar", label: "Мой календарь", account: "work@demo.blot"),
                 .init(id: "drive", pluginID: "drive", label: "Рабочий диск", account: "work@demo.blot"),
-                .init(id: "slack", pluginID: "slack", label: "Blot Team", account: "Команда · Проекты · Клиенты"),
+                .init(id: "slack", pluginID: "slack", label: "Ori Team", account: "Команда · Проекты · Клиенты"),
                 .init(id: "quickbooks", pluginID: "quickbooks", label: "Мой бизнес", account: "Demo Company"),
                 .init(
                     id: "freshdesk", pluginID: "freshdesk", label: "Поддержка", account: "support@demo.blot",

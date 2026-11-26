@@ -44,7 +44,7 @@ struct PhoneProfileIdentitySection: View {
                     if loadingPhoto { ProgressView() }
                     if let photoError { Text(photoError).font(.footnote).foregroundStyle(.secondary) }
                     if hasChanges {
-                        Button(store.t("Save")) { save() }.buttonStyle(.borderedProminent)
+                        Button(store.t("Save")) { save() }.buttonStyle(WorkspaceButtonStyle(.primary))
                             .disabled(loadingPhoto).accessibilityIdentifier("workspace.profile.save")
                     }
                     if saving { ProgressView() }

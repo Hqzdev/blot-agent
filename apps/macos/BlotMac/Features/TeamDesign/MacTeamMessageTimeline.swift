@@ -41,7 +41,9 @@ final class MacTeamMessageTimeline {
             visibleIDs = validIDs
             entranceIDs = []
             pending = []
-            lastRevealedID = initialized ? messages.last?.id : nil
+            if initialized && !validIDs.subtracting(known).isEmpty {
+                lastRevealedID = messages.last?.id
+            }
             initialized = true
             return hasOutgoing
         }

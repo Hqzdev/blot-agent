@@ -25,27 +25,35 @@ public actor WorkspaceFileService {
     }
 
     public func importFile(commandID: UUID, source: URL) async throws -> UUID {
-        let mediaType = try WorkspaceFileFormat.mediaType(forExtension: source.pathExtension)
         let data = try boundedData(at: source)
+        let mediaType: String
+        if let known = try? WorkspaceFileFormat.mediaType(forExtension: source.pathExtension) { mediaType = known }
+        else {
+            guard WorkspaceTextFileFormat.decode(data) != nil else { throw WorkspaceFileError.unsupportedType }
+            mediaType = "text/plain"
+        }
         try extractor.validate(data, mediaType: mediaType)
         return try await store(commandID: commandID, name: source.lastPathComponent, mediaType: mediaType, data: data)
     }
 
-    public func store(commandID: UUID, name: String, mediaType: String, data: Data, taskID: UUID? = nil) async throws -> UUID {
+    public func store(commandID: UUID, name: String, mediaType: String, data: Data, taskID: UUID? = nil, generation: ChatJSON? = nil) async throws -> UUID {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.utf8.count <= 800,
               !name.contains(where: { $0.isNewline || $0 == "/" || $0 == "\\" || $0 == "\0" }) else { throw WorkspaceStorageError.invalidParameters }
         guard data.count <= maximumBytes else { throw WorkspaceFileError.tooLarge }
         try _Concurrency.Task.checkCancellation()
         let hash = Self.digest(data)
         let relativePath = String(hash.prefix(2)) + "/" + hash + "." + WorkspaceFileFormat.fileExtension(mediaType)
-        let destination = try safeURL(relativePath)
-        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
-        if FileManager.default.fileExists(atPath: destination.path) {
-            guard Self.digest(try boundedData(at: destination)) == hash else { throw WorkspaceFileError.integrityMismatch }
-        } else { try data.write(to: destination, options: .atomic) }
-        struct Input: Encodable { let name: String; let mediaType: String; let hash: String; let byteCount: Int; let taskID: UUID? }
+        struct Input: Encodable { let name: String; let mediaType: String; let hash: String?; let byteCount: Int?; let taskID: UUID?; let generation: ChatJSON? }
         let command = try WorkspaceCommand(type: "artifact.store", workspaceID: identity.workspaceID,
-            payload: Input(name: name, mediaType: mediaType, hash: hash, byteCount: data.count, taskID: taskID)).data()
+            payload: Input(name: name, mediaType: mediaType, hash: generation == nil ? hash : nil,
+                byteCount: generation == nil ? data.count : nil, taskID: taskID, generation: generation)).data()
+        // Generated PDF bytes can contain changing timestamps. Bind replay to the exact validated
+        // input, while the persisted artifact continues to bind its original bytes by SHA-256.
+        if try await repository.hasReceipt(commandID: commandID, command: command) {
+            _ = try await url(for: commandID)
+            return commandID
+        }
+        _ = try stage(data, mediaType: mediaType)
         return try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
             let execution = try taskID.map { try tx.require(BlotV3.Task.self, id: $0).execution }
             let artifact = try BlotV3.Artifact(metadata: tx.metadata(id: commandID, now: Date()), execution: execution, name: name,
@@ -53,6 +61,27 @@ public actor WorkspaceFileService {
             try tx.put(artifact, expectedVersion: 0)
             return commandID
         }
+    }
+
+    struct StagedContent: Sendable {
+        let hash: String
+        let relativePath: String
+        let byteCount: Int
+    }
+    func stage(_ data: Data, mediaType: String) throws -> StagedContent {
+        guard data.count <= maximumBytes else { throw WorkspaceFileError.tooLarge }
+        let hash = Self.digest(data)
+        let path = String(hash.prefix(2)) + "/" + hash + "." + WorkspaceFileFormat.fileExtension(mediaType)
+        let destination = try safeURL(path)
+        try FileManager.default.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
+        if FileManager.default.fileExists(atPath: destination.path) {
+            guard Self.digest(try boundedData(at: destination)) == hash else { throw WorkspaceFileError.integrityMismatch }
+        } else { try data.write(to: destination, options: .atomic) }
+        return .init(hash: hash, relativePath: path, byteCount: data.count)
+    }
+
+    func preview(_ data: Data, mediaType: String) throws -> URL {
+        try safeURL(stage(data, mediaType: mediaType).relativePath)
     }
 
     public func url(for artifactID: UUID) async throws -> URL {

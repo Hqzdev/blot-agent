@@ -6,8 +6,10 @@ struct MacTeamSwipeToReply: ViewModifier {
     let onReply: () -> Void
     @Environment(\.blotReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.locale) private var locale
     @State private var swipe = MacTeamReplySwipeState()
     @GestureState private var dragging = false
+    private var russian: Bool { locale.language.languageCode?.identifier == "ru" }
 
     func body(content: Content) -> some View {
         content
@@ -40,8 +42,8 @@ struct MacTeamSwipeToReply: ViewModifier {
             .onChange(of: dragging) { previous, current in
                 if previous && !current && swipe.capturesGesture { finish(cancelled: true) }
             }
-            .help("Два пальца вправо — ответить")
-            .accessibilityAction(named: Text("Ответить")) { onReply() }
+            .help(russian ? "Два пальца вправо — ответить" : "Swipe right with two fingers to reply")
+            .accessibilityAction(named: Text(russian ? "Ответить" : "Reply")) { onReply() }
     }
 
     private func update(_ translation: CGSize) {
@@ -52,7 +54,7 @@ struct MacTeamSwipeToReply: ViewModifier {
 
     private func finish(cancelled: Bool) {
         var reply = false
-        withKAnimation(reduceMotion || systemReduceMotion, .spring(response: 0.36, dampingFraction: 0.72)) {
+        withKAnimation(reduceMotion || systemReduceMotion, KMotion.standard) {
             reply = swipe.finish(cancelled: cancelled)
         }
         if reply { onReply() }

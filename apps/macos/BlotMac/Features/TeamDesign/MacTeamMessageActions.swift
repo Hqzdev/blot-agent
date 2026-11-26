@@ -50,20 +50,20 @@ struct MacTeamMessageMenuLayout: View {
                     react(emoji)
                     close()
                 } label: {
-                    Text(emoji).font(.system(size: 22)).frame(width: 39, height: 40)
+                    Text(emoji).font(.system(size: 22)).frame(maxWidth: .infinity, minHeight: 40)
                         .background(WorkspaceStyle.ink.opacity(selected(emoji) ? 0.1 : 0), in: Circle())
                 }.buttonStyle(BlotPlainButtonStyle()).accessibilityLabel("Реакция " + emoji)
                     .accessibilityAddTraits(selected(emoji) ? [.isSelected] : [])
             }
-        }.padding(.vertical, 3)
-        Divider()
+        }.frame(maxWidth: .infinity).padding(.vertical, 3)
+        WorkspaceMenuGap()
         ForEach(MacTeamMessageAction.allCases, id: \.self) { action in
-            MacTeamNavigationButton {
+            Button {
                 perform(action)
                 close()
             } label: {
-                BlotLabel(action.rawValue, symbol: action.symbol, size: BlotIconSize.control).font(.system(size: 12))
-            }
+                BlotLabel(action.rawValue, symbol: action.symbol, size: BlotIconSize.control).font(.system(size: 13))
+            }.buttonStyle(MacMenuRowStyle())
         }
     }
 }

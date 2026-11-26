@@ -31,6 +31,7 @@ enum WorkspaceFailureCopy {
             switch model {
             case .http(401), .http(403): return "Провайдер ИИ отклонил доступ. Проверьте ключ и права на модель. Сообщение сохранено."
             case .http(402): return "У провайдера ИИ закончился доступный баланс или пакет токенов. Сообщение сохранено."
+            case .quotaExceeded(let reset): return "Лимит Ori исчерпан. Снова доступно \(reset.formatted(date: .abbreviated, time: .shortened))."
             case .http(429): return "Провайдер ИИ ограничил частоту запросов. Повторите ответ немного позже."
             case .http(let status): return "Провайдер ИИ вернул ошибку HTTP \(status). Сообщение сохранено; можно повторить ответ."
             case .invalidConfiguration: return "Не настроено подключение выбранной модели. Проверьте модель и ключ."

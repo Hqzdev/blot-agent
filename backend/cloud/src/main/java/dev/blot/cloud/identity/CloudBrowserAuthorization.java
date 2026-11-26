@@ -2,10 +2,12 @@ package dev.blot.cloud.identity;
 
 import dev.blot.cloud.CloudFailure;
 import dev.blot.cloud.storage.CloudDatabase;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.Clock;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -21,13 +23,41 @@ public final class CloudBrowserAuthorization {
   private final CloudTokens tokens;
   private final CloudSessions sessions;
   private final Clock clock;
+  private final Map<String, String> callbacks;
 
   public CloudBrowserAuthorization(
       CloudDatabase database, CloudTokens tokens, CloudSessions sessions, Clock clock) {
+    this(database, tokens, sessions, clock, "");
+  }
+
+  public CloudBrowserAuthorization(
+      CloudDatabase database,
+      CloudTokens tokens,
+      CloudSessions sessions,
+      Clock clock,
+      String webOrigin) {
     this.database = database;
     this.tokens = tokens;
     this.sessions = sessions;
     this.clock = clock;
+    var configured = new HashMap<>(CALLBACKS);
+    if (!webOrigin.isBlank()) {
+      URI origin = URI.create(webOrigin);
+      boolean loopback =
+          "http".equals(origin.getScheme())
+              && ("localhost".equals(origin.getHost()) || "127.0.0.1".equals(origin.getHost()));
+      if ((!"https".equals(origin.getScheme()) && !loopback)
+          || origin.getHost() == null
+          || origin.getUserInfo() != null
+          || origin.getQuery() != null
+          || origin.getFragment() != null
+          || !java.util.Set.of("", "/", "/app", "/app/").contains(origin.getPath())) {
+        throw new IllegalArgumentException("Invalid web application origin");
+      }
+      String prefix = origin.getPath().startsWith("/app") ? "/app" : "";
+      configured.put("blot-web", origin.resolve(prefix + "/api/auth/blot/callback").toString());
+    }
+    callbacks = Map.copyOf(configured);
   }
 
   public Code issue(CloudActor actor, String clientID, String redirectURI, String challenge) {
@@ -100,8 +130,8 @@ public final class CloudBrowserAuthorization {
         });
   }
 
-  private static void validateClient(String clientID, String redirectURI) {
-    if (clientID == null || redirectURI == null || !redirectURI.equals(CALLBACKS.get(clientID)))
+  private void validateClient(String clientID, String redirectURI) {
+    if (clientID == null || redirectURI == null || !redirectURI.equals(callbacks.get(clientID)))
       throw invalid();
   }
 

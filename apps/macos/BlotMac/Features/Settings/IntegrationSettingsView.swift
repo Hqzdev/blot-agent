@@ -58,12 +58,12 @@ struct IntegrationSettingsView: View {
                     SettingsChoice(title: "Open files in", value: $settings.editor, options: ["VS Code", "Xcode", "Cursor", "System default"])
                 }
                 SettingsDivider()
-                SettingsToggleRow(title: "Preview files in Blot", detail: "Show a file preview before opening it externally.", value: $settings.editorPreview)
+                SettingsToggleRow(title: "Preview files in Ori", detail: "Show a file preview before opening it externally.", value: $settings.editorPreview)
             }
         case .browser:
             SettingsGroup(title: "Browser") {
                 SettingsRow(title: "Open links in", detail: "Choose where task links open.") {
-                    SettingsChoice(title: "Browser", value: $settings.browser, options: ["System default", "Safari", "Chrome", "Blot browser"])
+                    SettingsChoice(title: "Browser", value: $settings.browser, options: ["System default", "Safari", "Chrome", "Ori browser"])
                 }
                 SettingsDivider()
                 SettingsToggleRow(title: "Show browser previews", detail: "Display web previews alongside task results.", value: $settings.browserPreview)

@@ -24015,6 +24015,568 @@ Gate функциональной готовности: задача с iPhone �
 ## 23. Подготовленные архитектурные документы
 
 
+### docs/implementation/workspace-workflows.md
+
+#### Workspace workflows: implementation and setup
+
+Updated 18 November 2026. Owning platform: macOS; shared Apple code also compiles for iOS. Enterprise dashboard is excluded from this scope.
+
+##### Implemented paths
+
+| Scenario | Entry point | Persisted behavior |
+| --- | --- | --- |
+| Routines | Schedules → Edit / Delete | Optimistic versions; enable/pause, recurrence, timezone, missed runs; deleting a routine preserves prior runs/tasks |
+| Custom Rules | Privacy → Rules | Personal ask-first/automatic rules scoped to tool, resource and agent; purchases and Gmail sending retain mandatory review |
+| Memory review | Memory → Accept / Reject | Candidates are excluded from context until accepted; rejecting a candidate does not forget its source message |
+| Memory import | Memory → Import | Copyable export prompt for another assistant, pasted facts, editable preview and selection; original input retained as source artifact |
+| Website purchases | Agent browser tools | Visible pointer, pause/takeover, validated order card, approve/deny, exact document and page-content binding before payment click; bank confirmation is manual |
+| Teach a task | Skills → Teach a task (Mac) | Select running app; record supported accessible buttons and ordinary text values; timer, pause, step review/edit/remove; saved recording artifact plus runnable skill |
+| Taught task execution | Skill → Run | Owner approves recorded sequence; ambiguous/changed targets or application switching stop it; no automatic retry; iPhone can inspect/edit recorded steps and request execution on a paired physical Mac |
+| Vault | Privacy → Vault | Owner-scoped device Keychain; login, contact, API secret and tokenized-card reference; CSV import; optimistic item versions |
+| 1Password | Catalog → 1Password | Authenticate to an HTTPS Connect Server, select permitted vaults, import chosen logins into device Vault; passwords do not enter model output |
+| Google services | Catalog → Gmail / Calendar / Drive | Native PKCE OAuth, Keychain refresh tokens, account/agent assignment, direct Google APIs; mail search/read/draft/send, calendar discovery/list/create/update, Drive search/text/export |
+| Remote MCP services | Catalog → Notion / GitHub / Airtable / Asana / Granola | Official endpoints; discovery, PKCE OAuth or supported bearer/header credentials; choose actual server tools and assigned agents |
+| Slack / Teams | Catalog → service | Native public-client PKCE OAuth; Slack can also use an owner-provided bot token; direct channel/message APIs, reviewed sending |
+| Team Bot Manage | General or Privacy → Team Bots Manage | Server teams, verified-email invitations, owner/admin/member roles; versioned bot configuration, assigned physical desktop, channel triggers and allowed tools |
+| Team Bot runtime | Blot running on selected Mac | Polls configured channels every 65 seconds, creates channel-isolated tasks, excludes personal memories, limits tools, adds owner review for changes; final reply returns to originating thread with a durable send claim |
+| Pages / Library | Files → Pages and Library | Text/table/metric/link blocks, search, table filters, pins, archive/restore, immutable version history and conflict resolution; page_list/read/create/update tools and inline result cards |
+| Sharing | Page / Skill → Share snapshot link | Explicit immutable publication, expiration 1–90 days, owner revocation and escaped public HTML; source history/chat/credentials are excluded |
+| Marketplace skills | Skills → Marketplace | Reviewable bundled templates, install, JSON import/export, expiring publication; installation never grants tools or assignments |
+| Composer skills | Composer attachment menu → Skills | Search installed skills, supply parameters, choose agent/revision/device and run |
+| Billing | Usage → Billing | Current plan, monthly prices, owner-scoped payment history with test labels, web checkout, cancel to Free; YooKassa remains test-only |
+| Updates | Settings → Updates | Installed version/build; Stable/Beta; fetch explicitly published release metadata and open its HTTPS download page |
+
+##### External setup still required
+
+Slack and Microsoft apps have not been registered, as confirmed by the owner. No external accounts have been authorized during development. Implemented adapters are not evidence of a completed live provider test.
+
+The new cloud endpoints and web Billing endpoint must be deployed before those features work against the hosted service. This implementation does not silently deploy backend changes or pretend an old server supports new routes. Native features continue working locally when cloud collaboration is unavailable.
+
+###### Slack
+
+1. Create a Slack app in the test workspace. Enable PKCE/public client.
+2. Register `blot-agent-macos:/plugins/slack` and `blot-agent-ios:/plugins/slack`.
+3. User scopes: `channels:read`, `groups:read`, `channels:history`, `groups:history`, `chat:write`, `search:read`, `users:read`.
+4. Set public `BLOT_SLACK_CLIENT_ID` before building, or enter the client ID in the native connector.
+5. Native PKCE grants act as the signed-in user. Slack does not allow bot scopes on native redirects. For a distinct bot identity, install a bot in the workspace and connect its `xoxb-` token in the SecureField; invite it to each selected channel. Never put a client secret in the native app.
+6. Team Bot channel configuration uses the connector UUID shown in settings, Slack workspace ID, channel ID and a nonempty trigger such as `<@BOT_USER_ID>`.
+
+Sources: [Slack PKCE](https://docs.slack.dev/authentication/using-pkce/), [OAuth installation](https://docs.slack.dev/authentication/installing-with-oauth/).
+
+###### Microsoft Teams
+
+1. Register an Entra app supporting work/school accounts and public desktop/mobile authorization.
+2. Register `blot-agent-macos:/plugins/teams` and `blot-agent-ios:/plugins/teams` as native redirects; enable the public-client flow.
+3. Delegated scopes: `User.Read`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `offline_access`. Tenant consent may be required.
+4. Set public `BLOT_TEAMS_CLIENT_ID`, or enter it in the connector. Sign in on the Mac that executes the bot.
+5. Configure connector UUID, Microsoft team ID, channel ID and trigger in Team Bot Manage.
+
+This adapter posts as the signed-in Microsoft user. It is not an Azure Bot Framework app or a separately installed Teams bot identity. Such an identity needs its own Azure registration and deployment.
+
+Sources: [Microsoft PKCE flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow), [Read channel messages](https://learn.microsoft.com/en-us/graph/api/channel-list-messages?view=graph-rest-1.0), [Send channel messages](https://learn.microsoft.com/en-us/graph/api/channel-post-messages?view=graph-rest-1.0).
+
+###### Google
+
+Enable Gmail, Calendar and Drive APIs in the existing Google Cloud project. Configure native macOS/iOS clients using the existing `BLOT_GOOGLE_MACOS_CLIENT_ID` / `BLOT_GOOGLE_IOS_CLIENT_ID` build inputs. Add test users to the OAuth consent screen. Each service requests its own scopes and requires explicit account authorization. Public distribution with Gmail restricted scopes may require provider review; a working test-user login does not establish public verification.
+
+[Google sending format](https://developers.google.com/workspace/gmail/api/guides/sending), [Calendar events](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert), [Drive export](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/export).
+
+###### MCP and 1Password
+
+Official MCP endpoints are preset in the catalog. Dynamic registration works only where offered. Providers that require registration need their registered client ID; a provider rejection remains a failed connection, not a simulated connected state. GitHub additionally supports its documented PAT setup. Generic MCP supports custom headers and local stdio on Mac.
+
+1Password needs an existing account, running Connect Server and scoped Connect token. The UI accepts HTTPS only. [Connect requirements and API](https://developer.1password.com/docs/connect/connect-api-reference/).
+
+##### What can be tested without buying an API subscription
+
+Provider quotas and eligibility were checked against official documentation on 18 November 2026. Free account availability does not mean every remote MCP tool is free or unlimited.
+
+| Plugin | Test access |
+| --- | --- |
+| Apple apps, Pages, Routines, Rules, Vault, Teach | Local features need no external service API key; macOS system permissions still apply |
+| GitHub | Free account plus appropriately scoped PAT; [authentication and rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) |
+| Gmail / Calendar / Drive | Google account and Cloud project with test users; check the current per-project quotas, including the 2026 changes: [Gmail limits](https://developers.google.com/workspace/gmail/api/reference/quota) |
+| Slack | Own development workspace/app; Free workspaces allow up to 10 custom/third-party app installations; [Free limitations](https://slack.com/help/articles/27204752526611-Feature-limitations-on-the-free-version-of-Slack) |
+| Airtable | Free workspace quota: 1,000 API calls/month; [limits](https://support.airtable.com/articles/7735693959-managing-api-call-limits-in-airtable). MCP access is still subject to provider consent/tool availability |
+| Asana | Free domains have API quota of 150 requests/minute; registration is needed for its MCP OAuth integration; [API limits](https://developers.asana.com/docs/rate-limits) |
+| Granola | Basic includes MCP and its last 30 days of notes; [official description](https://www.granola.ai/blog/granola-mcp-claude-chatgpt-cursor) |
+| Notion | Connect using the workspace's available MCP permissions; some tool/plan capabilities and enterprise approved-client policies can restrict access; [Notion MCP](https://www.notion.com/help/notion-mcp). No blanket claim that every tool is free |
+| Teams | Work/school tenant with Teams entitlement; eligible members can request a Microsoft 365 developer subscription, not every account qualifies; [Developer Program](https://learn.microsoft.com/office/developer-program/microsoft-365-developer-program) |
+| 1Password | Existing account/Connect or a provider trial; no perpetual free API tier is promised |
+| Generic MCP | Depends on the chosen server; a local stdio server can be tested without a hosted subscription |
+
+QuickBooks, Freshdesk, Beehiiv, Composio, Zapier, Adobe, Atlassian and Loom retain catalog entries. They are not presented as authenticated, working built-in integrations without a real connector/account. A service-supported MCP server can be added through generic MCP.
+
+##### Cloud/API compatibility and deployment
+
+- SQLite cloud schema advances from 5 to 6; new collaboration/publication tables do not replace existing account/device/sync data. Account deletion cascades through the new owner/member records.
+- Additive API prefix `/v1/collaboration`: teams, members, email-bound invites, bots with expected versions, publications and anonymous token read/share routes. Team members can read team configuration; only owner/admin can manage it. Bot execution credentials remain device-local.
+- Public shares contain an explicitly published snapshot in plaintext on the cloud server. They are not the encrypted private workspace backup. Links are random, stored as hashes, expiring and revocable; HTML escapes content and disables scripts/frames.
+- Public `/v1/releases/latest?platform=macos|ios&channel=stable|beta`: returns 204 until deployment config publishes metadata. Set `BLOT_RELEASE_<PLATFORM>_<CHANNEL>_JSON_FILE` to a file containing `version`, integer `build`, `minimumOS`, HTTPS `downloadURL`, `notes`, ISO-8601 `publishedAt`. Native clients open the advertised download page; they do not replace installed binaries automatically.
+- Web Billing adds `getPaymentHistory` RPC and `/app/api/billing/overview`. Native bearer authorization resolves the existing Blot account; it does not create a second user. Provider payloads and confirmation secrets are excluded from history. Deploy the Billing service and web gateway together.
+- Swift signed task delegation adds optional `skillRevisionID` with proof domain `BLOT-TASK-DELEGATION-3`. Existing task proofs remain domains 1/2. Older clients safely reject the new proof; update both Apple clients for remote skill execution. Shared Java source transfer does not implement this Apple-local executor on Android/Windows.
+- Pages/recordings use existing immutable artifacts; no new replicated record kind is introduced. Purchase/Page card variants have text fallback for older viewers. Personal rules and team task policies use typed existing grant records; they never expand underlying tool permissions.
+- Vault remains device-local Keychain storage. No cloud/team Vault synchronization is claimed. Raw card PAN/CVC, passwords and API secret values do not belong in chat cards or model tool results.
+- Teach records supported accessibility controls and ordinary text values, not arbitrary gestures, hotkeys, video or secure fields. The private signed executor needs macOS Accessibility permission. No simulator is needed or used.
+- Team polling runs while the selected Mac is awake and Blot is open. New channels begin at activation time; old history is not replayed automatically. Unknown delivery outcomes are not resent; verify the external thread first.
+
+##### Validation evidence
+
+Logs are project-local under `.build/workflows-*.log`. Builds use `.build/xcode` and `.build/ios`; Swift tests reuse `.build/swift`. No simulator or runtime download is part of validation. Live OAuth, merchant/bank payments and external Slack/Teams messaging require owner accounts and provider registrations; unit fixtures do not substitute for those checks.
+
+Latest local validation: all 201 Swift core tests passed, including the purchase-flow regression test. Two real WebKit/session tests passed on the Mac, including secret-field exclusion from order review. Java core/cloud checks passed (20 cloud tests); Billing's five focused unit tests, TypeScript typecheck, seven Apple build-configuration tests and 168 schema fixtures passed. Production SwiftUI rendering captured all 13 card types plus 42 chat-layout frames. The purchase amount/monthly-label and saved-page status issues found in those frames were corrected and rendered again.
+
+Mac process launch succeeded, but the CUA service returned `cgWindowNotFound` for the main app window. Manual interaction with the live account window is not recorded as passed. iOS was compiled for a generic physical-device destination with signing disabled; no iPhone installation or simulator run was performed.
+
+
+### docs/status/web-same-domain.md
+
+#### Веб Blot на основном домене
+
+Дата: 16 ноября 2026. Ветка: `mac/workspace`. Изменения реализованы в текущем проекте и проверены локально. Публикация этого выпуска пока не выполнена.
+
+##### Причина перехода
+
+Первоначальный выпуск использовал отдельные deployments сайта и веба с разными публичными адресами. Переменная `BLOT_WEB_APP_URL` направляла вход сайта на `blot-web-ha1zyys-projects.vercel.app`. Отдельный пользовательский домен для этого не требуется.
+
+Публичный адрес веба после публикации: `https://blot-agent.vercel.app/app`. Лендинг остаётся в `/`, общая страница входа — в `/login`, account API и резервные копии Apple — в `/v1`. Прежний веб-адрес остаётся серверным upstream для proxy, без перехода браузера на него.
+
+##### Реализация
+
+- Веб собирается с Next.js `basePath: /app`. Обновлены браузерные API-запросы, загрузки, ссылки на ресурсы, Auth.js, история URL и проверки E2E. Next Link/router и серверные navigation redirects сохраняют пути без префикса там, где Next.js добавляет его сам.
+- `landing/proxy.js` передаёт `/app/*` отдельному веб-deployment, сохраняя путь. Новый случайный `BLOT_WEB_PROXY_SECRET` аутентифицирует серверный переход; он хранится только в серверном окружении обоих deployments. Клиентам он не выдаётся.
+- Общий вход принимает точный callback `/app/api/auth/blot/callback`. Allowlist поддерживает прежнее размещение в корне для совместимости конфигураций. Нативные callbacks Mac/iPhone сохранены.
+- Auth.js получает полный публичный путь: Next.js удаляет basePath из внутренних route requests. Нормализация применяется к Auth.js handlers и проверке PKCE callback.
+- Попытки входа имеют отдельные зашифрованные cookies по state, сроком пять минут. Одна вкладка больше не перезаписывает verifier другой. Cookies ограничены `/app`; HTTPS использует Secure.
+- Переходы с лендинга на вход используют обычную навигацию между Next.js zones. Это исключает предварительную загрузку состояния входа через Next Link.
+
+Исходная production-ошибка на скриншоте зарегистрирована на стадии проверки попытки входа, до обмена кода. Существующие логи не позволяют установить, отсутствовал ли cookie, истёк ли он или не совпало состояние. Исправления путей `/app` дополнительно проверены при подготовке размещения на одном домене; они не объявляются доказанной причиной исходной ошибки на старом адресе.
+
+##### Проверки
+
+Успешно выполнены production-сборки Next.js сайта и веба; web lint, TypeScript и проверки workspace; 50 веб-тестов; 38 тестов общего входа/accounts; Java cloud tests с проверкой нового callback; 167 контрактных fixtures и совместимость web/Apple payloads.
+
+`scripts/verify-web-blot-login.mjs` запускает обе настоящие Next.js production-сборки, HTTPS на публичном и upstream переходах, настоящий proxy сайта и изолированный AccountService с PostgreSQL-совместимым PGlite. Проверены переход `/login → /app`, защита чатов, PKCE, Secure-сессия того же owner, параллельная вкладка, подмена state, повтор кода, отзыв и выход. Каждый браузерный redirect проверяется на сохранение публичного origin. Временные тестовые записи не попадают в production PostgreSQL. Тест добавлен в CI вместе со сборкой proxy.
+
+Личный вход через Google/Яндекс/письмо и новая production-маршрутизация до публикации не проверялись. Приложения и симуляторы не запускались.
+
+##### Подготовленный выпуск и блокировка
+
+Production-проект Vercel: `landing`, `prj_kUhW84aq7Ygx3w8mLeBCOJxX4YBd`, команда `ha1zyys-projects`. Требуются значения:
+
+```text
+AUTH_URL=https://blot-agent.vercel.app
+BLOT_WEB_APP_URL=https://blot-agent.vercel.app/app
+BLOT_WEB_UPSTREAM_URL=https://blot-web-ha1zyys-projects.vercel.app
+BLOT_WEB_PROXY_SECRET=<новый случайный серверный секрет>
+```
+
+Остальные production-переменные, PostgreSQL credentials и AUTH_SECRET сохраняются. После обновления окружения требуется собрать оба deployments и явно назначить каждому его alias. Автоматическое назначение всех доменов одному deployment остаётся отключённым.
+
+Автоматическая проверка отклонила запись production-переменных и нового секрета: потребовала явного согласия владельца на отправку этого секрета указанному проекту Vercel. Повторная запись, публикация и переключение aliases не выполнялись. Продолжение выпуска ожидает подтверждения пользователя.
+
+
+### docs/product/blot-unification-plan.md
+
+#### План объединения Blot Pilot Agent и Lumia
+
+План определяет, как перенести существующие проекты в шесть приложений Blot и подключить их к общему аккаунту, PostgreSQL и GigaChat.
+
+Дата решений владельца: 15 ноября 2026. Исходники перенесены в `apps/terminal/` и `apps/web/`; подключение общего аккаунта, PostgreSQL и GigaChat остаётся следующим этапом. [Результаты переноса и проверок](../status/web-terminal-import.md).
+
+Исходные версии: Pilot Agent `4c4446c5da094821bccf169071ccb06d6521a268`, Lumia `9d9eecd94063c6f4b9e67d7e7ffa9d1182b0dcdb`. Оба исходных репозитория с историей Git и манифестом хешей сохранены локально в `.build/import-origins/2026-11-15/`; это резервные исходники, не disposable build outputs.
+
+Уточнение владельца: основной `landing/` остаётся без изменений. Лендинг Lumia сохранён отдельно в `docs/design/lumia-landing/` и не подключается к веб-клиенту. В `apps/web/` пока сохраняется внутренний pnpm workspace Lumia с `packages/` и `services/`, чтобы сначала проверить перенос без изменения поведения. Выделение общих серверных модулей в целевые каталоги ниже выполняется при интеграции API. Маркетинговый исходник Pilot сохранён в `docs/design/pilot-landing/`.
+
+##### Принятые решения
+
+| Область | Решение |
+| --- | --- |
+| Приложения | `apps/macos`, `apps/ios`, `apps/windows`, `apps/android`, `apps/web`, `apps/terminal` |
+| Общие данные | PostgreSQL — основной источник данных веба, мобильных и настольных приложений |
+| Доступ к данным | Все клиенты обращаются к API Blot; параметры подключения к PostgreSQL остаются на сервере |
+| Веб | Основа Lumia; чаты, агенты, проекты, память, навыки, поиск, загружаемые вложения и создаваемые документы |
+| Граница веба | Нет доступа к файловой системе компьютера, локальному терминалу и локальным исполнительным инструментам |
+| Терминал | Основа Pilot Agent, Python сохраняется; код, контекст проекта, изменения, команды, проверки и продолжение работы |
+| Интерфейс терминала | Нет списка обычных чатов и управления перепиской; рабочие запуски и их контекст — отдельные сущности |
+| Модели | Один серверный шлюз GigaChat для всех клиентов; общий ключ провайдера остаётся на сервере |
+| Аккаунт | Существующая система входа Blot и единый идентификатор владельца; отдельная регистрация Lumia не переносится как второй источник аккаунтов |
+| Исполнение | Локальные файлы и команды выполняются только локальным исполнителем с соответствующими правами; наличие общей записи в БД не выдаёт права исполнения |
+| Windows и Android | Отдельные приложения на Java; существующий Swift UI не переносится в них копированием |
+
+Эти решения заменяют положения ТЗ и плана от 1 ноября о хранении пользовательской истории только на устройствах и отсутствии веб-клиента. Остальные требования, включая подтверждения действий, сохранение данных, ограничения устройств и правила выпуска, сохраняются. Новый срок полной поставки определяется после проверки импортированных исходников и первого общего сценария; прежняя дата сама по себе не подтверждает выполнимость расширенного объёма.
+
+##### Целевая структура репозитория
+
+```text
+apps/
+  macos/                       существующее приложение SwiftUI и Mac-исполнитель
+  ios/                         существующее приложение SwiftUI
+  windows/                     приложение JavaFX и Windows-исполнитель
+  android/                     приложение Java с нативным интерфейсом Android
+  web/                         веб-приложение из Lumia
+  terminal/                    Python CLI из Pilot Agent
+  shared/                      существующий общий интерфейс Apple
+  verification/                существующие проверки приложений
+  Blot.xcodeproj/              существующий общий проект Apple
+  BackendInfo.plist            существующая конфигурация Apple backend
+backend/
+  core/                        существующие общие Java-модели и правила
+  application/                 существующие Java-сценарии и интерфейсы
+  infrastructure/              существующие Java-адаптеры
+  api/                         существующий локальный API
+  cloud/                       существующий Java cloud; адаптация без второго источника аккаунтов
+  services/
+    identity/                  выделенный сервер аккаунтов Blot
+    conversation/              общие данные рабочего пространства и серверные операции
+    ai-gateway/                серверный адаптер GigaChat из Lumia
+packages/
+  Blot*/                       существующие Swift packages
+  web/
+    contracts/                 TypeScript-контракты и валидаторы
+    database/                  PostgreSQL-репозитории и миграции из Lumia
+    platform/                  общий серверный транспорт и инфраструктура
+contracts/                     общие протоколы и источник моделей Blot
+fixtures/                      общие примеры и проверки совместимости
+landing/                       существующий сайт загрузок и документации
+scripts/                       общие проверки и упаковка
+docs/                          требования, архитектура и результаты проверок
+```
+
+Это целевая раскладка, а не перечень уже созданных приложений. Пустые targets, заглушки и `.gitkeep` для видимости готовности не добавляются. Общие Apple-файлы не требуется переносить ради симметрии дерева. Каждый новый каталог появляется вместе с реальной реализацией или перенесённым модулем.
+
+`landing/` и `apps/web/` сначала сохраняют отдельные сборки и зависимости: у них разные поколения Next.js и React. Общие TypeScript-пакеты подключаются через согласованный workspace; существующий npm lock-файл сайта сохраняется до отдельной проверенной миграции. Перенос приложения и обновление framework не объединяются в одну задачу.
+
+##### Карта переноса исходников
+
+| Источник после добавления владельцем | Назначение | Действие |
+| --- | --- | --- |
+| `pilot-agent/pilot_agent/` | `apps/terminal/pilot_agent/` | Сохранить цикл агента, инструменты, контекст, UI терминала и существующие импорты; добавить команду `blot` через Python entry point |
+| `pilot-agent/tests/`, `pyproject.toml`, `uv.lock` | `apps/terminal/` | Перенести вместе с реализацией; исправить пути и запуск проверок |
+| Установщики и scripts Pilot | `apps/terminal/` и общие `scripts/` по ответственности | Проверить установку из нового пути и запуск без присутствия корневого каталога-источника |
+| `pilot-agent/web/` | Существующий `landing/` только для нужных материалов | Это маркетинговый сайт Pilot, а не будущий веб-клиент; отдельное приложение из него не создаётся |
+| `Lumia/app/`, `components/`, `hooks/`, `artifacts/`, прикладной `lib/`, `public/` | `apps/web/` | Сохранить рабочий интерфейс, тесты и ресурсы; заменить бренд и адаптер авторизации |
+| `Lumia/services/conversation/` | `backend/services/conversation/` | Переиспользовать репозитории и операции; дополнить сущностями и правилами Blot |
+| `Lumia/services/ai-gateway/` | `backend/services/ai-gateway/` | Переиспользовать GigaChat OAuth, TLS и транспорт; добавить публичную авторизацию Blot, квоты и общий формат инструментов |
+| `Lumia/packages/contracts/`, `database/`, `platform/` | `packages/web/` | Сохранить разделение ответственности; согласовать с общими контрактами Blot |
+| `Lumia/services/identity/` | Адаптер к существующему аккаунту Blot | Перенести необходимые интерфейсы профиля; не создавать независимую таблицу логинов для того же пользователя |
+| `landing/lib/accounts/`, `landing/lib/auth/` | Постепенно `backend/services/identity/` и адаптеры сайта | Сохранить текущие аккаунты, сессии, Google/Яндекс, почтовый вход и возврат в приложения |
+| Billing из Lumia | Отдельный последующий блок | Сохранить исходник при импорте; платёжная интеграция не является зависимостью первого общего сценария |
+
+Перед переносом каждого блока фиксируются локальный commit, незакоммиченные файлы, вложенные `AGENTS.md`, лицензии и зависимости. Локальные версии могут отличаться от просмотренных GitHub `main`. Вложенные `.git` не перемещаются внутрь приложения и не удаляются автоматически. Не переносятся зависимости, сборочные outputs, `.env`, ключи и локальные базы. Исходные каталоги не удаляются до проверки полноты переноса; рабочие файлы и историю Git сохраняют отдельно от чистки сборок.
+
+Каждый модуль имеет одну ответственность: интерфейс клиента, сценарий, repository, транспорт или платформенный исполнитель. Связи передаются через конструкторы и интерфейсы. Общий сервер не импортирует SwiftUI, AppKit, Android UI или JavaFX. Между Python, TypeScript, Java и Swift переиспользуются контракты и проверяемое поведение; соответствующие адаптеры реализуются на языке своего приложения.
+
+##### Общие данные и границы доступа
+
+PostgreSQL хранит аккаунты, профили, устройства, чаты и сообщения, агентов и их конфигурации, проекты, задачи, назначения, память, навыки, расписания, документы, вложения, результаты и учёт расхода. Локальная SQLite Apple-клиентов становится кэшем и исходящей очередью. Действующие облачные снимки workspace используются как вход для миграции, а не как единственный API общей истории.
+
+Файлы библиотеки доступны всем авторизованным клиентам через API владельца. Для принятого варианта хранения сервер получает адаптер PostgreSQL для содержимого и частей больших файлов; существующий Vercel Blob из Lumia не становится обязательной внешней зависимостью автоматически. Импорт существующих Blob-объектов предусматривает проверку размера, hash и принадлежности. Рабочая папка кодового проекта остаётся ресурсом конкретного исполнителя; её файлы не становятся общедоступными только из-за регистрации проекта в PostgreSQL.
+
+Для CLI добавляются отдельные записи проекта и кодового запуска: цель, executor, состояние, контрольная точка, сводка контекста, события инструментов и результаты проверок. Внутренняя последовательность запросов модели сохраняется настолько, насколько нужно для продолжения запуска, без обязательного создания обычной `Conversation` и без списка чатов в терминале.
+
+Сервер выводит владельца и полномочия из проверенной сессии. Изменения получают `commandId`, ожидаемую версию и сохранённый результат. Повтор доставки не повторяет действие; конкурентные изменения возвращают конфликт. Поток событий имеет курсор и восстанавливается после разрыва. Данные общего проекта не дают доступа к локальному пути, credentials или терминалу другого устройства. Веб-аккаунт в первом выпуске не получает возможность отправлять команды локальному компьютеру.
+
+Существующие `contracts/v3/model.json` и общие fixtures остаются источником текущих моделей. Перед расширением фиксируется совместимость старых клиентов; несовместимое изменение получает новую версию протокола. TypeScript и Python используют проверяемые схемы и те же fixtures. Java/Swift DTO обновляются существующим генератором, а не ручными правками. Расширение генератора или отдельная генерация клиентов выполняется как реализация с проверкой совпадения моделей.
+
+##### Аккаунт и серверный GigaChat
+
+Веб использует сессию аккаунта Blot; Mac, мобильные клиенты и CLI получают собственные отзываемые сессии. Для `blot login` добавляется отдельный разрешённый клиент с браузерным входом и PKCE, callback на loopback и проверкой исходной попытки. Refresh token на Mac хранится в Keychain. Пароли, токены и строки подключения к PostgreSQL не встраиваются в CLI и не записываются в его project context.
+
+Публичный model API принимает сессию пользователя Blot и проверяет лимит, размер контекста и разрешённую модель. Затем внутренний GigaChat-адаптер получает или обновляет токен провайдера. `GIGACHAT_AUTH_KEY` и внутренний секрет сервисов остаются на сервере. Шлюз работает независимо от открытого Mac-приложения; CLI подключается к нему после входа, без запуска локального сервиса с общим ключом.
+
+Общий контракт модели включает текст, stream, вызовы инструментов и их результаты, usage, отмену и состояние незавершённого ответа. Нормализация связывает OpenAI `tools/tool_calls` из Pilot с GigaChat `functions/function_call`, включая состояние функций, идентификаторы и последовательность результатов. Текущий Java cloud gateway с текстовыми сообщениями не считается готовым контрактом для кодового агента. Старые endpoints сохраняются на период адаптации поддерживаемых клиентов.
+
+Квоты и расход общие для аккаунта на всех клиентах. Резерв, завершение и неизвестный usage сохраняются по ID запроса. Повтор подключения к потоку не создаёт новую генерацию и не списывает расход повторно. Серверное логирование и telemetry настраиваются без секретов и содержимого пользовательских запросов.
+
+##### Этапы выполнения
+
+Общая история чатов и сообщений веба, Mac и iPhone опубликована через серверный мост PostgreSQL и существующий account-backup протокол Apple: [реализация и проверки](../status/shared-chat-history.md). Это не завершает синхронизацию файлов, проектов, задач и запусков из следующих этапов.
+
+Веб-часть этапа 4 реализована в исходниках: общий аккаунт, PKCE-переход, проверка и отзыв сессии. Конфигурация развёртывания и результаты проверок — в [отчёте](../status/web-blot-auth.md). CLI-вход, продление веб-сессий, общая история и модельный gateway остаются в плане.
+
+| Этап | Работа | Зависимость | Критерий завершения |
+| --- | --- | --- | --- |
+| 1. Приём исходников | Проверить добавленные `pilot-agent/` и `Lumia/`, версии, изменения и границы модулей; зафиксировать команды проверки | Исходники в корне | Есть точная карта каждого переносимого блока и воспроизводимые исходные проверки |
+| 2. Размещение приложений | Перенести Python в `apps/terminal`, веб в `apps/web`, общие серверные модули и пакеты по карте; обновить пути, workspace и CI | 1 | CLI help и существующие тесты работают из нового пути; веб проходит свои проверки; существующие Apple targets сохраняют сборку |
+| 3. Общая модель данных | Согласовать сущности Blot и Lumia, миграции PostgreSQL, owners, версии, события, CLI run и файловое хранилище | 1 | Одна серверная операция даёт одинаковый результат для всех клиентов; повтор и конфликт проверены |
+| 4. Единый вход | Подключить веб к аккаунту Blot, добавить CLI-клиент, обновление и отзыв сессий; выделять identity постепенно | 2, 3 | Один аккаунт открывается в вебе, приложении и CLI; выход и отзыв реально закрывают соответствующий доступ |
+| 5. Шлюз модели | Подключить GigaChat-адаптер Lumia к публичной авторизации Blot; нормализовать функции, stream, usage и квоты | 3, 4 | Один и тот же контракт проходит текст, инструмент, результат и отмену; общий ключ отсутствует во всех клиентских сборках |
+| 6. Blot Code | Подключить Python provider, хранилище контекста и запуски, разрешения, проверку файлов и результаты процессов | 2–5 | `blot login` → задача в папке → diff → настоящий тест → остановка → продолжение без повторного побочного эффекта |
+| 7. Blot Web | Подключить общие чаты, проекты, файлы, документы и навыки; добавить интерфейсы агентов и задач по мере готовности их API | 2–5 | Переписка и документ появляются под тем же аккаунтом в другом клиенте; локальные filesystem/process endpoints недоступны веб-сессии |
+| 8. Mac и iOS | Добавить серверные repository-адаптеры, исходящую очередь, миграцию старой локальной истории и общий поток событий | 3–5 | Изменения между вебом, Mac и физическим iPhone сходятся; перезапуск и конфликт не теряют данные |
+| 9. Windows | Создать JavaFX-клиент общих API и локальный исполнитель Windows, затем подключать полный функционал | 3–5 | На физическом Windows-компьютере работают вход, общая история и проверенный локальный кодовый сценарий |
+| 10. Android | Создать Java-клиент общих API, кэш/очередь и мобильные сценарии | 3–5 | На физическом Android работают вход, общая история, восстановление сети и управление разрешёнными задачами |
+| 11. Общая поставка | Упаковка шести приложений, инструкции, миграция и сквозная приёмка | 6–10 | Каждый заявленный сценарий имеет результат на целевой платформе и установочный способ |
+
+На этапе 2 выполняется перенос без изменения смысла агентного цикла; на этапах 3–8 подключаются новые данные и поведение. Маркетинговая фаза Pilot не входит в основной кодовый режим Blot. Деплой остаётся отдельным явно выбранным действием. Перевод Python на Java не планируется.
+
+Задачи Windows и Android выполняются и проверяются на соответствующем компьютере владельца после переноса общих изменений через `main`. Серверные и веб-проверки, не требующие этих устройств, можно выполнять раньше. При отсутствии устройства фиксируется непроведённая проверка, а не готовность приложения.
+
+##### Миграция существующих данных
+
+1. Составить список локальных SQLite workspace, облачных backup-снимков Blot, таблиц и объектов Lumia. Секреты и пользовательские данные не включать в репозиторий или отчёт.
+2. Сохранить резервные копии и проверить восстановление на изолированной базе. Фундаментальную миграцию Lumia для новой БД не запускать поверх действующей БД Blot как готовое обновление.
+3. Сохранить текущие Blot account IDs. Для существующих аккаунтов Lumia подготовить явное связывание с подтверждением владения; совпадение email не объединяет аккаунты автоматически. Парольные хеши разных схем не заменяют друг друга напрямую.
+4. Импортировать истории и версии документов с устойчивым соответствием ID; использовать повторяемые миграции с контрольной точкой. Проверить owners, ссылки, tombstones и hash вложений.
+5. Переводить клиент на серверный источник после сверки полноты импорта. Записи офлайн-очереди отправляются с прежними ID. Локальную исходную базу сохранять до успешной проверки миграции.
+6. Старые клиенты получают совместимый API на время перехода либо явное требование обновления. Не допускать двух независимо изменяемых источников одной истории.
+
+##### Сквозные сценарии приёмки
+
+| Сценарий | Что проверяется |
+| --- | --- |
+| Общий аккаунт | Регистрация/вход, восстановление, Google/Яндекс, несколько сессий и отзыв; веб и приложения показывают одного владельца |
+| Общая история | Сообщение из веба появляется на Mac и телефоне; изменение и удаление передаются; офлайн-повтор не создаёт дубль |
+| Общие агенты | Изменение профиля, модели, навыка и памяти отображается на других клиентах; права локального инструмента остаются устройственными |
+| Веб-документы | Загрузка вложения, чтение, создание документа и получение результата другим клиентом; проверка чужого owner и ограничений размера |
+| Граница веба | Прямой HTTP-вызов не открывает локальный файл и не запускает shell, даже если UI-кнопки отсутствуют |
+| Кодовый запуск | Python CLI читает выбранный проект, готовит изменение, показывает diff и настоящий exit code; обычный чат в каталоге приложения не создаётся |
+| Продолжение CLI | Остановка и перезапуск восстанавливают цель и контекст; подтверждённая запись не выполняется повторно; неизвестный исход требует сверки |
+| Модель и лимиты | Все клиенты используют один серверный шлюз; функции и usage совместимы; истёкшая сессия, очередь и квота дают понятный результат |
+| Исполнитель | Точная привязка к устройству и проекту; общая запись задачи не позволяет одному ПК запускать работу на другом |
+| Сохранность | Миграция, повтор импорта, конфликт, обрыв и восстановление backup сохраняют данные и границы владельцев |
+| Поставка | Установка и запуск каждой готовой сборки на физическом устройстве; приложение не зависит от наличия импортированных корневых папок |
+
+Расширение возможностей веба не означает автоматической готовности внешних интеграций, CEO, Motes или расписаний из исходного ТЗ. Каждый такой сценарий подключается к реальному серверному контракту и проверяется отдельно. Матрица BLOT-01…30 пересматривается в части общего PostgreSQL и веб-клиента; новые сценарии web/CLI добавляются без снятия остальных требований.
+
+##### Проверки и работа с ветками
+
+Для переноса без изменения поведения используются существующие тесты Pilot, unit/type/build проверки Lumia и проверки затронутых Apple targets. После подключения нужны тесты границ аккаунта, контрактов, миграций, совместимости модели, конфликтов и повторной доставки. Реальные тестовые аккаунты и вызовы модели выполняются отдельным ограниченным сценарием; успешный CI не заменяет этот сценарий.
+
+Сборки используют стабильные каталоги проекта и существующие кэши, оставляют не менее 20 GiB свободного места. Запуск — только на физических устройствах владельца. Playwright проверяет веб в браузере; мобильные эмуляторы и симуляторы не используются.
+
+Изменения сначала применяются и проверяются в текущем проекте. Общая интеграция имеет одну владеющую платформенную ветку `mac/<task>` и проходит через review в `mac/main`, затем в `main`. iOS, Windows и Android получают общие изменения через предусмотренные adaptation-ветки. Новые префиксы `web/*` и `terminal/*` этим планом не вводятся. Перенос, модель данных, вход, gateway и адаптация клиентов разделяются на обозримые изменения. Развёртывание и переключение действующей базы происходят только после подготовки и проверки конкретных миграций.
+
+##### Первый результат после добавления папок
+
+Сначала выполняются этапы 1 и 2: карта локальных исходников, перенос в `apps/web` и `apps/terminal`, исправление путей и проверок. Существующие `apps/macos` и `apps/ios` сохраняют рабочее состояние. Затем реализуется общий вертикальный сценарий: аккаунт Blot → GigaChat gateway → Python-инструмент → сохранённый кодовый запуск, и аккаунт Blot → веб-чат → PostgreSQL → отображение на Mac/iPhone.
+
+
+### docs/status/web-terminal-import.md
+
+#### Перенос веба и терминала в приложения Blot
+
+Исходники Lumia и Pilot Agent перенесены в `apps/web/` и `apps/terminal/` с проверкой сборки и существующего поведения.
+
+Дата: 15 ноября 2026. Изменения находятся в текущем проекте на `mac/workspace`. Этот отчёт фиксирует этап размещения приложений из [плана объединения](../product/blot-unification-plan.md). Последующее подключение веба к общей авторизации описано в [отдельном отчёте](web-blot-auth.md); ограничения и результаты ниже относятся к исходному переносу.
+
+##### Сохранённые исходники
+
+| Источник | Commit | Результат |
+| --- | --- | --- |
+| Lumia | `9d9eecd94063c6f4b9e67d7e7ffa9d1182b0dcdb` | Веб-приложение и его внутренний pnpm workspace в `apps/web/` |
+| Pilot Agent | `4c4446c5da094821bccf169071ccb06d6521a268` | Python-приложение, инструменты, навыки, тесты и упаковка в `apps/terminal/` |
+
+Все 589 исходных tracked-файлов сверены по SHA-256 при копировании. Полные оригинальные репозитории вместе с `.git` сохранены в `.build/import-origins/2026-11-15/Lumia/` и `.build/import-origins/2026-11-15/pilot-agent/`. Рядом находится `manifest.json` с первоначальной картой копирования и хешами. Это резервные исходники, их нельзя удалять как сборочный кэш. В новых каталогах приложений нет вложенных `.git`.
+
+Основной `landing/` остался без изменений. Исходные маршрут, компоненты и изображение лендинга Lumia сохранены в `docs/design/lumia-landing/`. Маркетинговый сайт Pilot сохранён в `docs/design/pilot-landing/`. Эти материалы не подключены к приложениям и не заменяют основной сайт.
+
+##### Изменения путей и запуска
+
+- `apps/web` сохраняет собственные `pnpm-lock.yaml`, `packages/` и `services/`. Переход на общие серверные каталоги выполняется при подключении API; обновления Next.js и React в этом переносе нет.
+- Веб-маршрут `/` перенаправляет на `/chat`. Без сессии пользователь получает `/login?callbackUrl=%2Fchat`. Старый лендинг не участвует в маршрутизации. Проверка начальной страницы в auth-тесте обновлена для этого поведения и заголовков мобильной/настольной форм.
+- Python entry points `blot` и `pilot-agent` вызывают один CLI. Имя Python-пакета и существующие `.pilot-agent` данные сохранены.
+- `pilot-agent-dev` выбирает приложение через `uv run --project`, сохраняя рабочую папку пользователя. Проверочные shell-скрипты сами определяют каталог приложения, поэтому запускаются также из корня монорепозитория.
+- Git-установка CLI указывает `#subdirectory=apps/terminal`; Docker-установщик и команда update используют `apps/terminal/docker-compose.yml`. Документация клонирования и запуска обновлена. Установка через удалённый URL требует публикации этих изменений в соответствующей ветке.
+- Рабочие CI workflows перенесены в корневую `.github/workflows`: `web.yml`, `terminal.yml`, `terminal-docker.yml`. Настроены каталоги команд, lock-файлы и ветки платформ. Неактивный upstream release workflow с сообщением о будущей публикации не подключён; его исходник сохранён в резервном репозитории.
+
+##### Проверки
+
+| Проверка | Результат |
+| --- | --- |
+| Python dependencies | `uv sync --all-groups --frozen`, установленный Python 3.13; новые Python runtimes не скачивались |
+| Полный CLI suite | `apps/terminal/scripts/run_tests.sh`: Ruff, mypy, **117 pytest-тестов**, compileall и оба CLI entry points прошли |
+| Упаковка CLI | `uv build`: wheel и sdist собраны в `.build/terminal-dist/`; wheel содержит defaults, встроенные навыки и entry point `blot` |
+| CLI в другой папке | Из изолированного проекта запущены `blot init` и `blot status`; состояние создано в папке проекта, не приложения |
+| Shell и Docker configuration | `bash -n` для установщиков и скриптов; `docker compose ... config --quiet` прошли |
+| Веб dependencies | `pnpm install --frozen-lockfile` прошёл; lock-файл сохранён |
+| Веб quality | Biome, TypeScript и **42 unit-теста** прошли |
+| Внутренний workspace | TypeScript-проверки всех семи пакетов/сервисов прошли |
+| Миграционные файлы | `pnpm db:check` с фиктивным `POSTGRES_URL` прошёл; изменения к базе не применялись |
+| Веб production | `pnpm build` с фиктивными CI-настройками прошёл |
+| Production HTTP | На loopback проверены `/ → /chat → /login`, ответ login 200, history 401 без сессии и пустая анонимная session |
+| Браузер на Mac | Production-страница открылась с формой Welcome back, полями и кнопками входа |
+| Основной сайт | `git diff --quiet -- landing` подтвердил отсутствие изменений |
+
+Проверки выполнены на текущем физическом Mac. Мобильные приложения, симуляторы и эмуляторы не запускались; существующие Apple source/build paths не менялись. Сборки Apple не повторялись, поскольку их исходники и конфигурация не затронуты. Свободное место после проверок выше 20 GiB.
+
+##### Границы проверки
+
+Реальные вход, работа PostgreSQL, модель, Blob, платежи и почта не проверялись: перенесённые приложения сохраняют свои прежние системы аккаунтов и провайдеров. Эти сценарии требуют следующего этапа общего API и подготовленной конфигурации. Полный Playwright suite с регистрацией и модельными запросами не запускался. Docker image не собирался; проверена конфигурация Compose без запуска Docker VM и загрузки образов. GitHub workflows подготовлены, но удалённый CI не запускался.
+
+Drizzle Kit 0.25 выводит предупреждение `Failed to find Response internal state key` под установленным Node.js 24 перед успешным `Everything's fine`; версия инструмента при переносе не менялась. В CLI suite один стандартный GetPassWarning относится к тесту ввода credentials без интерактивного терминала; тест прошёл.
+
+
+### docs/status/web-blot-auth.md
+
+#### Общий вход Blot в веб-приложении
+
+Дата: 15 ноября 2026. Этот отчёт фиксирует первоначальное подключение авторизации в текущем проекте, ветка `mac/workspace`. Последующее развёртывание, подключение общей PostgreSQL и вход с публичного сайта описаны в [отчёте о выпуске](web-postgres-release.md); ограничения проверок ниже относятся к первоначальному этапу.
+
+##### Поведение
+
+`apps/web` перенаправляет вход и регистрацию на существующую страницу `landing/login`. Почта с кодом, Google и Яндекс обрабатываются прежним сервисом аккаунтов Blot. После входа сайт выдаёт одноразовый код для `blot-web`, привязанный к точному callback и PKCE S256. Веб-сервер обменивает код и создаёт зашифрованную httpOnly-сессию с тем же `ownerID`, который используют приложения.
+
+Проверяются state, зашифрованная попытка входа, срок, PKCE, точный адрес возврата и совпадение владельца токена с `/v1/auth/me`. Общие токены не включаются в JSON браузерной сессии. Поддержка `blot-web` добавлена в Node AccountService и Java cloud; существующие callback Mac/iOS сохранены.
+
+Серверные страницы и API проверяют актуальный аккаунт через общий сервис; проверка кешируется только внутри одного серверного render. Отзыв сессии закрывает доступ, а устаревшая cookie не вызывает цикл между чатом и входом. Выход отзывает отдельную веб-сессию и очищает cookie, сохраняя другие сессии аккаунта. Страница после выхода требует явного нажатия для повторного входа.
+
+Сессия веба действует до 10 минут, с ограничением сроком access token. Refresh token сейчас не сохраняется: автоматическое продление требует следующего изменения с корректной обработкой ротации и параллельных запросов. Долговременный вход пока не реализован.
+
+Прежняя регистрация Lumia по nickname/password и отдельный Google provider отключены в вебе. Общая идентичность берётся из Blot, веб-настройки сохраняются в новой `identity.blot_profiles` по общему owner ID. Совпадение email со старой `identity.users` не объединяет владельцев и не открывает старые данные Lumia.
+
+Прежние веб-кнопки смены пароля и удаления аккаунта удалены: они работали с независимой Lumia identity. Интерфейс направляет к управлению общим аккаунтом в Mac/iPhone; отдельных веб-операций изменения пароля/удаления общего аккаунта этот этап не добавляет. Никнейм веба остаётся локальной настройкой отображения, не меняет общее имя аккаунта.
+
+##### Настройка
+
+На существующем сайте/сервисе аккаунтов:
+
+```env
+BLOT_WEB_APP_URL=https://app.example.org
+```
+
+Только origin без пути, query или fragment. Эта настройка разрешает единственный callback `/api/auth/blot/callback`. В production используется HTTPS; HTTP разрешён только для localhost/127.0.0.1.
+
+На веб-приложении:
+
+```env
+AUTH_URL=https://app.example.org
+AUTH_SECRET=<не менее 32 случайных символов>
+BLOT_AUTH_URL=https://example.org/login
+BLOT_ACCOUNT_SERVICE_URL=https://example.org
+```
+
+`BLOT_ACCOUNT_SERVICE_URL` можно не задавать, если API расположен на origin сайта. Секрет веба отдельный; ключи GigaChat и OAuth в браузер не передаются. Конфигурация должна быть согласована между обоими развёртываниями. Сначала обновляется allowlist account service, затем веб с точным `AUTH_URL`.
+
+Для локальной работы сайт запускается через `cd landing && npm run dev:local` на `127.0.0.1:3000`; этот режим по умолчанию разрешает веб `127.0.0.1:3001`. В `apps/web` скопировать `.env.example` в `.env.local`, настроить секрет и существующие интеграции, затем `pnpm dev`. Для обоих сайтов использовать `127.0.0.1`, чтобы не смешивать cookie localhost и 127.0.0.1. Проверочный временный секрет из тестов не используется для рабочего окружения.
+
+Миграция `apps/web/packages/database/migrations/0004_blot_profiles.sql` добавляет только таблицу настроек и включена в существующий migration journal. Применяется штатным `pnpm db:migrate` на подготовленной веб-базе с предыдущими миграциями. Начальную миграцию Lumia `0000` нельзя запускать поверх действующей базы Blot как готовое обновление. Связывание исторических данных, общая история и gateway остаются отдельными этапами.
+
+##### Проверки
+
+- Веб: Biome, TypeScript и 46 unit-тестов; TypeScript всех семи workspace-пакетов; `pnpm db:check`; production-сборка.
+- Существующий сайт: 37 auth/account тестов и production-сборка Next.js без перегенерации документации.
+- Java cloud: строгая проверка зависимостей, Spotless и 15 тестов cloud; использован уже установленный JDK 25.
+- `node scripts/verify-web-blot-login.mjs`: реальный AccountService, PostgreSQL PGlite с pgcrypto и production Next.js. Проверены общий владелец, отсутствие токена в session JSON, подмена state, replay, отзыв, отсутствие redirect loop, выход, все пять SQL-миграций веба и изоляция старого аккаунта с тем же email.
+- В браузере текущего физического Mac проверен переход из `/login` веба на нашу форму Blot с сохранёнными PKCE-параметрами и способами входа.
+
+Тестовый PostgreSQL изолирован и временный; сообщения с кодом перехватываются в памяти. Вход через реальные Google/Яндекс и доставку настоящего письма этот прогон не выполнял. Модель, платежи, Blob и синхронизация истории не проверялись в рамках подключения входа. Полный Playwright suite с модельными запросами не запускался. Удалённый CI и production deployment не запускались.
+
+Drizzle Kit 0.25 на Node 24 выводит прежнее предупреждение `Failed to find Response internal state key`, затем успешно завершает проверку. Свободно около 32 GiB. Сборки Apple и мобильные устройства не затронуты.
+
+
+### docs/status/web-postgres-release.md
+
+#### Веб, общая PostgreSQL и вход с сайта
+
+15 ноября 2026. Рабочая ветка `mac/workspace`. Изменения внесены в текущий проект; приложения Apple и терминал этим этапом не меняются.
+
+Последующее подключение общей истории Mac/iPhone описано в [отдельном отчёте](shared-chat-history.md). Указанные ниже ограничения относятся к первоначальному веб-выпуску.
+
+##### Подключение
+
+Веб использует существующую Neon PostgreSQL проекта Vercel `landing` (`prj_kUhW84aq7Ygx3w8mLeBCOJxX4YBd`, команда `ha1zyys-projects`). `POSTGRES_URL` и `DATABASE_URL` уже настроены там как sensitive. Они остаются внутри Vercel и не выгружаются в локальные файлы.
+
+Для этого выпуска сайт и веб собираются как два deployment одного проекта с отдельными адресами. Сайт сохраняет `https://blot-agent.vercel.app`; веб получает `https://blot-web-ha1zyys-projects.vercel.app`. Адреса назначаются явно. Автоматическое назначение custom production domains отключено, чтобы сборка одного приложения не переключала адрес другого. Не применять общую команду promote ко всем доменам проекта при последующих выпусках: каждый адрес должен указывать на соответствующее приложение.
+
+Обычный `/login` сайта запускает вход веба. Запросы с полным PKCE или native callback проходят прежний сценарий: Google, Яндекс или почта → общий аккаунт → одноразовый код → исходный клиент. После обычного входа пользователь попадает в `/chat` веба. Проверка native callback сохранена.
+
+##### Данные и миграции
+
+`WebDatabaseMigrator` выполняет миграции в одной транзакции с advisory lock и отдельным журналом `blot_web.migrations`. При обнаружении существующих неучтённых веб-таблиц мигратор останавливается и откатывает изменения. Повторный запуск не применяет уже выполненные миграции; изменение их SHA-256 или неизвестная новая версия также останавливают запуск.
+
+В действующей БД применены миграции `0000`–`0005`: новые таблицы в `identity`, `conversation`, `billing`, `ai` и `blot_web`. Таблицы аккаунтов Blot в `public` сохраняются. Это не перенос прежних данных Lumia и не автоматическое объединение владельцев по email.
+
+Чаты и сообщения сохраняются под общим Blot owner ID. Сервер проверяет владельца при чтении и изменении. Наличие веб-таблиц в общей БД само по себе не подключает к ним историю Mac/iPhone: адаптация общей истории между клиентами остаётся в плане.
+
+Веб-ограничитель запросов использует атомарный PostgreSQL upsert; при настроенном Upstash сохраняется прежний Redis backend. Хранение счётчиков не зависит от отдельного serverless instance. Модель использует существующие серверные `BLOT_GIGACHAT_AUTH_KEY` и `BLOT_GIGACHAT_MODEL`, если отдельные `GIGACHAT_*` не заданы. Ключ в браузер не передаётся.
+
+##### Проверки
+
+- Biome, TypeScript, 47 unit-тестов веба, включая конкурентные счётчики и сброс окна на PostgreSQL PGlite.
+- TypeScript всех семи workspace-пакетов, Drizzle journal check, локальные production-сборки веба и сайта.
+- 38 auth/account тестов сайта: обычный вход в веб, сохранённые native/PKCE запросы и отказ от внешних адресов.
+- Локальный сквозной сценарий: общий аккаунт → PKCE → веб-сессия; state/replay, выход/отзыв, шесть миграций, повторный запуск, изменённый hash и отказ от неизвестной схемы с сохранением её данных.
+- Проверка внутри Vercel на действующей Neon: создан отдельный тестовый чат с временным owner ID; GigaChat дал настоящий короткий ответ; оба сообщения сохранены и перечитаны через новый repository instance; история найдена; доступ другого owner отклонён; PostgreSQL-счётчик общий. После проверки удалены только чат и счётчик с заранее созданными тестовыми ID. Общие аккаунты не создавались и не удалялись.
+
+`pnpm build:cloud` применяет проверенные миграции, выполняет эту ограниченную проверку БД и модели и собирает веб. Сборка сайта использует `next build`; опубликованные документационные файлы сохраняются, генерация спецификации остаётся отдельной локальной командой.
+
+##### Состояние выпуска
+
+Оба production deployment готовы и опубликованы:
+
+| Приложение | Deployment | Публичный адрес |
+| --- | --- | --- |
+| Веб | `dpl_97F4sykZz9ECkUGiSibLJiTJUTZZ` | https://blot-web-ha1zyys-projects.vercel.app |
+| Сайт | `dpl_FE9CZ5muhvhNcDWpM1yVAMEExhVG` | https://blot-agent.vercel.app |
+
+Веб-домен добавлен в project domains и подтверждён. После этого он явно назначен веб-сборке. Защита preview остаётся прежней; общая Vercel SSO protection не отключалась.
+
+Публичные HTTP-проверки: сайт `/` и `/workspace/documents/apple-apps` → 200; `/login` → 307 в web start; web start → 307 на нашу форму с `client_id=blot-web` и точным callback веба; форма → 200; анонимная веб-сессия → 200, история без входа → 401. Общий account API на недействительный токен отвечает 401 `session_expired`, обмен недействительного кода — 401 `browser_authorization_invalid`. В браузере Mac выполнен переход по кнопке «Войти» с главной до нашей формы с сохранёнными PKCE-параметрами. Runtime logs новых deployment по уровням error/fatal за окно проверки пусты.
+
+Для автономной сборки сайта страницы документации читают те же опубликованные `public/project-docs` файлы, которые предлагаются для скачивания; все 42 документа присутствуют. Зависимость от отсутствующего в отдельном artifact каталога `../docs` устранена.
+
+Исходники отправлены через API из текущего рабочего проекта без `.env`, ключей, локальных БД и build outputs. Artifact manifests сохранены в игнорируемом `.build/blot-web-release/`. Коммит или push этих изменений не выполнялись. Веб source manifest SHA-256: `92cfe91f24e3757a0e5dd5f6f8dbeabd99b1ecf97f0b5868f3f5e13f381ca1f6`; сайт: `fe0acfe0463b55fef935d479f981ed06e3f59533ad960ebb7f94bce134065740`.
+
+Реальный вход пользователя через Google/Яндекс или письмо в этом прогоне не выполнялся автоматически. Веб-сессии пока остаются короткими, как описано в [отчёте об авторизации](web-blot-auth.md). Локальная БД веба отдельно не настраивалась: действующие sensitive credentials не экспортируются из Vercel; для работы с общей PostgreSQL используется опубликованный веб.
+
+Blob и платежи этим выпуском не подключаются. Проверка GigaChat ограничена коротким текстовым запросом, без файлов и внешних действий.
+
+
+### docs/status/shared-chat-history.md
+
+#### Общая история веба, Mac и iPhone
+
+15–16 ноября 2026. Изменения внесены в текущий проект, ветка `mac/workspace`. Реализован и опубликован обмен чатами и сообщениями через существующую PostgreSQL Blot.
+
+##### Как работает
+
+Apple-приложения уже публикуют account-scoped `WorkspaceReplicaSnapshot` через `/v1/workspace/backups` и проверяют изменения каждые пять секунд. Веб прежде использовал отдельные `conversation.chats` и `conversation.messages` без преобразования в этот формат.
+
+Общий пакет `apps/web/packages/chat-sync` соединяет оба формата на сервере. Чтение облачных снимков Apple и операции с веб-чатами запускают синхронизацию владельца. Сервер читает последние завершённые снимки устройств, объединяет версии записей и материализует историю в веб-таблицах. Веб-изменения попадают в транзакционную очередь PostgreSQL и публикуются как совместимый снимок отдельной серверной реплики. Клиентские протоколы и v3 модели не меняются; новая сборка Apple для этого серверного изменения не требуется при использовании существующего account-backup клиента.
+
+Веб обновляет список и открытый чат каждые пять секунд и при возвращении фокуса. Обновления не заменяют текущий поток генерации и не запускают повторный ответ модели. Импортированные веб-сообщения в Apple имеют завершённое состояние; исторический текст не исполняется повторно как новая команда.
+
+Идентификаторы чатов и сообщений сохраняются. Старые direct-thread aliases объединяются так же, как в Swift; порядок сообщения учитывает позиции, а не только часы устройства. Для отдельных веб-чатов создаются отдельные профили агента, чтобы native-правило «один direct-чат на агента» не склеивало разные переписки.
+
+Удаления передаются как tombstones и побеждают старые офлайн-версии. Редактирование веб-вопроса создаёт новый ID сообщения после удаления прежней ветки — это сохраняет native-правило неизменяемости пользовательского сообщения. Поля изменяемых записей объединяются по векторам версий с тем же детерминированным разрешением конкурентных изменений, что в Swift. Повторная доставка не создаёт сообщений или снимков при неизменной истории.
+
+##### Данные и границы
+
+Миграция `0006_shared_chat_sync` добавляет `blot_web.chat_replica_state`, `chat_replica_records`, `chat_replica_imports`, `chat_events`, `message_order` и триггеры захвата веб-изменений. Существующие веб-чаты включаются в очередь; существующие native-снимки обрабатываются при следующем обращении к истории или фоновой синхронизации. Исходные native-снимки сохраняются прежним механизмом резервирования, не заменяются веб-проекцией.
+
+Все операции привязаны к Blot owner ID и workspace ID; имена и email не связывают разных владельцев. Пересечение record ID с другим аккаунтом отклоняется. Синхронизация сериализуется блокировкой строки владельца. Удаление общего аккаунта очищает его общие чаты и состояние синхронизации.
+
+Обмен касается чатов, текста, ролей, порядка сообщений и необходимого native-контекста агентов/участников. Существующие web parts и attachments сохраняются, если текст не менялся. Перенос локальных файлов, байтов вложений, документов, проектов, задач и запусков этим этапом не реализуется; их native-данные остаются в исходных снимках. Прежние пределы native snapshot/chunk формата сохраняются. Чаты будут видны при входе в один и тот же аккаунт на всех клиентах.
+
+##### Проверки
+
+- Веб: Biome, TypeScript, 50 unit-тестов; workspace type checks; production build и сквозной вход с семью миграциями.
+- Сайт: 38 auth/account тестов и production build с общим пакетом вне корня `landing`.
+- SwiftPM на физическом Mac: установка реального веб-снимка в две независимые SQLite-реплики; ответ из iPhone-реплики в Mac-реплике; повторное применение без дублей. Полученный настоящим Swift-кодом native-снимок возвращён в тест PostgreSQL и появился в веб-истории.
+- Два прежних cloud-backup теста: восстановление чатов/проектов, офлайн-изменения и повтор оборванной отправки; вместе с новым тестом прошли три проверки Swift.
+- 167 общих v3 fixtures и оба новых снимка прошли JSON Schema-проверку сгенерированных моделей.
+- На действующей Neon в Vercel: временный владелец с новыми UUID, веб-чат → Apple snapshot → native reply → веб; повторы и устаревшие удаления проверены. Вся эта проверка выполняется внутри транзакции с обязательным ROLLBACK, аккаунты и переписки пользователя не изменяются тестом. Прежняя проверка реального короткого ответа GigaChat также сохранена.
+
+Живой вход пользователя и интерфейс подключённого физического iPhone не проверялись. `devicectl` показал физический iPhone 13 Pro Max в состоянии `unavailable`; симуляторы и эмуляторы не использовались. Проверен общий Swift-код и серверный протокол. В имеющейся Mac-сборке `AppleInstallation.plist` подтверждены `AuthURL=https://blot-agent.vercel.app/login` и `AccountServiceURL=https://blot-agent.vercel.app`. После публикации достаточно обновить страницу веба и открыть актуальные Apple-приложения в том же аккаунте; обмен происходит при доступной сети, обычно за несколько циклов фоновой синхронизации.
+
+##### Выпуск
+
+Опубликованы готовые production deployment в существующем Vercel-проекте `landing`:
+
+| Приложение | Deployment | Адрес |
+| --- | --- | --- |
+| Веб | `dpl_AF2xfKjrjdUib1wBHj5yG8caxUJE` | https://blot-web-ha1zyys-projects.vercel.app |
+| Сайт / native backup API | `dpl_HSSd9U7mmUwRanENeyhrBWRRxMHa` | https://blot-agent.vercel.app |
+
+В действующей Neon применена только новая миграция `0006_shared_chat_sync`; повторный запуск подтвердил отсутствие незавершённых миграций. В опубликованной веб-сборке прошли серверные проверки двусторонней синхронизации и настоящий короткий запрос GigaChat. Одна промежуточная веб-сборка остановилась на дополнительной проверке чата; повторная полностью прошла и опубликована вместо неё.
+
+Публичные HTTP-проверки: сайт и анонимная веб-сессия → 200; история, новый endpoint сообщений и native backups без входа → 401. Проверка runtime logs новых сборок за окно выпуска не обнаружила error/fatal записей. Домены назначены явно, общая защита preview не менялась.
+
+Артефакты выпуска сохранены в игнорируемом `.build/shared-chat-release/`; секреты и локальные БД в них не включены. Source manifest SHA-256: веб `75999964055a7191be351e60835f39e1718c412fc28aa58e956a3682ca567ca1`, сайт `e743332132e2d49b3cd6b06f12732eb848d67f247f6cc371a243c98f19dda5d0`. Исходники находятся в текущем проекте; автоматический commit/push не выполнялся. Свободно около 32 GiB, переиспользован `.build/swift/workspace`.
+
+
 ### docs/integrations/apple-apps.md
 
 #### Системные приложения Apple
@@ -24648,6 +25210,8 @@ SVG-файлы имеют имена `chat-chief-of-staff.svg`, `chat-sales-outb
 
 #### План разработки Blot для четырёх платформ
 
+> Дополнение от 15 ноября 2026: [план объединения Blot, Pilot Agent и Lumia](blot-unification-plan.md) заменяет решения ниже об отсутствии веб-клиента и локальном хранении истории. В целевую структуру входят шесть приложений, общий PostgreSQL и Python CLI; остальные требования сохраняются. Календарь ниже относится к прежнему объёму.
+
 Дата: 1 ноября 2026. Целевой срок основной поставки: 1 декабря 2026. Часовой пояс плана: Asia/Yekaterinburg.
 
 Blot — личный ИИ-помощник с постоянными агентами и командой исполнителей. Пользователь общается с CEO или отдельным агентом. Работа с браузером, почтой, файлами и кодом выполняется на выбранном компьютере. Телефон управляет этой работой через интернет и самостоятельно поддерживает обычный чат и простые напоминания.
@@ -24769,9 +25333,52 @@ Blot — личный ИИ-помощник с постоянными агент
 Подробные правила и приёмочные сценарии находятся в [полном ТЗ](blot-technical-specification.md). Подключение инструментов сторонних разработчиков описано в [руководстве MCP](../integrations/mcp-developer-guide.md).
 
 
+### docs/product/ori-defense-specification.md
+
+#### Техническое задание на демонстрационную версию Ori
+
+Редакция от 26 ноября 2026 года. Платформа защиты — macOS. Результат работы — учебный прототип рабочего пространства, в котором пользователь даёт поручение команде агентов, видит вклад участников и проверяет результат перед действием.
+
+##### Состав демонстрации
+
+Демонстрация проходит в нативном приложении Ori на Mac. Локальный режим запускается командой `./script/build_and_run.sh --design`. Для сценариев используются подготовленные письма, счета, документы и профили агентов. Ответы задаёт локальный сценарный модуль. Отправка письма меняет статус в демонстрационном рабочем пространстве. Для показа достаточно Mac с установленным приложением или подготовленной средой сборки.
+
+##### Требования и приёмка
+
+| № | Требование | Что проверяется | Результат |
+| --- | --- | --- | --- |
+| ORI-01 | Личные и групповые чаты | Создать группу из нескольких агентов, отправить сообщение и увидеть ответы с указанием автора. Действия в группе сохраняют отдельную историю личных чатов. | Пройдено |
+| ORI-02 | Работа команды над поручением | Попросить разобрать неоплаченные счета. В ответе участвуют выбранные представители команды, а итог появляется в групповом чате. По запросу контент-плана команда выдаёт документ. | Пройдено |
+| ORI-03 | Профили и шаблоны агентов | Создать и отредактировать профиль. Импортировать шаблон с инструкциями, навыками и памятью. Импортированное расписание остаётся на паузе. | Пройдено |
+| ORI-04 | Документы и вложения | Создать контент-план как документ. Открыть тестовое вложение из чата и получить ответ по его содержимому. | Пройдено |
+| ORI-05 | Подтверждение действия | Отредактировать черновик, подтвердить демонстрационную отправку и увидеть её статус. Запрет отправки блокирует действие, а повторное подтверждение сохраняет единственную запись. | Пройдено |
+| ORI-06 | Память и навыки | Сохранить общее правило «для всех пиши по-русски». Повтор правила сохраняет одну запись. Запуск навыка категоризации расходов возвращает результат в чате. | Пройдено |
+| ORI-07 | Расписание | Задать время утреннего обзора сообщением, запустить обзор вручную и увидеть отметку о запуске. Приостановленное расписание исключается из расчёта следующего запуска. | Пройдено |
+| ORI-08 | Локальное хранение | Повторно открыть сохранённое рабочее пространство и восстановить историю, группы, настройки и статус письма. При ошибке чтения приложение сохраняет исходный файл. | Пройдено |
+
+**Статус демонстрационного объёма — реализован.** 26 ноября 2026 года на Mac прошли 87 автоматических проверок логики, включая требования ORI-01–ORI-08. Команда повторной проверки — `bash scripts/check-mac-team-demo.sh`. Снимки интерфейса и материалы предыдущих прогонов находятся в `docs/status/verification/mac-team-demo/` и `docs/status/verification/mac-chat-interactions/`.
+
+##### Сценарий защиты
+
+1. Открыть Ori и показать рабочее пространство с ролью координатора и профилями специалистов.
+2. Создать групповой чат с координатором, специалистом по финансам и помощником по почте. Отправить «Разберите неоплаченные счета» и показать сообщения участников и итог.
+3. Открыть тестовый черновик письма, отредактировать текст, подтвердить отправку и показать обновившийся статус.
+4. Попросить «Подготовь контент-план» в чате с агентом по контенту и показать созданный документ.
+5. В чате с координатором задать «Каждое утро в 10:30 присылай обзор почты и Slack». Открыть расписание, запустить обзор вручную и показать историю запуска.
+6. Закрыть и снова открыть деморежим. Показать сохранённую переписку и статус письма.
+
+##### Границы поставки
+
+Проверка по этому ТЗ охватывает локальное демо macOS. Клиент для iPhone, другие платформы, живые модели, внешние аккаунты, реальные отправки, платежи и межустройственная синхронизация относятся к общему плану продукта. [Исходное ТЗ Blot и матрица BLOT-01…30](blot-technical-specification.md).
+
+
 ### docs/product/blot-technical-specification.md
 
 #### Техническое задание Blot для четырёх платформ
+
+> Исторический план продукта. Для защиты применяется [ТЗ демонстрационной версии Ori](ori-defense-specification.md).
+
+> Изменения владельца от 15 ноября 2026 зафиксированы в [плане объединения Blot, Pilot Agent и Lumia](blot-unification-plan.md): добавляются веб-клиент и Python CLI, PostgreSQL становится общим источником пользовательских данных. Эти решения имеют приоритет над противоречащими им положениями о локальном хранении и отсутствии веб-клиента. Остальные требования сохраняются; это изменение требований, а не отметка о готовой реализации.
 
 Версия требований: 1 ноября 2026. Основная поставка: 1 декабря 2026. Назначение: разработка и приёмка учебного проекта с поведением готового пользовательского продукта.
 
@@ -26655,23 +27262,28 @@ API охватывает состояние и совместимость сер
 
 ##### С чего начать
 
-Трёх документов достаточно, чтобы понять проект:
+Для защиты используйте [ТЗ демонстрационной версии Ori](product/ori-defense-specification.md). Материалы по развитию продукта:
 
-1. [Техническое задание](product/blot-technical-specification.md) — что продукт должен уметь и как мы проверим, что он готов. Это главный документ.
-2. [План разработки](product/blot-product-plan.md) — в каком порядке строим, к какому сроку и сколько кода ждать.
-3. [Карта модулей](architecture/module-map.md) — какая часть кода за что отвечает. Её удобно давать ИИ вместе с задачей.
+1. [План объединения Blot, Pilot Agent и Lumia](product/blot-unification-plan.md) — шесть приложений, общие PostgreSQL, аккаунт и GigaChat; карта переноса и порядок реализации.
+2. [Исходное техническое задание Blot](product/blot-technical-specification.md) — план четырёх платформ и матрица BLOT-01…30.
+3. [План разработки](product/blot-product-plan.md) — исходные этапы и оценки до расширения объёма.
+4. [Карта модулей](architecture/module-map.md) — существующее разделение кода и ответственности.
 
-**Если документы спорят друг с другом, верно то, что написано в ТЗ от 1 ноября 2026.** Всё, что написано в октябре, описывает первую версию продукта (только Mac и iPhone) и могло устареть.
+Подключение общей авторизации веба: [реализация, настройки и проверки](status/web-blot-auth.md).
+Общая PostgreSQL и переход с сайта: [веб-выпуск](status/web-postgres-release.md).
+Обмен чатами веба, Mac и iPhone: [общая история](status/shared-chat-history.md).
+
+**Решения от 15 ноября имеют приоритет в вопросах веба, терминала и общего PostgreSQL. Остальные требования определяет ТЗ от 1 ноября 2026.** Октябрьские документы описывают прежнюю версию продукта и могли устареть. План не подтверждает реализацию: состояние проверок смотрите в отчётах.
 
 ##### Что где лежит
 
 | Папка | Что внутри | Можно ли верить |
 | --- | --- | --- |
-| `product/` | ТЗ и план разработки | Да, актуально на 1 ноября |
+| `product/` | ТЗ, план разработки и план объединения | Решения от 15 ноября уточняют ТЗ от 1 ноября |
 | `architecture/` | Как устроен код: слои Java, пакеты Swift, сборка, контракты, карта модулей | Карта модулей — да. Остальное написано в октябре, сверяйте с ТЗ |
 | `rules/` | Правила продукта: разрешения, роли, границы инструментов, хранение данных, словарь понятий | Октябрь. Смысл правил в целом остаётся, детали сверяйте с ТЗ |
 | `agents/` | Как работают агенты и оркестратор (тот, кто раздаёт им задачи) | Октябрь |
-| `integrations/` | Подключения: MCP-серверы и Google Workspace | MCP — актуально, Google — план на будущее |
+| `integrations/` | Подключения: MCP-серверы и Google Workspace | MCP и Google — реализованы; настройка описана в workflow guide |
 | `design/` | Логотип, персонажи, макеты сайта, правила интерфейса | Персонажи — актуально, остальное октябрь |
 | `status/` | Отчёты и доказательства проверок. Текущий блок: [Apple v3](status/apple-v3-implementation.md) | Дата и границы проверки указаны в каждом отчёте |
 | `archive/` | Устаревшее: первая версия продукта и старый список из 405 задач | Нет, только для истории |
@@ -26685,8 +27297,8 @@ API охватывает состояние и совместимость сер
 ##### Простыми словами
 
 - **Ядро** — программа на компьютере, которая делает работу: читает файлы, запускает команды, пишет код.
-- **Клиент** — приложение, через которое вы общаетесь с Blot: Mac, iPhone, Android или Windows.
-- **Облако** — наш сервер. Он хранит только аккаунты и помогает телефону найти компьютер. Чаты и файлы там не лежат.
+- **Клиент** — приложение Blot: Mac, iPhone, Android, Windows, веб или терминал. У терминала отдельный кодовый режим без списка чатов.
+- **Облако** — наш сервер и общий PostgreSQL. По новому плану он хранит пользовательские данные и выдаёт их клиентам через API; переход от нынешних локальных баз и облачных снимков ещё предстоит выполнить.
 - **CEO** — главный агент. Вы говорите с ним, он раздаёт работу остальным и собирает результат.
 - **Агент** — помощник с именем, ролью и памятью: дизайнер, исследователь, разработчик.
 - **Mote** — маленький помощник на одну узкую задачу. Живёт, пока задача не выполнена.
@@ -26698,13 +27310,14 @@ API охватывает состояние и совместимость сер
 
 | Вопрос | Куда смотреть |
 | --- | --- |
-| Что должно работать к 1 декабря? | [ТЗ](product/blot-technical-specification.md), разделы «Матрица приёмки» и «Показ учителю» |
+| Что показываем на защите? | [ТЗ демонстрационной версии Ori](product/ori-defense-specification.md), раздел «Сценарий защиты» |
 | Какие экраны нужны? | [ТЗ](product/blot-technical-specification.md), раздел «Интерфейс и дизайн», и папка `screens/` |
 | Кто за что отвечает в коде? | [Карта модулей](architecture/module-map.md) |
 | Какие бывают сущности и состояния задачи? | [Сущности и состояния](architecture/domain-model.md) |
 | Когда Blot спрашивает разрешение? | [Разрешения](rules/permission-policy.md) и раздел «Режимы и разрешения» в ТЗ |
 | Как агенты передают работу друг другу? | [Оркестратор](agents/orchestrator.md) |
 | Как подключить свой MCP-сервер? | [Руководство по MCP](integrations/mcp-developer-guide.md) |
+| Как настроить Routines, Teach, Vault, Pages и Team Bots? | [Реализация сценариев и подключений](implementation/workspace-workflows.md) |
 | Как хранятся и удаляются данные? | [Данные](rules/data-lifecycle.md) |
 | Что уже написано в backend? | `status/backend-implementation-progress.md` |
 
@@ -31069,7 +31682,7 @@ Blot — основной помощник и координатор. Он до�
 
 Документ задаёт рекомендуемый каталог навыков, плагинов и MCP-серверов для профилей Blot. Это целевая конфигурация: перечисленные внешние плагины и MCP-интеграции не считаются подключёнными, пока они отдельно не реализованы, настроены и разрешены для проекта.
 
-Gmail, Google Calendar и Google Drive запланированы как будущие пользовательские подключения. Их OAuth, разрешённые операции и ограничения описаны в [спецификации Google Workspace](../integrations/google-workspace.md); сами подключения не включаются в профиль автоматически.
+Gmail, Google Calendar и Google Drive реализованы как отдельные пользовательские подключения Apple-клиентов. Их OAuth, разрешённые операции и ограничения описаны в [спецификации Google Workspace](../integrations/google-workspace.md); сами подключения не включаются в профиль автоматически.
 
 ##### Термины
 
@@ -31281,54 +31894,49 @@ Blot должен выбирать наименее затратный спос�
 
 #### Google Workspace: Gmail, Calendar и Drive
 
-> **Статус: октябрьская версия.** Если здесь написано иначе, чем в [ТЗ от 1 ноября 2026](../product/blot-technical-specification.md), верно ТЗ.
+Реализация Apple-клиентов на 19 ноября 2026 года. Интеграции исполняются в локальном Swift runtime. Пользователь подключает аккаунт и выбирает агентов отдельно для каждого сервиса.
 
-Статус: будущее расширение после базовой поставки Blot. Google Workspace не подключён автоматически и не входит в минимальный набор инструментов Code.
+##### OAuth
 
-##### Цель
+Mac использует клиент типа Desktop app, PKCE S256 и системный браузер. Одноразовый callback принимается на случайном порту 127.0.0.1; проверяются state, путь и порт. Отмена останавливает listener. В адрес браузера не передаются client secret или verifier.
 
-После явного подключения Blot сможет по запросу пользователя находить важные письма, события и документы, связывать их с рабочим планом и предлагать следующие действия. Например: «Найди в почте задачи по запуску», «Сверь сроки с календарём» или «Собери требования из папки Drive».
+В .env задаются BLOT_GOOGLE_MACOS_CLIENT_ID и BLOT_GOOGLE_MACOS_CLIENT_JSON — точный путь к скачанному JSON этого Desktop-клиента. Альтернатива JSON: BLOT_GOOGLE_MACOS_CLIENT_SECRET. Сборка проверяет совпадение client ID и секцию installed. Секрет Web OAuth клиента для нативного клиента не используется.
 
-Подключение не переводит пользователя на облачный сервер Blot: обработка и хранение токенов выполняются локальным Java-сервисом на Mac. Внешний Google API вызывается по сети от имени подключённого пользователя.
+iPhone сохраняет отдельный BLOT_GOOGLE_IOS_CLIENT_ID, зарегистрированный bundle ID и custom-scheme callback. Desktop-секрет в ресурс iOS не включается. JSON с секретом и .env не коммитятся; конфигурация Desktop-клиента используется приватной сборкой Mac. Токены и конфигурация обновления остаются в Keychain и не реплицируются.
 
-##### Подключение и доступ
+В Google Cloud должны быть включены Gmail API, Calendar API и Drive API. Для режима Testing аккаунту нужен доступ тестового пользователя. Общий вход в Blot через Google на сайте и разрешения API — отдельные OAuth-процессы.
 
-- Каждую службу Gmail, Calendar и Drive пользователь подключает отдельно через OAuth и может отключить независимо.
-- Запрашиваются только минимальные актуальные scopes для выбранных функций. Реальные Google scopes фиксируются при реализации по официальной документации и проходят проверку согласия OAuth.
-- Refresh-токены хранятся в Keychain Mac. Токены не попадают в модельный контекст, логи, экспорт, iPhone или вывод инструмента.
-- Пользователь выбирает, какие источники и, где возможно, папки/календари доступны Blot. Поиск за пределами выбранного scope сервер отклоняет.
-- Подключение показывает название аккаунта, список разрешённых служб и уровень доступа. Отзыв доступа блокирует новые запросы; пользователь может удалить локальные кэши и индексы.
+##### Реализованные инструменты
 
-##### Возможности по сервисам
+| Сервис | Инструменты |
+|---|---|
+| Gmail | gmail_search, gmail_read, gmail_draft, gmail_send |
+| Calendar | calendar_list, calendar_events, calendar_create, calendar_update |
+| Drive | drive_search, drive_read, drive_create |
+| Общий | google_accounts — аккаунты, доступные этому агенту |
 
-| Сервис | Начальные операции интеграции | Поведение Mote | Ограничения |
-| --- | --- | --- | --- |
-| Gmail | Поиск писем, чтение выбранных писем и цепочек | Inbox Mote извлекает темы, дедлайны, просьбы и возможные задачи; даёт ссылку на письмо и цитату-основание | Не отправляет, пересылает, архивирует, помечает и не удаляет письма без отдельной будущей функции и явного подтверждения |
-| Google Calendar | Чтение разрешённых календарей и событий | Calendar Mote находит ближайшие события, свободные интервалы и конфликты; предлагает план/время | Не создаёт, не переносит и не удаляет события автоматически; запись календаря — отдельная capability и отдельное подтверждение |
-| Google Drive | Поиск и чтение файлов в выбранном scope | Drive Mote находит документы, суммирует содержимое и отвечает со ссылками на источник | Не меняет, не перемещает и не удаляет файлы без отдельной capability и явного подтверждения |
+Calendar принимает RFC3339 с часовым поясом; обновление связано с прочитанным etag. Инструменты не рассылают приглашения. Drive читает текстовые файлы, экспортирует Docs в текст, Sheets в CSV. Документы, таблицы и презентации создаются локально инструментом document_create, без Google: Markdown/PDF, CSV и презентации PDF. Созданный файл прикрепляется к ответу и открывается в панели Blot. Google Drive используется только для явной просьбы сохранить файл в облако. Google Docs/Sheets/Slides API не запрашиваются.
 
-##### Сценарий «что мне сделать?»
+##### Сохранение файлов Drive
 
-1. Пользователь запускает запрос в Code и выбирает подключённые источники либо использует ранее заданный набор доступов.
-2. Blot формирует ограниченные подзадачи и вызывает соответствующие Inbox, Calendar и Drive Motes только для реально доступных источников.
-3. Motes возвращают предложения действий, сроки и ссылки на первичные источники. Каждый пункт различает подтверждённое содержание источника и вывод модели.
-4. Blot удаляет дубли, группирует пункты по сроку/проекту, отмечает конфликты и спрашивает пользователя о неоднозначных задачах.
-5. Только после принятия пользователем Blot может создать внутренние задачи Code. Любое действие записи в Google требует отдельного разрешения и показывает точные данные операции до подтверждения.
+drive_create принимает account_id, name с расширением и ровно один источник:
 
-В Work можно обсуждать общие вопросы, но внешние поисковые вызовы, Motes и создание задач не запускаются скрытно. Пользователь явным образом переключается в Code или выбирает действие «собрать задачи из источников».
+- content: UTF-8 текст до 32 KiB. MIME по умолчанию text/plain; также поддерживаются Markdown, CSV, HTML, JSON и XML.
+- artifact_id: файл до 5 MiB, явно прикреплённый к текущему запросу. Проверяются авторство, доступность и целостность. Произвольный путь на диске не принимается.
 
-##### Данные и приватность
+Необязательный parent_id задаёт папку Drive; без него используется «Мой диск». Перед загрузкой проверяются тип папки и возможность добавления файлов. Метаданные и байты отправляются одним multipart-запросом. Создаётся новый файл; существующие файлы не перезаписываются, публичный доступ не включается. Успех возвращает фактический ID и ссылку Google.
 
-Поиск и чтение выполняются по запросу, если пользователь отдельно не включил расписание. По умолчанию Blot не сканирует всю почту и Drive, не строит бессрочную копию аккаунта и не отправляет содержимое всех найденных документов модели. В контекст передаются только нужные фрагменты в пределах бюджета. Локальные кэши имеют срок актуальности, ограниченный размер и команду очистки; краткие выжимки сохраняют ссылки на первоисточник.
+Scopes Drive: drive.readonly и drive.file. Это не выборочная папочная изоляция аккаунта: чтение разрешено в пределах scopes, а parent_id задаёт место конкретной записи.
 
-Запросы, выбранные источники, ссылки, дата чтения, scopes и результат фиксируются в истории Code-запуска. Полный текст письма/документа не копируется в долговременную память автоматически. Пользователь может запретить конкретную службу или источник для выбранного проекта.
+##### Подтверждения
 
-##### Будущие этапы
+Права проверяются для устройства, сервиса, аккаунта, агента и текущего запроса. Запрет записи в запросе или Observe блокируют запись. Внешняя запись проходит проверку правил/подтверждение; отправка Gmail требует обязательного просмотра адресата, темы и тела.
 
-1. **Read-only пилот:** подключение аккаунтов, поиск/чтение с узкими scopes, ссылки и удаление токенов/кэша.
-2. **Сводка задач:** объединение писем, календаря и Drive в список кандидатов с дедлайнами и подтверждениями.
-3. **Подтверждённые записи:** создание внутренних задач Blot после принятия пользователем; отдельно спроектировать запись событий Calendar и файлов Drive.
-4. **Расписания:** периодическая проверка только по отдельной настройке и бюджету, с видимым временем последней проверки и возможностью паузы. Никаких фоновых действий по умолчанию.
+Запись проходит durable at-most-once границу. Повтор того же вызова возвращает сохранённый результат. При потере соединения после начала запроса исход остаётся неизвестным; автоматическая повторная отправка запрещена. При повторе параметры сравниваются как JSON, а не по экранированию строки.
 
-Каждый этап получает отдельные интерфейсы адаптеров, права, проверки безопасности, UX разрешений и критерии приёмки до реализации.
+##### Проверка
+
+Изолированные тесты проверяют настоящий код OAuth/HTTP: Gmail поиск/чтение/черновик/отправку, Calendar список/чтение/создание/etag-обновление, Drive поиск/чтение/сохранение/вложение, отказ подтверждения, отзыв доступа, повтор успешного вызова и неизвестный исход. Проверяются PKCE/state/порт, отсутствие секрета в адресе браузера и исключение Desktop-секрета из ресурса iOS. Живая проверка аккаунта требует согласия пользователя на странице Google.
+
+Протоколы: [Google Desktop OAuth](https://developers.google.com/identity/protocols/oauth2/native-app), [Drive multipart upload](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 

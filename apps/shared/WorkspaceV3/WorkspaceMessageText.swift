@@ -10,13 +10,25 @@ struct WorkspaceMessageText: View {
     var markdown = true
     var agents: [BlotV3.AgentProfile] = []
     var skills: [BlotV3.Skill] = []
+    var onAccentSurface = false
+    @Environment(WorkspaceStore.self) private var store
     @Environment(\.colorScheme) private var scheme
     @Environment(\.displayScale) private var displayScale
     @ScaledMetric(relativeTo: .body) private var avatarSize = 14
 
     var body: some View {
         WorkspaceRenderedTextCache.text(text, markdown: markdown, agents: agents, skills: skills,
-            size: avatarSize, scale: displayScale, scheme: scheme) { renderedText }
+            size: avatarSize, scale: displayScale, scheme: scheme, onAccentSurface: onAccentSurface) { renderedText }
+            .environment(\.openURL, OpenURLAction { url in
+                if let id = WorkspaceResultLink.artifactID(from: url) {
+                    guard store.snapshot.artifacts.contains(where: { $0.metadata.id == id }) else { return .discarded }
+                    store.showGeneratedFile(id); return .handled
+                }
+                if ["https", "http"].contains(url.scheme?.lowercased() ?? ""), url.user == nil, url.password == nil {
+                    store.openBrowserURL(url); return .handled
+                }
+                return .discarded
+            })
     }
 
     private var renderedText: Text {
@@ -40,7 +52,8 @@ struct WorkspaceMessageText: View {
             // Keep code and existing links intact.
             guard !content[start..<end].runs.contains(where: { $0.link != nil || $0.inlinePresentationIntent?.contains(.code) == true }) else { continue }
             result.append(Text(AttributedString(content[cursor..<start])))
-            let name = Text(verbatim: target.displayName).foregroundColor(target.color).fontWeight(.semibold)
+            let mention = AttributedString(target.displayName)
+            let name = Text(mention).foregroundColor(onAccentSurface ? .white : target.color).fontWeight(.medium)
             switch target {
             case .agent(let agent):
                 if let image = WorkspaceMentionAvatar.image(agent: agent, size: avatarSize, scale: displayScale, scheme: scheme) {
@@ -48,7 +61,7 @@ struct WorkspaceMessageText: View {
                     result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
                 }
             case .skill:
-                let avatar = Text(Image(systemName: "shippingbox")).foregroundColor(target.color)
+                let avatar = Text(BlotIcon.image(.skill)).foregroundColor(target.color)
                 result.append(avatar); result.append(Text(verbatim: "\u{202F}"))
             case .plugin(let plugin):
                 if let image = WorkspaceMentionAvatar.image(plugin: plugin, size: avatarSize, scale: displayScale, scheme: scheme) {
@@ -85,6 +98,7 @@ private enum WorkspaceRenderedTextCache {
         let size: CGFloat
         let scale: CGFloat
         let dark: Bool
+        let onAccentSurface: Bool
     }
     private final class Key: NSObject {
         let input: Input
@@ -100,10 +114,10 @@ private enum WorkspaceRenderedTextCache {
         let cache = NSCache<Key, Value>(); cache.countLimit = 256; cache.totalCostLimit = 8 * 1024 * 1024; return cache
     }()
     static func text(_ text: String, markdown: Bool, agents: [BlotV3.AgentProfile], skills: [BlotV3.Skill],
-                     size: CGFloat, scale: CGFloat, scheme: ColorScheme, render: () -> Text) -> Text {
+                     size: CGFloat, scale: CGFloat, scheme: ColorScheme, onAccentSurface: Bool, render: () -> Text) -> Text {
         let targets = agents.flatMap { [$0.metadata.id.uuidString, $0.name, $0.avatarShape, $0.avatarColor] }
             + skills.filter { !$0.archived }.flatMap { [$0.metadata.id.uuidString, $0.name] }
-        let key = Key(Input(text: text, markdown: markdown, targets: targets, size: size, scale: scale, dark: scheme == .dark))
+        let key = Key(Input(text: text, markdown: markdown, targets: targets, size: size, scale: scale, dark: scheme == .dark, onAccentSurface: onAccentSurface))
         if let value = cache.object(forKey: key) { return value.text }
         let value = render()
         cache.setObject(Value(value), forKey: key, cost: text.utf8.count * 6 + targets.reduce(0) { $0 + $1.utf8.count } + 4096)

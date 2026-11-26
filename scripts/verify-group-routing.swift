@@ -25,9 +25,20 @@ private actor ScriptedGroupModel: ChatModel {
         if systems.contains("Select the interaction mode") {
             routingCalls += 1
             if scenario == "social-routing" { text = "{\"mode\":\"conversation\"}" }
+            else if scenario == "conversation-tool" || scenario == "repaired-tool-route" {
+                text = scenario == "repaired-tool-route" && routingCalls == 1 ? "Invalid routing object." : "{\"mode\":\"conversation\",\"firstToolID\":\"document_create\"}"
+            }
             else if scenario == "specialist" { text = "{\"mode\":\"specialist\",\"agentID\":\"\(ids[1])\"}" }
             else if scenario == "malformed" { text = "I can answer directly." }
             else { text = "{\"mode\":\"team\",\"summary\":\"Анализ и таблица\",\"assignments\":[{\"agentID\":\"\(ids[1])\",\"task\":\"Analyze the data\"},{\"agentID\":\"\(ids[2])\",\"task\":\"Create a Markdown table\",\"dependsOn\":[\"\(ids[1])\"]}]}" }
+        } else if scenario == "conversation-tool" || scenario == "repaired-tool-route" {
+            precondition(request.tools.contains { $0.name == "document_create" }, "A non-casual conversation route must retain permitted file tools")
+            if request.messages.last?.role == "tool" {
+                precondition(request.requiredTool == nil, "Continuation must return to automatic selection")
+                return [.text("Документ создан."), .finished(.stop)]
+            }
+            precondition(request.requiredTool == "document_create", "The selected first tool must reach the provider request")
+            return [.text("Создам тестовый документ."), .toolCall(.init(id: "conversation-document", name: "document_create", arguments: .object(["name": .string("Conversation check"), "format": .string("markdown"), "content": .string("Actual file")] ))), .finished(.toolCalls)]
         } else if systems.contains("Rewrite each assigned task") {
             text = "{\"summary\":\"Work plan\",\"assignments\":[{\"agentID\":\"\(ids[1])\",\"task\":\"I will analyze the data.\"},{\"agentID\":\"\(ids[2])\",\"task\":\"I will create a Markdown table.\"}]}"
         } else if systems.contains("Verify completion of one assigned step") {
@@ -54,14 +65,19 @@ private actor ScriptedGroupModel: ChatModel {
                     "content": .string("|Metric|Value|\n|---|---|\n|Revenue|10|\n|Profit|6|")]))), .finished(.toolCalls)]
             }
         } else { text = systems.contains("ordinary group conversation") ? "Привет! Всё хорошо." : "Самостоятельный ответ специалиста." }
+        if systems.contains("Select the interaction mode"), scenario != "malformed", !(scenario == "repaired-tool-route" && routingCalls == 1) {
+            precondition(request.requiredTool == "select_group_route" && request.tools.count == 1)
+            let arguments = try! JSONDecoder().decode(ChatJSON.self, from: Data(text.utf8))
+            return [.toolCall(.init(id: "routing", name: "select_group_route", arguments: arguments)), .finished(.toolCalls)]
+        }
         return [.text(text), .finished(.stop)]
     }
 }
 
 @main struct VerifyGroupRouting {
     @MainActor static func main() async throws {
-        for scenario in ["greeting", "social-routing", "specialist", "team", "addressed", "blocked", "malformed", "nested-conclusion", "broken-conclusion"] { try await verify(scenario) }
-        print("PASS: real group pipeline — greetings without planner, specialist ownership, team tools, mentions/replies, pin lifecycle, blocked result, malformed-route fallback")
+        for scenario in ["greeting", "social-routing", "conversation-tool", "repaired-tool-route", "specialist", "team", "addressed", "blocked", "malformed", "nested-conclusion", "broken-conclusion"] { try await verify(scenario) }
+        print("PASS: real group pipeline — ownership, team tools, pin lifecycle, bounded routing repair and rejection without false-success fallback")
     }
     @MainActor static func verify(_ scenario: String) async throws {
         let directory = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
@@ -72,7 +88,7 @@ private actor ScriptedGroupModel: ChatModel {
         var ids: [UUID] = []
         for name in ["CEO", "Analyst", "Manager"] {
             ids.append(try await agents.save(commandID: UUID(), draft: .init(name: name, instructions: "Work as " + name,
-                modelID: "gigachat", toolIDs: name == "Manager" ? ["document_create"] : [])))
+                modelID: "gigachat", toolIDs: name == "Manager" || (["conversation-tool", "repaired-tool-route"].contains(scenario) && name == "CEO") ? ["document_create"] : [])))
         }
         let group = try await WorkspaceGroupService(repository: repository, identity: identity).create(commandID: UUID(), title: "Team", agentIDs: ids)
         if scenario == "greeting" {
@@ -84,7 +100,7 @@ private actor ScriptedGroupModel: ChatModel {
         }
         let sourceID = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: group,
             content: scenario == "greeting" ? "Привет" : scenario == "social-routing" ? "Как настроение у команды?"
-                : scenario == "specialist" ? "Проанализируй данные" : scenario == "malformed" ? "Кратко объясни, что такое выручка"
+                : ["conversation-tool", "repaired-tool-route", "malformed"].contains(scenario) ? "Создай тестовый документ" : scenario == "specialist" ? "Проанализируй данные"
                 : scenario == "addressed" ? "Analyst — Analyze the data. Manager — Create a Markdown table using Analyst's results." : "Проанализируй данные и подготовь таблицу")
         let source = try await repository.record(BlotV3.Message.self, id: sourceID, workspaceID: identity.workspaceID)!
         let model = ScriptedGroupModel(scenario, ids: ids)
@@ -103,12 +119,22 @@ private actor ScriptedGroupModel: ChatModel {
                 }
             }
         } catch {
+            if scenario == "malformed", error as? WorkspaceGroupResponseError == .invalidPlan {
+                let projection = try await repository.projection(identity: identity)
+                let calls = await model.routingCalls
+                precondition(calls == 2, "Only one repair is allowed")
+                precondition(projection.artifacts.isEmpty && !projection.messages.contains { $0.role == .assistant && $0.delivery == .completed })
+                precondition(projection.modelSteps.allSatisfy { $0.toolCallsJSON == nil }, "No workspace operation follows invalid routing")
+                try await service.close()
+                print("PASS: invalid route cannot fall back to a simulated-success response")
+                return
+            }
             guard scenario == "broken-conclusion", error is WorkspaceGroupConclusion.Failure else { throw error }
             rejectedConclusion = true
         }
         precondition(rejectedConclusion == (scenario == "broken-conclusion"))
         let projection = try await repository.projection(identity: identity)
-        let replies = projection.messages.filter { $0.role == .assistant && $0.delivery == .completed && !$0.content.isEmpty && $0.commandId == source.commandId }
+        let replies = projection.messages.filter { $0.role == .assistant && $0.delivery == .completed && (!$0.content.isEmpty || !$0.artifactIds.isEmpty) && $0.commandId == source.commandId }
         precondition(!replies.contains { $0.content.contains("\"summary\":") || $0.content.contains("\"completed\":") })
         let pins = try await repository.pinnedGroupPlans()
         let routingCalls = await model.routingCalls
@@ -118,6 +144,10 @@ private actor ScriptedGroupModel: ChatModel {
         case "greeting", "social-routing":
             precondition(replies.count == 1 && replies[0].authorAgentId == ids[0])
             precondition(routingCalls == (scenario == "greeting" ? 0 : 1) && !sawPlan && pins.isEmpty)
+        case "conversation-tool", "repaired-tool-route":
+            precondition(replies.count == 2 && replies.allSatisfy { $0.authorAgentId == ids[0] } && !sawPlan)
+            precondition(routingCalls == (scenario == "repaired-tool-route" ? 2 : 1))
+            precondition(projection.artifacts.count == 1 && projection.modelSteps.contains { $0.toolCallsJSON?.contains("document_create") == true && $0.toolResultsJSON != nil })
         case "specialist": precondition(replies.count == 1 && replies[0].authorAgentId == ids[1] && !sawPlan)
         case "team", "addressed", "blocked", "nested-conclusion", "broken-conclusion":
             precondition(sawPlan)

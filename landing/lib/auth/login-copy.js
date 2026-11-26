@@ -2,9 +2,9 @@ export const loginCopy = {
   ru: {
     login: "Войти в Ori", register: "Создать аккаунт", verify: "Проверьте почту", signedIn: "Вы вошли в аккаунт",
     choose: "Выберите способ входа", google: "Продолжить с Google", yandex: "Продолжить с Яндекс", emailButton: "Войти через почту", registerEmail: "Регистрация через почту",
-    name: "Ваше имя", email: "Электронная почта", code: "Код из письма", send: "Получить код", confirm: "Войти", wait: "Подождите…", checking: "Проверяем вход…",
+    name: "Ваше имя", email: "Электронная почта", code: "Код из письма", send: "Получить код", confirm: "Подтвердить вход", wait: "Подождите…", checking: "Проверяем вход…",
     codeSent: "Если аккаунт существует, код отправлен на вашу почту.", registrationSent: "Отправили код на вашу почту.", codeDescription: "Введите шестизначный код из письма для", codeHint: "Код действует 10 минут.",
-    resend: "Отправить код ещё раз", resendIn: "Повторная отправка через", seconds: "с", back: "Назад", changeEmail: "Изменить почту", noAccount: "Ещё нет аккаунта?", hasAccount: "Уже есть аккаунт?", signIn: "Войти", signUp: "Зарегистрироваться",
+    resend: "Отправить код ещё раз", resendIn: "Повторная отправка через", seconds: "с", back: "Назад", changeEmail: "Изменить почту", cancel: "Отмена", close: "Закрыть вход", noAccount: "Ещё нет аккаунта?", hasAccount: "Уже есть аккаунт?", signIn: "Войти", signUp: "Зарегистрироваться",
     privacy: "Продолжая, вы принимаете", privacyLink: "политику конфиденциальности", device: "Устройство", open: "Открыть Ori", opening: "Открываем Ori…", again: "Открыть ещё раз", download: "Скачать Ori", other: "Войти в другой аккаунт",
     accountDescription: "Ваш аккаунт готов к работе.", nativeDescription: "Возвращаемся в приложение Ori…", openHelp: "Если браузер запросит разрешение открыть Ori, подтвердите его.",
     unknown: "Не удалось продолжить. Повторите попытку.",
@@ -12,9 +12,9 @@ export const loginCopy = {
   en: {
     login: "Sign in to Ori", register: "Create an account", verify: "Check your email", signedIn: "You’re signed in",
     choose: "Choose how to continue", google: "Continue with Google", yandex: "Continue with Yandex", emailButton: "Sign in with email", registerEmail: "Register with email",
-    name: "Your name", email: "Email address", code: "Email code", send: "Send code", confirm: "Sign in", wait: "Please wait…", checking: "Checking your session…",
+    name: "Your name", email: "Email address", code: "Email code", send: "Send code", confirm: "Confirm sign-in", wait: "Please wait…", checking: "Checking your session…",
     codeSent: "If an account exists, we’ve sent a code to your email.", registrationSent: "We’ve sent a code to your email.", codeDescription: "Enter the six-digit code sent to", codeHint: "The code expires in 10 minutes.",
-    resend: "Resend code", resendIn: "Resend in", seconds: "s", back: "Back", changeEmail: "Change email", noAccount: "New to Ori?", hasAccount: "Already have an account?", signIn: "Sign in", signUp: "Create an account",
+    resend: "Resend code", resendIn: "Resend in", seconds: "s", back: "Back", changeEmail: "Change email", cancel: "Cancel", close: "Close sign-in", noAccount: "New to Ori?", hasAccount: "Already have an account?", signIn: "Sign in", signUp: "Create an account",
     privacy: "By continuing, you accept our", privacyLink: "privacy policy", device: "Device", open: "Open Ori", opening: "Opening Ori…", again: "Open again", download: "Download Ori", other: "Use another account",
     accountDescription: "Your account is ready.", nativeDescription: "Returning to the Ori app…", openHelp: "If your browser asks for permission to open Ori, allow it.", unknown: "Unable to continue. Please try again.",
   },

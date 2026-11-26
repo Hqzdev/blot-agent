@@ -11,6 +11,7 @@ public struct GoogleOAuthAuthorization: Sendable {
 
     public init(configuration: GoogleOAuthConfiguration, access: Set<GoogleAccess>) throws {
         guard !access.isEmpty else { throw GoogleOAuthError.invalidScopes }
+        if configuration.usesLoopback, configuration.redirectURI.port == nil { throw GoogleOAuthError.invalidConfiguration }
         self.configuration = configuration
         self.state = try Self.random()
         self.verifier = try Self.random()
@@ -32,7 +33,8 @@ public struct GoogleOAuthAuthorization: Sendable {
     public func tokenRequest(callback: URL) throws -> URLRequest {
         guard let components = URLComponents(url: callback, resolvingAgainstBaseURL: false),
               components.scheme == configuration.redirectURI.scheme,
-              components.host == nil, components.path == configuration.redirectURI.path,
+              components.host == configuration.redirectURI.host, components.port == configuration.redirectURI.port,
+              components.path == configuration.redirectURI.path, components.user == nil, components.password == nil,
               components.fragment == nil else { throw GoogleOAuthError.invalidCallback }
         let items = components.queryItems ?? []
         guard items.filter({ $0.name == "state" }).count == 1,
@@ -41,10 +43,12 @@ public struct GoogleOAuthAuthorization: Sendable {
         guard items.filter({ $0.name == "code" }).count == 1,
               let code = items.first(where: { $0.name == "code" })?.value,
               !code.isEmpty, code.utf8.count <= 8192 else { throw GoogleOAuthError.invalidCallback }
-        return GoogleOAuthTokenClient.request([
+        var fields = [
             "client_id": configuration.clientID, "redirect_uri": configuration.redirectURI.absoluteString,
             "code": code, "code_verifier": verifier, "grant_type": "authorization_code",
-        ])
+        ]
+        if let secret = configuration.clientSecret { fields["client_secret"] = secret }
+        return GoogleOAuthTokenClient.request(fields)
     }
 
     private static func random() throws -> String {

@@ -52,19 +52,19 @@
         }
       }
     },
-    "Blot name" : {
+    "Agent name" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Blot name"
+            "value" : "Agent name"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Имя блота"
+            "value" : "Имя агента"
           }
         }
       }
@@ -154,19 +154,19 @@
         }
       }
     },
-    "Create blot" : {
+    "Create agent" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Create blot"
+            "value" : "Create agent"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Создать блота"
+            "value" : "Создать агента"
           }
         }
       }
@@ -273,19 +273,19 @@
         }
       }
     },
-    "Make your blot yours" : {
+    "Make your agent yours" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Make your blot yours"
+            "value" : "Make your agent yours"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Как выглядит ваш блот?"
+            "value" : "Как выглядит ваш агент?"
           }
         }
       }
@@ -307,19 +307,19 @@
         }
       }
     },
-    "Meet your blot" : {
+    "Meet your agent" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Meet your blot"
+            "value" : "Meet your agent"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Познакомьтесь со своим блотом"
+            "value" : "Познакомьтесь со своим агентом"
           }
         }
       }
@@ -392,19 +392,19 @@
         }
       }
     },
-    "Setting up your blot" : {
+    "Setting up your agent" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Setting up your blot"
+            "value" : "Setting up your agent"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Настраиваем вашего блота"
+            "value" : "Настраиваем вашего агента"
           }
         }
       }
@@ -443,19 +443,19 @@
         }
       }
     },
-    "Start with a template or describe your own role. Your blot’s name and look stay the same." : {
+    "Start with a template or describe your own role. Your agent’s name and look stay the same." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start with a template or describe your own role. Your blot’s name and look stay the same."
+            "value" : "Start with a template or describe your own role. Your agent’s name and look stay the same."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Выберите шаблон или опишите свою роль. Имя и внешность блота останутся прежними."
+            "value" : "Выберите шаблон или опишите свою роль. Имя и внешность агента останутся прежними."
           }
         }
       }
@@ -511,53 +511,53 @@
         }
       }
     },
-    "What should your blot help with?" : {
+    "What should your agent help with?" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What should your blot help with?"
+            "value" : "What should your agent help with?"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "С чем должен помогать ваш блот?"
+            "value" : "С чем должен помогать ваш агент?"
           }
         }
       }
     },
-    "What’s your blot’s name?" : {
+    "What’s your agent’s name?" : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "What’s your blot’s name?"
+            "value" : "What’s your agent’s name?"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Как зовут вашего блота?"
+            "value" : "Как зовут вашего агента?"
           }
         }
       }
     },
-    "You choose the name, look, and role. Your blot grows with you." : {
+    "You choose the name, look, and role. Your agent grows with you." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You choose the name, look, and role. Your blot grows with you."
+            "value" : "You choose the name, look, and role. Your agent grows with you."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Вы выбираете имя, внешность и роль. Ваш блот развивается вместе с вами."
+            "value" : "Вы выбираете имя, внешность и роль. Ваш агент развивается вместе с вами."
           }
         }
       }
@@ -579,36 +579,36 @@
         }
       }
     },
-    "Your AI companion for work and everyday life. Let’s create your first blot together." : {
+    "Your AI companion for work and everyday life. Let’s create your first agent together." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your AI companion for work and everyday life. Let’s create your first blot together."
+            "value" : "Your AI companion for work and everyday life. Let’s create your first agent together."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Ваш ИИ-помощник для работы и повседневной жизни. Давайте вместе создадим первого блота."
+            "value" : "Ваш ИИ-помощник для работы и повседневной жизни. Давайте вместе создадим первого агента."
           }
         }
       }
     },
-    "Your blot asks before significant actions. Connect apps when you’re ready." : {
+    "Your agent asks before significant actions. Connect apps when you’re ready." : {
       "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Your blot asks before significant actions. Connect apps when you’re ready."
+            "value" : "Your agent asks before significant actions. Connect apps when you’re ready."
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Блот спрашивает перед важными действиями. Подключайте приложения, когда будете готовы."
+            "value" : "Агент спрашивает перед важными действиями. Подключайте приложения, когда будете готовы."
           }
         }
       }

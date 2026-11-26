@@ -244,7 +244,9 @@
       "mobileOwned": "bool",
       "pinned": "bool",
       "archived": "bool",
-      "kind": "ConversationKind?"
+      "kind": "ConversationKind?",
+      "parentConversationId": "uuid?",
+      "parentMessageId": "uuid?"
     },
     "Message": {
       "metadata": "RecordMetadata",
@@ -521,6 +523,25 @@
       "inputTokens": "int?",
       "outputTokens": "int?",
       "state": "ModelStepState"
+    },
+    "ConversationCard": {
+      "metadata": "RecordMetadata",
+      "messageId": "uuid",
+      "operationId": "uuid",
+      "executorDeviceId": "uuid",
+      "kind": "text",
+      "state": "text",
+      "expiresAt": "time?",
+      "payloadJSON": "text",
+      "responseJSON": "text?",
+      "updatedByDeviceId": "uuid"
+    }
+  },
+  "examples": {
+    "ConversationCard": {
+      "kind": "question",
+      "state": "pending",
+      "payloadJSON": "{\"question\":{\"_0\":{\"prompt\":\"Which language should we use?\",\"choices\":[\"Swift\",\"Java\"],\"allowsCustomAnswer\":true}}}"
     }
   }
 }

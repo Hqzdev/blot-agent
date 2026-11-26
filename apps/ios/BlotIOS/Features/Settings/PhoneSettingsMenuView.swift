@@ -38,7 +38,7 @@ struct PhoneSettingsMenuView: View {
                     Text(store.settingsText("Try another setting name.")).font(.subheadline).foregroundStyle(.secondary)
                 }
             }
-            Text("Blot · " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"))
+            Text("Ori · " + (Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"))
                 .font(.footnote).foregroundStyle(WorkspaceStyle.secondary).frame(maxWidth: .infinity)
         }
         .scrollPosition(store.navigation.position(for: .settings))

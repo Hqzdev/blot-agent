@@ -24,7 +24,7 @@ struct PhoneConversationView: View {
     private var agent: BlotV3.AgentProfile? { identity.agent }
 
     var body: some View {
-        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)))
+        let rows = PhoneMessageTimeline.rows(in: Array(history.messages(in: store.currentVisibleMessages)), activityMessageIDs: store.chatContent.activityMessageIDs)
         let ids = rows.map(\.id)
         let animation = reduceMotion ? nil : PhoneMessageMotion.spring
         ScrollViewReader { proxy in
@@ -129,9 +129,12 @@ struct PhoneConversationView: View {
             }.padding(.horizontal, 18).padding(.top, 6).padding(.bottom, 8)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            PhoneConversationComposer().padding(.horizontal, 30).padding(.vertical, 10)
+            VStack(spacing: 8) {
+                WorkspaceVoicePanel().padding(.horizontal, 18)
+                PhoneConversationComposer().padding(.horizontal, 30)
+            }.padding(.vertical, 10)
         }
-        .workspaceGlassContainer()
+        .workspaceGlassContainer().environment(\.blotChatChrome, true)
         .sheet(isPresented: $showsPinnedMessages) {
             PhonePinnedMessagesList(select: selectPinnedMessage).environment(store)
         }
@@ -161,19 +164,18 @@ struct PhoneConversationView: View {
         VStack(alignment: .leading, spacing: 0) {
             if let plan = store.groupPlan(for: row.message) {
                 WorkspaceGroupPlanCard(plan: plan, agents: store.chatContent.agents, skills: store.chatContent.skills, russian: store.language == "ru")
-                    .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 20))
-                    .contextMenu { WorkspaceMessageActionsMenu(message: row.message).environment(store) }
+                    .workspaceContextActions { WorkspaceMessageActionsMenu(message: row.message).environment(store) }
             } else {
-                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery) { id in
+                PhoneMessageBubble(message: row.message, showsDelivery: row.showsDelivery, showsAuthor: row.showsAuthor) { id in
                     store.messageNavigationTarget = id
                 }
             }
-            ForEach(row.message.artifactIds.compactMap { store.chatContent.artifacts[$0] }, id: \.metadata.id) { file in
-                Button {
-                    store.selectedRecordID = file.metadata.id
-                    store.navigate(.file)
-                } label: { PhoneFileRow(file: file) }
-                    .buttonStyle(.plain).padding(.trailing, 44)
+            if row.message.role == .assistant {
+                WorkspaceMessageResults(message: row.message).padding(.leading, 28).padding(.trailing, 14)
+            } else {
+                ForEach(row.message.artifactIds.compactMap { store.chatContent.artifacts[$0] }, id: \.metadata.id) { file in
+                    Button { store.showGeneratedFile(file.metadata.id) } label: { PhoneFileRow(file: file) }.buttonStyle(.plain).padding(.trailing, 44)
+                }
             }
         }
         .padding(.top, compactMessages ? row.spacing * 0.65 : row.spacing)
@@ -203,8 +205,9 @@ struct PhoneConversationView: View {
             PhoneGlassCircleButton(symbol: "chevron.left", title: store.t("Back")) { store.back() }
             PhoneConversationTitle(identity: identity)
             Spacer(minLength: 0)
-            Menu {
-                Button { store.showBrowser() } label: { Label(store.language == "ru" ? "Браузер" : "Browser", systemImage: "globe") }
+            WorkspaceVoiceButton()
+            WorkspaceMenu {
+                BlotIconButton(store.language == "ru" ? "Браузер" : "Browser", symbol: "globe") { store.showBrowser() }
                 BlotIconButton(store.t("Skills"), symbol: "shippingbox") { store.navigate(.skills) }
                 BlotIconButton(store.t("Schedule this task"), symbol: "calendar.badge.plus") { store.navigate(.createSchedule) }
                 BlotIconButton(store.t("Files"), symbol: "folder") { store.navigate(.files) }
@@ -214,9 +217,8 @@ struct PhoneConversationView: View {
             } label: {
                 BlotIcon(symbol: "ellipsis").font(.title3)
             }
-            .buttonStyle(.glass)
-            .buttonBorderShape(.circle)
             .frame(width: 44, height: 44)
+            .blotChromeSurface(cornerRadius: 24)
             .accessibilityLabel(store.t("Chat actions"))
         }
     }
@@ -228,53 +230,73 @@ private struct PhoneMessageBubble: View {
     @AppStorage(PhoneSettingsPreferenceKey.compactMessages) private var compactMessages = false
     let message: BlotV3.Message
     let showsDelivery: Bool
+    let showsAuthor: Bool
     let showMessage: (UUID) -> Void
     @Environment(WorkspaceStore.self) private var store
 
+    @Environment(\.self) private var environment
     private var isUser: Bool { message.role == .user }
+    private var isResult: Bool { !isUser && (!message.artifactIds.isEmpty || message.content.contains("blot-file://") || message.content.contains("](") && message.content.contains("http")) }
+    private var author: BlotV3.AgentProfile? {
+        store.chatContent.agents.first { $0.metadata.id == (message.authorAgentId ?? store.currentConversation?.agentId) }
+    }
     private var metadata: WorkspaceMessageMetadata? { store.chatInteractions.messages[message.metadata.id] }
     private var quoted: BlotV3.Message? {
+        guard isUser else { return nil }
         guard let id = metadata?.replyToMessageID ?? message.replyToMessageId else { return nil }
         guard let value = store.message(id), store.groupPlan(for: value) == nil else { return nil }
         return value
     }
 
     var body: some View {
-        VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
-            if message.role == .assistant, store.currentConversation?.kind == .group {
-                PhoneGroupMessageAuthor(message: message)
+        HStack(alignment: WorkspaceChatStyle.avatarBaseline, spacing: 6) {
+            if !isUser {
+                if showsAuthor, let author { WorkspaceAvatarView(agent: author, size: 22).padding(.bottom, 3) }
+                else { Color.clear.frame(width: 22, height: 22) }
             }
-            HStack(spacing: 0) {
-                if isUser { Spacer(minLength: 44) }
-                VStack(alignment: .leading, spacing: 8) {
-                    if let quoted {
-                        Button { showMessage(quoted.metadata.id) } label: { WorkspaceQuotedMessage(message: quoted) }
-                            .buttonStyle(.plain)
-                    }
-                    WorkspaceMessageText(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills).font(.body)
-                        .fixedSize(horizontal: false, vertical: true)
-                    WorkspaceMessagePlugins(message: message)
+            VStack(alignment: isUser ? .trailing : .leading, spacing: 4) {
+                if message.role == .assistant, showsAuthor {
+                    PhoneGroupMessageAuthor(message: message)
                 }
-                .foregroundStyle(WorkspaceStyle.ink)
-                .padding(.horizontal, compactMessages ? 12 : 14).padding(.vertical, compactMessages ? 8 : 12)
-                .background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 26))
-                .contentShape(.contextMenuPreview, RoundedRectangle(cornerRadius: 26))
-                .contextMenu { WorkspaceMessageActionsMenu(message: message).environment(store) }
-                if !isUser { Spacer(minLength: 44) }
-            }
-            if let reaction = metadata?.reaction {
-                Button { store.toggleReaction(reaction, to: message.metadata.id) } label: {
-                    Text(reaction).font(.system(size: 20)).padding(.horizontal, 9).padding(.vertical, 4)
-                        .background(WorkspaceStyle.surface, in: Capsule())
-                        .overlay(Capsule().strokeBorder(WorkspaceStyle.secondary.opacity(0.15)))
-                }.buttonStyle(.plain).padding(.horizontal, 14).accessibilityLabel(store.t("Remove reaction") + " " + reaction)
-            }
-            if store.mode == .live && showsDelivery {
-                Text(store.deliveryTitle(message.delivery)).font(.caption2).foregroundStyle(WorkspaceStyle.secondary).padding(.trailing, 14)
-            } else if isUser && showsDelivery {
-                let read = message.delivery == .completed || store.chatActivity.readMessageIDs.contains(message.metadata.id) || store.chatInteractions.agentReadMessageIDs?.contains(message.metadata.id) == true
-                Text(store.t(read ? "Read" : "Sent")).font(.caption2)
-                    .foregroundStyle(WorkspaceStyle.secondary).padding(.trailing, 14)
+                WorkspaceToolActivityView(message: message).padding(.trailing, isUser ? 0 : 44)
+                if store.chatContent.cards[message.metadata.id] == nil && (!message.content.isEmpty || isUser && !message.artifactIds.isEmpty) {
+                HStack(spacing: 0) {
+                    if isUser { Spacer(minLength: 44) }
+                    VStack(alignment: .leading, spacing: 8) {
+                        if let quoted {
+                            Button { showMessage(quoted.metadata.id) } label: { WorkspaceQuotedMessage(message: quoted, onDarkSurface: isUser) }
+                                .buttonStyle(.plain)
+                        }
+                        WorkspaceMessageBody(text: store.mode == .live ? message.content : store.t(message.content), markdown: !isUser, agents: store.chatContent.agents, skills: store.chatContent.skills, onAccentSurface: isUser).font(.body)
+                            .fixedSize(horizontal: false, vertical: true)
+                        if store.chatContent.activities(for: message).isEmpty { WorkspaceMessagePlugins(message: message) }
+                    }
+                    .foregroundStyle(isUser ? Color.white : WorkspaceStyle.ink)
+                    .padding(.horizontal, compactMessages ? 12 : 14).padding(.vertical, compactMessages ? 8 : 12)
+                    .background(isUser ? WorkspaceChatStyle.outgoing(agent: author, group: store.currentConversation?.kind == .group, environment: environment) : (isResult ? Color.clear : WorkspaceStyle.surface), in: RoundedRectangle(cornerRadius: 22))
+                    .alignmentGuide(WorkspaceChatStyle.avatarBaseline) { $0[.bottom] }
+                    .workspaceContextActions { WorkspaceMessageActionsMenu(message: message).environment(store) }
+                    if !isUser { Spacer(minLength: 14) }
+                }
+                }
+                if !(store.chatContent.cards[message.metadata.id] ?? []).isEmpty {
+                    WorkspaceConversationCards(message: message)
+                        .alignmentGuide(WorkspaceChatStyle.avatarBaseline) { $0[.bottom] }
+                }
+                if let reaction = metadata?.reaction {
+                    Button { store.toggleReaction(reaction, to: message.metadata.id) } label: {
+                        Text(reaction).font(.system(size: 20)).padding(.horizontal, 9).padding(.vertical, 4)
+                            .background(WorkspaceStyle.surface, in: Capsule())
+                            .overlay(Capsule().strokeBorder(WorkspaceStyle.secondary.opacity(0.15)))
+                    }.buttonStyle(.plain).padding(.horizontal, 14).accessibilityLabel(store.t("Remove reaction") + " " + reaction)
+                }
+                if store.mode == .live && showsDelivery {
+                    Text(store.deliveryTitle(message.delivery)).font(.caption2).foregroundStyle(WorkspaceStyle.secondary).padding(.trailing, 14)
+                } else if isUser && showsDelivery {
+                    let read = message.delivery == .completed || store.chatActivity.readMessageIDs.contains(message.metadata.id) || store.chatInteractions.agentReadMessageIDs?.contains(message.metadata.id) == true
+                    Text(store.t(read ? "Read" : "Sent")).font(.caption2)
+                        .foregroundStyle(WorkspaceStyle.secondary).padding(.trailing, 14)
+                }
             }
         }
     }

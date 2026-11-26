@@ -6,6 +6,8 @@ struct PhonePrivacySettingsView: View {
     @Environment(WorkspaceStore.self) private var store
     var body: some View {
         PhoneSettingsPage {
+            WorkspaceTeamBotsButton()
+            WorkspaceVaultButton().padding(.vertical, 8)
             PhoneSettingsGroup(title: "Data and privacy") {
                 PhoneSettingsRow(title: "Credentials", detail: "Sign-in keys and tokens are stored in the system Keychain.", showsChevron: false)
                 PhoneSettingsDivider()
@@ -32,12 +34,14 @@ struct PhoneMemorySettingsView: View {
     var body: some View {
         @Bindable var store = store
         PhoneSettingsPage {
+            WorkspaceMemoryImportButton()
             if store.snapshot.memories.isEmpty {
                 PhoneSettingsGroup(title: "No memories saved yet", detail: "Choose Remember in a message's actions.") { EmptyView() }
             }
             ForEach(store.snapshot.memories, id: \.metadata.id) { memory in
                 PhoneSettingsGroup(title: "") {
                     VStack(alignment: .leading, spacing: 16) {
+                        WorkspaceMemoryReview(memory: memory)
                         if editingID == memory.metadata.id {
                             TextField(store.t("Memory text"), text: $store.form.memory.content, axis: .vertical).lineLimit(3...10)
                             WorkspaceV3ActionButton(title: "Save", action: .saveMemory)
@@ -58,7 +62,7 @@ struct PhoneMemorySettingsView: View {
             }
             WorkspaceFeedback()
         }
-        .confirmationDialog(store.t("Delete"), isPresented: Binding(get: { deletingID != nil }, set: { if !$0 { deletingID = nil } }), titleVisibility: .visible) {
+        .workspaceConfirmationDialog(store.t("Delete"), isPresented: Binding(get: { deletingID != nil }, set: { if !$0 { deletingID = nil } }), titleVisibility: .visible) {
             Button(store.t("Delete"), role: .destructive) {
                 if let id = deletingID { store.deleteMemory(id) }; deletingID = nil
             }
@@ -88,10 +92,7 @@ struct PhoneMcpSettingsView: View {
                     WorkspaceField(title: "Server name", text: $store.form.mcp.name)
                     WorkspaceField(title: "Server URL", text: $store.form.mcp.endpoint)
                     PhoneSettingsValueRow(title: "Transport") {
-                        Picker(store.t("Transport"), selection: $store.form.mcp.transport) {
-                            Text("Streamable HTTP").tag("STREAMABLE_HTTP")
-                            Text("stdio").tag("STDIO")
-                        }.labelsHidden()
+                        WorkspaceChoice(title: store.t("Transport"), selection: $store.form.mcp.transport, options: [.init("STREAMABLE_HTTP", "Streamable HTTP"), .init("STDIO", "stdio")], showsTitle: false)
                     }
                     Text(store.t("Transports: stdio on computer · Streamable HTTP")).font(.footnote).foregroundStyle(.secondary)
                     Text(store.t("Secrets belong in protected settings and never in prompts.")).font(.footnote).foregroundStyle(.secondary)

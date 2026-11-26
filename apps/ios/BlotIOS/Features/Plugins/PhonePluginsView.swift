@@ -118,7 +118,7 @@ struct PhonePluginsView: View {
         }
         .padding(.leading, 16).padding(.trailing, query.isEmpty ? 16 : 2)
         .frame(minHeight: 48)
-        .glassEffect(.regular.interactive(), in: .capsule)
+        .blotChromeSurface(cornerRadius: 24)
     }
 
     private var emptyState: some View {
@@ -149,7 +149,7 @@ struct PhonePluginsView: View {
     }
 
     private func isInstalled(_ plugin: PhonePlugin) -> Bool {
-        store.snapshot.connections.contains {
+        (store.snapshot.localConnectedPluginIDs?.contains(plugin.id) == true) || store.snapshot.connections.contains {
             ($0.pluginId == plugin.id || $0.service == plugin.name) && $0.state == .connected
                 && (plugin.appleID == nil || $0.deviceId == store.snapshot.localDeviceID)
         }
@@ -180,18 +180,17 @@ private struct PhonePluginCard: View {
             }
             Button(action: manage) {
                 Group {
-                    if let apple = plugin.appleID { ApplePluginStatusText(plugin: apple) }
-                    else {
-                        Text(installed ? store.t("Connected") : store.language == "ru" ? "Установить" : "Install")
-                            .padding(.horizontal, 10).padding(.vertical, 7)
-                            .background(PhonePluginsStyle.action, in: Capsule())
+                    if let apple = plugin.appleID {
+                        ApplePluginStatusText(plugin: apple) { PhonePluginBadge(connected: $0) }
+                    } else {
+                        PhonePluginBadge(connected: installed)
                     }
                 }
-                .font(.subheadline.weight(.semibold)).fixedSize(horizontal: true, vertical: false)
+                .fixedSize(horizontal: true, vertical: false)
                 .frame(minHeight: 44)
                 .contentShape(Capsule())
             }.buttonStyle(.plain).disabled(store.busy)
-                .accessibilityLabel(store.t("Manage connection") + " " + plugin.name)
+                .accessibilityHint(store.t("Manage connection") + " " + plugin.name)
                 .accessibilityIdentifier("workspace.plugins.manage.\(plugin.id)")
         }
         .padding(16).frame(minHeight: 80)
@@ -203,6 +202,5 @@ private struct PhonePluginCard: View {
 private enum PhonePluginsStyle {
     static var canvas: Color { BlotColor.dynamic(.init(light: 0xF5F5F5FF, dark: 0x111111FF)) }
     static var card: Color { BlotColor.dynamic(.init(light: 0xFFFFFFFF, dark: 0x1B1B1BFF)) }
-    static var action: Color { BlotColor.dynamic(.init(light: 0xF7F7F7FF, dark: 0x292929FF)) }
     static var selection: Color { BlotColor.dynamic(.init(light: 0xECECECFF, dark: 0x2B2B2BFF)) }
 }

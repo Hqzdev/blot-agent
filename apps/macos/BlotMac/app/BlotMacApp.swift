@@ -1,8 +1,10 @@
+import AppKit
 import BlotDesign
 import SwiftUI
 
 @main
 struct BlotMacApp: App {
+    @Environment(\.openWindow) private var openWindow
     @State private var workspace = WorkspaceBootstrap.makeStore()
     @FocusedValue(\.teamSceneActions) private var teamActions
     init() {
@@ -11,7 +13,7 @@ struct BlotMacApp: App {
         #endif
     }
     var body: some Scene {
-        WindowGroup {
+        WindowGroup(id: "workspace") {
             #if DEBUG
             if MacKeychainVerification.requested { ProgressView() }
             else { WorkspaceRootView(store: workspace) }
@@ -20,12 +22,14 @@ struct BlotMacApp: App {
             #endif
         }
         .defaultSize(width: 1280, height: 820)
+        .defaultLaunchBehavior(.presented)
         .windowResizability(.contentMinSize)
         .windowStyle(.hiddenTitleBar)
         .windowToolbarStyle(.unifiedCompact)
         .commands {
             CommandGroup(replacing: .newItem) {
                 Button(workspace.t(teamActions == nil ? "New chat" : "Create agent")) {
+                    if !NSApp.windows.contains(where: { $0.canBecomeMain }) { openWindow(id: "workspace") }
                     if let teamActions { teamActions.createAgent() }
                     else { workspace.navigate(.home) }
                 }.keyboardShortcut("n")
@@ -37,6 +41,9 @@ struct BlotMacApp: App {
                 }.keyboardShortcut(",")
             }
             CommandMenu(workspace.t("Go")) {
+                Button(workspace.language == "ru" ? "Примеры карточек агента" : "Agent card examples") {
+                    openWindow(id: "agent-card-gallery")
+                }
                 Button(workspace.t("Search")) {
                     if let teamActions { teamActions.search() }
                     else { workspace.navigate(.search) }
@@ -49,5 +56,11 @@ struct BlotMacApp: App {
                 #endif
             }
         }
+        Window("Карточки агента · Демо", id: "agent-card-gallery") {
+            MacAgentCardGallery()
+        }
+        .defaultSize(width: 1180, height: 820)
+        .windowResizability(.contentMinSize)
+        .defaultLaunchBehavior(.suppressed)
     }
 }
