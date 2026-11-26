@@ -3,6 +3,7 @@ import SwiftUI
 
 struct MacChatWallpaperSettings: View {
     @AppStorage(MacChatWallpaper.defaultsKey) private var wallpaper: MacChatWallpaper = .standard
+    @AppStorage(MacChatWallpaper.blurDefaultsKey) private var blurred = false
     @Environment(\.macCompactSettings) private var compact
     @Environment(\.locale) private var locale
 
@@ -16,6 +17,10 @@ struct MacChatWallpaperSettings: View {
                 }
             }
             .padding(.vertical, 14)
+            Divider()
+            MacTeamSettingsToggle(title: russian ? "Размыть обои" : "Blur wallpaper", isOn: $blurred)
+                .disabled(wallpaper == .standard)
+                .accessibilityIdentifier("workspace.chat-wallpaper.blur")
         }
     }
 

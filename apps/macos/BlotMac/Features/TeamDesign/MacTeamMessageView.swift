@@ -53,7 +53,7 @@ struct MacTeamMessageView: View {
             MacTeamMentionText(source: message.text).font(.system(size: 13)).lineSpacing(5).textSelection(.enabled)
         }
         .padding(.horizontal, 16).padding(.vertical, compact ? 9 : 12)
-        .background(message.isUser ? WorkspaceStyle.surface : WorkspaceStyle.surface.opacity(0.45),
+        .background(WorkspaceStyle.surface.opacity(0.45),
                     in: RoundedRectangle(cornerRadius: 18, style: .continuous))
         .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
