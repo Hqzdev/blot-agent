@@ -72,6 +72,9 @@
         }
       }
     },
+    " " : {
+
+    },
     "    <BlotAvatar />\n    <h1>Your AI team</h1>\n  );\n}" : {
 
     },
@@ -173,261 +176,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : " · Только чтение"
-          }
-        }
-      }
-    },
-    "Account security" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Account security"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Безопасность аккаунта"
-          }
-        }
-      }
-    },
-    "Browser access" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Browser access"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Доступ браузера"
-          }
-        }
-      }
-    },
-    "Browser permissions and profiles." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Browser permissions and profiles."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Разрешения и профили браузера."
-          }
-        }
-      }
-    },
-    "Couldn’t load files" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Couldn’t load files"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Не удалось загрузить файлы"
-          }
-        }
-      }
-    },
-    "Default model for the composer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Default model for the composer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Модель поля ввода по умолчанию"
-          }
-        }
-      }
-    },
-    "Loading files…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Loading files…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Загружаем файлы…"
-          }
-        }
-      }
-    },
-    "Model settings and API keys." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Model settings and API keys."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Модели и ключи API."
-          }
-        }
-      }
-    },
-    "No files yet" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No files yet"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Файлов пока нет"
-          }
-        }
-      }
-    },
-    "Optional API key" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Optional API key"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Дополнительный ключ API"
-          }
-        }
-      }
-    },
-    "Restore chats to return them to your sidebar." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Restore chats to return them to your sidebar."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Восстановите чат, чтобы вернуть его в боковую панель."
-          }
-        }
-      }
-    },
-    "Search by name" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search by name"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поиск по имени"
-          }
-        }
-      }
-    },
-    "Search messages" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Search messages"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Поиск по сообщениям"
-          }
-        }
-      }
-    },
-    "Select a Ori model or use the model assigned to the agent." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a Ori model or use the model assigned to the agent."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Выберите модель Ori или используйте модель, заданную у агента."
-          }
-        }
-      }
-    },
-    "Системная тема меняется вместе с оформлением macOS." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "The system theme follows macOS appearance."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Системная тема меняется вместе с оформлением macOS."
-          }
-        }
-      }
-    },
-    "Устройства" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Devices"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Устройства"
           }
         }
       }
@@ -932,6 +680,16 @@
         }
       }
     },
+    "%lld lines added, %lld removed" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$lld lines added, %2$lld removed"
+          }
+        }
+      }
+    },
     "%lld lines removed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1019,6 +777,9 @@
           }
         }
       }
+    },
+    "%lld unchanged lines" : {
+
     },
     "%lld words" : {
       "extractionState" : "manual",
@@ -1158,6 +919,9 @@
     "%lld%%" : {
 
     },
+    "+" : {
+
+    },
     "+ <section className=\"hero responsive\">" : {
 
     },
@@ -1181,6 +945,9 @@
 
     },
     "~/Documents/Blot Workspace" : {
+
+    },
+    "−" : {
 
     },
     "− <section className=\"hero old\">" : {
@@ -1325,9 +1092,6 @@
           }
         }
       }
-    },
-    "08:30" : {
-
     },
     "09:00" : {
 
@@ -1768,6 +1532,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Меню аккаунта"
+          }
+        }
+      }
+    },
+    "Account security" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Account security"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Безопасность аккаунта"
           }
         }
       }
@@ -4038,23 +3819,6 @@
         }
       }
     },
-    "Ask Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ask Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Спросить Ori"
-          }
-        }
-      }
-    },
     "Ask first" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4091,6 +3855,23 @@
     },
     "Ask first overrides automatic approval. Rules never grant access to unconnected tools. Purchases always require separate approval." : {
 
+    },
+    "Ask Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Спросить Ori"
+          }
+        }
+      }
     },
     "Ask your agent to save a task as a skill so you can run it again." : {
 
@@ -4484,409 +4265,6 @@
     "Block title" : {
 
     },
-    "Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori"
-          }
-        }
-      }
-    },
-    "Ori · Demo on this Mac" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Demo on this Mac"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Демо на этом Mac"
-          }
-        }
-      }
-    },
-    "Ori · Version 3 preview" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Version 3 preview"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Интерфейс версии 3"
-          }
-        }
-      }
-    },
-    "Ori · Демо на этом Mac" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Demo on this Mac"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Демо на этом Mac"
-          }
-        }
-      }
-    },
-    "Ori · Интерфейс версии 3" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Version 3 preview"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori · Интерфейс версии 3"
-          }
-        }
-      }
-    },
-    "Ori %@" : {
-
-    },
-    "Ori browser" : {
-
-    },
-    "Ori can use it in this project's chats." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori can use it in this project's chats."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori сможет использовать его в чатах этого проекта."
-          }
-        }
-      }
-    },
-    "Ori CEO" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori CEO"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori CEO"
-          }
-        }
-      }
-    },
-    "Ori collection · " : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori collection · "
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Коллекция Ori · "
-          }
-        }
-      }
-    },
-    "Ori drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Сначала Ori составляет план. Работа начинается после вашего подтверждения, а результат проверяет независимый рецензент."
-          }
-        }
-      }
-    },
-    "Ori for Chrome" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori for Chrome"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori для Chrome"
-          }
-        }
-      }
-    },
-    "Ori is writing…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori is writing…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori пишет…"
-          }
-        }
-      }
-    },
-    "Ori runs tasks on this computer. You decide what it can access." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori runs tasks on this computer. You decide what it can access."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ."
-          }
-        }
-      }
-    },
-    "Ori shows changes and asks before anything significant." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori shows changes and asks before anything significant."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori показывает изменения и спрашивает перед значимыми действиями."
-          }
-        }
-      }
-    },
-    "Ori shows recipients and text before sending." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori shows recipients and text before sending."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori показывает получателей и текст перед отправкой."
-          }
-        }
-      }
-    },
-    "Ori version" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori version"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Версия Ori"
-          }
-        }
-      }
-    },
-    "Ori working folder" : {
-
-    },
-    "Ori Workspace" : {
-
-    },
-    "Ori Workspace · This computer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori Workspace · This computer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori Workspace · Этот компьютер"
-          }
-        }
-      }
-    },
-    "Ori Workspace · Этот компьютер" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori Workspace · This computer"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori Workspace · Этот компьютер"
-          }
-        }
-      }
-    },
-    "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori runs tasks on this computer. You decide what it can access."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ."
-          }
-        }
-      }
-    },
-    "Ori для Chrome" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori for Chrome"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori для Chrome"
-          }
-        }
-      }
-    },
-    "Ori пишет…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori is writing…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori пишет…"
-          }
-        }
-      }
-    },
-    "Ori показывает изменения и спрашивает перед значимыми действиями." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori shows changes and asks before anything significant."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori показывает изменения и спрашивает перед значимыми действиями."
-          }
-        }
-      }
-    },
-    "Ori показывает получателей и текст перед отправкой." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori shows recipients and text before sending."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori показывает получателей и текст перед отправкой."
-          }
-        }
-      }
-    },
-    "Ori сможет использовать его в чатах этого проекта." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori can use it in this project's chats."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ori сможет использовать его в чатах этого проекта."
-          }
-        }
-      }
-    },
     "blue" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5046,7 +4424,44 @@
         }
       }
     },
+    "Browser access" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser access"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Доступ браузера"
+          }
+        }
+      }
+    },
+    "Browser permissions and profiles." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Browser permissions and profiles."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Разрешения и профили браузера."
+          }
+        }
+      }
+    },
     "Browser preview" : {
+
+    },
+    "Browser width" : {
 
     },
     "Browser: https://example.com. MCP: connection ID; project: project:ID. Empty means every authorized resource for this tool." : {
@@ -5567,6 +4982,9 @@
           }
         }
       }
+    },
+    "Changed files" : {
+
     },
     "Changes are saved automatically." : {
       "extractionState" : "manual",
@@ -7330,23 +6748,6 @@
         }
       }
     },
-    "Configure Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Configure Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Настроить Ori"
-          }
-        }
-      }
-    },
     "Configure group" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -7377,6 +6778,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Настроить уведомления"
+          }
+        }
+      }
+    },
+    "Configure Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configure Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Настроить Ori"
           }
         }
       }
@@ -8467,6 +7885,23 @@
         }
       }
     },
+    "Couldn’t load files" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t load files"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Не удалось загрузить файлы"
+          }
+        }
+      }
+    },
     "Couldn’t load local files." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -9456,6 +8891,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Модель по умолчанию для новых чатов."
+          }
+        }
+      }
+    },
+    "Default model for the composer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Default model for the composer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модель поля ввода по умолчанию"
           }
         }
       }
@@ -12939,6 +12391,9 @@
         }
       }
     },
+    "Hide file list" : {
+
+    },
     "Hide team" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13644,23 +13099,6 @@
         }
       }
     },
-    "Keep Ori open on your Mac to receive updates and respond to decisions." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep Ori open on your Mac to receive updates and respond to decisions."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений."
-          }
-        }
-      }
-    },
     "Keep Instacart and the recipe open. Nothing should be added to the cart." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -13674,6 +13112,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оставьте Instacart и рецепт открытыми. Ничего не добавляйте в корзину."
+          }
+        }
+      }
+    },
+    "Keep Ori open on your Mac to receive updates and respond to decisions." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Ori open on your Mac to receive updates and respond to decisions."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений."
           }
         }
       }
@@ -13953,6 +13408,9 @@
         }
       }
     },
+    "Library" : {
+
+    },
     "Light" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -14125,6 +13583,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Загружаем предпросмотр файла"
+          }
+        }
+      }
+    },
+    "Loading files…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading files…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Загружаем файлы…"
           }
         }
       }
@@ -15048,57 +14523,6 @@
         }
       }
     },
-    "Message Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Message Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Написать Ori"
-          }
-        }
-      }
-    },
-    "Message Ori below." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Message Ori below."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Напишите Ori в поле ниже."
-          }
-        }
-      }
-    },
-    "Message Ori…" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Message Ori…"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Напишите Ori…"
-          }
-        }
-      }
-    },
     "Message from " : {
       "extractionState" : "manual",
       "localizations" : {
@@ -15146,6 +14570,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "История сообщений будет удалена. Агент останется в команде."
+          }
+        }
+      }
+    },
+    "Message Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Написать Ori"
+          }
+        }
+      }
+    },
+    "Message Ori below." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message Ori below."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напишите Ori в поле ниже."
+          }
+        }
+      }
+    },
+    "Message Ori…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Message Ori…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Напишите Ori…"
           }
         }
       }
@@ -15407,6 +14882,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ответы модели."
+          }
+        }
+      }
+    },
+    "Model settings and API keys." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Model settings and API keys."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Модели и ключи API."
           }
         }
       }
@@ -16316,6 +15808,9 @@
         }
       }
     },
+    "No archived chats" : {
+
+    },
     "No camera is available." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -16482,6 +15977,26 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Нет доступных данных для подключения. Проверьте разрешения и повторите попытку."
+          }
+        }
+      }
+    },
+    "No files match this name" : {
+
+    },
+    "No files yet" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No files yet"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Файлов пока нет"
           }
         }
       }
@@ -16837,9 +16352,6 @@
           }
         }
       }
-    },
-    "No unsaved changes." : {
-
     },
     "No upcoming runs" : {
       "extractionState" : "manual",
@@ -17576,57 +17088,6 @@
         }
       }
     },
-    "Open Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Открыть Ori"
-          }
-        }
-      }
-    },
-    "Open Ori on your computer: Settings → Devices → Add iPhone." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Ori on your computer: Settings → Devices → Add iPhone."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Откройте Ori на компьютере: Настройки → Устройства → Добавить iPhone."
-          }
-        }
-      }
-    },
-    "Open Ori on your Mac, choose Devices → Connect iPhone, then scan the QR code." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Open Ori on your Mac, choose Devices → Connect iPhone, then scan the QR code."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Откройте Ori на Mac, выберите «Устройства → Подключить iPhone» и отсканируйте QR-код."
-          }
-        }
-      }
-    },
     "Open browser" : {
 
     },
@@ -17758,9 +17219,6 @@
         }
       }
     },
-    "Open in Ori" : {
-
-    },
     "Open in default app" : {
 
     },
@@ -17780,6 +17238,9 @@
           }
         }
       }
+    },
+    "Open in Ori" : {
+
     },
     "Open invoices" : {
       "extractionState" : "manual",
@@ -17831,6 +17292,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Открыть на этом компьютере"
+          }
+        }
+      }
+    },
+    "Open Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Открыть Ori"
+          }
+        }
+      }
+    },
+    "Open Ori on your computer: Settings → Devices → Add iPhone." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ori on your computer: Settings → Devices → Add iPhone."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте Ori на компьютере: Настройки → Устройства → Добавить iPhone."
+          }
+        }
+      }
+    },
+    "Open Ori on your Mac, choose Devices → Connect iPhone, then scan the QR code." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open Ori on your Mac, choose Devices → Connect iPhone, then scan the QR code."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Откройте Ori на Mac, выберите «Устройства → Подключить iPhone» и отсканируйте QR-код."
           }
         }
       }
@@ -17936,9 +17448,6 @@
           }
         }
       }
-    },
-    "Open skills" : {
-
     },
     "Open the new specialist form." : {
       "extractionState" : "manual",
@@ -18048,6 +17557,23 @@
         }
       }
     },
+    "Optional API key" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Optional API key"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Дополнительный ключ API"
+          }
+        }
+      }
+    },
     "Optional: leave empty for automatic registration when supported by the server." : {
 
     },
@@ -18098,6 +17624,409 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Разбирает почту и готовит ответы."
+          }
+        }
+      }
+    },
+    "Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori"
+          }
+        }
+      }
+    },
+    "Ori · Demo on this Mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Demo on this Mac"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Демо на этом Mac"
+          }
+        }
+      }
+    },
+    "Ori · Version 3 preview" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Version 3 preview"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Интерфейс версии 3"
+          }
+        }
+      }
+    },
+    "Ori · Демо на этом Mac" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Demo on this Mac"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Демо на этом Mac"
+          }
+        }
+      }
+    },
+    "Ori · Интерфейс версии 3" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Version 3 preview"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori · Интерфейс версии 3"
+          }
+        }
+      }
+    },
+    "Ori %@" : {
+
+    },
+    "Ori browser" : {
+
+    },
+    "Ori can use it in this project's chats." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori can use it in this project's chats."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori сможет использовать его в чатах этого проекта."
+          }
+        }
+      }
+    },
+    "Ori CEO" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori CEO"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori CEO"
+          }
+        }
+      }
+    },
+    "Ori collection · " : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori collection · "
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Коллекция Ori · "
+          }
+        }
+      }
+    },
+    "Ori drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Сначала Ori составляет план. Работа начинается после вашего подтверждения, а результат проверяет независимый рецензент."
+          }
+        }
+      }
+    },
+    "Ori for Chrome" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori for Chrome"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori для Chrome"
+          }
+        }
+      }
+    },
+    "Ori is writing…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori is writing…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori пишет…"
+          }
+        }
+      }
+    },
+    "Ori runs tasks on this computer. You decide what it can access." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori runs tasks on this computer. You decide what it can access."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ."
+          }
+        }
+      }
+    },
+    "Ori shows changes and asks before anything significant." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori shows changes and asks before anything significant."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori показывает изменения и спрашивает перед значимыми действиями."
+          }
+        }
+      }
+    },
+    "Ori shows recipients and text before sending." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori shows recipients and text before sending."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori показывает получателей и текст перед отправкой."
+          }
+        }
+      }
+    },
+    "Ori version" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori version"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Версия Ori"
+          }
+        }
+      }
+    },
+    "Ori working folder" : {
+
+    },
+    "Ori Workspace" : {
+
+    },
+    "Ori Workspace · This computer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori Workspace · This computer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori Workspace · Этот компьютер"
+          }
+        }
+      }
+    },
+    "Ori Workspace · Этот компьютер" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori Workspace · This computer"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori Workspace · Этот компьютер"
+          }
+        }
+      }
+    },
+    "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori runs tasks on this computer. You decide what it can access."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori выполняет задачи на этом компьютере. Вы выбираете, к чему дать доступ."
+          }
+        }
+      }
+    },
+    "Ori для Chrome" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori for Chrome"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori для Chrome"
+          }
+        }
+      }
+    },
+    "Ori пишет…" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori is writing…"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori пишет…"
+          }
+        }
+      }
+    },
+    "Ori показывает изменения и спрашивает перед значимыми действиями." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori shows changes and asks before anything significant."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori показывает изменения и спрашивает перед значимыми действиями."
+          }
+        }
+      }
+    },
+    "Ori показывает получателей и текст перед отправкой." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori shows recipients and text before sending."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori показывает получателей и текст перед отправкой."
+          }
+        }
+      }
+    },
+    "Ori сможет использовать его в чатах этого проекта." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori can use it in this project's chats."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ori сможет использовать его в чатах этого проекта."
           }
         }
       }
@@ -18248,9 +18177,6 @@
 
     },
     "page.tsx" : {
-
-    },
-    "Pages and Library" : {
 
     },
     "Pair a new device" : {
@@ -20879,9 +20805,6 @@
         }
       }
     },
-    "Remove Ori’s access to this account on this device?" : {
-
-    },
     "Remove file" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -20915,6 +20838,9 @@
           }
         }
       }
+    },
+    "Remove Ori’s access to this account on this device?" : {
+
     },
     "Remove parameter" : {
 
@@ -21460,6 +21386,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Восстановите переписку или удалите её историю."
+          }
+        }
+      }
+    },
+    "Restore chats to return them to your sidebar." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore chats to return them to your sidebar."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Восстановите чат, чтобы вернуть его в боковую панель."
           }
         }
       }
@@ -22902,6 +22845,23 @@
         }
       }
     },
+    "Search by name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search by name"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск по имени"
+          }
+        }
+      }
+    },
     "Search by name and content" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -23034,6 +22994,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ссылка для поиска. В демо сайты не открываются."
+          }
+        }
+      }
+    },
+    "Search messages" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search messages"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Поиск по сообщениям"
           }
         }
       }
@@ -23204,6 +23181,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Источники в отчёте"
+          }
+        }
+      }
+    },
+    "Select a Ori model or use the model assigned to the agent." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select a Ori model or use the model assigned to the agent."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Выберите модель Ori или используйте модель, заданную у агента."
           }
         }
       }
@@ -24303,23 +24297,6 @@
         }
       }
     },
-    "Show Ori in the menu bar" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Show Ori in the menu bar"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Показывать Ori в строке меню"
-          }
-        }
-      }
-    },
     "Show chats" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24340,6 +24317,9 @@
     "Show fewer actions" : {
 
     },
+    "Show file list" : {
+
+    },
     "Show only this specialist's channel" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24353,6 +24333,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Показать только канал этого специалиста"
+          }
+        }
+      }
+    },
+    "Show Ori in the menu bar" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show Ori in the menu bar"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Показывать Ori в строке меню"
           }
         }
       }
@@ -24472,23 +24469,6 @@
         }
       }
     },
-    "Sign in to Ori" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Sign in to Ori"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Войти в Ori"
-          }
-        }
-      }
-    },
     "Sign in to continue with your team." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -24502,6 +24482,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Войдите, чтобы продолжить работу с командой."
+          }
+        }
+      }
+    },
+    "Sign in to Ori" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sign in to Ori"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Войти в Ori"
           }
         }
       }
@@ -27852,6 +27849,9 @@
         }
       }
     },
+    "Try “theme,” “Enter,” or the name of an app." : {
+
+    },
     "Try “theme”, “Enter” or an app name." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -27868,6 +27868,9 @@
           }
         }
       }
+    },
+    "Try a different name or select All." : {
+
     },
     "Try another app or template name." : {
       "extractionState" : "manual",
@@ -28305,6 +28308,9 @@
           }
         }
       }
+    },
+    "Upcoming runs" : {
+
     },
     "Update automatically" : {
       "extractionState" : "manual",
@@ -29185,6 +29191,9 @@
           }
         }
       }
+    },
+    "Waiting for your answer" : {
+
     },
     "Waiting for your decision" : {
       "extractionState" : "manual",
@@ -31435,6 +31444,9 @@
         }
       }
     },
+    "Архив чатов" : {
+
+    },
     "Архивированные чаты" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31645,6 +31657,9 @@
         }
       }
     },
+    "Библиотека" : {
+
+    },
     "Бирюзовый" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -31661,6 +31676,9 @@
           }
         }
       }
+    },
+    "Ближайшие запуски" : {
+
     },
     "Боковая панель" : {
       "extractionState" : "manual",
@@ -35855,6 +35873,16 @@
         }
       }
     },
+    "Добавлено строк: %lld, удалено: %lld" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Добавлено строк: %1$lld, удалено: %2$lld"
+          }
+        }
+      }
+    },
     "Добавляются в профиль нового агента. Затем их можно изменить под конкретную задачу." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -38465,6 +38493,9 @@
           }
         }
       }
+    },
+    "Искать по сообщениям" : {
+
     },
     "Использование и подписка" : {
       "extractionState" : "manual",
@@ -43087,9 +43118,6 @@
         }
       }
     },
-    "Несохранённых изменений нет." : {
-
-    },
     "Нет" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44438,6 +44466,9 @@
         }
       }
     },
+    "Ожидаю вашего ответа" : {
+
+    },
     "ОК" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44662,23 +44693,6 @@
         }
       }
     },
-    "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений." : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Keep Ori open on your Mac to receive updates and respond to decisions."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений."
-          }
-        }
-      }
-    },
     "Оставьте Instacart и рецепт открытыми. Ничего не добавляйте в корзину." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -44692,6 +44706,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Оставьте Instacart и рецепт открытыми. Ничего не добавляйте в корзину."
+          }
+        }
+      }
+    },
+    "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep Ori open on your Mac to receive updates and respond to decisions."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Оставьте Ori открытым на Mac, чтобы получать обновления и отвечать на запросы решений."
           }
         }
       }
@@ -45838,9 +45869,6 @@
           }
         }
       }
-    },
-    "Открыть скиллы" : {
-
     },
     "Открыть создание нового специалиста." : {
       "extractionState" : "manual",
@@ -47531,6 +47559,9 @@
     "По ссылке будет доступна текущая копия содержимого любому, у кого есть ссылка. История, чат и подключения не публикуются. Изменения исходной страницы не меняют опубликованную копию." : {
 
     },
+    "По этому имени ничего не найдено" : {
+
+    },
     "Повторить" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -48497,7 +48528,7 @@
         }
       }
     },
-    "Подходящих скиллов нет" : {
+    "Подходящих навыков нет" : {
 
     },
     "Позвонить агенту" : {
@@ -49151,6 +49182,9 @@
         }
       }
     },
+    "Показать список файлов" : {
+
+    },
     "Показать только канал этого специалиста" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -49405,6 +49439,9 @@
           }
         }
       }
+    },
+    "Попробуйте другое название или выберите «Все»." : {
+
     },
     "Попробуйте другое название настройки." : {
       "extractionState" : "manual",
@@ -53145,6 +53182,23 @@
         }
       }
     },
+    "Системная тема меняется вместе с оформлением macOS." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The system theme follows macOS appearance."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Системная тема меняется вместе с оформлением macOS."
+          }
+        }
+      }
+    },
     "Системная тема следует настройкам iPhone. Светлая и тёмная темы применяются только к Ori на этом iPhone." : {
       "extractionState" : "manual",
       "localizations" : {
@@ -53343,6 +53397,9 @@
           }
         }
       }
+    },
+    "Скрыть список файлов" : {
+
     },
     "Следовать языку системы. Для русского используется русский, для остальных языков — английский." : {
       "extractionState" : "manual",
@@ -55302,9 +55359,6 @@
         }
       }
     },
-    "Страницы и Library" : {
-
-    },
     "Строгий" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -55321,6 +55375,9 @@
           }
         }
       }
+    },
+    "Строк без изменений: %lld" : {
+
     },
     "Структура статей и ответы на вопросы аудитории." : {
       "extractionState" : "manual",
@@ -56748,6 +56805,23 @@
     "Установленные шаблоны становятся обычными навыками: их можно редактировать, назначать агентам, запускать из чата и по расписанию." : {
 
     },
+    "Устройства" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Devices"
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Устройства"
+          }
+        }
+      }
+    },
     "Устройства подключены" : {
 
     },
@@ -57018,6 +57092,9 @@
         }
       }
     },
+    "Файлов пока нет" : {
+
+    },
     "Файлов: %lld" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -57085,6 +57162,9 @@
           }
         }
       }
+    },
+    "Файлы изменений" : {
+
     },
     "Файлы пространства, вложения и результаты работы агентов." : {
       "extractionState" : "manual",

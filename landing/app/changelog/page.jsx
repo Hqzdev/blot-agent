@@ -2,11 +2,16 @@ import { SiteText } from "@/components/site/LocaleProvider";
 import { PageFrame, PageLink } from "@/components/site/PageFrame";
 import { betaRelease } from "@/lib/releases.mjs";
 
-export const metadata = { title: "1.0 Beta · Changelog — Ori" };
+export const metadata = { title: `${betaRelease.version} · Changelog — Ori` };
 
 export default function ChangelogPage() {
-  return <PageFrame eyebrow="Changelog" title="Ori 1.0 Beta." intro="Our first downloadable beta for Mac and iPhone. Android and Windows are coming soon.">
-    <article className="site-release"><time dateTime={betaRelease.date}><SiteText>November 4, 2026</SiteText></time><div className="site-prose">
+  return <PageFrame eyebrow="Changelog" title="What’s new in Ori." intro="Download macOS and iPhone builds from GitHub. Android and Windows are coming soon.">
+    <article className="site-release"><time dateTime={betaRelease.date}><SiteText>November 26, 2026</SiteText></time><div className="site-prose">
+      <span className="site-tag">{betaRelease.version}</span><h2><SiteText>Blot is now Ori.</SiteText></h2>
+      <p><SiteText>This beta updates the chat and workspace on Mac and iPhone.</SiteText></p>
+      <PageLink href={betaRelease.url}><SiteText>GitHub release and checksums</SiteText></PageLink>
+    </div></article>
+    <article className="site-release"><time dateTime="2026-11-04"><SiteText>November 4, 2026</SiteText></time><div className="site-prose">
       <span className="site-tag"><SiteText>First beta</SiteText></span><h2><SiteText>Your first workspace for a team of agents.</SiteText></h2>
       <p><SiteText>This release brings together the native apps, local workspace, model runtime, account sign-in, and the interface improvements built during the first stage of development.</SiteText></p>
       <ul>
@@ -24,7 +29,7 @@ export default function ChangelogPage() {
       <p><SiteText>The public beta includes no shared model credentials. Add your own compatible API key and choose Compatible API in your agent settings.</SiteText></p>
       <h3><SiteText>Still in development</SiteText></h3>
       <p><SiteText>Android and Windows installers, complete Wi-Fi/Bluetooth discovery and attachment synchronization, background schedule execution, and full end-to-end validation of external integrations are still in development. Some polished preview screens are ahead of the live workspace. This is an early beta, not the completed product.</SiteText></p>
-      <PageLink href="/beta"><SiteText>Download and installation</SiteText></PageLink><PageLink href={betaRelease.url}><SiteText>GitHub release and checksums</SiteText></PageLink>
+      <PageLink href="/beta"><SiteText>Download and installation</SiteText></PageLink><PageLink href={`${betaRelease.repository}/releases/tag/v1.0.0-beta.1`}><SiteText>GitHub release and checksums</SiteText></PageLink>
     </div></article>
     <article className="site-release"><time dateTime="2026-11-01"><SiteText>November 1, 2026</SiteText></time><div className="site-prose"><span className="site-tag"><SiteText>Website</SiteText></span><h2><SiteText>A new home for Ori.</SiteText></h2><p><SiteText>A refreshed landing page, interactive chat demo, animated characters, documentation, and a project workspace with the roadmap and specifications.</SiteText></p><PageLink href="/workspace"><SiteText>Explore the project roadmap</SiteText></PageLink></div></article>
   </PageFrame>;

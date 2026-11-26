@@ -6,7 +6,7 @@ import Testing
 @Test func sharedWebChatsInstallOnAppleReplicasAndReplyRoundTrips() async throws {
     let root = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
         .deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-    let bytes = try Data(contentsOf: root.appendingPathComponent("apps/web/packages/chat-sync/fixtures/web-snapshot.json"))
+    let bytes = try Data(contentsOf: root.appendingPathComponent("packages/BlotChatSync/fixtures/web-snapshot.json"))
     let snapshot = try WorkspaceCoding.decode(WorkspaceReplicaSnapshot.self, from: bytes)
     let folder = FileManager.default.temporaryDirectory.appendingPathComponent("blot-web-chat-test-" + UUID().uuidString)
     try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

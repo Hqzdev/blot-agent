@@ -1,6 +1,6 @@
 import { AuthError } from "../auth/errors.mjs";
 import { digest, validID, equal } from "./security.mjs";
-import { BlotChatSyncBridge } from "../../../apps/web/packages/chat-sync/src/bridge.mjs";
+import { BlotChatSyncBridge } from "../../../packages/BlotChatSync/src/bridge.mjs";
 
 const CHUNK_BYTES = 524288;
 const invalid = () => new AuthError("invalid_workspace_backup");

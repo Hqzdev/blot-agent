@@ -24015,6 +24015,120 @@ Gate функциональной готовности: задача с iPhone �
 ## 23. Подготовленные архитектурные документы
 
 
+### docs/implementation/workspace-workflows.md
+
+#### Workspace workflows: implementation and setup
+
+Updated 18 November 2026. Owning platform: macOS; shared Apple code also compiles for iOS. Enterprise dashboard is excluded from this scope.
+
+##### Implemented paths
+
+| Scenario | Entry point | Persisted behavior |
+| --- | --- | --- |
+| Routines | Schedules → Edit / Delete | Optimistic versions; enable/pause, recurrence, timezone, missed runs; deleting a routine preserves prior runs/tasks |
+| Custom Rules | Privacy → Rules | Personal ask-first/automatic rules scoped to tool, resource and agent; purchases and Gmail sending retain mandatory review |
+| Memory review | Memory → Accept / Reject | Candidates are excluded from context until accepted; rejecting a candidate does not forget its source message |
+| Memory import | Memory → Import | Copyable export prompt for another assistant, pasted facts, editable preview and selection; original input retained as source artifact |
+| Website purchases | Agent browser tools | Visible pointer, pause/takeover, validated order card, approve/deny, exact document and page-content binding before payment click; bank confirmation is manual |
+| Teach a task | Skills → Teach a task (Mac) | Select running app; record supported accessible buttons and ordinary text values; timer, pause, step review/edit/remove; saved recording artifact plus runnable skill |
+| Taught task execution | Skill → Run | Owner approves recorded sequence; ambiguous/changed targets or application switching stop it; no automatic retry; iPhone can inspect/edit recorded steps and request execution on a paired physical Mac |
+| Vault | Privacy → Vault | Owner-scoped device Keychain; login, contact, API secret and tokenized-card reference; CSV import; optimistic item versions |
+| 1Password | Catalog → 1Password | Authenticate to an HTTPS Connect Server, select permitted vaults, import chosen logins into device Vault; passwords do not enter model output |
+| Google services | Catalog → Gmail / Calendar / Drive | Native PKCE OAuth, Keychain refresh tokens, account/agent assignment, direct Google APIs; mail search/read/draft/send, calendar discovery/list/create/update, Drive search/text/export |
+| Remote MCP services | Catalog → Notion / GitHub / Airtable / Asana / Granola | Official endpoints; discovery, PKCE OAuth or supported bearer/header credentials; choose actual server tools and assigned agents |
+| Slack / Teams | Catalog → service | Native public-client PKCE OAuth; Slack can also use an owner-provided bot token; direct channel/message APIs, reviewed sending |
+| Team Bot Manage | General or Privacy → Team Bots Manage | Server teams, verified-email invitations, owner/admin/member roles; versioned bot configuration, assigned physical desktop, channel triggers and allowed tools |
+| Team Bot runtime | Blot running on selected Mac | Polls configured channels every 65 seconds, creates channel-isolated tasks, excludes personal memories, limits tools, adds owner review for changes; final reply returns to originating thread with a durable send claim |
+| Pages / Library | Files → Pages and Library | Text/table/metric/link blocks, search, table filters, pins, archive/restore, immutable version history and conflict resolution; page_list/read/create/update tools and inline result cards |
+| Sharing | Page / Skill → Share snapshot link | Explicit immutable publication, expiration 1–90 days, owner revocation and escaped public HTML; source history/chat/credentials are excluded |
+| Marketplace skills | Skills → Marketplace | Reviewable bundled templates, install, JSON import/export, expiring publication; installation never grants tools or assignments |
+| Composer skills | Composer attachment menu → Skills | Search installed skills, supply parameters, choose agent/revision/device and run |
+| Billing | Usage → Billing | Current plan, monthly prices, owner-scoped payment history with test labels, web checkout, cancel to Free; YooKassa remains test-only |
+| Updates | Settings → Updates | Installed version/build; Stable/Beta; fetch explicitly published release metadata and open its HTTPS download page |
+
+##### External setup still required
+
+Slack and Microsoft apps have not been registered, as confirmed by the owner. No external accounts have been authorized during development. Implemented adapters are not evidence of a completed live provider test.
+
+The new cloud endpoints and web Billing endpoint must be deployed before those features work against the hosted service. This implementation does not silently deploy backend changes or pretend an old server supports new routes. Native features continue working locally when cloud collaboration is unavailable.
+
+###### Slack
+
+1. Create a Slack app in the test workspace. Enable PKCE/public client.
+2. Register `blot-agent-macos:/plugins/slack` and `blot-agent-ios:/plugins/slack`.
+3. User scopes: `channels:read`, `groups:read`, `channels:history`, `groups:history`, `chat:write`, `search:read`, `users:read`.
+4. Set public `BLOT_SLACK_CLIENT_ID` before building, or enter the client ID in the native connector.
+5. Native PKCE grants act as the signed-in user. Slack does not allow bot scopes on native redirects. For a distinct bot identity, install a bot in the workspace and connect its `xoxb-` token in the SecureField; invite it to each selected channel. Never put a client secret in the native app.
+6. Team Bot channel configuration uses the connector UUID shown in settings, Slack workspace ID, channel ID and a nonempty trigger such as `<@BOT_USER_ID>`.
+
+Sources: [Slack PKCE](https://docs.slack.dev/authentication/using-pkce/), [OAuth installation](https://docs.slack.dev/authentication/installing-with-oauth/).
+
+###### Microsoft Teams
+
+1. Register an Entra app supporting work/school accounts and public desktop/mobile authorization.
+2. Register `blot-agent-macos:/plugins/teams` and `blot-agent-ios:/plugins/teams` as native redirects; enable the public-client flow.
+3. Delegated scopes: `User.Read`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`, `ChannelMessage.Read.All`, `ChannelMessage.Send`, `offline_access`. Tenant consent may be required.
+4. Set public `BLOT_TEAMS_CLIENT_ID`, or enter it in the connector. Sign in on the Mac that executes the bot.
+5. Configure connector UUID, Microsoft team ID, channel ID and trigger in Team Bot Manage.
+
+This adapter posts as the signed-in Microsoft user. It is not an Azure Bot Framework app or a separately installed Teams bot identity. Such an identity needs its own Azure registration and deployment.
+
+Sources: [Microsoft PKCE flow](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow), [Read channel messages](https://learn.microsoft.com/en-us/graph/api/channel-list-messages?view=graph-rest-1.0), [Send channel messages](https://learn.microsoft.com/en-us/graph/api/channel-post-messages?view=graph-rest-1.0).
+
+###### Google
+
+Enable Gmail, Calendar and Drive APIs in the existing Google Cloud project. Configure native macOS/iOS clients using the existing `BLOT_GOOGLE_MACOS_CLIENT_ID` / `BLOT_GOOGLE_IOS_CLIENT_ID` build inputs. Add test users to the OAuth consent screen. Each service requests its own scopes and requires explicit account authorization. Public distribution with Gmail restricted scopes may require provider review; a working test-user login does not establish public verification.
+
+[Google sending format](https://developers.google.com/workspace/gmail/api/guides/sending), [Calendar events](https://developers.google.com/workspace/calendar/api/v3/reference/events/insert), [Drive export](https://developers.google.com/workspace/drive/api/reference/rest/v3/files/export).
+
+###### MCP and 1Password
+
+Official MCP endpoints are preset in the catalog. Dynamic registration works only where offered. Providers that require registration need their registered client ID; a provider rejection remains a failed connection, not a simulated connected state. GitHub additionally supports its documented PAT setup. Generic MCP supports custom headers and local stdio on Mac.
+
+1Password needs an existing account, running Connect Server and scoped Connect token. The UI accepts HTTPS only. [Connect requirements and API](https://developer.1password.com/docs/connect/connect-api-reference/).
+
+##### What can be tested without buying an API subscription
+
+Provider quotas and eligibility were checked against official documentation on 18 November 2026. Free account availability does not mean every remote MCP tool is free or unlimited.
+
+| Plugin | Test access |
+| --- | --- |
+| Apple apps, Pages, Routines, Rules, Vault, Teach | Local features need no external service API key; macOS system permissions still apply |
+| GitHub | Free account plus appropriately scoped PAT; [authentication and rate limits](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api) |
+| Gmail / Calendar / Drive | Google account and Cloud project with test users; check the current per-project quotas, including the 2026 changes: [Gmail limits](https://developers.google.com/workspace/gmail/api/reference/quota) |
+| Slack | Own development workspace/app; Free workspaces allow up to 10 custom/third-party app installations; [Free limitations](https://slack.com/help/articles/27204752526611-Feature-limitations-on-the-free-version-of-Slack) |
+| Airtable | Free workspace quota: 1,000 API calls/month; [limits](https://support.airtable.com/articles/7735693959-managing-api-call-limits-in-airtable). MCP access is still subject to provider consent/tool availability |
+| Asana | Free domains have API quota of 150 requests/minute; registration is needed for its MCP OAuth integration; [API limits](https://developers.asana.com/docs/rate-limits) |
+| Granola | Basic includes MCP and its last 30 days of notes; [official description](https://www.granola.ai/blog/granola-mcp-claude-chatgpt-cursor) |
+| Notion | Connect using the workspace's available MCP permissions; some tool/plan capabilities and enterprise approved-client policies can restrict access; [Notion MCP](https://www.notion.com/help/notion-mcp). No blanket claim that every tool is free |
+| Teams | Work/school tenant with Teams entitlement; eligible members can request a Microsoft 365 developer subscription, not every account qualifies; [Developer Program](https://learn.microsoft.com/office/developer-program/microsoft-365-developer-program) |
+| 1Password | Existing account/Connect or a provider trial; no perpetual free API tier is promised |
+| Generic MCP | Depends on the chosen server; a local stdio server can be tested without a hosted subscription |
+
+QuickBooks, Freshdesk, Beehiiv, Composio, Zapier, Adobe, Atlassian and Loom retain catalog entries. They are not presented as authenticated, working built-in integrations without a real connector/account. A service-supported MCP server can be added through generic MCP.
+
+##### Cloud/API compatibility and deployment
+
+- SQLite cloud schema advances from 5 to 6; new collaboration/publication tables do not replace existing account/device/sync data. Account deletion cascades through the new owner/member records.
+- Additive API prefix `/v1/collaboration`: teams, members, email-bound invites, bots with expected versions, publications and anonymous token read/share routes. Team members can read team configuration; only owner/admin can manage it. Bot execution credentials remain device-local.
+- Public shares contain an explicitly published snapshot in plaintext on the cloud server. They are not the encrypted private workspace backup. Links are random, stored as hashes, expiring and revocable; HTML escapes content and disables scripts/frames.
+- Public `/v1/releases/latest?platform=macos|ios&channel=stable|beta`: returns 204 until deployment config publishes metadata. Set `BLOT_RELEASE_<PLATFORM>_<CHANNEL>_JSON_FILE` to a file containing `version`, integer `build`, `minimumOS`, HTTPS `downloadURL`, `notes`, ISO-8601 `publishedAt`. Native clients open the advertised download page; they do not replace installed binaries automatically.
+- Web Billing adds `getPaymentHistory` RPC and `/app/api/billing/overview`. Native bearer authorization resolves the existing Blot account; it does not create a second user. Provider payloads and confirmation secrets are excluded from history. Deploy the Billing service and web gateway together.
+- Swift signed task delegation adds optional `skillRevisionID` with proof domain `BLOT-TASK-DELEGATION-3`. Existing task proofs remain domains 1/2. Older clients safely reject the new proof; update both Apple clients for remote skill execution. Shared Java source transfer does not implement this Apple-local executor on Android/Windows.
+- Pages/recordings use existing immutable artifacts; no new replicated record kind is introduced. Purchase/Page card variants have text fallback for older viewers. Personal rules and team task policies use typed existing grant records; they never expand underlying tool permissions.
+- Vault remains device-local Keychain storage. No cloud/team Vault synchronization is claimed. Raw card PAN/CVC, passwords and API secret values do not belong in chat cards or model tool results.
+- Teach records supported accessibility controls and ordinary text values, not arbitrary gestures, hotkeys, video or secure fields. The private signed executor needs macOS Accessibility permission. No simulator is needed or used.
+- Team polling runs while the selected Mac is awake and Blot is open. New channels begin at activation time; old history is not replayed automatically. Unknown delivery outcomes are not resent; verify the external thread first.
+
+##### Validation evidence
+
+Logs are project-local under `.build/workflows-*.log`. Builds use `.build/xcode` and `.build/ios`; Swift tests reuse `.build/swift`. No simulator or runtime download is part of validation. Live OAuth, merchant/bank payments and external Slack/Teams messaging require owner accounts and provider registrations; unit fixtures do not substitute for those checks.
+
+Latest local validation: all 201 Swift core tests passed, including the purchase-flow regression test. Two real WebKit/session tests passed on the Mac, including secret-field exclusion from order review. Java core/cloud checks passed (20 cloud tests); Billing's five focused unit tests, TypeScript typecheck, seven Apple build-configuration tests and 168 schema fixtures passed. Production SwiftUI rendering captured all 13 card types plus 42 chat-layout frames. The purchase amount/monthly-label and saved-page status issues found in those frames were corrected and rendered again.
+
+Mac process launch succeeded, but the CUA service returned `cgWindowNotFound` for the main app window. Manual interaction with the live account window is not recorded as passed. iOS was compiled for a generic physical-device destination with signing disabled; no iPhone installation or simulator run was performed.
+
+
 ### docs/status/web-same-domain.md
 
 #### Веб Blot на основном домене
@@ -25219,9 +25333,50 @@ Blot — личный ИИ-помощник с постоянными агент
 Подробные правила и приёмочные сценарии находятся в [полном ТЗ](blot-technical-specification.md). Подключение инструментов сторонних разработчиков описано в [руководстве MCP](../integrations/mcp-developer-guide.md).
 
 
+### docs/product/ori-defense-specification.md
+
+#### Техническое задание на демонстрационную версию Ori
+
+Редакция от 26 ноября 2026 года. Платформа защиты — macOS. Результат работы — учебный прототип рабочего пространства, в котором пользователь даёт поручение команде агентов, видит вклад участников и проверяет результат перед действием.
+
+##### Состав демонстрации
+
+Демонстрация проходит в нативном приложении Ori на Mac. Локальный режим запускается командой `./script/build_and_run.sh --design`. Для сценариев используются подготовленные письма, счета, документы и профили агентов. Ответы задаёт локальный сценарный модуль. Отправка письма меняет статус в демонстрационном рабочем пространстве. Для показа достаточно Mac с установленным приложением или подготовленной средой сборки.
+
+##### Требования и приёмка
+
+| № | Требование | Что проверяется | Результат |
+| --- | --- | --- | --- |
+| ORI-01 | Личные и групповые чаты | Создать группу из нескольких агентов, отправить сообщение и увидеть ответы с указанием автора. Действия в группе сохраняют отдельную историю личных чатов. | Пройдено |
+| ORI-02 | Работа команды над поручением | Попросить разобрать неоплаченные счета. В ответе участвуют выбранные представители команды, а итог появляется в групповом чате. По запросу контент-плана команда выдаёт документ. | Пройдено |
+| ORI-03 | Профили и шаблоны агентов | Создать и отредактировать профиль. Импортировать шаблон с инструкциями, навыками и памятью. Импортированное расписание остаётся на паузе. | Пройдено |
+| ORI-04 | Документы и вложения | Создать контент-план как документ. Открыть тестовое вложение из чата и получить ответ по его содержимому. | Пройдено |
+| ORI-05 | Подтверждение действия | Отредактировать черновик, подтвердить демонстрационную отправку и увидеть её статус. Запрет отправки блокирует действие, а повторное подтверждение сохраняет единственную запись. | Пройдено |
+| ORI-06 | Память и навыки | Сохранить общее правило «для всех пиши по-русски». Повтор правила сохраняет одну запись. Запуск навыка категоризации расходов возвращает результат в чате. | Пройдено |
+| ORI-07 | Расписание | Задать время утреннего обзора сообщением, запустить обзор вручную и увидеть отметку о запуске. Приостановленное расписание исключается из расчёта следующего запуска. | Пройдено |
+| ORI-08 | Локальное хранение | Повторно открыть сохранённое рабочее пространство и восстановить историю, группы, настройки и статус письма. При ошибке чтения приложение сохраняет исходный файл. | Пройдено |
+
+**Статус демонстрационного объёма — реализован.** 26 ноября 2026 года на Mac прошли 87 автоматических проверок логики, включая требования ORI-01–ORI-08. Команда повторной проверки — `bash scripts/check-mac-team-demo.sh`. Снимки интерфейса и материалы предыдущих прогонов находятся в `docs/status/verification/mac-team-demo/` и `docs/status/verification/mac-chat-interactions/`.
+
+##### Сценарий защиты
+
+1. Открыть Ori и показать рабочее пространство с ролью координатора и профилями специалистов.
+2. Создать групповой чат с координатором, специалистом по финансам и помощником по почте. Отправить «Разберите неоплаченные счета» и показать сообщения участников и итог.
+3. Открыть тестовый черновик письма, отредактировать текст, подтвердить отправку и показать обновившийся статус.
+4. Попросить «Подготовь контент-план» в чате с агентом по контенту и показать созданный документ.
+5. В чате с координатором задать «Каждое утро в 10:30 присылай обзор почты и Slack». Открыть расписание, запустить обзор вручную и показать историю запуска.
+6. Закрыть и снова открыть деморежим. Показать сохранённую переписку и статус письма.
+
+##### Границы поставки
+
+Проверка по этому ТЗ охватывает локальное демо macOS. Клиент для iPhone, другие платформы, живые модели, внешние аккаунты, реальные отправки, платежи и межустройственная синхронизация относятся к общему плану продукта. [Исходное ТЗ Blot и матрица BLOT-01…30](blot-technical-specification.md).
+
+
 ### docs/product/blot-technical-specification.md
 
 #### Техническое задание Blot для четырёх платформ
+
+> Исторический план продукта. Для защиты применяется [ТЗ демонстрационной версии Ori](ori-defense-specification.md).
 
 > Изменения владельца от 15 ноября 2026 зафиксированы в [плане объединения Blot, Pilot Agent и Lumia](blot-unification-plan.md): добавляются веб-клиент и Python CLI, PostgreSQL становится общим источником пользовательских данных. Эти решения имеют приоритет над противоречащими им положениями о локальном хранении и отсутствии веб-клиента. Остальные требования сохраняются; это изменение требований, а не отметка о готовой реализации.
 
@@ -27107,10 +27262,10 @@ API охватывает состояние и совместимость сер
 
 ##### С чего начать
 
-Начните с решений владельца от 15 ноября, затем переходите к требованиям и архитектуре:
+Для защиты используйте [ТЗ демонстрационной версии Ori](product/ori-defense-specification.md). Материалы по развитию продукта:
 
 1. [План объединения Blot, Pilot Agent и Lumia](product/blot-unification-plan.md) — шесть приложений, общие PostgreSQL, аккаунт и GigaChat; карта переноса и порядок реализации.
-2. [Техническое задание](product/blot-technical-specification.md) — возможности продукта и исходная матрица приёмки.
+2. [Исходное техническое задание Blot](product/blot-technical-specification.md) — план четырёх платформ и матрица BLOT-01…30.
 3. [План разработки](product/blot-product-plan.md) — исходные этапы и оценки до расширения объёма.
 4. [Карта модулей](architecture/module-map.md) — существующее разделение кода и ответственности.
 
@@ -27128,7 +27283,7 @@ API охватывает состояние и совместимость сер
 | `architecture/` | Как устроен код: слои Java, пакеты Swift, сборка, контракты, карта модулей | Карта модулей — да. Остальное написано в октябре, сверяйте с ТЗ |
 | `rules/` | Правила продукта: разрешения, роли, границы инструментов, хранение данных, словарь понятий | Октябрь. Смысл правил в целом остаётся, детали сверяйте с ТЗ |
 | `agents/` | Как работают агенты и оркестратор (тот, кто раздаёт им задачи) | Октябрь |
-| `integrations/` | Подключения: MCP-серверы и Google Workspace | MCP — актуально, Google — план на будущее |
+| `integrations/` | Подключения: MCP-серверы и Google Workspace | MCP и Google — реализованы; настройка описана в workflow guide |
 | `design/` | Логотип, персонажи, макеты сайта, правила интерфейса | Персонажи — актуально, остальное октябрь |
 | `status/` | Отчёты и доказательства проверок. Текущий блок: [Apple v3](status/apple-v3-implementation.md) | Дата и границы проверки указаны в каждом отчёте |
 | `archive/` | Устаревшее: первая версия продукта и старый список из 405 задач | Нет, только для истории |
@@ -27155,13 +27310,14 @@ API охватывает состояние и совместимость сер
 
 | Вопрос | Куда смотреть |
 | --- | --- |
-| Что должно работать к 1 декабря? | [ТЗ](product/blot-technical-specification.md), разделы «Матрица приёмки» и «Показ учителю» |
+| Что показываем на защите? | [ТЗ демонстрационной версии Ori](product/ori-defense-specification.md), раздел «Сценарий защиты» |
 | Какие экраны нужны? | [ТЗ](product/blot-technical-specification.md), раздел «Интерфейс и дизайн», и папка `screens/` |
 | Кто за что отвечает в коде? | [Карта модулей](architecture/module-map.md) |
 | Какие бывают сущности и состояния задачи? | [Сущности и состояния](architecture/domain-model.md) |
 | Когда Blot спрашивает разрешение? | [Разрешения](rules/permission-policy.md) и раздел «Режимы и разрешения» в ТЗ |
 | Как агенты передают работу друг другу? | [Оркестратор](agents/orchestrator.md) |
 | Как подключить свой MCP-сервер? | [Руководство по MCP](integrations/mcp-developer-guide.md) |
+| Как настроить Routines, Teach, Vault, Pages и Team Bots? | [Реализация сценариев и подключений](implementation/workspace-workflows.md) |
 | Как хранятся и удаляются данные? | [Данные](rules/data-lifecycle.md) |
 | Что уже написано в backend? | `status/backend-implementation-progress.md` |
 
@@ -31526,7 +31682,7 @@ Blot — основной помощник и координатор. Он до�
 
 Документ задаёт рекомендуемый каталог навыков, плагинов и MCP-серверов для профилей Blot. Это целевая конфигурация: перечисленные внешние плагины и MCP-интеграции не считаются подключёнными, пока они отдельно не реализованы, настроены и разрешены для проекта.
 
-Gmail, Google Calendar и Google Drive запланированы как будущие пользовательские подключения. Их OAuth, разрешённые операции и ограничения описаны в [спецификации Google Workspace](../integrations/google-workspace.md); сами подключения не включаются в профиль автоматически.
+Gmail, Google Calendar и Google Drive реализованы как отдельные пользовательские подключения Apple-клиентов. Их OAuth, разрешённые операции и ограничения описаны в [спецификации Google Workspace](../integrations/google-workspace.md); сами подключения не включаются в профиль автоматически.
 
 ##### Термины
 
@@ -31738,54 +31894,49 @@ Blot должен выбирать наименее затратный спос�
 
 #### Google Workspace: Gmail, Calendar и Drive
 
-> **Статус: октябрьская версия.** Если здесь написано иначе, чем в [ТЗ от 1 ноября 2026](../product/blot-technical-specification.md), верно ТЗ.
+Реализация Apple-клиентов на 19 ноября 2026 года. Интеграции исполняются в локальном Swift runtime. Пользователь подключает аккаунт и выбирает агентов отдельно для каждого сервиса.
 
-Статус: будущее расширение после базовой поставки Blot. Google Workspace не подключён автоматически и не входит в минимальный набор инструментов Code.
+##### OAuth
 
-##### Цель
+Mac использует клиент типа Desktop app, PKCE S256 и системный браузер. Одноразовый callback принимается на случайном порту 127.0.0.1; проверяются state, путь и порт. Отмена останавливает listener. В адрес браузера не передаются client secret или verifier.
 
-После явного подключения Blot сможет по запросу пользователя находить важные письма, события и документы, связывать их с рабочим планом и предлагать следующие действия. Например: «Найди в почте задачи по запуску», «Сверь сроки с календарём» или «Собери требования из папки Drive».
+В .env задаются BLOT_GOOGLE_MACOS_CLIENT_ID и BLOT_GOOGLE_MACOS_CLIENT_JSON — точный путь к скачанному JSON этого Desktop-клиента. Альтернатива JSON: BLOT_GOOGLE_MACOS_CLIENT_SECRET. Сборка проверяет совпадение client ID и секцию installed. Секрет Web OAuth клиента для нативного клиента не используется.
 
-Подключение не переводит пользователя на облачный сервер Blot: обработка и хранение токенов выполняются локальным Java-сервисом на Mac. Внешний Google API вызывается по сети от имени подключённого пользователя.
+iPhone сохраняет отдельный BLOT_GOOGLE_IOS_CLIENT_ID, зарегистрированный bundle ID и custom-scheme callback. Desktop-секрет в ресурс iOS не включается. JSON с секретом и .env не коммитятся; конфигурация Desktop-клиента используется приватной сборкой Mac. Токены и конфигурация обновления остаются в Keychain и не реплицируются.
 
-##### Подключение и доступ
+В Google Cloud должны быть включены Gmail API, Calendar API и Drive API. Для режима Testing аккаунту нужен доступ тестового пользователя. Общий вход в Blot через Google на сайте и разрешения API — отдельные OAuth-процессы.
 
-- Каждую службу Gmail, Calendar и Drive пользователь подключает отдельно через OAuth и может отключить независимо.
-- Запрашиваются только минимальные актуальные scopes для выбранных функций. Реальные Google scopes фиксируются при реализации по официальной документации и проходят проверку согласия OAuth.
-- Refresh-токены хранятся в Keychain Mac. Токены не попадают в модельный контекст, логи, экспорт, iPhone или вывод инструмента.
-- Пользователь выбирает, какие источники и, где возможно, папки/календари доступны Blot. Поиск за пределами выбранного scope сервер отклоняет.
-- Подключение показывает название аккаунта, список разрешённых служб и уровень доступа. Отзыв доступа блокирует новые запросы; пользователь может удалить локальные кэши и индексы.
+##### Реализованные инструменты
 
-##### Возможности по сервисам
+| Сервис | Инструменты |
+|---|---|
+| Gmail | gmail_search, gmail_read, gmail_draft, gmail_send |
+| Calendar | calendar_list, calendar_events, calendar_create, calendar_update |
+| Drive | drive_search, drive_read, drive_create |
+| Общий | google_accounts — аккаунты, доступные этому агенту |
 
-| Сервис | Начальные операции интеграции | Поведение Mote | Ограничения |
-| --- | --- | --- | --- |
-| Gmail | Поиск писем, чтение выбранных писем и цепочек | Inbox Mote извлекает темы, дедлайны, просьбы и возможные задачи; даёт ссылку на письмо и цитату-основание | Не отправляет, пересылает, архивирует, помечает и не удаляет письма без отдельной будущей функции и явного подтверждения |
-| Google Calendar | Чтение разрешённых календарей и событий | Calendar Mote находит ближайшие события, свободные интервалы и конфликты; предлагает план/время | Не создаёт, не переносит и не удаляет события автоматически; запись календаря — отдельная capability и отдельное подтверждение |
-| Google Drive | Поиск и чтение файлов в выбранном scope | Drive Mote находит документы, суммирует содержимое и отвечает со ссылками на источник | Не меняет, не перемещает и не удаляет файлы без отдельной capability и явного подтверждения |
+Calendar принимает RFC3339 с часовым поясом; обновление связано с прочитанным etag. Инструменты не рассылают приглашения. Drive читает текстовые файлы, экспортирует Docs в текст, Sheets в CSV. Документы, таблицы и презентации создаются локально инструментом document_create, без Google: Markdown/PDF, CSV и презентации PDF. Созданный файл прикрепляется к ответу и открывается в панели Blot. Google Drive используется только для явной просьбы сохранить файл в облако. Google Docs/Sheets/Slides API не запрашиваются.
 
-##### Сценарий «что мне сделать?»
+##### Сохранение файлов Drive
 
-1. Пользователь запускает запрос в Code и выбирает подключённые источники либо использует ранее заданный набор доступов.
-2. Blot формирует ограниченные подзадачи и вызывает соответствующие Inbox, Calendar и Drive Motes только для реально доступных источников.
-3. Motes возвращают предложения действий, сроки и ссылки на первичные источники. Каждый пункт различает подтверждённое содержание источника и вывод модели.
-4. Blot удаляет дубли, группирует пункты по сроку/проекту, отмечает конфликты и спрашивает пользователя о неоднозначных задачах.
-5. Только после принятия пользователем Blot может создать внутренние задачи Code. Любое действие записи в Google требует отдельного разрешения и показывает точные данные операции до подтверждения.
+drive_create принимает account_id, name с расширением и ровно один источник:
 
-В Work можно обсуждать общие вопросы, но внешние поисковые вызовы, Motes и создание задач не запускаются скрытно. Пользователь явным образом переключается в Code или выбирает действие «собрать задачи из источников».
+- content: UTF-8 текст до 32 KiB. MIME по умолчанию text/plain; также поддерживаются Markdown, CSV, HTML, JSON и XML.
+- artifact_id: файл до 5 MiB, явно прикреплённый к текущему запросу. Проверяются авторство, доступность и целостность. Произвольный путь на диске не принимается.
 
-##### Данные и приватность
+Необязательный parent_id задаёт папку Drive; без него используется «Мой диск». Перед загрузкой проверяются тип папки и возможность добавления файлов. Метаданные и байты отправляются одним multipart-запросом. Создаётся новый файл; существующие файлы не перезаписываются, публичный доступ не включается. Успех возвращает фактический ID и ссылку Google.
 
-Поиск и чтение выполняются по запросу, если пользователь отдельно не включил расписание. По умолчанию Blot не сканирует всю почту и Drive, не строит бессрочную копию аккаунта и не отправляет содержимое всех найденных документов модели. В контекст передаются только нужные фрагменты в пределах бюджета. Локальные кэши имеют срок актуальности, ограниченный размер и команду очистки; краткие выжимки сохраняют ссылки на первоисточник.
+Scopes Drive: drive.readonly и drive.file. Это не выборочная папочная изоляция аккаунта: чтение разрешено в пределах scopes, а parent_id задаёт место конкретной записи.
 
-Запросы, выбранные источники, ссылки, дата чтения, scopes и результат фиксируются в истории Code-запуска. Полный текст письма/документа не копируется в долговременную память автоматически. Пользователь может запретить конкретную службу или источник для выбранного проекта.
+##### Подтверждения
 
-##### Будущие этапы
+Права проверяются для устройства, сервиса, аккаунта, агента и текущего запроса. Запрет записи в запросе или Observe блокируют запись. Внешняя запись проходит проверку правил/подтверждение; отправка Gmail требует обязательного просмотра адресата, темы и тела.
 
-1. **Read-only пилот:** подключение аккаунтов, поиск/чтение с узкими scopes, ссылки и удаление токенов/кэша.
-2. **Сводка задач:** объединение писем, календаря и Drive в список кандидатов с дедлайнами и подтверждениями.
-3. **Подтверждённые записи:** создание внутренних задач Blot после принятия пользователем; отдельно спроектировать запись событий Calendar и файлов Drive.
-4. **Расписания:** периодическая проверка только по отдельной настройке и бюджету, с видимым временем последней проверки и возможностью паузы. Никаких фоновых действий по умолчанию.
+Запись проходит durable at-most-once границу. Повтор того же вызова возвращает сохранённый результат. При потере соединения после начала запроса исход остаётся неизвестным; автоматическая повторная отправка запрещена. При повторе параметры сравниваются как JSON, а не по экранированию строки.
 
-Каждый этап получает отдельные интерфейсы адаптеров, права, проверки безопасности, UX разрешений и критерии приёмки до реализации.
+##### Проверка
+
+Изолированные тесты проверяют настоящий код OAuth/HTTP: Gmail поиск/чтение/черновик/отправку, Calendar список/чтение/создание/etag-обновление, Drive поиск/чтение/сохранение/вложение, отказ подтверждения, отзыв доступа, повтор успешного вызова и неизвестный исход. Проверяются PKCE/state/порт, отсутствие секрета в адресе браузера и исключение Desktop-секрета из ресурса iOS. Живая проверка аккаунта требует согласия пользователя на странице Google.
+
+Протоколы: [Google Desktop OAuth](https://developers.google.com/identity/protocols/oauth2/native-app), [Drive multipart upload](https://developers.google.com/workspace/drive/api/guides/manage-uploads).
 
