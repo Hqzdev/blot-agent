@@ -9,8 +9,8 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { themeInitializationScript } from "@/lib/landing/theme";
 
 export const metadata = {
-  title: "Blot — AI teammates that finish the work",
-  description: "A team of AI agents for your apps, files, and projects. Blot for macOS, iOS, Android, and Windows.",
+  title: "Ori — AI teammates that finish the work",
+  description: "A team of AI agents for your apps, files, and projects. Ori for macOS, iOS, Android, and Windows.",
 };
 
 export default function RootLayout({ children }) {

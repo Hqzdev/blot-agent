@@ -2,7 +2,7 @@ import { LoginPage } from "@/components/auth/LoginPage";
 import { nativeAttempt, attemptQuery } from "@/lib/auth/browser-session.mjs";
 import { yandexConfiguration } from "@/lib/auth/config.mjs";
 
-export const metadata = { title: "Войти в Blot", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata = { title: "Войти в Ori", robots: { index: false, follow: false }, referrer: "no-referrer" };
 export default async function Login({ searchParams }) {
   const values = await searchParams;
   const query = new URLSearchParams();

@@ -74,11 +74,7 @@ html[data-theme="dark"] .blot-landing {
 .blot-button-paper { background: var(--blot-paper); color: var(--blot-ink); }
 .blot-button-small { min-height: 36px; font-size: 13px; padding: 8px 16px; }
 .blot-actions { display: flex; justify-content: center; gap: 8px; }
-.blot-logo { display: block; flex-shrink: 0; width: 126px; height: 24px; }
-.blot-logo img { width: 126px; height: 24px; display: block; object-fit: contain; }
-.blot-logo .blot-logo-paper { display: none; }
-html[data-theme="dark"] .blot-logo-ink { display: none; }
-html[data-theme="dark"] .blot-logo .blot-logo-paper { display: block; }
+.blot-logo { display: inline-flex; align-items: center; flex-shrink: 0; min-height: 24px; font-size: 26px; font-weight: 700; letter-spacing: -0.06em; }
 
 .blot-header { position: sticky; top: 0; z-index: 40; background: color-mix(in srgb, var(--blot-paper) 92%, transparent); backdrop-filter: blur(18px); }
 .blot-header-inner { max-width: 1280px; height: 64px; padding: 0 24px; margin: auto; display: flex; align-items: center; gap: 40px; }

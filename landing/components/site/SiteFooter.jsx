@@ -13,6 +13,6 @@ export function SiteFooter({ theme, onThemeChange }) {
       <div className="blot-footer-brand"><Logo /><label className="site-appearance"><Monitor size={16} /><select value={theme} onChange={event => onThemeChange(event.target.value)} aria-label={t("Appearance")}><option value="system">{t("System")}</option><option value="light">{t("Light")}</option><option value="dark">{t("Dark")}</option></select></label></div>
       <div className="blot-footer-links">{footerGroups.map(([name, links]) => <div key={name}><h3>{t(name)}</h3><ul>{links.map(([label, href]) => <li key={label}><Link href={href}>{t(label)}</Link></li>)}</ul></div>)}</div>
     </div>
-    <div className="blot-footer-bottom">© 2026 Blot</div>
+    <div className="blot-footer-bottom">© 2026 Ori</div>
   </footer>;
 }

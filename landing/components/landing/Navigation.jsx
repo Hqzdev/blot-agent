@@ -9,7 +9,7 @@ import { menuGroups } from "@/lib/landing/content";
 
 export function Logo({ onNavigate }) {
   const { t } = useLocale();
-  return <Link href="/" onClick={onNavigate} className="blot-logo" aria-label={t("Blot home")}><img src="/blot/logo-ink.png" width="126" height="24" alt="Blot Agent" className="blot-logo-ink" /><img src="/blot/logo-paper.png" width="126" height="24" alt="" className="blot-logo-paper" /></Link>;
+  return <Link href="/" onClick={onNavigate} className="blot-logo" aria-label={t("Ori home")}>Ori</Link>;
 }
 
 export function Navigation() {
