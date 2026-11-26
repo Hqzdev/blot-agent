@@ -4,12 +4,13 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
     case welcome, signIn, createAccount, verifyEmail, firstRun, firstAgent, createAgent
     case home, chats, archivedChats, search, newChat, chat, running, approval, result, file, review
     case skills, agents, agentProfile, editAgent, files, schedules, createSchedule
+    case pages
     #if os(iOS)
     case overview
     #endif
     case usage, personalization, settingsProfile, settingsStorage, settingsUpdates
     #if os(macOS)
-    case marketplace
+    case marketplace, agentMarketplace
     #endif
     case settings, appSettings, account, models, permissions, connections, devices, pair, memory, mcp
     case browserSettings, browser, permissionRules, blocked, offline, appearance, notifications, language, recovery
@@ -18,7 +19,7 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
     var isSetting: Bool { [.settings, .settingsProfile, .settingsStorage, .settingsUpdates, .appSettings, .account, .usage, .personalization, .models, .permissions, .connections, .devices, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .notifications, .language].contains(self) }
     var title: String {
         switch self {
-        case .welcome: "Blot"
+        case .welcome: "Ori"
         case .signIn: "Sign in"
         case .createAccount: "New account"
         case .verifyEmail: "Verification"
@@ -29,10 +30,11 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
         case .chats: "Chats"
         case .archivedChats: "Archive"
         case .search: "Search"
-        case .chat, .running, .approval, .result, .offline: "Blot CEO"
+        case .chat, .running, .approval, .result, .offline: "Ori CEO"
         case .file: "week-meal-prep.md"
         case .review: "Code changes"
         case .skills: "Skills"
+        case .pages: "Library"
         case .agents: "Agents"
         case .agentProfile: "Agent"
         case .editAgent: "Edit agent"
@@ -52,6 +54,7 @@ enum WorkspaceRoute: String, CaseIterable, Identifiable, Hashable {
         case .settingsUpdates: "Updates"
         #if os(macOS)
         case .marketplace: "Apps and templates"
+        case .agentMarketplace: "Marketplace"
         #endif
         case .models: "AI models"
         case .permissions: "Permissions"

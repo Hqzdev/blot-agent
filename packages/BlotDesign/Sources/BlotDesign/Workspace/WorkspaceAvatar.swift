@@ -20,6 +20,7 @@ public struct WorkspaceAvatar: View {
                 eyes
                 .foregroundStyle(color == .white || (color == .primary && scheme == .dark) ? Color.black : Color.white)
                 .position(x: size * faceCenter.x, y: size * faceCenter.y)
+                .offset(x: size * (pose.gazeX - 1) * 0.025, y: size * pose.gazeY * 0.025)
             }
         }.frame(width: size, height: size)
             .scaleEffect(x: pose.scaleX, y: pose.scaleY, anchor: .bottom)

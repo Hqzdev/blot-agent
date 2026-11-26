@@ -10,9 +10,9 @@ struct PhoneGlassCircleButton: View {
         Button(action: action) {
             BlotIcon(symbol: symbol, size: 22).font(.system(size: 21, weight: .regular))
                 .frame(width: 44, height: 44)
-                .glassEffect(.regular.interactive(), in: .circle)
-                .contentShape(Rectangle())
-        }.buttonStyle(.plain).accessibilityLabel(title)
+                .blotChromeSurface(cornerRadius: 24)
+                .blotHitArea()
+        }.buttonStyle(BlotHitTargetButtonStyle()).accessibilityLabel(title)
     }
 }
 
@@ -21,7 +21,7 @@ struct PhoneGlassCapsule<Content: View>: View {
 
     var body: some View {
         content.padding(.horizontal, 12).frame(minHeight: 44)
-            .glassEffect(.regular.interactive(), in: .capsule)
+            .blotChromeSurface(cornerRadius: 24).blotHitArea()
     }
 }
 

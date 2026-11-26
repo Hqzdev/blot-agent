@@ -67,7 +67,8 @@ struct MacTeamCreateMenu: View {
         .frame(width: expanded ? 192 : 36, height: expanded ? 128 : 36, alignment: .topLeading)
         .clipped()
         .foregroundStyle(WorkspaceStyle.ink)
-        .glassEffect(.regular.interactive(), in: .rect(cornerRadius: expanded ? 22 : 18))
+        .blotChromeSurface(cornerRadius: expanded ? 22 : 18)
+        .environment(\.blotChatChrome, !expanded)
         .frame(width: 192, height: 128, alignment: .topLeading)
         .onAppear {
             withAnimation(reduceMotion || systemReduceMotion ? nil : .spring(response: 0.36, dampingFraction: 0.84)) {

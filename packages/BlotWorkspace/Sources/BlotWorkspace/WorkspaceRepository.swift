@@ -205,6 +205,8 @@ public actor WorkspaceRepository {
             result.skillRevisions = try store.records(BlotV3.SkillRevision.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.artifacts = try store.records(BlotV3.Artifact.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.connections = try store.records(BlotV3.Connection.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
+            result.mcpConnections = try store.records(BlotV3.McpConnection.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
+            result.cards = try store.records(BlotV3.ConversationCard.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.modelSteps = try store.records(BlotV3.ModelStep.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.tasks = try store.records(BlotV3.Task.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }
             result.sessions = try store.records(BlotV3.AgentSession.self, workspaceID: identity.workspaceID).filter { $0.metadata.ownerId == identity.ownerID }

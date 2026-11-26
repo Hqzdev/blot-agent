@@ -19,7 +19,7 @@ struct ProjectOverview: View {
             ContentColumn {
                 VStack(alignment: .leading, spacing: KSpace.xl) {
                     HStack(alignment: .top, spacing: KSpace.md) {
-                        Image(systemName: "folder").font(.system(size: 26, weight: .light)).foregroundStyle(K.text2)
+                        BlotIcon(symbol: "folder", size: 26).foregroundStyle(K.text2)
                         VStack(alignment: .leading, spacing: 6) {
                             Text(project.name).font(KFont.pageTitle()).textSelection(.enabled)
                             Text("Чаты и материалы в одном месте")
@@ -33,7 +33,7 @@ struct ProjectOverview: View {
                     }
                     if materials.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Дайте Blot контекст").font(KFont.body(.medium))
+                            Text("Дайте Ori контекст").font(KFont.body(.medium))
                             Text("Добавьте описание задачи, заметки или документы. Затем напишите в поле ниже.")
                                 .font(KFont.body()).foregroundStyle(K.text2)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -48,7 +48,7 @@ struct ProjectOverview: View {
                                 .foregroundStyle(K.text2).textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
                         } label: {
-                            Label(parts.first ?? "Материал", systemImage: "doc.text").font(KFont.body())
+                            BlotLabel(parts.first ?? "Материал", symbol: "doc.text", size: 16).font(KFont.body())
                         }
                     }
                 }.padding(.vertical, KSpace.section)

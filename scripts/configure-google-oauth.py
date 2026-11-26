@@ -16,8 +16,8 @@ URL_NAME = "dev.blot.google-oauth"
 def client(value, platform):
     if not CLIENT_ID.fullmatch(value):
         raise ValueError(f"{platform}: ожидается OAuth client ID вида NUMBER-ID.apps.googleusercontent.com")
-    scheme = ".".join(reversed(value.split(".")))
-    return {"ClientID": value, "BundleID": BUNDLES[platform], "RedirectURI": scheme + ":/oauthredirect"}
+    redirect = "http://127.0.0.1/oauthredirect" if platform == "macOS" else ".".join(reversed(value.split("."))) + ":/oauthredirect"
+    return {"ClientID": value, "BundleID": BUNDLES[platform], "RedirectURI": redirect}
 
 
 def atomic_plist(path, value):
@@ -45,7 +45,8 @@ def validate(config, info):
         stored = config["Clients"][platform]
         if stored != client(stored.get("ClientID", ""), platform):
             raise ValueError(f"{platform}: bundle ID или redirect URI не соответствует client ID")
-        expected_schemes.add(stored["RedirectURI"].split(":", 1)[0])
+        if platform == "iOS":
+            expected_schemes.add(stored["RedirectURI"].split(":", 1)[0])
     if len(managed) != 1 or set(managed[0].get("CFBundleURLSchemes", [])) != expected_schemes:
         raise ValueError("URL schemes в Info.plist не соответствуют OAuth-конфигурации")
     return "Google OAuth: оба client ID, bundle ID и redirect URI согласованы. Реальный вход требует проверки на устройствах."
@@ -82,7 +83,7 @@ def main():
         types = [item for item in info.get("CFBundleURLTypes", []) if item.get("CFBundleURLName") != URL_NAME]
         if config["Enabled"]:
             types.append({"CFBundleURLName": URL_NAME, "CFBundleTypeRole": "Editor", "CFBundleURLSchemes": sorted(
-                value["RedirectURI"].split(":", 1)[0] for value in config["Clients"].values())})
+                value["RedirectURI"].split(":", 1)[0] for platform, value in config["Clients"].items() if platform == "iOS")})
         if types:
             info["CFBundleURLTypes"] = types
         else:

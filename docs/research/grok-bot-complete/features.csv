@@ -1,0 +1,312 @@
+id,group,name,availability,source,evidence,validated_in_app
+F001,Боты и организация,"Создание бота с именем, формой и цветом","Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F002,Боты и организация,Назначение постоянной роли через чат,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F003,Боты и организация,Создание бота другим ботом,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F004,Боты и организация,Выбор и замена primary Bot,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F005,Боты и организация,Переименование и метка роли,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F006,Боты и организация,Генерация аватара по описанию,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F007,Боты и организация,Загрузка и кадрирование аватара,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F008,Боты и организация,Закрепление ботов,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F009,Боты и организация,Секции по проектам и клиентам,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F010,Боты и организация,Скрытие и восстановление бота,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F011,Боты и организация,Дублирование на iPhone без истории и памяти,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F012,Боты и организация,Удаление бота,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F013,Боты и организация,Публикация шаблона,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F014,Боты и организация,Обновление и отключение ссылки шаблона,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F015,Боты и организация,Импорт своей копии шаблона,"Desktop и mobile, отдельные действия зависят от платформы",https://docs.x.ai/grok-bot/bots,official-documentation,False
+F016,Память,Сохранение устойчивых предпочтений,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F017,Память,Сохранение правил и истории работы,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F018,Память,Общие факты о пользователе между ботами,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F019,Память,Просмотр памяти вопросом в чате,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F020,Память,Исправление и забывание фактов,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F021,Память,Использование контекста прошлых звонков,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F022,Память,Импорт памяти из другого ассистента,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F023,Память,Сохранение памяти при Reset переписки,Личная память и командное обучение имеют разные правила,https://docs.x.ai/grok-bot/bots,official-documentation,False
+F024,Переписка и поиск,"Текст, ссылки и вставленные изображения",Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F025,Переписка и поиск,Прикрепление локальных файлов,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F026,Переписка и поиск,"Упоминания бота, группы, routine и приложения",Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F027,Переписка и поиск,Ответ на конкретное сообщение,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F028,Переписка и поиск,Реакции на сообщения,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F029,Переписка и поиск,Дополнительная инструкция во время работы,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F030,Переписка и поиск,Остановка текущей работы сообщением,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F031,Переписка и поиск,Лента действий инструментов и компьютера,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F032,Переписка и поиск,Редактируемые черновики email и Slack,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F033,Переписка и поиск,Отправка и отклонение черновика,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F034,Переписка и поиск,Вложения в Gmail и Outlook черновиках,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F035,Переписка и поиск,"Поиск по сообщениям, файлам и routines",Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F036,Переписка и поиск,Поиск более старых сообщений,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F037,Переписка и поиск,Палитра команд и горячие клавиши,Desktop и mobile,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F038,Группы и передача работы,Создание и переименование группы,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F039,Группы и передача работы,Изменение состава группы,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F040,Группы и передача работы,Адресация через @ и @everyone,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F041,Группы и передача работы,Общий контекст нескольких специалистов,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F042,Группы и передача работы,Асинхронная передача задачи другому боту,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F043,Группы и передача работы,Ответы на вопросы и формы в группе,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F044,Группы и передача работы,Вложения пользователя в группе,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F045,Группы и передача работы,Выбор владельца этапа инструкцией,Группа из 2–6 ботов; голосовой звонок одному боту,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F046,Голос и телефонные звонки,Диктовка с редактированием перед отправкой,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F047,Голос и телефонные звонки,Живой голосовой разговор,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F048,Голос и телефонные звонки,Голосовые заметки и расшифровка,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F049,Голос и телефонные звонки,"Mute, Hang up и показ transcript",Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F050,Голос и телефонные звонки,"Выбор голоса, скорости и языка",Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F051,Голос и телефонные звонки,Возврат к продолжающемуся звонку,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F052,Голос и телефонные звонки,Карточка завершённого звонка,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F053,Голос и телефонные звонки,Звонок организации с подтверждением адресата,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F054,Голос и телефонные звонки,Передача телефонного звонка пользователю,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F055,Голос и телефонные звонки,Ответ на вопрос во время звонка,Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F056,Голос и телефонные звонки,"Запись, копирование и экспорт transcript звонка",Исходящие телефонные звонки доступны только в США,https://docs.x.ai/grok-bot/chat-and-collaboration,official-documentation,False
+F057,Облачный компьютер,Работа в облаке при закрытом ноутбуке,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F058,Облачный компьютер,"Браузер, командная строка и файловая система",Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F059,Облачный компьютер,Постоянные файлы и сессии входа,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F060,Облачный компьютер,Параллельная работа на отдельных экранах,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F061,Облачный компьютер,Предпросмотр компьютера в правой панели,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F062,Облачный компьютер,Наблюдение за действиями,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F063,Облачный компьютер,Take control и возврат управления,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F064,Облачный компьютер,Работа с сайтом без коннектора,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F065,Облачный компьютер,Общий каталог /workspace,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F066,Облачный компьютер,Обновление программного обеспечения и образа,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F067,Облачный компьютер,Recover и Reset компьютера,Один постоянный компьютер аккаунта; отдельный экран у каждого бота,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F068,Приложения и MCP,Поиск и установка приложения,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F069,Приложения и MCP,Карточка подключения прямо в чате,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F070,Приложения и MCP,OAuth-вход и повторная авторизация,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F071,Приложения и MCP,Просмотр установленных приложений,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F072,Приложения и MCP,Включение отдельных инструментов приложения,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F073,Приложения и MCP,Несколько аккаунтов у поддерживающих приложений,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F074,Приложения и MCP,Метки аккаунтов work и personal,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F075,Приложения и MCP,Удаление приложения и отключение входа,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F076,Приложения и MCP,Подключение Remote HTTPS MCP,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F077,Приложения и MCP,MCP с headers и OAuth client,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F078,Приложения и MCP,MCP через Command и Arguments,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F079,Приложения и MCP,Подключение MCP по просьбе в чате,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F080,Приложения и MCP,1Password с подтверждением выбранных логинов,Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F081,Почта и поиск в X,Собственный адрес mail.grokbot.com,Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F082,Почта и поиск в X,Plus aliases для одного адреса,Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F083,Почта и поиск в X,"Чтение, поиск, черновики и отправка почты",Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F084,Почта и поиск в X,Пересылка с форматированием и вложениями,Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F085,Почта и поиск в X,"Routine по письму, отправителю или домену",Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F086,Почта и поиск в X,Публичный поиск X без входа,Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F087,Почта и поиск в X,"Чтение постов, упоминаний и трендов X",Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F088,Почта и поиск в X,Личные данные X через авторизованный plugin,Собственная почта может требовать включения администратором,https://docs.x.ai/grok-bot/computer-and-apps,official-documentation,False
+F089,Навыки,Сохранение выполненной процедуры как skill,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F090,Навыки,Создание навыка из письменной инструкции,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F091,Навыки,Общие private skills нескольких ботов,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F092,Навыки,Включение private skill для бота,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F093,Навыки,Запуск навыка по имени,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F094,Навыки,Teach a task по демонстрации,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F095,Навыки,Проверка и правка созданного навыка,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F096,Навыки,Публикация навыка команде,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F097,Навыки,"Sync, Copy link и Unpublish навыка",Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F098,Навыки,Навык только для одного командного бота,Общая библиотека; включение навыка для конкретного бота,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F099,Расписания и события,Создание расписания естественным языком,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F100,Расписания и события,Расписание с часовым поясом,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F101,Расписания и события,Запуск по событию Slack,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F102,Расписания и события,"Запуск по GitHub, Linear, Sentry, PagerDuty",Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F103,Расписания и события,Запуск по входящей почте,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F104,Расписания и события,Webhook с URL и Bearer key,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F105,Расписания и события,Передача JSON body webhook в задачу,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F106,Расписания и события,Просмотр Instruction и When to run,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F107,Расписания и события,Pause и Resume,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F108,Расписания и события,Test с результатом в переписке,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F109,Расписания и события,Изменение routine через чат,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F110,Расписания и события,Удаление с подтверждением,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F111,Расписания и события,"История Running, Succeeded и Failed",Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F112,Расписания и события,Видимость routine на Team Bot,Облако; Test доступен в desktop не у всех routines,https://docs.x.ai/grok-bot/skills-routines-and-automations,official-documentation,False
+F113,Файлы и результаты,"Изображения, аудио и видео на входе",Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F114,Файлы и результаты,"PDF, Word, Excel и PowerPoint",Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F115,Файлы и результаты,"CSV, JSON, YAML, код и notebooks",Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F116,Файлы и результаты,"Перенос файлов в Drive, OneDrive, SharePoint",Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F117,Файлы и результаты,Загрузка файлов и вложений на компьютер,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F118,Файлы и результаты,Предпросмотр результатов в карточках,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F119,Файлы и результаты,"Документы, таблицы, презентации и отчёты",Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F120,Файлы и результаты,Генерация изображений по описанию и референсам,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F121,Файлы и результаты,Генерация коротких видео,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F122,Файлы и результаты,Видео по первому и последнему кадру,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F123,Файлы и результаты,Просмотр медиа с увеличением и навигацией,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F124,Файлы и результаты,Скачивание одного или всех файлов,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F125,Файлы и результаты,Видеоплеер со скоростью и перемоткой,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F126,Файлы и результаты,Файлы и View PR из Cloud Agent,Лимиты desktop описаны отдельно в отчёте,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F127,Pages и Library,"Создание отчёта, dashboard или tracker как Page",Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F128,Pages и Library,Карточка страницы и Open,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F129,Pages и Library,Страница рядом с чат-панелью,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F130,Pages и Library,Изменение той же страницы через чат,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F131,Pages и Library,Фильтры и переключатели внутри страницы,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F132,Pages и Library,Обновление страницы из routine,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F133,Pages и Library,Переименование страницы на desktop,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F134,Pages и Library,Library с группами по времени,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F135,Pages и Library,"Фильтры Pages, Media, Links, Files, Apps",Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F136,Pages и Library,Pin и Unpin в Library,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F137,Pages и Library,"Доступ лично, команде или по ссылке",Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F138,Pages и Library,Приглашение людей и групп Viewer,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F139,Pages и Library,Copy link и Open in browser,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F140,Pages и Library,Управление опубликованными страницами в dashboard,Постепенное включение; документация отдельно оговаривает Enterprise,https://docs.x.ai/grok-bot/files-and-results,official-documentation,False
+F141,Согласования,Проверка действия перед инструментом,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F142,Согласования,Карточка с операцией и входными данными,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F143,Согласования,"Allow once, Always allow и Deny",Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F144,Согласования,Создание Allow-правила из карточки,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F145,Согласования,Custom Rules Ask first и Allow automatically,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F146,Согласования,Редактирование и удаление правил,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F147,Согласования,Показ заблокированных правил администратора,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F148,Согласования,Приоритет Ask first при конфликте,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F149,Согласования,Истечение фонового согласования,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F150,Согласования,Отдельное разрешение локального выполнения,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F151,Согласования,Защищённый ввод и ручная передача управления,Auto Review включён по умолчанию; правила зависят от команды,https://docs.x.ai/grok-bot/approvals-security-and-privacy,official-documentation,False
+F152,Vault и платежи,"Хранилище Login, Card и Contact info",Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F153,Vault и платежи,Добавление и изменение записей,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F154,Vault и платежи,Импорт логинов CSV из менеджеров паролей,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F155,Vault и платежи,Сканирование или фото карты,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F156,Vault и платежи,Подсказки Hints для выбора записи,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F157,Vault и платежи,Сохранение из Secure Form,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F158,Vault и платежи,Secure secret card для API keys,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F159,Vault и платежи,Write-only замена секрета,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F160,Vault и платежи,"Платёжные аккаунты Link, X Money, Shop Pay",Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F161,Vault и платежи,Default payment method,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F162,Vault и платежи,Карточка заказа с итоговой суммой,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F163,Vault и платежи,Пакет карточных платежей с одним согласованием,Vault аккаунта недоступен чужому Team Bot,https://docs.x.ai/grok-bot/vault,official-documentation,False
+F164,Инициатива,Предложение взять обнаруженную работу,Основной личный бот; уведомления и check-ins различаются,https://docs.x.ai/grok-bot/initiative,official-documentation,False
+F165,Инициатива,Предупреждение об отключившемся приложении,Основной личный бот; уведомления и check-ins различаются,https://docs.x.ai/grok-bot/initiative,official-documentation,False
+F166,Инициатива,Предложение переподключения,Основной личный бот; уведомления и check-ins различаются,https://docs.x.ai/grok-bot/initiative,official-documentation,False
+F167,Инициатива,Follow-up в X Chat,Основной личный бот; уведомления и check-ins различаются,https://docs.x.ai/grok-bot/initiative,official-documentation,False
+F168,Инициатива,Координация основным ботом,Основной личный бот; уведомления и check-ins различаются,https://docs.x.ai/grok-bot/initiative,official-documentation,False
+F169,Team Bots,Создание командного бота как draft,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F170,Team Bots,Publish общего бота,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F171,Team Bots,"Sharing команде, организации, людям и группам",Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F172,Team Bots,"Роли Owner, Manager и Collaborator",Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F173,Team Bots,Поиск Browse shared Bots,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F174,Team Bots,Приватная переписка каждого участника,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F175,Team Bots,Согласование общего обучения Review learnings,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F176,Team Bots,"Командные apps, secrets, skills и files",Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F177,Team Bots,Разрешение на личный коннектор участника,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F178,Team Bots,Shared connectors и service accounts,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F179,Team Bots,Bot-specific vault logins,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F180,Team Bots,Управление General и Knowledge,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F181,Team Bots,Аналитика использования и top users,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F182,Team Bots,Автоматическое добавление в sidebar администратором,Team и Enterprise; минимум два участника команды,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F183,Slack и Microsoft Teams,Подключение опубликованного Team Bot в Teams,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F184,Slack и Microsoft Teams,Согласование приложения администратором Teams,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F185,Slack и Microsoft Teams,Link Account участника,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F186,Slack и Microsoft Teams,Упоминание в канале и диалог один на один,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F187,Slack и Microsoft Teams,Добавление в групповой чат Teams,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F188,Slack и Microsoft Teams,Чтение текущей ветки и доступных каналов,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F189,Slack и Microsoft Teams,Работа с файлами через OneDrive,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F190,Slack и Microsoft Teams,Обновление имени и аватара в Teams,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F191,Slack и Microsoft Teams,Удаление приложения из Teams,Канал Team Bot и коннектор сервиса выполняют разные функции,https://docs.x.ai/grok-bot/microsoft-teams,official-documentation,False
+F192,Slack как канал,Отдельный Slack handle командного бота,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F193,Slack как канал,DM и упоминания в каналах,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F194,Slack как канал,Передача работы личным ботам участника,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F195,Slack как канал,Ответ в той же Slack-ветке,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F196,Slack как канал,Согласование действия инициатором запроса,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F197,Slack как канал,Ответы в ветке routine без нового упоминания,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F198,Slack как канал,Настройка Slack Workspace Access,Связывание аккаунта выполняется для workspace,https://docs.x.ai/grok-bot/team-bots,official-documentation,False
+F199,Встречи,"Вход в Google Meet, Zoom и Teams по ссылке","Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F200,Встречи,Подтверждение перед присоединением,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F201,Встречи,Вход по календарю,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F202,Встречи,Транскрибирование и заметки,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F203,Встречи,Ответы по имени в чате встречи,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F204,Встречи,Приватный ответ в Zoom chat,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F205,Встречи,Upcoming с обратным отсчётом,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F206,Встречи,Disable Interactivity,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F207,Встречи,Cancel или Quit встречи,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F208,Встречи,"Итоги, action items и transcript","Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F209,Встречи,Развёрнутый отчёт на Page,"Team, Enterprise и Ultra; Enterprise admin может отключить",https://docs.x.ai/grok-bot/meetings,official-documentation,False
+F210,Мобильное приложение,Синхронизация ботов и переписки с desktop,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F211,Мобильное приложение,Создание ботов и групп,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F212,Мобильное приложение,Системное меню Share в Grok Bot,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F213,Мобильное приложение,Черновик сообщения для каждой беседы,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F214,Мобильное приложение,Выделение текста и Add to Chat,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F215,Мобильное приложение,"Голос, диктовка, фото и файлы",iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F216,Мобильное приложение,Просмотр и управление облачным экраном,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F217,Мобильное приложение,Рoutines и Run history,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F218,Мобильное приложение,"Поиск Messages, Bots, Groups, Files, Routines",iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F219,Мобильное приложение,Library и sharing Pages,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F220,Мобильное приложение,Push-уведомления и haptics,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F221,Мобильное приложение,"Siri, Spotlight и Shortcuts на iPhone",iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F222,Мобильное приложение,Live Activities и Action Button на iPhone,iPhone и Android; отдельные функции различаются,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F223,Приложения физического телефона,Чтение и изменение календаря,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F224,Приложения физического телефона,Поиск контактов только для чтения,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F225,Приложения физического телефона,Чтение текущего положения телефона,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F226,Приложения физического телефона,Установка будильника и таймера,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F227,Приложения физического телефона,Reminders на iPhone,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F228,Приложения физического телефона,Управление Apple Home на iPhone,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F229,Приложения физического телефона,"Разрешения Allow, Allowed и Denied",Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F230,Приложения физического телефона,Согласование действия на нужном устройстве,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F231,Приложения физического телефона,Переименование устройств и их статусы,Нужны разрешения и открытый Grok Bot; собственный личный бот,https://docs.x.ai/grok-bot/mobile,official-documentation,False
+F232,Настройки,Несколько аккаунтов и переключение,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F233,Настройки,"Follow System, Light и Dark",Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F234,Настройки,Accent Bot color или Black,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F235,Настройки,Язык интерфейса и проверка орфографии,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F236,Настройки,Выбор микрофона,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F237,Настройки,Аппаратное ускорение,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F238,Настройки,Timezone и Auto-detect,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F239,Настройки,Manage devices,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F240,Настройки,Execution on this computer,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F241,Настройки,Route traffic through this computer,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F242,Настройки,Обновления приложения и автоперезапуск,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F243,Настройки,Уведомления конкретного бота,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F244,Настройки,"Needs attention, unread и working",Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F245,Настройки,Mark read и unread,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F246,Настройки,Ошибки с Copy request ID,Набор пунктов зависит от аккаунта и rollout,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F247,Использование и оплата,План и Manage billing,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F248,Использование и оплата,Недельный расход и время сброса,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F249,Использование и оплата,Графики By Bot и By source,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F250,Использование и оплата,Additional usage и monthly limit,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F251,Использование и оплата,Credits и Auto top-up,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F252,Использование и оплата,Usage reset,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F253,Использование и оплата,Referral на дополнительный reset,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F254,Использование и оплата,Разбор расхода по запросу в личном чате,Доступные расходы и reset зависят от тарифа,https://docs.x.ai/grok-bot/settings-and-notifications,official-documentation,False
+F255,Администрирование,Доступ команды и групп к Grok Bot,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F256,Администрирование,SSO и SCIM,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F257,Администрирование,Разрешение Cloud Agents,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F258,Администрирование,"Политики sharing Bots, templates и Pages",Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F259,Администрирование,Allow Shared Logins,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F260,Администрирование,Включение Meetings и Agent Email,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F261,Администрирование,Разрешённые plugins и MCP,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F262,Администрирование,Ограничение local execution,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F263,Администрирование,Team Rules и Group Rules,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F264,Администрирование,Enforce Auto-review и team rules,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F265,Администрирование,Team Setup Scripts и Team Secrets,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F266,Администрирование,Разрешение sudo,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F267,Администрирование,Action Recording,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F268,Администрирование,Audit logs и OpenTelemetry Export,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F269,Администрирование,Групповые настройки и Admin API,Часть настроек только Enterprise,https://docs.x.ai/grok-bot/teams-and-enterprises,official-documentation,False
+F270,Сеть и безопасность,Allow All Network Access,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F271,Сеть и безопасность,Allow All Sites Except These,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F272,Сеть и безопасность,Defaults + Team Allowlist,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F273,Сеть и безопасность,Team Allowlist Only,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F274,Сеть и безопасность,Домены и IP-диапазоны в allowlist,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F275,Сеть и безопасность,Отдельная политика группы и блокировка изменений,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F276,Сеть и безопасность,Apply to MCP servers,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F277,Сеть и безопасность,Статические egress IP,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F278,Сеть и безопасность,Ограничения локального выполнения,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F279,Сеть и безопасность,Контроль retention и удаления данных,Enterprise; blocked sites являются best effort,https://docs.x.ai/grok-bot/security,official-documentation,False
+F280,Корпоративная инфраструктура,Доступ к частной сети через desktop route,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F281,Корпоративная инфраструктура,Сетевой клиент через Team Setup,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F282,Корпоративная инфраструктура,Tailscale как вариант подключения,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F283,Корпоративная инфраструктура,Cloudflare Tunnel как вариант подключения,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F284,Корпоративная инфраструктура,Setup Script и Check Script,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F285,Корпоративная инфраструктура,Повторное применение setup при пересоздании,Enterprise и управляемый setup,https://docs.x.ai/grok-bot/private-networks,official-documentation,False
+F286,Inference hooks,Подписанный prompt frame перед моделью,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F287,Inference hooks,Вердикт allow или deny,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F288,Inference hooks,Validate Tool Calls перед выполнением,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F289,Inference hooks,Custom HTTPS endpoint и headers,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F290,Inference hooks,Ротация signing secret,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F291,Inference hooks,Test Connection,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F292,Inference hooks,Shadow mode и enforcement,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F293,Inference hooks,Настройка поведения при сбое,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F294,Inference hooks,Поэтапный rollout и circuit breaker,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F295,Inference hooks,События проверки в audit log,Enterprise beta,https://docs.x.ai/grok-bot/inference-hooks,official-documentation,False
+F296,Управление компьютерами команды,Recreate с сохранением durable disk,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F297,Управление компьютерами команды,Terminate текущей VM,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F298,Управление компьютерами команды,Delete VMs and Data,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F299,Управление компьютерами команды,Delete All Grok Bot Data,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F300,Управление компьютерами команды,Отслеживание массовой операции,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F301,Управление компьютерами команды,Повтор отказавших операций,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F302,Управление компьютерами команды,Операции через API,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F303,Управление компьютерами команды,Удаление неактивных компьютеров по retention,Enterprise; массовые операции администратора,https://docs.x.ai/grok-bot/computers,official-documentation,False
+F304,Внешние точки входа,Передача поста или ветки через @bot,Доступность @bot зависит от страны аккаунта X,https://docs.x.ai/grok-bot/tag-on-x,official-documentation,False
+F305,Внешние точки входа,Подтверждение принятия задачи в X,Доступность @bot зависит от страны аккаунта X,https://docs.x.ai/grok-bot/tag-on-x,official-documentation,False
+F306,Внешние точки входа,Выполнение и результат в Grok Bot,Доступность @bot зависит от страны аккаунта X,https://docs.x.ai/grok-bot/tag-on-x,official-documentation,False
+F307,Внешние точки входа,"Контекст исходного, родительского и цитируемого поста",Доступность @bot зависит от страны аккаунта X,https://docs.x.ai/grok-bot/tag-on-x,official-documentation,False
+F308,Deep links,Открытие чата через grokbot URL scheme,Приложение должно быть установлено и авторизовано,https://docs.x.ai/grok-bot/deep-links,official-documentation,False
+F309,Deep links,Выбор бота параметром id,Приложение должно быть установлено и авторизовано,https://docs.x.ai/grok-bot/deep-links,official-documentation,False
+F310,Deep links,Подстановка до 1000 символов без отправки,Приложение должно быть установлено и авторизовано,https://docs.x.ai/grok-bot/deep-links,official-documentation,False
+F311,Deep links,Переход к primary Bot без id,Приложение должно быть установлено и авторизовано,https://docs.x.ai/grok-bot/deep-links,official-documentation,False

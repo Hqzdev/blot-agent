@@ -50,3 +50,15 @@ test("an expired, mismatched or credential-bearing callback never closes the bro
     await assert.rejects(handoff.open({ query }), /invalid_auth_response/);
   }
 });
+
+test("web handoff returns to the exact web origin without opening a native app", async () => {
+  const web = new URLSearchParams(query);
+  web.set("client_id", "blot-web"); web.set("redirect_uri", "https://web.blot.example/api/auth/blot/callback");
+  const result = { callbackURL: `https://web.blot.example/api/auth/blot/callback?code=${"c".repeat(43)}&state=${"s".repeat(43)}`, expiresAt: new Date(Date.now() + 60_000).toISOString() };
+  const navigated = [];
+  const handoff = new AppHandoff({ prepare: async () => result, navigate: url => navigated.push(url) });
+  await handoff.open({ query: web.toString() });
+  assert.deepEqual(navigated, [result.callbackURL]);
+  result.callbackURL = result.callbackURL.replace("web.blot.example", "attacker.example");
+  await assert.rejects(handoff.open({ query: web.toString() }), /invalid_auth_response/);
+});

@@ -74,7 +74,7 @@ struct MacTeamIntegrationSettingsContent: View {
     @ViewBuilder private var updates: some View {
         @Bindable var presentation = presentation
         MacTeamSettingsSection(title: "Приложение") {
-            MacTeamSettingsRow(title: "Версия Blot", detail: "Текущая локальная сборка приложения.") {
+            MacTeamSettingsRow(title: "Версия Ori", detail: "Текущая локальная сборка приложения.") {
                 Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")
                     .foregroundStyle(.secondary)
             }

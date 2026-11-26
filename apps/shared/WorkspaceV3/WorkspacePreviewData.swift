@@ -14,7 +14,7 @@ enum WorkspacePreviewData {
         "createdAt": "2026-11-02T09:00:00Z",
         "updatedAt": "2026-11-02T09:00:00Z"
       },
-      "name": "Blot CEO",
+      "name": "Ori CEO",
       "roleId": "ceo",
       "avatarShape": "round",
       "avatarColor": "ink",
@@ -119,7 +119,7 @@ enum WorkspacePreviewData {
         "updatedAt": "2026-11-02T09:00:00Z"
       },
       "agentId": "10000000-0000-4000-8000-000000000001",
-      "title": "Blot CEO",
+      "title": "Ori CEO",
       "mobileOwned": true,
       "pinned": true,
       "archived": true
@@ -179,7 +179,7 @@ enum WorkspacePreviewData {
         "updatedAt": "2026-11-02T09:00:00Z"
       },
       "agentId": "10000000-0000-4000-8000-000000000001",
-      "title": "Blot landing",
+      "title": "Ori landing",
       "mobileOwned": true,
       "pinned": true,
       "archived": true
@@ -362,7 +362,7 @@ enum WorkspacePreviewData {
       },
       "scope": "PERSONAL",
       "scopeId": null,
-      "content": "Main project is Blot",
+      "content": "Main project is Ori",
       "sourceId": "00000000-0000-4000-8000-000000000001",
       "state": "CANDIDATE"
     },

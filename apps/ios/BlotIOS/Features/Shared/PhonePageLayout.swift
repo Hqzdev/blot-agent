@@ -30,7 +30,7 @@ struct PhonePageHeader<Actions: View>: View {
         }
         .frame(minHeight: 44)
         .padding(.horizontal, PhonePageLayout.inset).padding(.vertical, 8)
-        .background(WorkspaceStyle.canvas)
+        .background(WorkspaceStyle.canvas).environment(\.blotChatChrome, false)
     }
 }
 
@@ -52,6 +52,6 @@ struct PhonePage<Content: View>: View {
                 .padding(PhonePageLayout.inset).frame(maxWidth: .infinity)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(WorkspaceStyle.canvas.ignoresSafeArea())
+        .background(WorkspaceStyle.canvas.ignoresSafeArea()).workspacePanelControls()
     }
 }

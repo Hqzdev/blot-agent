@@ -1,3 +1,4 @@
+import BlotDomain
 import Foundation
 
 public enum WorkspaceSyncError: Error, Equatable, Sendable {
@@ -80,6 +81,7 @@ public struct WorkspaceReplicaSnapshot: Codable, Equatable, Sendable {
     public let records: [WorkspaceReplicaRecord]
     // Older snapshots omit this metadata; absence never removes newer local pins.
     public var messagePins: [WorkspaceMessagePin]? = nil
+    public var conversationCards: [BlotV3.ConversationCard]? = nil
 }
 
 enum JSONFields {

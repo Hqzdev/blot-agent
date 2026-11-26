@@ -49,6 +49,18 @@ public struct WorkspaceMemoryService: Sendable {
         }
     }
 
+    /// Dismissing a suggestion does not forget its source message or invalidate conversation history.
+    public func reject(commandID: UUID, memoryID: UUID, expectedVersion: Int) async throws {
+        struct Input: Encodable { let memoryID: UUID; let expectedVersion: Int }
+        let command = try WorkspaceCommand(type: "memory.reject", workspaceID: identity.workspaceID, payload: Input(memoryID: memoryID, expectedVersion: expectedVersion)).data()
+        _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
+            let old = try tx.require(BlotV3.MemoryEntry.self, id: memoryID, version: expectedVersion)
+            try tx.requireResolved(kind: "MemoryEntry", id: memoryID)
+            guard old.state == .candidate else { throw WorkspaceStorageError.invalidParameters }
+            try tx.delete(old); return memoryID
+        }
+    }
+
     public func saveSummary(commandID: UUID, conversationID: UUID, content: String, sourceIDs: [UUID], now: Date = Date()) async throws -> UUID {
         struct Input: Encodable { let conversationID: UUID; let content: String; let sourceIDs: [UUID] }
         let command = try WorkspaceCommand(type: "context.summary.save", workspaceID: identity.workspaceID,

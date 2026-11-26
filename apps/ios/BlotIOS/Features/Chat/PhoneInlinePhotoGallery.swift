@@ -39,7 +39,7 @@ struct PhoneInlinePhotoGallery: View {
                     BlotIcon(symbol: "chevron.left", size: 22).frame(width: 46, height: 46)
                 }
                 .buttonStyle(.plain).foregroundStyle(.white)
-                .glassEffect(.regular.tint(.black.opacity(0.85)).interactive(), in: .circle)
+                .background(BlotColor.inverse, in: Circle())
                 .accessibilityLabel(store.t("Back"))
 
                 Spacer(minLength: 0)
@@ -53,7 +53,7 @@ struct PhoneInlinePhotoGallery: View {
                             .padding(.horizontal, 20).frame(minHeight: 46)
                     }
                     .buttonStyle(.plain).foregroundStyle(.white)
-                    .glassEffect(.regular.tint(.black.opacity(0.85)).interactive(), in: .capsule)
+                    .background(BlotColor.inverse, in: Capsule())
                 } else {
                     Button {
                         withKAnimation(reduceMotion, KMotion.panel) { menu.attachPhotos() }
@@ -63,7 +63,7 @@ struct PhoneInlinePhotoGallery: View {
                             .padding(.horizontal, 20).padding(.vertical, 12).frame(minHeight: 46)
                     }
                     .buttonStyle(.plain).foregroundStyle(.white)
-                    .glassEffect(.regular.tint(.blue).interactive(), in: .capsule)
+                    .background(BlotColor.inverse, in: Capsule())
                 }
             }
         }

@@ -36,6 +36,9 @@ struct WorkspacePluginReference: Identifiable {
         return Array(Set([entry.name] + aliases)).sorted().map { Self(entry: entry, name: $0) }
     }
     static func plugin(forTool name: String) -> Self? {
+        if let google = WorkspaceGoogleCatalog.plugin(name), let entry = PluginCatalog.external.first(where: { $0.id == google.rawValue }) {
+            return Self(entry: entry, name: entry.name)
+        }
         guard let plugin = AppleToolCatalog.all.first(where: { $0.definition.name == name })?.plugin,
               let entry = PluginCatalog.apple.first(where: { $0.appleID == plugin }) else { return nil }
         return Self(entry: entry, name: entry.name)
@@ -63,6 +66,6 @@ struct WorkspacePluginLogo: View {
         Group {
             if let appleID = plugin.entry.appleID { ApplePluginIcon(plugin: appleID, size: size) }
             else { Image(plugin.entry.asset).resizable().scaledToFit().frame(width: size, height: size) }
-        }.accessibilityHidden(true)
+        }.clipShape(RoundedRectangle(cornerRadius: size * 0.24)).accessibilityHidden(true)
     }
 }

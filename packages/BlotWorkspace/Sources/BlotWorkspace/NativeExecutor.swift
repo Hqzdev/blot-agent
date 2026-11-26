@@ -8,6 +8,7 @@ public actor NativeExecutor: NativeExecuting {
     private var reserved: Set<String> = []
     private var stopped = false
     private let storage: NativeWorkspaceStorage
+    private var teach: NativeTeachRecorder?
     public init(workspaceHome: URL = FileManager.default.homeDirectoryForCurrentUser) {
         storage = NativeWorkspaceStorage(home: workspaceHome.standardizedFileURL.resolvingSymlinksInPath())
     }
@@ -15,6 +16,10 @@ public actor NativeExecutor: NativeExecuting {
         guard !stopped else { throw NativeExecutionError.unavailable }
         try request.command.validate()
         let c = request.command, p = request.parameters
+        if [.teachApplications, .teachStart, .teachStatus, .teachPause, .teachStop, .teachReplay].contains(request.operation) {
+            if teach == nil { teach = await NativeTeachRecorder() }
+            return try await teach!.perform(request.operation, parameters: p)
+        }
         switch request.operation {
         case .workspacePrepare: return try storage.prepare(p)
         case .workspaceRecord: return try storage.record(p, removing: false)
@@ -47,8 +52,16 @@ public actor NativeExecutor: NativeExecuting {
                 case .workspaceWrite:
                     let expected = p["expected_hash"] ?? ""
                     guard expected == "missing" || expected.range(of: "^[a-f0-9]{64}$", options: .regularExpression) != nil else { throw NativeExecutionError.invalidRequest }
+                    var before: String?
+                    if expected != "missing" {
+                        let data = try files.read(p["path"] ?? "")
+                        guard NativeScopedFiles.hash(data) == expected else { throw NativeExecutionError.changed }
+                        if data.count <= 48 * 1024 { before = String(data: data, encoding: .utf8) }
+                    }
                     let hash = try files.write(p["path"] ?? "", data: Data((p["content"] ?? "").utf8), expected: expected)
-                    return .object(["state": .string("succeeded"), "sha256": .string(hash), "path": .string(p["path"] ?? "")])
+                    var result: [String: ChatJSON] = ["state": .string("succeeded"), "sha256": .string(hash), "path": .string(p["path"] ?? "")]
+                    if let before { result["previous_content"] = .string(before) }
+                    return .object(result)
                 default: throw NativeExecutionError.invalidRequest
                 }
             }
@@ -61,6 +74,6 @@ public actor NativeExecutor: NativeExecuting {
             }
         }
     }
-    public func stopAll() async { stopped = true; await processes.stopAll() }
+    public func stopAll() async { stopped = true; await teach?.cleanup(); await processes.stopAll() }
 }
 #endif

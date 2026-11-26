@@ -19,19 +19,23 @@ private struct WorkspaceAccountDeletionView: View {
     private var ru: Bool { store.language == "ru" }
     var body: some View {
         NavigationStack {
-            Form {
+            WorkspacePanelForm {
                 Text(ru ? "Аккаунт, облачные копии, сеансы и локальные файлы этого аккаунта будут удалены. Восстановить их будет нельзя. Копии на других отключённых устройствах нельзя стереть удалённо." : "Your account, cloud backups, sessions and this account's local files will be deleted permanently. Offline copies on other devices cannot be erased remotely.")
                 Button(ru ? "Отправить код на почту аккаунта" : "Send code to account email") { perform { try await $0.requestAccountDeletion(); sent = true } }
                 if sent {
-                    TextField(ru ? "Код из письма" : "Email code", text: $code).textFieldStyle(.roundedBorder)
+                    TextField(ru ? "Код из письма" : "Email code", text: $code).textFieldStyle(WorkspacePanelTextFieldStyle())
                     Button(ru ? "Удалить аккаунт навсегда" : "Permanently delete account", role: .destructive) {
                         perform { try await $0.confirmAccountDeletion(code: code); dismiss(); store.signOut() }
                     }.disabled(code.count != 6)
                 }
                 if let failure { Text(failure).foregroundStyle(.red) }
-            }.formStyle(.grouped).disabled(busy)
-            .navigationTitle(ru ? "Удаление аккаунта" : "Delete account")
-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
+            }.disabled(busy)
+
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: ru ? "Удаление аккаунта" : "Delete account") {
+                    Button(store.t("Cancel")) { dismiss() }.disabled(busy)
+                }
+            }.workspaceEditorChrome()
         }.interactiveDismissDisabled(busy)
         #if os(macOS)
         .frame(width: 520, height: 420)

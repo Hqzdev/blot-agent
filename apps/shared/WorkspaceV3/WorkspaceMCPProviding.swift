@@ -15,9 +15,15 @@ extension LocalWorkspaceService: WorkspaceMCPProviding {
         mcp = service
         return service
     }
-    func mcpProvider() async throws -> MCPToolProvider {
+    func mcpProvider() async throws -> WorkspaceRefreshingToolProvider {
         let interactions = appleIntegrations.interactions
-        return try await mcpService().provider { title, details in try await interactions.confirm(title: title, details: details) }
+        let service = try await mcpService()
+        let confirm: @Sendable (String, String) async throws -> Bool = { title, details in
+            try await interactions.confirm(title: title, details: details)
+        }
+        return WorkspaceRefreshingToolProvider(initial: try await service.provider(confirm: confirm), reload: {
+            try await service.provider(confirm: confirm)
+        })
     }
 }
 

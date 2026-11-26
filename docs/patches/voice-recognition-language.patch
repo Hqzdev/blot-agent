@@ -1,0 +1,279 @@
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneGeneralSettingsView.swift b/apps/ios/BlotIOS/Features/Settings/PhoneGeneralSettingsView.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneGeneralSettingsView.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneGeneralSettingsView.swift
+@@ -27,6 +27,7 @@
+                     }.labelsHidden()
+                 }
+             }
++            WorkspaceVoiceSettingsView()
+         }
+     }
+ }
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCatalog.swift
+@@ -12,7 +12,7 @@
+     static let groups = ["Workspace", "Personal", "Integrations"]
+     static let items: [Item] = [
+         .init(route: .files, title: "Files", detail: "Workspace files, attachments and agent results.", symbol: "folder", group: "Workspace"),
+-        .init(route: .appSettings, title: "General", detail: "App language and permissions.", symbol: "gearshape", group: "Personal"),
++        .init(route: .appSettings, title: "General", detail: "App language, voice recognition and permissions.", symbol: "gearshape", group: "Personal"),
+         .init(route: .notifications, title: "Notifications", detail: "Events your agents notify you about.", symbol: "bell", group: "Personal"),
+         .init(route: .settingsProfile, title: "Profile", detail: "Your profile, token activity and account actions.", symbol: "person.crop.circle", group: "Personal"),
+         .init(route: .appearance, title: "Appearance", detail: "Theme, motion and interface density.", symbol: "sun.max", group: "Personal"),
+diff --git a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCopy.swift b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCopy.swift
+--- a/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCopy.swift
++++ b/apps/ios/BlotIOS/Features/Settings/PhoneSettingsCopy.swift
+@@ -18,6 +18,7 @@
+         "Usage and subscription": "Использование и подписка", "Agent memory": "Память агентов",
+         "Files and data": "Файлы и данные", "Data and privacy": "Данные и приватность", "Applications": "Приложения", "Updates": "Обновления",
+         "App language and permissions.": "Язык интерфейса и разрешения приложения.",
++        "App language, voice recognition and permissions.": "Язык приложения, голосовой режим, расшифровка речи и разрешения.",
+         "Events your agents notify you about.": "События, о которых сообщают ваши агенты.",
+         "Your name in your personal workspace.": "Ваше имя в личном пространстве.",
+         "Theme, motion and interface density.": "Тема, движение и плотность интерфейса.",
+diff --git a/apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsCatalog.swift b/apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsCatalog.swift
+--- a/apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsCatalog.swift
++++ b/apps/macos/BlotMac/Features/TeamDesign/MacTeamSettingsCatalog.swift
+@@ -71,7 +71,7 @@
+     }
+     func matches(_ query: String) -> Bool {
+         let keywords: String = switch self {
+-        case .general: "Enter ввод подсказки английский русский"
++        case .general: "Enter ввод подсказки английский русский голос звонок распознавание расшифровка voice speech recognition transcription"
+         case .appearance: "светлая тёмная системная анимации уменьшить компактные"
+         case .personalization: "задача обучение шаблон"
+         case .connections: "Gmail Calendar Drive Slack Notion"
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacSettingsGeneralPane.swift b/apps/macos/BlotMac/Features/Workspace/MacSettingsGeneralPane.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacSettingsGeneralPane.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacSettingsGeneralPane.swift
+@@ -28,6 +28,7 @@
+                 MacTeamSettingsToggle(title: "Открывать при входе в систему", detail: "Запускать Blot вместе с macOS.",
+                     isOn: Binding(get: { launchesAtLogin }, set: setLaunchAtLogin))
+             }
++            WorkspaceVoiceSettingsView()
+             MacTeamSettingsSection(title: "Сообщения") {
+                 MacTeamSettingsToggle(title: "Отправлять по Enter", detail: "Если выключено, Enter переносит строку. ⌘Enter всегда отправляет сообщение.", isOn: $sendOnReturn)
+                 Divider()
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -15,6 +15,7 @@
+     var serviceForBrowser: (any WorkspaceCommandService)? { commands }
+     let guestBrowser = WorkspaceBrowserState()
+     let voice: VoiceConversationSession
++    let voicePreferences: WorkspaceVoicePreferences
+     var nativeCommands: (any WorkspaceNativeProviding)? { service as? any WorkspaceNativeProviding }
+     var mcpCommands: (any WorkspaceMCPProviding)? { service as? any WorkspaceMCPProviding }
+     func refreshMCP() async throws {
+@@ -227,8 +228,9 @@
+     }
+     var isPreview: Bool { mode != .live }
+ 
+-    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil, voice: VoiceConversationSession? = nil) {
++    init(mode: Mode = .live, route: WorkspaceRoute? = nil, service: (any WorkspaceService)? = nil, voice: VoiceConversationSession? = nil, voicePreferences: WorkspaceVoicePreferences? = nil) {
+         self.voice = voice ?? VoiceConversationSession()
++        self.voicePreferences = voicePreferences ?? WorkspaceVoicePreferences(defaults: mode == .live ? .standard : nil)
+         self.mode = mode
+         self.isRestoringSession = mode == .live
+         self.inspectorVisible = mode == .preview
+@@ -881,7 +883,8 @@
+     func beginVoiceConversation() {
+         guard mode == .live, !busy, !isReplying, let id = selectedConversationID, route == .chat else { return }
+         let generation = sessionGeneration
+-        voice.begin(conversationID: id, locale: Locale(identifier: language == "ru" ? "ru-RU" : "en-US")) { [weak self] text in
++        voice.begin(conversationID: id, locale: Locale(identifier: language == "ru" ? "ru-RU" : "en-US"),
++            recognitionLocale: voicePreferences.recognitionLocale(interfaceLanguage: language)) { [weak self] text in
+             guard let self, self.sessionGeneration == generation else { throw CancellationError() }
+             return try await self.sendVoiceTurn(text, in: id)
+         }
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/AppleVoiceInput.swift
+@@ -12,6 +12,15 @@
+     private var results: Task<Void, Error>?
+     private var transcript = VoiceTranscript()
+     public init() {}
++    /// Capability lookup only: no microphone permission or model downloads.
++    public static func supportedLocales() async -> [Locale] {
++        var identifiers = Set<String>()
++        if SpeechTranscriber.isAvailable {
++            for locale in await SpeechTranscriber.supportedLocales { identifiers.insert(locale.identifier.replacingOccurrences(of: "_", with: "-")) }
++        }
++        for locale in await DictationTranscriber.supportedLocales { identifiers.insert(locale.identifier.replacingOccurrences(of: "_", with: "-")) }
++        return identifiers.sorted().map(Locale.init(identifier:))
++    }
+     public func prepare(locale: Locale) async throws {
+         self.locale = locale
+         if SpeechTranscriber.isAvailable, let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale) {
+diff --git a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift
+--- a/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift
++++ b/packages/BlotAppleIntegrations/Sources/BlotAppleIntegrations/VoiceConversationSession.swift
+@@ -22,7 +22,7 @@
+     public init(input: any VoiceRecognizing = AppleVoiceInput(), output: any VoiceSpeaking = AppleVoiceOutput()) {
+         self.input = input; self.output = output
+     }
+-    public func begin(conversationID: UUID, locale: Locale, send: @escaping @MainActor (String) async throws -> String) {
++    public func begin(conversationID: UUID, locale: Locale, recognitionLocale: Locale? = nil, send: @escaping @MainActor (String) async throws -> String) {
+         guard !isActive else { return }
+         let previous = operation
+         generation = UUID(); let token = generation
+@@ -33,7 +33,7 @@
+             guard let self, self.valid(token) else { return }
+             do {
+                 try self.output.prepare(locale: locale)
+-                try await self.input.prepare(locale: locale)
++                try await self.input.prepare(locale: recognitionLocale ?? locale)
+                 guard self.valid(token) else { await self.input.stop(); return }
+                 try await self.listen(token)
+             } catch { await self.fail(error, token: token) }
+diff --git a/scripts/verify-voice-chat.swift b/scripts/verify-voice-chat.swift
+--- a/scripts/verify-voice-chat.swift
++++ b/scripts/verify-voice-chat.swift
+@@ -8,14 +8,16 @@
+ @MainActor private final class ChatVoiceInput: VoiceRecognizing {
+     var active = false
+     var phrase = "Привет"
+-    func prepare(locale: Locale) async throws {}
++    var preparedLocale: Locale?
++    func prepare(locale: Locale) async throws { preparedLocale = locale }
+     func start(update: @escaping @MainActor (String) -> Void, activity: @escaping @MainActor () -> Void, failure: @escaping @MainActor (Error) -> Void) async throws { active = true }
+     func finish() async throws -> String { active = false; return phrase }
+     func stop() async { active = false }
+ }
+ @MainActor private final class ChatVoiceOutput: VoiceSpeaking {
+     var spoken: [String] = []
+-    func prepare(locale: Locale) throws {}
++    var preparedLocale: Locale?
++    func prepare(locale: Locale) throws { preparedLocale = locale }
+     func speak(_ text: String) async throws { spoken.append(text) }
+     func stop() {}
+ }
+@@ -42,7 +44,16 @@
+         let local = try LocalWorkspaceService(databaseURL: root.appendingPathComponent("workspace.sqlite"), makeModel: { _ in ChatVoiceModel() })
+         let input = ChatVoiceInput(), output = ChatVoiceOutput()
+         let voice = VoiceConversationSession(input: input, output: output)
+-        let store = WorkspaceStore(mode: .live, service: local, voice: voice)
++        let suite = "dev.blot.voice-preferences-fixture." + UUID().uuidString
++        let defaults = UserDefaults(suiteName: suite)!
++        defer { defaults.removePersistentDomain(forName: suite) }
++        let preferences = WorkspaceVoicePreferences(defaults: defaults)
++        guard preferences.selection == WorkspaceVoicePreferences.followInterface,
++              preferences.recognitionLocale(interfaceLanguage: "ru").identifier == "ru-RU",
++              preferences.recognitionLocale(interfaceLanguage: "en").identifier == "en-US" else { throw VoiceFailure.languageUnavailable }
++        preferences.selection = "fr-FR"
++        guard WorkspaceVoicePreferences(defaults: defaults).selection == "fr-FR" else { throw VoiceFailure.languageUnavailable }
++        let store = WorkspaceStore(mode: .live, service: local, voice: voice, voicePreferences: preferences)
+         await store.loadWorkspace()
+         store.form.agent = WorkspaceAgentForm(name: "Voice fixture", instructions: "Answer briefly")
+         await store.perform(.createAgent)
+@@ -50,10 +61,16 @@
+         await store.newChat(with: agentID)
+         guard let directID = store.selectedConversationID else { throw VoiceFailure.emptyResponse }
+         try await checkTurn(store: store, input: input, output: output, conversationID: directID)
++        guard input.preparedLocale?.identifier == "fr-FR",
++              output.preparedLocale?.identifier == (store.language == "ru" ? "ru-RU" : "en-US") else { throw VoiceFailure.languageUnavailable }
++        print("PASS: persisted recognition language reaches the input adapter without changing playback/interface language")
+         print("PASS: voice → actual WorkspaceStore → durable personal chat → model → speech, typed draft preserved")
++        preferences.selection = "de-DE"
+         let created = await store.createGroup(title: "Voice group fixture", agentIDs: [agentID])
+         guard created, let groupID = store.selectedConversationID else { throw VoiceFailure.emptyResponse }
+         try await checkTurn(store: store, input: input, output: output, conversationID: groupID)
++        guard input.preparedLocale?.identifier == "de-DE" else { throw VoiceFailure.languageUnavailable }
++        print("PASS: changing recognition language applies to the next group call")
+         print("PASS: voice → actual group conversation routing → final reply → one speech output")
+         store.beginVoiceConversation()
+         try await waitUntil { voice.phase == .listening }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceVoicePreferences.swift b/apps/shared/WorkspaceV3/WorkspaceVoicePreferences.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceVoicePreferences.swift
+@@ -0,0 +1,21 @@
++import Foundation
++import Observation
++
++/// Device-local recognition preference, independent from the interface and playback language.
++@MainActor @Observable
++final class WorkspaceVoicePreferences {
++    static let defaultsKey = "blot.v3.voice.recognitionLanguage"
++    static let followInterface = "interface"
++    private let defaults: UserDefaults?
++    var selection: String {
++        didSet { defaults?.set(selection, forKey: Self.defaultsKey) }
++    }
++    init(defaults: UserDefaults? = .standard) {
++        self.defaults = defaults
++        let saved = defaults?.string(forKey: Self.defaultsKey) ?? Self.followInterface
++        selection = saved.isEmpty ? Self.followInterface : saved
++    }
++    func recognitionLocale(interfaceLanguage: String) -> Locale {
++        Locale(identifier: selection == Self.followInterface ? (interfaceLanguage == "ru" ? "ru-RU" : "en-US") : selection)
++    }
++}
+diff --git a/apps/shared/WorkspaceV3/WorkspaceVoiceSettingsView.swift b/apps/shared/WorkspaceV3/WorkspaceVoiceSettingsView.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspaceVoiceSettingsView.swift
+@@ -0,0 +1,62 @@
++import BlotAppleIntegrations
++import SwiftUI
++
++struct WorkspaceVoiceSettingsView: View {
++    @Environment(WorkspaceStore.self) private var store
++    @State private var locales: [Locale] = []
++    @State private var loaded = false
++    private var russian: Bool { store.language == "ru" }
++    private var title: String { russian ? "Голосовой режим" : "Voice mode" }
++    private var detail: String {
++        russian ? "Выберите язык, на котором говорите. Он используется для расшифровки со следующего звонка. Язык интерфейса не изменится." : "Choose the language you speak. It is used for transcription from your next call. The interface language stays the same."
++    }
++    private var displayLocale: Locale { Locale(identifier: store.language) }
++    private func name(_ id: String) -> String { displayLocale.localizedString(forIdentifier: id) ?? id }
++    private var languageIDs: [String] { locales.map { $0.identifier.replacingOccurrences(of: "_", with: "-") } }
++    var body: some View {
++        Group {
++            #if os(macOS)
++            MacTeamSettingsSection(title: title) {
++                MacTeamSettingsRow(localizesTitle: false, title: russian ? "Язык распознавания" : "Recognition language", detail: detail) {
++                    picker
++                }
++                availability
++            }
++            #else
++            PhoneSettingsGroup(title: title) {
++                PhoneSettingsValueRow(title: russian ? "Язык распознавания" : "Recognition language", detail: detail) {
++                    picker
++                }
++                availability.padding(.horizontal, 16).padding(.bottom, loaded && locales.isEmpty ? 12 : 0)
++            }
++            #endif
++        }
++        .task {
++            let available = await AppleVoiceInput.supportedLocales()
++            guard !_Concurrency.Task.isCancelled else { return }
++            locales = available; loaded = true
++        }
++    }
++    private var picker: some View {
++        @Bindable var preferences = store.voicePreferences
++        return Picker(russian ? "Язык распознавания" : "Recognition language", selection: $preferences.selection) {
++            Text(russian ? "Как в приложении" : "Same as app").tag(WorkspaceVoicePreferences.followInterface)
++            if preferences.selection != WorkspaceVoicePreferences.followInterface, !languageIDs.contains(preferences.selection) {
++                Text(name(preferences.selection) + (loaded ? (russian ? " — недоступен" : " — unavailable") : "")).tag(preferences.selection)
++            }
++            ForEach(languageIDs.sorted { name($0).localizedStandardCompare(name($1)) == .orderedAscending }, id: \.self) { id in
++                Text(name(id)).tag(id)
++            }
++        }
++        .pickerStyle(.menu).labelsHidden()
++        .accessibilityLabel(russian ? "Язык распознавания речи" : "Speech recognition language")
++        .accessibilityIdentifier("workspace.voice.recognition-language")
++    }
++    @ViewBuilder private var availability: some View {
++        if !loaded { ProgressView().controlSize(.small).accessibilityLabel(russian ? "Проверка доступных языков" : "Checking available languages") }
++        else if locales.isEmpty {
++            Text(russian ? "На этом устройстве локальное распознавание недоступно." : "On-device speech recognition is unavailable on this device.")
++                .font(.footnote).foregroundStyle(.secondary)
++        }
++    }
++}

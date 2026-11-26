@@ -50,7 +50,7 @@ struct PhoneSearchView: View {
             }.scrollDismissesKeyboard(.interactively)
         }
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
-        .workspaceGlassContainer()
+        .workspaceGlassContainer().environment(\.blotChatChrome, true)
         .accessibilityIdentifier("workspace.search.sheet")
     }
 

@@ -12,7 +12,7 @@ enum AgentRole: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .blot: "Blot"
+        case .blot: "Ori"
         case .productLead: "Product Lead"
         case .projectManager: "Project Manager"
         case .techLead: "Tech Lead"
@@ -43,7 +43,7 @@ enum AgentRole: String, CaseIterable, Identifiable {
 
     var duty: String {
         switch self {
-        case .blot: "Blot · main agent"
+        case .blot: "Ori · main agent"
         case .productLead: "CEO · owns the goal"
         case .projectManager: "plans · assigns tasks"
         case .techLead: "architecture · ADR"
@@ -138,7 +138,7 @@ enum ThreadBlock: Identifiable {
     }
 }
 
-// MARK: - Blot Code
+// MARK: - Ori Code
 
 enum TaskPhase { case working, done, stopped }
 
@@ -160,7 +160,7 @@ struct ProjectItem: Identifiable {
     var tasks: [TaskItem]
 }
 
-// MARK: - Blot Work
+// MARK: - Ori Work
 
 struct TeamMember: Identifiable {
     var id: AgentRole { role }

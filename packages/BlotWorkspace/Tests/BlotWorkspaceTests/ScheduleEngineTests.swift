@@ -215,3 +215,32 @@ func scheduleMissedRunPolicySurvivesRestartAndRepeatedChecks(_ policy: BlotV3.Mi
     let stored = try #require(try await fixture.repository.records(BlotV3.Automation.self, workspaceID: fixture.identity.workspaceID).first)
     #expect(try WorkspaceScheduleCalculator().nextRun(for: stored, after: scheduleInstant("2026-11-01T05:45:00Z")) == scheduleInstant("2026-11-08T06:30:00Z"))
 }
+
+@Test func deletingRoutineStopsFutureRunsAndPreservesExistingTasks() async throws {
+    let fixture = try await ScheduleFixture(); defer { cleanupWorkspaceTestStorage(fixture.directory) }
+    let now = Date()
+    let id = try await fixture.service.save(commandID: UUID(), draft: fixture.draft(), now: now)
+    let taskID = try await fixture.service.runManually(commandID: UUID(), scheduleID: id, now: now)
+    let saved = try #require(try await fixture.repository.record(BlotV3.Automation.self, id: id, workspaceID: fixture.identity.workspaceID))
+    let deletion = UUID()
+    try await fixture.service.delete(commandID: deletion, scheduleID: id, expectedVersion: saved.metadata.version)
+    try await fixture.service.delete(commandID: deletion, scheduleID: id, expectedVersion: saved.metadata.version)
+    #expect(try await fixture.repository.record(BlotV3.Automation.self, id: id, workspaceID: fixture.identity.workspaceID) == nil)
+    #expect(try await fixture.repository.record(BlotV3.Task.self, id: taskID, workspaceID: fixture.identity.workspaceID) != nil)
+    #expect(try await fixture.runs().count == 1)
+    #expect(try await fixture.runner.enqueueDueRuns(now: now.addingTimeInterval(172800)).taskIDs.isEmpty)
+}
+
+@Test func editingRoutineChangesItsNextRunAndRejectsStaleEdits() async throws {
+    let fixture = try await ScheduleFixture(); defer { cleanupWorkspaceTestStorage(fixture.directory) }
+    let now = scheduleInstant("2026-11-18T08:00:00Z")
+    let id = try await fixture.service.save(commandID: UUID(), draft: fixture.draft(), now: now)
+    var changed = fixture.draft(); changed.localTime = "12:30"; changed.goal = "Updated instructions"
+    _ = try await fixture.service.save(commandID: UUID(), scheduleID: id, expectedVersion: 1, draft: changed, now: now)
+    let saved = try #require(try await fixture.repository.record(BlotV3.Automation.self, id: id, workspaceID: fixture.identity.workspaceID))
+    #expect(saved.goal == "Updated instructions")
+    #expect(try WorkspaceScheduleCalculator().nextRun(for: saved, after: now) == scheduleInstant("2026-11-18T12:30:00Z"))
+    await #expect(throws: WorkspaceStorageError.versionConflict) {
+        _ = try await fixture.service.save(commandID: UUID(), scheduleID: id, expectedVersion: 1, draft: changed, now: now)
+    }
+}

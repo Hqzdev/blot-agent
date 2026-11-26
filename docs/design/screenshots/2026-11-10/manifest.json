@@ -1,0 +1,414 @@
+{
+  "capturedOn": "2026-11-10",
+  "timezone": "Asia/Yekaterinburg",
+  "gitCommit": "eb5d71a313bc9b91af775dbc5ae0c0f96b869880",
+  "workingTreeIncludesUncommittedChanges": true,
+  "macos": {
+    "source": "fresh build from current project; live UI on physical Mac",
+    "buildPath": ".build/xcode/Build/Products/Debug/Blot.app",
+    "sourcePaths": [
+      "apps/macos/BlotMac",
+      "apps/shared/WorkspaceV3",
+      "packages/BlotDesign"
+    ],
+    "theme": "dark",
+    "legacyPreviewIncluded": false
+  },
+  "iphone": {
+    "source": "installed Blot 1.0 (2); workspace-preview on physical iPhone 13 Pro Max",
+    "sourcePaths": [
+      "apps/ios/BlotIOS",
+      "apps/shared/WorkspaceV3",
+      "packages/BlotDesign"
+    ],
+    "language": "ru",
+    "theme": "light",
+    "appWasNotReinstalled": true
+  },
+  "screenshots": [
+    {
+      "file": "macos/01-workspace-current.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 496795,
+      "sha256": "505dd82656fa7768d836b66deb7374177db81fb8abfcf64990989c79f2b30ec5"
+    },
+    {
+      "file": "macos/02-settings-general.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 241823,
+      "sha256": "56dcab4ecbbf3dc730f97e74db116d97a04e7044f6eba33f1b7c15a44f5e8d51"
+    },
+    {
+      "file": "macos/03-settings-notifications.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 244941,
+      "sha256": "61fedf949a1846284bda07eb00d673be9610b29005cd437fa900227139fcddae"
+    },
+    {
+      "file": "macos/04-settings-appearance.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 212142,
+      "sha256": "cc3273dcae1ded19542a39b75fb365d8da124e91b71e25217ee7c2d4ba837fe1"
+    },
+    {
+      "file": "macos/05-settings-profile.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 259752,
+      "sha256": "dc1a6922441b3dda78e7a6947467e3f389cb9274f17d60e35dc0fdf2e93a0985"
+    },
+    {
+      "file": "macos/06-settings-personalization.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 245610,
+      "sha256": "d7cfd328f37ddd103b75137292b908f33c60a0b7fe0b82025ae6e577527a5f4f"
+    },
+    {
+      "file": "macos/07-settings-shortcuts.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 229254,
+      "sha256": "afd932a1edc039669fd833967a28fb0b941e8af349b4b0435f2fcf80421993d8"
+    },
+    {
+      "file": "macos/08-settings-usage.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 248562,
+      "sha256": "cd027261e951eec002910465e2dd588e395767d9e5d65b4faafd427718ef2b23"
+    },
+    {
+      "file": "macos/09-settings-memory.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 166658,
+      "sha256": "6f877eb84d7f63cee78f8847a318f4dbe1cf27895da5a43b972bd0ef9a8ef0db"
+    },
+    {
+      "file": "macos/10-settings-storage.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 226396,
+      "sha256": "534f5edff44e95d763ed983da828f70dbfcd73f0c9862b597480d97aa6b3f605"
+    },
+    {
+      "file": "macos/11-settings-privacy.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 213603,
+      "sha256": "15e7c8ad90062f48ce73c26d0747a0ac0a4621fdb76cab61d42fd73c71b3915d"
+    },
+    {
+      "file": "macos/12-settings-devices.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 288236,
+      "sha256": "ce58b33595a4a1b59598f543ad0af81e7649a0475b9f1717241b6197c4eb8d09"
+    },
+    {
+      "file": "macos/13-settings-applications.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 244882,
+      "sha256": "f0ad395237bfae8f3cfd68bd2f87edd7bc6d2d0da0245a00e0d1e2ba809c9c24"
+    },
+    {
+      "file": "macos/14-settings-mcp.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 169947,
+      "sha256": "4d563761f0e605bd9125ca1beed3ab091b6a42f81747319a94392a7adcbedc29"
+    },
+    {
+      "file": "macos/15-settings-updates.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 156784,
+      "sha256": "4a82bccecd0dcbd7f9aba893863e170b04e915a8023be8a0aded52a86186ecb0"
+    },
+    {
+      "file": "macos/16-create-menu.jpg",
+      "platform": "macos",
+      "width": 384,
+      "height": 256,
+      "bytes": 13461,
+      "sha256": "220536a21df7d1224909e5302b846d58b34a3d3a3e74d559c61786fd8e20a22b"
+    },
+    {
+      "file": "macos/17-create-agent.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 220404,
+      "sha256": "087d8afb16734d25370217e1c64a5ee49308edc047bd422aa12dafa2ba3b5630"
+    },
+    {
+      "file": "macos/18-marketplace.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 328904,
+      "sha256": "f1aa3ff49e6c7a52c30a54cacb40a8a22037b19d828fbe44b09431db8f1a54fd"
+    },
+    {
+      "file": "macos/19-template-detail.jpg",
+      "platform": "macos",
+      "width": 1240,
+      "height": 1220,
+      "bytes": 103162,
+      "sha256": "df8e76bb3ef53f06b4834b27b9c2fa20ee36b5494e432ff9577ac45c0f312c9e"
+    },
+    {
+      "file": "macos/20-group-workspace.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 427260,
+      "sha256": "e3e12534e336ac17f60dba0699de91e081c1871b74d0971bc5806a1c07c19e35"
+    },
+    {
+      "file": "macos/21-schedules.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 205960,
+      "sha256": "d139ee9a71b03a77ce3dafa2768c303e2016bb1647eee062e6ac1e599a221c1d"
+    },
+    {
+      "file": "macos/22-create-schedule.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 241636,
+      "sha256": "b7ddbd334feb4815a9955a6292ce9428d349839ff47fd1deace4f0e39057a2a4"
+    },
+    {
+      "file": "macos/23-files.jpg",
+      "platform": "macos",
+      "width": 2048,
+      "height": 1958,
+      "bytes": 199492,
+      "sha256": "97b6033d420aa06d221f5ea213d6f6f21f179ccd3e7ec6201a26a6c93d539186"
+    },
+    {
+      "file": "iphone/01-welcome.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 214026,
+      "sha256": "80e0e721cb43b71d7ba5fe2bd60d18c0f1906eb215e001fcaae9c8446a0af83f"
+    },
+    {
+      "file": "iphone/02-sign-in.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 390897,
+      "sha256": "0b01a92059e09c5a5baed3f2f8e524c085d5a3ef8c5d0d06ddbdb815545d1e5f"
+    },
+    {
+      "file": "iphone/03-create-account.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 422525,
+      "sha256": "78ad5242a55c1a06178607fd0caea757d8d11323e118d99267cae4ea31b05126"
+    },
+    {
+      "file": "iphone/04-verify-email.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 260277,
+      "sha256": "dfa3a5fa197243c595edc7ba266a7b4008d65293c8f93b01a1452ac999feb192"
+    },
+    {
+      "file": "iphone/05-first-agent.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 248038,
+      "sha256": "288f8e30f7144285720ab4e4329c46a3b2be642a75381e05c7f0b7cd3e4e333c"
+    },
+    {
+      "file": "iphone/06-create-agent.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 409114,
+      "sha256": "c7e53538362b6c4ac686480b889221c76933f8df8001c445e500254b294b867c"
+    },
+    {
+      "file": "iphone/07-all-chats.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 239785,
+      "sha256": "4a90cabcff1adca1206b936cbef18a92621ef596506bd9ae6e819bd42d4e2685"
+    },
+    {
+      "file": "iphone/08-search.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 339050,
+      "sha256": "ba6c7eba89699501df2f06dccb3a74c26e4a67acb1d8600689ebbe8bf2acaee5"
+    },
+    {
+      "file": "iphone/09-new-chat.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 374485,
+      "sha256": "24675464cae51f40db6c96743b00be00141f8fabc89ae290be7c270f5b1ee0ac"
+    },
+    {
+      "file": "iphone/10-chat-with-ceo.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 316975,
+      "sha256": "f12b6f6227c724ba10fe639b91c2ef572a8b6ff99ff6262ee47f0d7f353ec5eb"
+    },
+    {
+      "file": "iphone/11-task-running.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 589869,
+      "sha256": "193f576d07109127c110624323ed1b7fcd4df1e0d4902d55eb63a964496e77fa"
+    },
+    {
+      "file": "iphone/12-approval.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 386725,
+      "sha256": "eeb18f6988c6ba0457c9f48557522029e0d1f43fbee2d1a47de53a173b747bc1"
+    },
+    {
+      "file": "iphone/13-result.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 383941,
+      "sha256": "1d975be492c5b799dcea5f42718f6f01a43ad50c95a2d3fd012fb1bbfbe5f69c"
+    },
+    {
+      "file": "iphone/14-file-preview.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 694043,
+      "sha256": "a3e161656ec527db52c9d8d9bfe7a0c3e0fe05011112275c85056e98dfb6cbc4"
+    },
+    {
+      "file": "iphone/15-my-agents.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 362762,
+      "sha256": "88c8b5772dc0900382908df2c6c14e33b2f2ab0150af95765f788438afc94c9c"
+    },
+    {
+      "file": "iphone/16-agent-profile.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 315645,
+      "sha256": "3b870389445513b39d61a08b4d4d3c9318996ab121f9b392b02f4b9d248f31f7"
+    },
+    {
+      "file": "iphone/17-schedules.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 299760,
+      "sha256": "a2d384a7659bb909de7ef51093c600e77d0165870c121027d4b8105ecae19763"
+    },
+    {
+      "file": "iphone/18-new-schedule.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 340212,
+      "sha256": "f6fdd31fefb00ddde831edf846823e069f15acd7e4d21910c2e3acdd9d1b0769"
+    },
+    {
+      "file": "iphone/19-computers.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 409961,
+      "sha256": "c74492be20f509675c60f8019c1d1ba7b1803e2c81a20933c4c0af128b6390af"
+    },
+    {
+      "file": "iphone/20-connect-computer.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 327068,
+      "sha256": "317015761b560165b18092cbb39df0e71a4f86aa1b3ab55a454cddee174a5de0"
+    },
+    {
+      "file": "iphone/21-computer-offline.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 334256,
+      "sha256": "2a96fdeaacf617ffb26d8a5c396bfda30b6970c04b9882793016d644b22b6c1b"
+    },
+    {
+      "file": "iphone/22-connections.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 611297,
+      "sha256": "073cde9f5c733683cfdc3c5891ac58323fe21ab39c46948f46ec46978a0d6e80"
+    },
+    {
+      "file": "iphone/23-settings.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 374054,
+      "sha256": "f260ac299bd11bc5b7d0d1cf342c2feae215cc0d7c996b76d8223745bb397b12"
+    },
+    {
+      "file": "iphone/24-ai-models.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 395022,
+      "sha256": "c215e33a83304acefc22a5628c1c0c9b69ee1b61a4075ce0889ac398ead42de1"
+    },
+    {
+      "file": "iphone/25-browser-view.png",
+      "platform": "iphone",
+      "width": 1284,
+      "height": 2778,
+      "bytes": 235455,
+      "sha256": "fc6c5df03c12f8282c4d442b776c5632ccb1dd48e83221299acb7f6934e58b12"
+    }
+  ]
+}

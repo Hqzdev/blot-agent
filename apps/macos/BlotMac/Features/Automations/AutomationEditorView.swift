@@ -41,7 +41,7 @@ struct AutomationEditorView: View {
         let saving = app.workspace.commands.active.contains(key)
         let retrying = app.workspace.commands.pending[key] != nil && !saving
         KSheet(item == nil ? "New schedule" : "Edit schedule",
-               subtitle: "Blot starts a run on these days. It works while the app and this Mac are running.", width: 640) {
+               subtitle: "Ori starts a run on these days. It works while the app and this Mac are running.", width: 640) {
             VStack(alignment: .leading, spacing: KSpace.lg) {
                 HStack(alignment: .top, spacing: KSpace.md) {
                     KTextField("Name", text: $name, placeholder: "Triage new issues", required: true, autofocus: item == nil)
@@ -72,7 +72,7 @@ struct AutomationEditorView: View {
                     KTextField("Token budget per run", text: $budget, mono: true,
                                error: (Int64(budget) ?? 0) >= 8192 || budget.isEmpty ? nil : "At least 8,192.").frame(width: 180)
                 }
-                KTextArea("Instructions", text: $goal, placeholder: "What should Blot do on every run?", minHeight: 150, maxHeight: 240)
+                KTextArea("Instructions", text: $goal, placeholder: "What should Ori do on every run?", minHeight: 150, maxHeight: 240)
                 HStack(spacing: KSpace.md) {
                     KToggle(isOn: $enabled).accessibilityLabel("Schedule enabled")
                     Text("Run on schedule").font(KFont.ui(13)).foregroundStyle(K.text)

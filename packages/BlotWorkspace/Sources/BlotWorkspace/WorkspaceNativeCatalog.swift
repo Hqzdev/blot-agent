@@ -52,6 +52,7 @@ public struct WorkspaceNativeProject: Codable, Sendable, Identifiable {
 }
 
 struct WorkspaceNativeState: Codable {
+    var exactApprovals: [WorkspaceNativeCommandApproval]?
     var projects: [WorkspaceNativeProject] = []
     var conversations: [String: UUID] = [:]
 }
@@ -60,4 +61,11 @@ public struct NativeUnavailableExecutor: NativeExecuting {
     public init() {}
     public func request(_ request: NativeRequest) async throws -> ChatJSON { throw NativeExecutionError.unavailable }
     public func stopAll() async {}
+}
+
+struct WorkspaceNativeCommandApproval: Codable {
+    let projectID: UUID
+    let projectRevision: UUID
+    let agentID: UUID
+    let argumentDigest: String
 }

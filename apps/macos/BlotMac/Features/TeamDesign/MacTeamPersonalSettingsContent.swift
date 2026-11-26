@@ -129,7 +129,7 @@ struct MacTeamPersonalSettingsContent: View {
             }
         }
         MacTeamSettingsSection(title: "Подписка") {
-            MacTeamSettingsLink(title: "Blot " + presentation.settings.plan,
+            MacTeamSettingsLink(title: "Ori " + presentation.settings.plan,
                                detail: "Текущий демонстрационный план пространства.", actionTitle: "Управлять") {
                 presentation.sheet = .billing
             }
@@ -200,7 +200,7 @@ struct MacTeamPersonalSettingsContent: View {
                               values: ["Отключено", "$10", "$25", "$50"], showsTitle: false)
             }
             Divider()
-            MacTeamSettingsLink(title: "Подписка", detail: "Blot " + presentation.settings.plan, actionTitle: "Управлять") {
+            MacTeamSettingsLink(title: "Подписка", detail: "Ori " + presentation.settings.plan, actionTitle: "Управлять") {
                 presentation.sheet = .billing
             }
         }

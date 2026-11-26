@@ -58,8 +58,9 @@ public struct ChatModelRequest: Codable, Equatable, Sendable {
     public let messages: [ChatModelMessage]
     public let tools: [ChatToolDefinition]
     public let maximumOutputTokens: Int
-    public init(messages: [ChatModelMessage], tools: [ChatToolDefinition] = [], maximumOutputTokens: Int = 2048) {
-        self.messages = messages; self.tools = tools; self.maximumOutputTokens = maximumOutputTokens
+    public let requiredTool: String?
+    public init(messages: [ChatModelMessage], tools: [ChatToolDefinition] = [], maximumOutputTokens: Int = 2048, requiredTool: String? = nil) {
+        self.messages = messages; self.tools = tools; self.maximumOutputTokens = maximumOutputTokens; self.requiredTool = requiredTool
     }
 }
 
@@ -81,7 +82,7 @@ public protocol ChatModel: Sendable {
     func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error>
 }
 public enum ChatModelError: Error, Equatable, Sendable {
-    case invalidConfiguration, http(Int), transport(Int), invalidStream, unsupportedResponse, interrupted, providerFailure
+    case quotaExceeded(Date), invalidConfiguration, http(Int), transport(Int), invalidStream, unsupportedResponse, interrupted, providerFailure
 }
 
 public struct CompatibleChatModel: ChatModel {
@@ -98,6 +99,25 @@ public struct CompatibleChatModel: ChatModel {
             var body = try ModelRequestEncoder.compatible(request, model: model)
             body["stream_options"] = ["include_usage": true]
             return try ModelHTTP.request(endpoint: endpoint, token: apiKey, body: body)
+        }
+    }
+}
+
+public struct BlotAccountChatModel: BlotSelectableModel {
+    private let authorization: any WorkspaceCloudAuthorization
+    private let session = ModelHTTP.makeSession()
+    private var tier: BlotModelTier?
+    public func selecting(_ tier: BlotModelTier) -> any ChatModel {
+        var copy = self
+        copy.tier = tier
+        return copy
+    }
+    public init(authorization: any WorkspaceCloudAuthorization) { self.authorization = authorization }
+    public func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
+        ModelHTTP.stream(session: session, dialect: .gigaChat) {
+            let body = try ModelRequestEncoder.gigaChat(request, model: "gigachat")
+            return try await ModelHTTP.request(endpoint: URL(string: "https://blot-agent.vercel.app/app/api/model/chat")!,
+                token: authorization.accessToken(), body: tier.map { ["tier": $0.rawValue, "completion": body] } ?? body)
         }
     }
 }

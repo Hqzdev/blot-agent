@@ -2,7 +2,7 @@
 //  BlotGeometry.swift
 //  BlotDesign
 //
-//  Blot's shapes from agent.pen («18 · Blot — Pet, Motion & Roles»), redrawn in three tones:
+//  Ori's shapes from agent.pen («18 · Ori — Pet, Motion & Roles»), redrawn in three tones:
 //  ink (the body colour), paper (the eye colour) and a mid-grey accent that reads on both.
 //  All coordinates are in the 120 × 100 body box; accessories may reach outside it.
 //
@@ -16,7 +16,7 @@ nonisolated public enum BlotRole: String, CaseIterable, Identifiable, Sendable {
     public var id: String { rawValue }
 }
 
-/// Minimal SVG path reader for the commands Blot uses: M L H V C Q Z (absolute and relative).
+/// Minimal SVG path reader for the commands Ori uses: M L H V C Q Z (absolute and relative).
 nonisolated enum SVGPath {
     static func parse(_ d: String) -> Path {
         let tokens = tokenize(d)
@@ -108,13 +108,13 @@ nonisolated enum SVGPath {
 nonisolated enum BlotTone: Sendable {
     /// Same as the body.
     case ink
-    /// Same as the eyes — the surface behind Blot.
+    /// Same as the eyes — the surface behind Ori.
     case paper
     /// Mid grey that stays visible on ink and on paper.
     case accent
 }
 
-/// A piece of Blot artwork: filled or stroked path, or a circle.
+/// A piece of Ori artwork: filled or stroked path, or a circle.
 nonisolated struct BlotShape: Sendable {
     nonisolated enum Kind: Sendable { case path(Path), circle(CGPoint, CGFloat), arc(CGPoint, CGFloat, Double, Double) }
     let kind: Kind

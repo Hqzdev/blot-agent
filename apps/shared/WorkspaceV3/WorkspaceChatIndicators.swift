@@ -23,7 +23,7 @@ struct WorkspaceUnreadBadge: View {
             Text(count, format: .number).font(.system(size: size * 0.58, weight: .semibold)).monospacedDigit()
                 .foregroundStyle(.white).padding(.horizontal, 6).frame(minWidth: size, minHeight: size)
                 .background(muted ? WorkspaceStyle.secondary : Color.blue, in: Capsule())
-                .contentTransition(.numericText()).animation(.easeOut(duration: 0.18), value: count)
+                .contentTransition(.numericText()).kAnimation(KMotion.quick, value: count)
                 .accessibilityLabel(store.t("Unread messages") + ": \(count)")
         }
     }

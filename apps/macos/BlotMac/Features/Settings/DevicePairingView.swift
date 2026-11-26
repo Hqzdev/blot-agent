@@ -12,7 +12,7 @@ struct DevicePairingView: View {
     nonisolated private struct PairRequest: Decodable, Sendable, Identifiable { let id: UUID; let version: Int64; let deviceName: String?; let platform: String?; let approved: Bool; let claimed: Bool }
     nonisolated private struct Id: Encodable, Sendable { let id: UUID }
     var body: some View {
-        KSheet("Connect your iPhone", subtitle: "Scan this code in Blot on your iPhone, then approve the device here.", width: 440) {
+        KSheet("Connect your iPhone", subtitle: "Scan this code in Ori on your iPhone, then approve the device here.", width: 440) {
             VStack(spacing: KSpace.md) {
                 Group {
                     if let descriptor, let image = qr(descriptor) {

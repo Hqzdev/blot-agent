@@ -15,7 +15,7 @@ enum MacSettingsCatalog {
     }
 
     static let entries: [Entry] = [
-        .init(route: .settings, glyph: .sliders, keywords: ["Language", "Show Blot in the menu bar", "Default model", "Run tasks on", "Keep working after closing the window"]),
+        .init(route: .settings, glyph: .sliders, keywords: ["Language", "Show Ori in the menu bar", "Default model", "Run tasks on", "Keep working after closing the window"]),
         .init(route: .appearance, glyph: .sun, keywords: ["Theme", "System", "Light", "Dark", "Reduce Motion"]),
         .init(route: .notifications, glyph: .bell, keywords: ["Configure notifications", "Notifications need system permission. Phone reminders will work without a running computer."]),
         .init(route: .account, glyph: .person, keywords: ["Name", "Email", "Profile and security", "Sign-in method", "Delete account", "Sign out everywhere"]),
@@ -37,7 +37,7 @@ enum MacSettingsCatalog {
     static func glyph(forSetting title: String) -> BlotGlyph {
         switch title {
         case "Language": .language
-        case "Show Blot in the menu bar", "Chrome extension": .layout
+        case "Show Ori in the menu bar", "Chrome extension": .layout
         case "Default model", "OpenAI", "Anthropic", "Gemini", "xAI", "Compatible API": .chip
         case "Run tasks on": .computer
         case "Ask before significant actions", "Pause on CAPTCHA, 2FA and sign-in": .shieldCheck

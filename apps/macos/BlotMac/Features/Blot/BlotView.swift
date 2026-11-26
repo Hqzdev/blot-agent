@@ -19,7 +19,7 @@ struct BlotView: View {
     var framing: BlotFraming = .stage
     /// Eyes track the mouse while it is within 240 pt (while resting).
     var followsPointer = false
-    /// nil = automatic: lively for a free-standing Blot of 56 pt and up, subtle otherwise.
+    /// nil = automatic: lively for a free-standing Ori of 56 pt and up, subtle otherwise.
     var behavior: BlotBehavior? = nil
     /// Clicking him plays a reaction (only where he is not inside another button).
     var tappable = false
@@ -49,7 +49,7 @@ struct BlotView: View {
             role: role.blotRole, state: state, size: size, replay: replay, framing: framing,
             behavior: resolvedBehavior, reduceMotion: reduced, intro: intro, tappable: tappable,
             stimulus: stimulus, followsPointer: followsPointer, pointer: { @MainActor in MacPointer.location() },
-            accessibilityLabel: role == .blot ? "Blot · \(state.title)" : "\(role.title) · \(state.title)")
+            accessibilityLabel: role == .blot ? "Ori · \(state.title)" : "\(role.title) · \(state.title)")
     }
 }
 

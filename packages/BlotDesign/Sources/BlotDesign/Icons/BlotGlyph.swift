@@ -1,6 +1,6 @@
 import Foundation
 
-/// Blot's thin, rounded outline icons. Source vectors live in BlotIcons.xcassets.
+/// Ori’s rounded template icons. Source vectors live in BlotIcons.xcassets.
 nonisolated public enum BlotGlyph: String, CaseIterable, Sendable {
     case home, chat, chats, person, people, folder, settings, sliders, search, plus
     case close, closeCircle, chevronLeft, chevronRight, chevronDown, arrowUp, arrowDown
@@ -13,6 +13,15 @@ nonisolated public enum BlotGlyph: String, CaseIterable, Sendable {
 
     case newspaper, inspector, personAdd, memory, skill, routine, card, usage, arrowUpRight, arrowUpLeft, returnKey, chevronsUpDown, speakers, currency, drive, key, hash, note, app, asterisk, outlineTriangle
 
+    case minus, chevronUp, branch, link, phone, phoneEnd, unpin, record, thumbsUp, thumbsDown
+
+    case activity, agent, arrowLeft, arrowRight, atSign, bolt, book, clock
+    case expand, eye, fileAdd, flag, folderAdd, folderOpen, gauge, keyboard
+    case lifebuoy, location, mobile, newWindow, pointer, pullRequest, rotateBack, running
+    case server, shuffle, terminal, tray, wifiOff
+
+    case textCursor
+
     public var assetName: String { "BlotIcon-" + rawValue }
 
     /// Existing model keys resolve to one outline family, including their former filled variants.
@@ -20,124 +29,127 @@ nonisolated public enum BlotGlyph: String, CaseIterable, Sendable {
 
     public static func resolve(symbol: String) -> Self? {
         switch symbol {
-        case "house", "house.fill": return .home
-        case "bubble.left", "bubble.left.fill": return .chat
-        case "bubble.left.and.bubble.right": return .chats
-        case "person", "person.fill", "person.crop.circle": return .person
-        case "person.2", "person.2.fill": return .people
-        case "folder", "folder.fill": return .folder
-        case "gear", "gearshape": return .settings
-        case "sliders", "slider.horizontal.3": return .sliders
-        case "line.3.horizontal.decrease": return .filter
-        case "magnifyingglass": return .search
-        case "plus": return .plus
-        case "xmark": return .close
-        case "xmark.circle", "xmark.circle.fill", "xmark.octagon": return .closeCircle
-        case "chevron.left": return .chevronLeft
-        case "chevron.right": return .chevronRight
-        case "chevron.down": return .chevronDown
-        case "arrow.up": return .arrowUp
-        case "arrow.down": return .arrowDown
-        case "arrow.down.to.line": return .download
-        case "square.and.pencil", "pencil": return .compose
-        case "calendar", "calendar.badge.clock": return .calendar
-        case "calendar.badge.plus": return .calendarAdd
-        case "desktopcomputer": return .computer
-        case "laptopcomputer": return .laptop
-        case "camera": return .camera
-        case "photo": return .image
-        case "paperclip": return .paperclip
-        case "doc", "doc.text", "text.document", "list.bullet.clipboard", "doc.badge.ellipsis": return .document
-        case "doc.richtext": return .pdf
-        case "chevron.left.forwardslash.chevron.right", "terminal": return .code
-        case "tablecells": return .spreadsheet
-        case "rectangle.on.rectangle": return .presentation
+        case "waveform.path.ecg": return .activity
+        case "a.square": return .app
         case "doc.zipper": return .archive
-        case "waveform": return .audio
-        case "film": return .video
-        case "doc.on.doc": return .copy
-        case "arrowshape.turn.up.left": return .reply
         case "archivebox": return .archiveBox
-        case "trash", "trash.fill": return .trash
+        case "arrow.down": return .arrowDown
+        case "arrow.left": return .arrowLeft
+        case "arrow.right", "arrow-right": return .arrowRight
+        case "arrow.up", "arrow-up": return .arrowUp
+        case "arrow.up.left": return .arrowUpLeft
+        case "arrow.up.right", "arrow.up.right.square", "square-arrow-out-up-right": return .arrowUpRight
+        case "at": return .atSign
+        case "waveform": return .audio
+        case "bell.slash": return .bellOff
+        case "zap": return .bolt
+        case "arrow.triangle.branch", "workflow", "git-branch": return .branch
+        case "calendar.badge.clock": return .calendar
+        case "calendar.badge.plus": return .calendarAdd
+        case "creditcard": return .card
+        case "bubble.left", "bubble.left.fill", "message-square": return .chat
+        case "bubble.left.and.bubble.right", "bubble.left.and.bubble.right.fill", "messages-square": return .chats
         case "checkmark": return .check
-        case "checkmark.circle": return .checkCircle
-        case "checkmark.shield": return .shieldCheck
-        case "exclamationmark.shield": return .shield
-        case "exclamationmark.triangle": return .warning
+        case "checkmark.circle", "checkmark.circle.fill", "circle-check": return .checkCircle
+        case "chevron.down", "chevron-down": return .chevronDown
+        case "chevron.left", "chevron-left": return .chevronLeft
+        case "chevron.right", "chevron-right": return .chevronRight
+        case "chevron.up", "chevron-up": return .chevronUp
+        case "chevron.up.chevron.down": return .chevronsUpDown
+        case "cpu": return .chip
+        case "circle.fill": return .circle
+        case "xmark", "x": return .close
+        case "xmark.circle", "xmark.circle.fill", "xmark.octagon": return .closeCircle
+        case "chevron.left.forwardslash.chevron.right": return .code
+        case "square.and.pencil", "pencil", "paintbrush", "square-pen": return .compose
+        case "desktopcomputer", "monitor", "display": return .computer
+        case "doc.on.doc": return .copy
+        case "dollarsign.circle.fill": return .currency
+        case "doc", "doc.text", "text.document", "list.bullet.clipboard", "doc.badge.ellipsis", "doc.plaintext", "doc.text.magnifyingglass", "file-text": return .document
+        case "arrow.down.to.line", "arrow.down.circle", "square.and.arrow.down": return .download
+        case "externaldrive.fill", "internaldrive": return .drive
+        case "envelope", "envelope.fill", "mail": return .email
+        case "maximize-2", "arrow.up.left.and.arrow.down.right": return .expand
+        case "doc.badge.plus": return .fileAdd
+        case "line.3.horizontal.decrease", "list-filter": return .filter
+        case "folder.fill": return .folder
+        case "folder.badge.plus": return .folderAdd
+        case "folder-open": return .folderOpen
+        case "gauge.with.dots.needle.33percent": return .gauge
+        case "square.grid.2x2", "grid-2x2": return .grid
+        case "number": return .hash
+        case "house", "house.fill": return .home
+        case "photo", "photo.badge.plus", "photo.on.rectangle", "photo.on.rectangle.angled": return .image
         case "info.circle": return .info
-        case "questionmark.circle": return .question
-        case "circle": return .circle
-        case "circle.lefthalf.filled", "gauge": return .progress
-        case "arrow.clockwise": return .refresh
-        case "play": return .play
-        case "pause": return .pause
-        case "stop", "stop.fill", "square": return .stop
+        case "sidebar.right", "panel-right": return .inspector
+        case "key.fill": return .key
+        case "character.bubble", "rectangle.bottomthird.inset.filled": return .language
+        case "laptopcomputer": return .laptop
+        case "rectangle.split.2x1", "sidebar.left", "panel-left": return .layout
+        case "lifepreserver": return .lifebuoy
+        case "list.bullet", "checklist", "list.bullet.rectangle": return .list
+        case "mappin.and.ellipse": return .location
+        case "rectangle.portrait.and.arrow.right", "log-out": return .logout
+        case "brain": return .memory
+        case "mic", "mic.fill": return .microphone
+        case "mic.slash", "mic.slash.fill": return .microphoneOff
+        case "minus.circle": return .minus
+        case "iphone": return .mobile
         case "ellipsis": return .more
         case "ellipsis.vertical": return .moreVertical
-        case "star.fill": return .star
-        case "pin": return .pin
-        case "bell": return .bell
-        case "bell.slash": return .bellOff
-        case "sun.max": return .sun
-        case "moon": return .moon
-        case "globe": return .globe
-        case "character.bubble", "rectangle.bottomthird.inset.filled": return .language
-        case "list.bullet": return .list
-        case "square.grid.2x2": return .grid
-        case "rectangle.split.2x1", "sidebar.left": return .layout
-        case "powerplug": return .plug
-        case "puzzlepiece.extension": return .puzzle
-        case "cpu": return .chip
-        case "sparkle": return .sparkle
-        case "square.and.arrow.up": return .share
-        case "paperplane": return .send
-        case "envelope": return .email
-        case "mic", "mic.fill": return .microphone
-        case "mic.slash": return .microphoneOff
-        case "rectangle.portrait.and.arrow.right": return .logout
-        case "lock": return .lock
-        case "network": return .network
-        case "qrcode": return .qr
-        case "qrcode.viewfinder", "viewfinder": return .scan
-        case "heart": return .heart
-        case "bookmark": return .bookmark
-        case "paintbrush": return .compose
-        case "sidebar.right": return .inspector
-        case "person.badge.plus": return .personAdd
-        case "person.3", "person.3.fill": return .people
-        case "person.crop.circle.fill": return .person
-        case "brain": return .memory
-        case "shippingbox": return .skill
-        case "clock.arrow.circlepath", "arrow.clockwise.circle": return .routine
-        case "creditcard": return .card
-        case "chart.bar": return .usage
-        case "arrow.up.right": return .arrowUpRight
-        case "arrow.up.left": return .arrowUpLeft
-        case "return": return .returnKey
-        case "chevron.up.chevron.down": return .chevronsUpDown
-        case "hifispeaker.2": return .speakers
-        case "dollarsign.circle.fill": return .currency
-        case "externaldrive.fill": return .drive
-        case "key.fill", "key": return .key
-        case "number": return .hash
-        case "n.square.fill": return .note
-        case "a.square": return .app
-        case "asterisk": return .asterisk
-        case "triangle": return .outlineTriangle
-        case "envelope.fill": return .email
-        case "bubble.left.and.bubble.right.fill": return .chats
-        case "checkmark.circle.fill": return .checkCircle
-        case "pause.circle": return .pause
-        case "arrow.down.circle": return .download
         case "point.3.connected.trianglepath.dotted": return .network
-        case "photo.badge.plus": return .image
-        case "checklist": return .list
-        case "exclamationmark.circle": return .warning
-        case "lock.shield": return .shieldCheck
-        case "star": return .star
-        case "doc.plaintext", "doc.text.magnifyingglass": return .document
-        case "newspaper", "newspaper.fill": return .newspaper
-        default: return nil
+        case "macwindow.on.rectangle": return .newWindow
+        case "newspaper.fill": return .newspaper
+        case "n.square.fill": return .note
+        case "triangle": return .outlineTriangle
+        case "pause.circle", "pause.fill": return .pause
+        case "doc.richtext": return .pdf
+        case "person.2", "person.2.fill", "person.3", "person.3.fill", "users": return .people
+        case "person.fill", "person.crop.circle", "person.crop.circle.fill", "person.crop.circle.badge.checkmark", "user": return .person
+        case "person.badge.plus", "person.crop.circle.badge.plus", "user-plus": return .personAdd
+        case "phone.fill": return .phone
+        case "phone.down.fill": return .phoneEnd
+        case "pin.fill": return .pin
+        case "powerplug", "app.connected.to.app.below.fill": return .plug
+        case "cursorarrow", "mouse-pointer-click", "cursorarrow.click": return .pointer
+        case "rectangle.on.rectangle": return .presentation
+        case "circle.lefthalf.filled": return .progress
+        case "arrow.triangle.pull", "git-pull-request": return .pullRequest
+        case "puzzlepiece.extension": return .puzzle
+        case "qrcode": return .qr
+        case "questionmark.circle": return .question
+        case "record.circle", "smallcircle.filled.circle", "circle-dot": return .record
+        case "arrow.clockwise": return .refresh
+        case "arrow.uturn.backward", "arrowshape.turn.up.left": return .reply
+        case "return": return .returnKey
+        case "rotate-ccw", "arrow.counterclockwise": return .rotateBack
+        case "clock.arrow.circlepath", "arrow.clockwise.circle": return .routine
+        case "circle.dotted": return .running
+        case "qrcode.viewfinder", "viewfinder", "text.viewfinder": return .scan
+        case "magnifyingglass": return .search
+        case "paperplane": return .send
+        case "gear", "gearshape": return .settings
+        case "square.and.arrow.up": return .share
+        case "exclamationmark.shield", "hand.raised", "xmark.shield", "shield-alert": return .shield
+        case "globe.badge.shield.half.filled", "checkmark.shield", "lock.shield", "shield-check": return .shieldCheck
+        case "shippingbox", "cube": return .skill
+        case "slider.horizontal.3", "sliders-horizontal": return .sliders
+        case "hifispeaker.2": return .speakers
+        case "tablecells": return .spreadsheet
+        case "star.fill": return .star
+        case "stop.fill", "square", "stop.circle": return .stop
+        case "sun.max": return .sun
+        case "hand.thumbsdown", "hand.thumbsdown.fill": return .thumbsDown
+        case "hand.thumbsup", "hand.thumbsup.fill": return .thumbsUp
+        case "trash.fill", "trash-2": return .trash
+        case "pin.slash": return .unpin
+        case "chart.bar", "chart-bar": return .usage
+        case "film": return .video
+        case "exclamationmark.triangle", "exclamationmark.circle", "exclamationmark.circle.fill", "circle-alert": return .warning
+        case "wifi.slash": return .wifiOff
+        case "play.fill": return .play
+        case "text.cursor": return .textCursor
+        default: return Self(rawValue: symbol)
         }
     }
 }

@@ -176,6 +176,60 @@ final class CloudServiceTest {
   }
 
   @Test
+  void webBrowserAuthorizationUsesTheConfiguredOriginAndExistingOwner() throws Exception {
+    accounts.register(EMAIL, PASSWORD, "Tester");
+    var verified = accounts.verify(EMAIL, mail.code);
+    var browser =
+        new CloudBrowserAuthorization(db, tokens, sessions, clock, "https://web.blot.example");
+    String verifier = "w".repeat(43);
+    String challenge =
+        Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(
+                MessageDigest.getInstance("SHA-256")
+                    .digest(verifier.getBytes(StandardCharsets.US_ASCII)));
+    String callback = "https://web.blot.example/api/auth/blot/callback";
+    failCode(
+        "browser_authorization_invalid",
+        () ->
+            browser.issue(
+                actor(verified),
+                "blot-web",
+                "https://attacker.example/api/auth/blot/callback",
+                challenge));
+    var code = browser.issue(actor(verified), "blot-web", callback, challenge);
+    var web = browser.exchange(code.code(), verifier, "blot-web", callback);
+    assertEquals(verified.ownerID(), web.ownerID());
+    assertNotEquals(verified.sessionID(), web.sessionID());
+    failCode(
+        "browser_authorization_invalid",
+        () -> browser.exchange(code.code(), verifier, "blot-web", callback));
+    var disabled = new CloudBrowserAuthorization(db, tokens, sessions, clock);
+    failCode(
+        "browser_authorization_invalid",
+        () -> disabled.issue(actor(verified), "blot-web", callback, challenge));
+    var mounted =
+        new CloudBrowserAuthorization(db, tokens, sessions, clock, "https://blot.example/app");
+    String mountedCallback = "https://blot.example/app/api/auth/blot/callback";
+    var mountedCode = mounted.issue(actor(verified), "blot-web", mountedCallback, challenge);
+    assertEquals(
+        verified.ownerID(),
+        mounted.exchange(mountedCode.code(), verifier, "blot-web", mountedCallback).ownerID());
+    failCode(
+        "browser_authorization_invalid",
+        () ->
+            mounted.issue(
+                actor(verified),
+                "blot-web",
+                "https://blot.example/api/auth/blot/callback",
+                challenge));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CloudBrowserAuthorization(db, tokens, sessions, clock, "http://web.blot.example"));
+  }
+
+  @Test
   void emailVerificationRotatingSessionsAndDeviceProofAreRequired() throws Exception {
     accounts.register(EMAIL, PASSWORD, "Tester");
     failCode("email_unverified", () -> accounts.login(EMAIL, PASSWORD));
@@ -334,6 +388,13 @@ final class CloudServiceTest {
     // Reopen an existing v1 database without replacing its account, device or relay data.
     db.transact(
         tx -> {
+          for (String table :
+              java.util.List.of(
+                  "published_content",
+                  "collaboration_bots",
+                  "collaboration_invites",
+                  "collaboration_members",
+                  "collaboration_teams")) tx.execute("DROP TABLE " + table);
           tx.execute("DROP TABLE snapshot_requests");
           tx.execute("DROP TABLE browser_authorizations");
           tx.execute("DROP INDEX accounts_google_subject");

@@ -31,7 +31,7 @@ struct PhoneChatView: View {
                         .listRowSeparator(.hidden).listRowBackground(Color.clear)
                 } else if !loading && messages.isEmpty {
                     BlotEmptyState(symbol: "bubble.left.and.bubble.right", title: "Start a conversation",
-                                   message: "Send a message to Blot using the field below.")
+                                   message: "Send a message to Ori using the field below.")
                         .listRowSeparator(.hidden).listRowBackground(Color.clear)
                 }
                 ForEach(messages.sorted { $0.data.ordinal < $1.data.ordinal }, id: \.id) { row in
@@ -69,7 +69,7 @@ struct PhoneChatView: View {
                 .padding(.leading, BlotSpace.s10)
             if let sendError { PhoneErrorText(sendError) }
             HStack(alignment: .bottom, spacing: BlotSpace.s8) {
-                TextField("Message Blot", text: $text, axis: .vertical)
+                TextField("Message Ori", text: $text, axis: .vertical)
                     .blotFont(.body)
                     .foregroundStyle(BlotColor.text)
                     .lineLimit(1...6)
@@ -78,7 +78,7 @@ struct PhoneChatView: View {
                     .frame(minHeight: BlotLayout.minimumTapTarget)
                     .focused($composing)
                     .disabled(sending || pending != nil)
-                    .accessibilityLabel("Message Blot")
+                    .accessibilityLabel("Message Ori")
                 BlotSendButton(phase: sending ? .sending : pending == nil ? .ready : .retry,
                                size: BlotLayout.minimumTapTarget - 8, action: send)
                     .frame(width: BlotLayout.minimumTapTarget, height: BlotLayout.minimumTapTarget)
@@ -135,7 +135,7 @@ struct PhoneChatView: View {
     }
 }
 
-/// 40 pt Blot above the composer. Reacts to typing, sending and a failed send; idles otherwise.
+/// 40 pt Ori above the composer. Reacts to typing, sending and a failed send; idles otherwise.
 private struct PhoneComposerBlot: View {
     let reactions: BlotReactionController
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -162,7 +162,7 @@ private struct PhoneMessageRow: View {
     private var author: String {
         switch role.uppercased() {
         case "USER": "You"
-        case "ASSISTANT": "Blot"
+        case "ASSISTANT": "Ori"
         case "SYSTEM": "System"
         case "TOOL": "Tool"
         default: phoneStatusLabel(role)

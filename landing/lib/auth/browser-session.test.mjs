@@ -2,7 +2,28 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { randomBytes } from "node:crypto";
 import { seal, unseal, nativeAttempt, appCallback, attemptQuery } from "./browser-session.mjs";
+import { websiteLoginDestination } from "./browser-clients.mjs";
 process.env.BLOT_WEB_SESSION_SECRET = randomBytes(32).toString("base64url");
+
+test("standalone website login opens the web while native and PKCE attempts stay intact", () => {
+  const previous = process.env.BLOT_WEB_APP_URL;
+  try {
+    process.env.BLOT_WEB_APP_URL = "https://web.blot.example";
+    assert.equal(websiteLoginDestination({}), "https://web.blot.example/api/auth/blot/start");
+    assert.equal(websiteLoginDestination({ intent: "register" }), "https://web.blot.example/api/auth/blot/start?intent=register");
+    assert.equal(websiteLoginDestination({ auth_error: "expired" }), null);
+    assert.equal(websiteLoginDestination(Object.fromEntries(query())), null);
+    assert.equal(websiteLoginDestination({ redirect_uri: "https://evil.example" }), null);
+    process.env.BLOT_WEB_APP_URL = "https://blot.example/app";
+    assert.equal(websiteLoginDestination({}), "https://blot.example/app/api/auth/blot/start");
+    const web = new URLSearchParams({ response_type: "code", client_id: "blot-web", redirect_uri: "https://blot.example/app/api/auth/blot/callback", state: "s".repeat(43), code_challenge: "c".repeat(43), code_challenge_method: "S256", intent: "login" });
+    assert.equal(nativeAttempt(web).redirectURI, "https://blot.example/app/api/auth/blot/callback");
+    delete process.env.BLOT_WEB_APP_URL;
+    assert.equal(websiteLoginDestination({}), null);
+  } finally {
+    if (previous === undefined) delete process.env.BLOT_WEB_APP_URL; else process.env.BLOT_WEB_APP_URL = previous;
+  }
+});
 
 function query(platform = "ios") {
   return new URLSearchParams({ response_type: "code", client_id: "blot-" + platform, redirect_uri: `blot-agent-${platform}:/oauth/account`,
@@ -34,5 +55,24 @@ test("redirect injection, duplicate state and non-PKCE attempts are rejected", (
   for (const mutation of [q => q.set("redirect_uri", "https://attacker.example"), q => q.append("state", "other"),
     q => q.set("code_challenge_method", "plain"), q => q.append("access_token", "value"), q => q.set("client_id", "blot-macos")]) {
     const changed = query(); mutation(changed); assert.throws(() => nativeAttempt(changed));
+  }
+});
+
+test("web handoff accepts only the configured application callback", () => {
+  const previous = process.env.BLOT_WEB_APP_URL;
+  try {
+    process.env.BLOT_WEB_APP_URL = "https://web.blot.example";
+    const attempt = query(); attempt.set("client_id", "blot-web");
+    attempt.set("redirect_uri", "https://web.blot.example/api/auth/blot/callback");
+    assert.equal(nativeAttempt(attempt).clientID, "blot-web");
+    const callback = new URL(appCallback(nativeAttempt(attempt), "c".repeat(43)));
+    assert.equal(callback.origin, "https://web.blot.example");
+    attempt.set("redirect_uri", "https://attacker.example/api/auth/blot/callback");
+    assert.throws(() => nativeAttempt(attempt));
+    delete process.env.BLOT_WEB_APP_URL;
+    attempt.set("redirect_uri", "https://web.blot.example/api/auth/blot/callback");
+    assert.throws(() => nativeAttempt(attempt));
+  } finally {
+    if (previous === undefined) delete process.env.BLOT_WEB_APP_URL; else process.env.BLOT_WEB_APP_URL = previous;
   }
 });

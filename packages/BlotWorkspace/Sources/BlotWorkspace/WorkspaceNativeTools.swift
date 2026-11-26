@@ -41,6 +41,10 @@ public struct WorkspaceNativeTools: WorkspaceToolExecuting {
         let processID = WorkspaceLogicalID.make(kind: "NativeProcess", workspaceID: identity.workspaceID, parts: [context.sourceMessageID.uuidString, call.id])
         let command = try await service.command(project: project, arguments: operation == .start ? call.arguments : .object([:]), id: processID, git: call.name.hasPrefix("git_"))
         if !WorkspaceNativeCatalog.writes(call.name) {
+            if try await WorkspaceRuleService(repository: repository, identity: identity).requiresReview(toolID: call.name,
+                resource: "project:" + project.id.uuidString, agentID: context.agentID, default: false) {
+                guard try await confirm(call.name, String(decoding: WorkspaceCoding.encode(call.arguments), as: UTF8.self)) else { throw NativeExecutionError.accessDenied }
+            }
             let result = try await service.perform(.init(operation, command: command, parameters: parameters))
             if operation == .gitPrepareCommit || operation == .gitPreparePush { await service.rememberPreparation(result, project: project.id, source: context.sourceMessageID) }
             return await service.redact(result, project: project)
@@ -80,9 +84,21 @@ public struct WorkspaceNativeTools: WorkspaceToolExecuting {
             parametersJSON: parametersJSON, consequences: consequences), expiresAt: Date().addingTimeInterval(600))
         guard let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) else { throw NativeExecutionError.unknown }
         let agentProfile = try await repository.record(BlotV3.AgentProfile.self, id: agent, workspaceID: identity.workspaceID)
-        let trusted = operation != .gitPush && agentProfile?.accessMode == .trusted_scope && project.trustedClasses.contains(WorkspaceNativeCatalog.operationClass(call.name))
+        let exactApproval = operation == .start ? try await service.hasCommandApproval(project: project, context: context, arguments: call.arguments) : false
+        var rememberCommand = false
+        let trusted = exactApproval || operation != .gitPush && agentProfile?.accessMode == .trusted_scope && project.trustedClasses.contains(WorkspaceNativeCatalog.operationClass(call.name))
+        let needsReview = try await WorkspaceRuleService(repository: repository, identity: identity).requiresReview(toolID: call.name,
+            resource: "project:" + project.id.uuidString, agentID: context.agentID, default: !trusted, mandatory: operation == .gitPush)
         do {
-            if !trusted { guard try await confirm("\(project.name) · \(call.name)", details) else { throw NativeExecutionError.accessDenied } }
+            if needsReview {
+                if context.inlineCards {
+                    let response = try await WorkspaceConversationCardService(repository: repository, identity: identity).review(action: action, context: context,
+                        content: .command(.init(title: project.name + " · " + call.name, details: details, command: action.parameters,
+                            ruleScope: operation == .start ? project.name : nil)))
+                    guard ["allow", "allow_rule"].contains(response.action) else { throw NativeExecutionError.accessDenied }
+                    rememberCommand = response.action == "allow_rule"
+                } else { guard try await confirm("\(project.name) · \(call.name)", details) else { throw NativeExecutionError.accessDenied } }
+            }
             let current = try await service.authorize(call.name, context: context)
             guard current.id == project.id, current.revision == project.revision else { throw NativeExecutionError.changed }
             try _Concurrency.Task.checkCancellation()
@@ -92,6 +108,7 @@ public struct WorkspaceNativeTools: WorkspaceToolExecuting {
             throw error
         }
         _ = try await permission.approve(commandID: UUID(), actionID: actionID, expectedVersion: action.metadata.version, digest: action.digest)
+        if rememberCommand { try await service.rememberCommandApproval(project: project, context: context, arguments: call.arguments) }
         let outcome = try await permission.begin(actionID: actionID, digest: action.digest)
         guard outcome.applied else { throw NativeExecutionError.unknown }
         do {

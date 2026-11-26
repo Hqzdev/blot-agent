@@ -21,7 +21,7 @@ export default async function DocumentPage({ params }) {
   const { id } = await params;
   const document = getDocument(id);
   if (!document) notFound();
-  const content = await readFile(join(process.cwd(), "..", "docs", document.path.slice("docs/".length)), "utf8");
+  const content = await readFile(join(process.cwd(), "public", "project-docs", document.path.slice("docs/".length)), "utf8");
   const title = content.split("\n")[0].replace(/^# /, "");
   return <main className="ws-doc-page" lang="ru" id="main-content" tabIndex={-1}>
     <Link className="ws-doc-back" href={`/workspace#${document.completed ? "completed" : "tasks"}`}><ArrowLeft size={14} />{document.completed ? "К выполненным задачам" : "К рабочей среде"}</Link>

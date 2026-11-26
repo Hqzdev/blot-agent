@@ -2,7 +2,7 @@
 //  BlotState.swift
 //  BlotDesign
 //
-//  Blot's moods, the pose of a single frame and the keyframed motion that produces it.
+//  Ori's moods, the pose of a single frame and the keyframed motion that produces it.
 //  Pure values: no app state, no platform types. Coordinates are in the 120 × 100 body box.
 //
 
@@ -52,7 +52,7 @@ nonisolated public enum BlotState: String, CaseIterable, Identifiable, Sendable 
         }
     }
 
-    /// Big, eye-catching beats — the director spaces them out so Blot never looks frantic.
+    /// Big, eye-catching beats — the director spaces them out so Ori never looks frantic.
     public var isBig: Bool { [.happy, .jump, .bounce, .wiggle, .peekaboo].contains(self) }
 
     /// States that describe a problem or a request; reactions never cover them.
@@ -67,7 +67,7 @@ nonisolated public struct BlotPose: Sendable, Equatable {
     public var scaleY = 1.0
     /// Lean around the bottom centre, degrees (positive = clockwise).
     public var tilt = 0.0
-    /// Where Blot looks: (1, 0) right — the default from the icon — (0, -1) up, (0, 0) blank stare.
+    /// Where Ori looks: (1, 0) right — the default from the icon — (0, -1) up, (0, 0) blank stare.
     public var gazeX = 1.0
     public var gazeY = 0.0
     public var openL = 1.0

@@ -90,7 +90,7 @@ struct TeamLivePanel: View {
                                     HStack(spacing: 6) {
                                         Text(AgentRole.displayName(session.data.text("role")))
                                             .font(KFont.label()).foregroundStyle(K.text)
-                                        Image(systemName: status.tone.icon).font(.system(size: 10, weight: .semibold))
+                                        BlotIcon(symbol: status.tone.icon, size: 10)
                                             .foregroundStyle(status.tone.color).accessibilityHidden(true)
                                         Text(status.label.lowercased()).font(KFont.mono(11)).foregroundStyle(K.text2)
                                     }

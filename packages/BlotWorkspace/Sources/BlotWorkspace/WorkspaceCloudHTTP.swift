@@ -37,8 +37,19 @@ public actor WorkspaceCloudHTTP {
         catch { throw WorkspaceCloudError.invalidResponse }
     }
 
-    public func empty(method: String, path: [String], body: Data? = nil, accessToken: String? = nil) async throws {
-        _ = try await perform(method: method, path: path, query: [:], body: body, accessToken: accessToken)
+    public func empty(method: String, path: [String], query: [String: String] = [:], body: Data? = nil, accessToken: String? = nil) async throws {
+        _ = try await perform(method: method, path: path, query: query, body: body, accessToken: accessToken)
+    }
+
+    public func releaseMetadata(platform: String, channel: String) async throws -> Data? {
+        guard ["macos", "ios"].contains(platform), ["stable", "beta"].contains(channel) else { throw WorkspaceCloudError.invalidConfiguration }
+        let data = try await perform(method: "GET", path: ["v1", "releases", "latest"], query: ["platform": platform, "channel": channel], body: nil, accessToken: nil)
+        return data.isEmpty ? nil : data
+    }
+
+    public func publicationURL(_ token: String) throws -> URL {
+        guard token.range(of: #"^[A-Za-z0-9_-]{43}$"#, options: .regularExpression) != nil else { throw WorkspaceCloudError.invalidConfiguration }
+        return origin.appendingPathComponent("v1/collaboration/share").appendingPathComponent(token)
     }
 
     private func perform(method: String, path: [String], query: [String: String], body: Data?, accessToken: String?) async throws -> Data {

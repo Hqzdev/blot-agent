@@ -8,6 +8,7 @@ struct PhoneSettingsProfileView: View {
         let activity = PhoneSettingsActivity(snapshot: store.snapshot)
         PhoneSettingsPage {
             PhoneProfileIdentitySection()
+            WorkspaceBillingView()
             PhoneSettingsGroup(title: "Activity") {
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 130), spacing: 16)], spacing: 24) {
                     metric("Total tokens", value: activity.totalTokens)
@@ -20,7 +21,7 @@ struct PhoneSettingsProfileView: View {
                 if store.snapshot.agents.isEmpty {
                     VStack(spacing: 14) {
                         Text(store.settingsText("Add the first specialist to your team")).font(.subheadline).foregroundStyle(.secondary)
-                        Button(store.t("Create agent")) { store.beginAgentCreation() }.buttonStyle(.bordered)
+                        Button(store.t("Create agent")) { store.beginAgentCreation() }.buttonStyle(WorkspaceButtonStyle(.secondary))
                     }.frame(maxWidth: .infinity).padding(20)
                 } else {
                     ForEach(Array(store.snapshot.agents.enumerated()), id: \.element.metadata.id) { index, agent in

@@ -9,14 +9,14 @@ struct PersonalSettingsView: View {
         switch settings.section {
         case .appearance:
             SettingsGroup(title: "Theme") {
-                SettingsRow(title: "Appearance", detail: "System follows your Mac's appearance, including automatic switching. Light and Dark override it for Blot only.") {
+                SettingsRow(title: "Appearance", detail: "System follows your Mac's appearance, including automatic switching. Light and Dark override it for Ori only.") {
                     KSegmented(options: ThemePreference.allCases,
                                selection: Binding(get: { app.theme }, set: { app.chooseTheme($0) }),
                                label: { $0.title }, title: "Appearance")
                 }
             }
             SettingsGroup(title: "Interface") {
-                SettingsRow(title: "Text size", detail: "Scales text across Blot. Larger sizes also follow the macOS text size.") {
+                SettingsRow(title: "Text size", detail: "Scales text across Ori. Larger sizes also follow the macOS text size.") {
                     SettingsChoice(title: "Text size", value: $settings.fontSize, options: TextSizePreference.allCases.map(\.rawValue))
                 }
                 SettingsDivider()
@@ -49,7 +49,7 @@ struct PersonalSettingsView: View {
                 SettingsDivider()
                 shortcut("Settings", "⌘ ,")
                 SettingsDivider()
-                shortcut("Blot Code · Task", "⌘ 1")
+                shortcut("Ori Code · Task", "⌘ 1")
                 SettingsDivider()
                 shortcut("Motes · Team chat", "⌘ 2")
                 SettingsDivider()

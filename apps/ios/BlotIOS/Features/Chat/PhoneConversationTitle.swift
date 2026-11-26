@@ -32,7 +32,7 @@ struct PhoneConversationTitle: View {
                     BlotIcon(.chevronDown, size: 12)
                 }
             }
-        }.buttonStyle(.plain)
+        }.buttonStyle(BlotHitTargetButtonStyle())
             .accessibilityLabel(identity.title)
             .accessibilityHint(store.t(identity.isGroup ? "Group members" : "Choose an agent"))
             .accessibilityIdentifier(identity.isGroup ? "workspace.chat.group.title" : "workspace.chat.agent.title")

@@ -37,6 +37,28 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
     var workspaceCommands: (any WorkspaceCommandService)? { local }
     var isAuthenticated: Bool { local != nil }
 
+    func billingClient() -> WorkspaceBillingClient { .init(authorization: session, credentials: credentials) }
+
+    func releaseService() -> WorkspaceReleaseService { .init(http: http) }
+
+    func collaborationClient() -> WorkspaceCollaborationClient { .init(http: http, authorization: session) }
+    func teamBotStatus() async -> String? { await local?.teamBotEngine?.status() }
+
+    func refreshSubscriptionCard(_ id: UUID) async throws {
+        guard let local else { throw WorkspaceServiceError.unavailable }
+        let identity = try await local.context()
+        guard let card = try await local.repository.record(BlotV3.ConversationCard.self, id: id, workspaceID: identity.workspaceID),
+              card.metadata.ownerId == identity.ownerID, card.kind == "subscription",
+              let url = URL(string: "https://blot-agent.vercel.app/app/api/billing/card-status?cardId=" + id.uuidString) else { throw WorkspaceServiceError.unavailable }
+        var request = URLRequest(url: url); request.timeoutInterval = 20
+        request.setValue("Bearer " + (try await session.accessToken()), forHTTPHeaderField: "Authorization")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let response = response as? HTTPURLResponse else { throw WorkspaceServiceError.unavailable }
+        if response.statusCode == 404 { return }
+        guard response.statusCode == 200, data.count <= 4096 else { throw WorkspaceServiceError.unavailable }
+        let payment = try JSONDecoder().decode(WorkspaceSubscriptionPayment.self, from: data)
+        try await WorkspaceConversationCardService(repository: local.repository, identity: identity).applyVerifiedPayment(cardID: id, payment: payment)
+    }
     init(installation: AppleInstallationConfiguration, directory: URL) throws {
         self.installation = installation
         guard let origin = installation.accountServiceURL else { throw WorkspaceCloudError.invalidConfiguration }
@@ -47,9 +69,14 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
         session = WorkspaceCloudSession(http: http, credentials: credentials, credentialName: "account-session")
     }
     func load() async throws -> WorkspaceSnapshot? {
+        #if DEBUG && os(iOS)
+        if let invitation = ProcessInfo.processInfo.environment["BLOT_TEST_INVITATION"], invitation.utf8.count == 43 {
+            try await credentials.write(Data(invitation.utf8), name: "billing-pilot-invitation")
+        }
+        #endif
         if !defaultWorkspacePrepared {
             do { try await LocalWorkspaceService.prepareDefaultWorkspaceRoot(); defaultWorkspacePrepared = true }
-            catch { authenticationLog.error("Could not prepare the local Blot working folder") }
+            catch { authenticationLog.error("Could not prepare the local Ori working folder") }
         }
         try await WorkspaceAccountErasure(root: directory, credentials: credentials).resume { owner in
             try await MainActor.run { try WorkspaceModelCredentialStore.removeAccount(owner) }; await WorkspaceBrowserProfile.erase(self.directory.appendingPathComponent(owner.uuidString)); try await LocalWorkspaceService.eraseSessionFiles(ownerID: owner)
@@ -102,6 +129,7 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
             do {
                 authenticationLog.info("Starting account browser authorization")
                 let callback = try await browser.signIn(authorization)
+                try _Concurrency.Task.checkCancellation()
                 stage = "token-exchange"
                 authenticationLog.info("Browser callback received; exchanging one-time code")
                 let tokens = try await session.exchange(authorization: authorization, callback: callback)
@@ -109,9 +137,14 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
                 authenticationLog.info("Account session saved; opening local workspace")
                 try await open(tokens)
                 let result = try await requireLocal().load() ?? WorkspaceSnapshot()
+                try _Concurrency.Task.checkCancellation()
                 authenticationLog.info("Account sign-in complete")
                 return result
             } catch {
+                if _Concurrency.Task.isCancelled {
+                    if stage != "browser" { try await signOut() }
+                    throw CancellationError()
+                }
                 reportAuthenticationFailure(error, stage: stage)
                 throw error
             }
@@ -211,15 +244,16 @@ final class WorkspaceAccountApplicationService: WorkspaceDevicePairingProviding,
             // Offline access remains available; the worker retries when connectivity returns.
             await backup.refresh()
             let deviceAuthority = try await WorkspaceDeviceAuthority.open(identity: identity, credentials: credentials)
-            let model = try installation.makeModel()
+            let model = BlotAccountChatModel(authorization: session)
             let modelCredentials = WorkspaceModelCredentialStore(accountNamespace: identity.ownerID.uuidString + ":" + identity.deviceID.uuidString)
             let service = try LocalWorkspaceService(databaseURL: database, repository: repository, identity: identity,
-                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget, deviceAuthority: deviceAuthority, mcpCredentials: credentials,
+                maximumOutputTokens: installation.gigaChat.outputTokens, runTokenBudget: installation.gigaChat.runTokenBudget, contextWindowTokens: installation.gigaChat.contextTokens, deviceAuthority: deviceAuthority, mcpCredentials: credentials,
                 automaticBrowserAccess: true, automaticSessionFiles: true, makeModel: { modelID in
                     if modelID == "gigachat" { return model }
                     let config = try modelCredentials.load()
                     return try CompatibleChatModel(endpoint: config.endpoint, model: config.model, apiKey: config.apiKey)
                 })
+            service.collaboration = collaborationClient()
             _ = try await service.load()
             local = service; localDirectory = accountDirectory; processLock = lock
             cloudBackup = backup
@@ -255,4 +289,8 @@ extension WorkspaceAccountApplicationService: WorkspaceAccountPasswordChanging, 
         guard local != nil, let directory = localDirectory else { throw WorkspaceCloudError.authenticationRequired }
         try await endSession(removing: directory)
     }
+}
+
+extension WorkspaceAccountApplicationService: WorkspaceMemoryImportProviding {
+    var workspaceMemoryImport: (any WorkspaceMemoryImportCommands)? { local }
 }

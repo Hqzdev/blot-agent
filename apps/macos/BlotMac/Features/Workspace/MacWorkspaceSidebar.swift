@@ -14,8 +14,9 @@ struct MacWorkspaceSidebar: View {
         let order = store.desktopContent.sidebarOrder(in: store.selectedConversationID)
         return store.snapshot.conversations.filter { chat in
             guard chat.archived == showsArchive else { return false }
+            if search.isEmpty { return !chat.pinned || showsArchive }
             let text = store.t(chat.title) + " " + preview(for: chat)
-            return search.isEmpty || text.localizedStandardContains(search)
+            return text.localizedStandardContains(search)
         }.sorted {
             if $0.pinned != $1.pinned { return $0.pinned }
             if $0.pinned && $1.pinned {
@@ -29,6 +30,9 @@ struct MacWorkspaceSidebar: View {
     }
 
     var body: some View {
+        let showsPins = !showsArchive && query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        let pinnedChats = showsPins ? store.pinnedConversations : []
+        let chats = chats
         VStack(spacing: 0) {
             HStack {
                 Spacer()
@@ -48,9 +52,9 @@ struct MacWorkspaceSidebar: View {
                 Text(store.t("No chats yet")).font(.system(size: 14)).foregroundStyle(WorkspaceStyle.secondary)
                 Spacer()
             } else {
+                if !pinnedChats.isEmpty { MacPinnedChats(chats: pinnedChats).padding(.bottom, 6) }
                 ScrollView {
                     LazyVStack(spacing: 2) {
-                        if !showsArchive && query.isEmpty && !store.pinnedConversations.isEmpty { pinnedStrip }
                         if showsArchive || store.snapshot.conversations.contains(where: \.archived) {
                             Button { showsArchive.toggle() } label: {
                                 HStack(spacing: 8) {
@@ -63,17 +67,17 @@ struct MacWorkspaceSidebar: View {
                                         }, size: 18)
                                     }
                                 }.padding(.horizontal, 9).frame(height: 34).contentShape(Rectangle())
-                            }.buttonStyle(.plain)
+                            }.buttonStyle(.plain).macSidebarHoverTarget()
                         }
                         ForEach(chats, id: \.metadata.id) { chat in chatRow(chat) }
-                        if chats.isEmpty {
+                        if chats.isEmpty && pinnedChats.isEmpty {
                             Text(store.t(query.isEmpty ? (showsArchive ? "Archive is empty" : "Start a conversation") : "No results"))
                                 .font(MacWorkspaceStyle.caption).foregroundStyle(WorkspaceStyle.secondary).padding(20)
                         }
                     }.padding(.horizontal, 8).padding(.bottom, 12)
-                }.scrollIndicators(.hidden)
+                }.scrollIndicators(.hidden).macSidebarHoverSection(radius: BlotRadius.control)
             }
-            footer
+            footer.macSidebarHoverSection(radius: BlotRadius.control)
         }.font(MacWorkspaceStyle.body).background(MacWorkspaceStyle.sidebar)
     }
 
@@ -104,29 +108,6 @@ struct MacWorkspaceSidebar: View {
     private func preview(for chat: BlotV3.Conversation) -> String {
         if let message = store.snapshot.messages.last(where: { $0.conversationId == chat.metadata.id }) { return store.t(message.content) }
         return store.snapshot.agents.first { $0.metadata.id == chat.agentId }.map { store.t($0.instructions) } ?? ""
-    }
-
-    private var pinnedStrip: some View {
-        ScrollView(.horizontal) {
-            HStack(alignment: .top, spacing: 12) {
-                ForEach(store.pinnedConversations, id: \.metadata.id) { chat in
-                    Button { store.openConversation(chat.metadata.id) } label: {
-                        VStack(spacing: 5) {
-                            chatAvatar(chat, size: 46)
-                                .overlay(alignment: .topTrailing) {
-                                    WorkspaceUnreadBadge(count: store.chatInteractions.unreadCount(in: chat.metadata.id),
-                                        muted: store.chatInteractions.isMuted(chat.metadata.id), size: 16)
-                                }
-                                .overlay(alignment: .bottomTrailing) {
-                                    BlotIcon(.star, size: 8).foregroundStyle(.white).frame(width: 16, height: 16)
-                                        .background(.orange, in: Circle()).overlay(Circle().strokeBorder(WorkspaceStyle.canvas, lineWidth: 1.5))
-                                }
-                            Text(store.t(chat.title)).font(.system(size: 10)).lineLimit(1).frame(width: 68)
-                        }.padding(.vertical, 8)
-                    }.buttonStyle(.plain).contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
-                }
-            }.padding(.horizontal, 8)
-        }.scrollIndicators(.hidden)
     }
 
     private func chatAvatar(_ chat: BlotV3.Conversation, size: CGFloat) -> some View {
@@ -169,8 +150,8 @@ struct MacWorkspaceSidebar: View {
                 .background(store.route == .chat && store.selectedConversationID == chat.metadata.id ? BlotColor.selected : .clear,
                             in: RoundedRectangle(cornerRadius: BlotRadius.control))
                 .contentShape(Rectangle())
-        }.buttonStyle(.plain).help(chat.title)
-            .contextMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+        }.buttonStyle(BlotPlainButtonStyle(showsHover: false)).macSidebarHoverTarget().help(chat.title)
+            .macCommandMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
     }
 
     private var footer: some View {
@@ -178,7 +159,7 @@ struct MacWorkspaceSidebar: View {
             if !store.snapshot.agents.isEmpty {
                 HStack {
                     footerButton("Plugins", glyph: .puzzle, route: .connections)
-                    Menu {
+                    WorkspaceMenu {
                         BlotIconButton(store.t("Agents"), symbol: "person.2") { store.navigate(.agents) }
                         BlotIconButton(store.t("Create agent"), symbol: "plus") { store.navigate(.createAgent) }
                         BlotIconButton(store.t("Automations"), symbol: "calendar") { store.navigate(.schedules) }
@@ -194,7 +175,7 @@ struct MacWorkspaceSidebar: View {
             HStack {
                 footerButton(store.form.account.name.isEmpty ? "Account" : store.form.account.name, glyph: .person, route: .account)
                 Button { store.navigate(.settings) } label: { BlotIcon(.settings, size: 15).frame(width: 26, height: 26) }
-                    .buttonStyle(.plain).help(store.t("Settings")).accessibilityLabel(store.t("Settings"))
+                    .buttonStyle(.plain).macSidebarHoverTarget().help(store.t("Settings")).accessibilityLabel(store.t("Settings"))
             }
         }.padding(.horizontal, 16).padding(.top, 6).padding(.bottom, 12)
     }
@@ -203,6 +184,61 @@ struct MacWorkspaceSidebar: View {
         Button { store.navigate(route) } label: {
             HStack(spacing: 10) { BlotIcon(glyph, size: 17).frame(width: 22); Text(store.t(title)); Spacer(minLength: 0) }
                 .frame(height: 34).contentShape(Rectangle())
-        }.buttonStyle(.plain)
+        }.buttonStyle(.plain).macSidebarHoverTarget()
+    }
+}
+
+struct MacPinnedChats: View {
+    let chats: [BlotV3.Conversation]
+    @Environment(WorkspaceStore.self) private var store
+
+    var body: some View {
+        ScrollView(.horizontal) {
+            LazyHStack(alignment: .top, spacing: 6) {
+                ForEach(chats, id: \.metadata.id) { chat in
+                    let id = chat.metadata.id
+                    let title = store.t(chat.title)
+                    let selected = store.route == .chat && store.selectedConversationID == id
+                    Button { store.openConversation(id) } label: {
+                        VStack(spacing: 6) {
+                            avatar(for: chat)
+                                .overlay(alignment: .topTrailing) {
+                                    WorkspaceUnreadBadge(count: store.chatInteractions.unreadCount(in: id),
+                                        muted: store.chatInteractions.isMuted(id), size: 16)
+                                }
+                            Text(title).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        .frame(width: 78).padding(.vertical, 6)
+                        .background(selected ? BlotColor.selected : .clear, in: RoundedRectangle(cornerRadius: 14))
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(BlotPlainButtonStyle(showsHover: false)).macSidebarHoverTarget().macHoverTip(title)
+                    .accessibilityLabel(title).accessibilityAddTraits(selected ? .isSelected : [])
+                    .macCommandMenu { WorkspaceChatActionsMenu(chat: chat).environment(store).disabled(store.busy) }
+                }
+            }.padding(.horizontal, 10)
+        }
+        .scrollIndicators(.hidden).macSidebarHoverSection(radius: 14)
+        .fixedSize(horizontal: false, vertical: true)
+        .accessibilityIdentifier("workspace.chat.pinned-conversations")
+    }
+
+    @ViewBuilder private func avatar(for chat: BlotV3.Conversation) -> some View {
+        if chat.kind == .group {
+            let memberIDs = Set(store.chatContent.participants.filter {
+                $0.conversationId == chat.metadata.id && !$0.removed
+            }.map(\.participantId))
+            MacLiveTeamGroupAvatar(agents: store.chatContent.agents.filter { memberIDs.contains($0.metadata.id) }, size: 46)
+        } else {
+            Group {
+                if let agent = store.chatContent.agents.first(where: { $0.metadata.id == chat.agentId }) {
+                    WorkspaceAvatarView(agent: agent, size: 46)
+                } else {
+                    WorkspaceAvatar(size: 46)
+                }
+            }.overlay(alignment: .bottomLeading) {
+                WorkspacePresenceDot(online: store.isAgentOnline(chat.agentId, in: chat.metadata.id), size: 13)
+            }
+        }
     }
 }

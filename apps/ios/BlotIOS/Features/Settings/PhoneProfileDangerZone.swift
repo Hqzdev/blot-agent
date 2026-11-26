@@ -33,7 +33,7 @@ struct PhoneProfileDangerZone: View {
             case .password: PhonePasswordEditor().environment(store)
             }
         }
-        .confirmationDialog(store.settingsText(confirmation == .deleteData ? "Delete local account data?" : "Sign out?"),
+        .workspaceConfirmationDialog(store.settingsText(confirmation == .deleteData ? "Delete local account data?" : "Sign out?"),
             isPresented: Binding(get: { confirmation != nil }, set: { if !$0 { confirmation = nil } }),
             titleVisibility: .visible, presenting: confirmation) { action in
                 Button(store.settingsText(action == .deleteData ? "Delete data from this iPhone" : "Sign out"), role: .destructive) {
@@ -43,7 +43,7 @@ struct PhoneProfileDangerZone: View {
             } message: { action in
                 Text(store.settingsText(action == .deleteData
                     ? "This signs you out and removes this account's local workspace and files. Cloud copies and other accounts stay unchanged."
-                    : "Sign out of Blot on this device."))
+                    : "Sign out of Ori on this device."))
             }
     }
 }

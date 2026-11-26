@@ -13,7 +13,8 @@ struct PhoneSettingsPage<Content: View>: View {
     @ViewBuilder let content: Content
     var body: some View {
         PhonePage { content }
-        .tint(PhoneSettingsStyle.accent)
+        .workspacePanelControls()
+        .tint(WorkspaceStyle.ink)
     }
 }
 
@@ -93,10 +94,15 @@ struct PhoneSettingsToggle: View {
     @Binding var isOn: Bool
     @Environment(WorkspaceStore.self) private var store
     var body: some View {
-        PhoneSettingsValueRow(title: title, detail: detail) {
-            Toggle(store.settingsText(title), isOn: $isOn).labelsHidden().tint(PhoneSettingsStyle.accent)
-                .accessibilityLabel(store.settingsText(title))
-        }
+        Toggle(isOn: $isOn) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text(store.settingsText(title)).font(.subheadline)
+                if let detail {
+                    Text(store.settingsText(detail)).font(.footnote).foregroundStyle(WorkspaceStyle.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        }.toggleStyle(BlotToggleStyle()).accessibilityLabel(store.settingsText(title)).padding(.horizontal, 16).padding(.vertical, 8).frame(minHeight: 56)
     }
 }
 

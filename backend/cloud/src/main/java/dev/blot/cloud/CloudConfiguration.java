@@ -1,6 +1,7 @@
 package dev.blot.cloud;
 
 import dev.blot.application.ports.*;
+import dev.blot.cloud.collaboration.*;
 import dev.blot.cloud.execution.CloudLeases;
 import dev.blot.cloud.identity.*;
 import dev.blot.cloud.model.*;
@@ -19,6 +20,17 @@ import org.springframework.context.annotation.*;
 
 @Configuration
 public class CloudConfiguration {
+  @Bean
+  CloudTeams teams(CloudDatabase db, CloudTokens tokens, JsonCodec json, Clock clock) {
+    return new CloudTeams(db, tokens, json, clock);
+  }
+
+  @Bean
+  CloudPublishedContent publishedContent(
+      CloudDatabase db, CloudTokens tokens, Clock clock, JsonCodec json) {
+    return new CloudPublishedContent(db, tokens, clock, json);
+  }
+
   @Bean
   Clock clock() {
     return Clock.systemUTC();
@@ -78,8 +90,12 @@ public class CloudConfiguration {
 
   @Bean
   CloudBrowserAuthorization browserAuthorization(
-      CloudDatabase db, CloudTokens tokens, CloudSessions sessions, Clock clock) {
-    return new CloudBrowserAuthorization(db, tokens, sessions, clock);
+      CloudDatabase db,
+      CloudTokens tokens,
+      CloudSessions sessions,
+      Clock clock,
+      @Value("${BLOT_WEB_APP_URL:}") String webOrigin) {
+    return new CloudBrowserAuthorization(db, tokens, sessions, clock, webOrigin);
   }
 
   @Bean

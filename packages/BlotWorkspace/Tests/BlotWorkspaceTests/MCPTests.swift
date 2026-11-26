@@ -60,7 +60,7 @@ private struct MCPHarness {
     }
     func connect(token: String = "") async throws -> UUID {
         let inspection = try await service.inspect(name: "Test MCP", configuration: .init(endpoint: "https://example.test/mcp", bearerToken: token))
-        return try await service.save(inspection, selectedTools: ["echo"], agentIDs: [agent])
+        return try await service.save(inspection, selectedTools: ["echo"])
     }
     func context(_ definition: ChatToolDefinition) -> WorkspaceToolContext { .init(sourceMessageID: source, taskID: nil, allowedToolIDs: [definition.name], agentID: agent) }
 }
@@ -122,7 +122,7 @@ private struct MCPHarness {
 @Test func mcpRevocationDuringConfirmationAndForeignReplicaCannotAuthorizeCalls() async throws {
     let h = try await MCPHarness(); defer { cleanupWorkspaceTestStorage(h.folder) }
     let id = try await h.connect()
-    let service = h.service, agent = h.agent
+    let service = h.service
     let provider = try await service.provider { _, _ in
         try await service.refresh(id: id)
         return true
@@ -130,7 +130,7 @@ private struct MCPHarness {
     let definition = try #require(provider.definitions.first)
     _ = try await provider.execute(.init(id: "revoke", name: definition.name, arguments: .object(["text": .string("hello")])), context: h.context(definition))
     #expect(await h.transport.calls == 0)
-    try await service.setAccess(id: id, selectedTools: ["echo"], agentIDs: [agent])
+    try await service.setAccess(id: id, selectedTools: ["echo"])
     let other = try await workspaceTestRepository(url: h.folder.appendingPathComponent("other.sqlite"))
     let otherIdentity = try await other.joinWorkspace(ownerID: h.identity.ownerID, workspaceID: h.identity.workspaceID)
     try await other.installReplicaSnapshot(h.repository.replicaSnapshot(identity: h.identity), identity: otherIdentity)

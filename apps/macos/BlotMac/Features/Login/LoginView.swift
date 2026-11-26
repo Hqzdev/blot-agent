@@ -50,7 +50,7 @@ struct LoginView: View {
             VStack(spacing: KSpace.md) {
                 if let setupError {
                     HStack(alignment: .top, spacing: KSpace.md) {
-                        InlineFeedback(text: "Blot could not reach its server on this Mac. \(setupError)", tone: .error)
+                        InlineFeedback(text: "Ori could not reach its server on this Mac. \(setupError)", tone: .error)
                             .textSelection(.enabled)
                         KButton(title: "Try again", icon: "rotate-ccw", height: 28, loading: checkingSetup) {
                             Task { await checkSetup() }
@@ -100,7 +100,7 @@ private struct SignUpForm: View {
     var body: some View {
         VStack(spacing: 24) {
             AuthHeading(
-                title: "Create your Blot account",
+                title: "Create your Ori account",
                 subtitle: "An agent that plans, edits and tests code right on your Mac."
             )
 
@@ -134,7 +134,7 @@ private struct LogInForm: View {
         VStack(spacing: 24) {
             AuthHeading(
                 title: "Welcome back",
-                subtitle: "Log in to pick up your tasks where Blot left off."
+                subtitle: "Log in to pick up your tasks where Ori left off."
             )
 
             VStack(spacing: 12) {
@@ -168,7 +168,7 @@ private struct LogInForm: View {
             }
 
 
-            SwitchPrompt(question: "New to Blot?", link: "Create an account") { model.show(.signUp) }
+            SwitchPrompt(question: "New to Ori?", link: "Create an account") { model.show(.signUp) }
         }
     }
 }
@@ -206,13 +206,13 @@ private struct VerifyEmailForm: View {
 
 // MARK: - Pieces
 
-/// The Blot arch: 56 × 64, top radius 28, 7 pt inner stroke, ember slot as the mouth.
+/// The Ori arch: 56 × 64, top radius 28, 7 pt inner stroke, ember slot as the mouth.
 struct BlotMark: View {
     var height: CGFloat = 64
     var body: some View {
         BlotDrawing(role: .blot)
             .frame(width: height, height: height)
-            .accessibilityLabel("Blot")
+            .accessibilityLabel("Ori")
     }
 }
 

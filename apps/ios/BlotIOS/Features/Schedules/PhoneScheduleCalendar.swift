@@ -16,8 +16,7 @@ struct PhoneScheduleCalendar: View {
         VStack(spacing: 12) {
             HStack {
                 weekButton("chevron.left", title: "Previous week", offset: -1)
-                DatePicker(store.t("Date"), selection: $selectedDate, displayedComponents: .date)
-                    .labelsHidden().datePickerStyle(.compact).frame(maxWidth: .infinity)
+                WorkspacePanelDateField(title: store.t("Date"), date: $selectedDate, calendarOnly: true).frame(maxWidth: .infinity)
                 weekButton("chevron.right", title: "Next week", offset: 1)
             }
             GeometryReader { geometry in

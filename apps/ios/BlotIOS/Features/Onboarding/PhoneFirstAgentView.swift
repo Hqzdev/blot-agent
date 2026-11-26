@@ -72,20 +72,20 @@ struct PhoneFirstAgentView: View {
 
     private var title: String {
         switch setup.step {
-        case .introduction: "Meet your blot"
-        case .name: "What’s your blot’s name?"
-        case .appearance: "Make your blot yours"
+        case .introduction: "Meet your agent"
+        case .name: "What’s your agent’s name?"
+        case .appearance: "Make your agent yours"
         case .role: "Choose a role"
-        case .preparing: "Setting up your blot"
+        case .preparing: "Setting up your agent"
         }
     }
 
     private var subtitle: String {
         switch setup.step {
-        case .introduction: "Your AI companion for work and everyday life. Let’s create your first blot together."
+        case .introduction: "Your AI companion for work and everyday life. Let’s create your first agent together."
         case .name: "Give it a name you like. You can change it later."
         case .appearance: "Choose its shape and color."
-        case .role: "Start with a template or describe your own role. Your blot’s name and look stay the same."
+        case .role: "Start with a template or describe your own role. Your agent’s name and look stay the same."
         case .preparing: "This may take a moment."
         }
     }
@@ -102,13 +102,13 @@ struct PhoneFirstAgentView: View {
         switch setup.step {
         case .introduction: introduction
         case .name:
-            TextField(text("Blot name"), text: $setup.draft.name)
+            TextField(text("Agent name"), text: $setup.draft.name)
                 .font(.title2.weight(.medium)).multilineTextAlignment(.center)
                 .textInputAutocapitalization(.words).submitLabel(.continue)
                 .focused($nameFocused).onSubmit { next() }
                 .padding(18).frame(minHeight: 56)
                 .background(WorkspaceStyle.secondary.opacity(0.08), in: .rect(cornerRadius: 18))
-                .accessibilityLabel(text("Blot name"))
+                .accessibilityLabel(text("Agent name"))
                 .accessibilityIdentifier("onboarding.first-blot.name")
         case .appearance: PhoneFirstAgentAppearancePicker(draft: $setup.draft, localize: text)
         case .role: roles
@@ -119,8 +119,8 @@ struct PhoneFirstAgentView: View {
     private var introduction: some View {
         VStack(alignment: .leading, spacing: 26) {
             benefit("sparkle", "A little help with big ideas", "Think things through, plan your day, and work on projects together.")
-            benefit("paintbrush", "A character of its own", "You choose the name, look, and role. Your blot grows with you.")
-            benefit("checkmark.shield", "You’re in control", "Your blot asks before significant actions. Connect apps when you’re ready.")
+            benefit("paintbrush", "A character of its own", "You choose the name, look, and role. Your agent grows with you.")
+            benefit("checkmark.shield", "You’re in control", "Your agent asks before significant actions. Connect apps when you’re ready.")
         }.padding(.top, 12)
     }
 
@@ -161,7 +161,7 @@ struct PhoneFirstAgentView: View {
                 .accessibilityIdentifier("onboarding.first-blot.role.\(role.rawValue)")
             }
             if setup.selectedRole == .custom {
-                TextField(text("What should your blot help with?"), text: $setup.draft.instructions, axis: .vertical)
+                TextField(text("What should your agent help with?"), text: $setup.draft.instructions, axis: .vertical)
                     .lineLimit(3...8).padding(16)
                     .background(WorkspaceStyle.secondary.opacity(0.08), in: .rect(cornerRadius: 18))
                     .accessibilityLabel(text("Your own role"))
@@ -172,7 +172,7 @@ struct PhoneFirstAgentView: View {
     private var footer: some View {
         VStack(spacing: 4) {
             Button(action: next) {
-                Text(text(setup.step == .role ? "Create blot" : "Continue"))
+                Text(text(setup.step == .role ? "Create agent" : "Continue"))
                     .font(.headline).frame(maxWidth: .infinity, minHeight: 24)
             }
             .buttonStyle(WorkspaceButtonStyle()).disabled(!setup.canContinue)

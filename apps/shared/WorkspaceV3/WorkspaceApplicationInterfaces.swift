@@ -19,7 +19,7 @@ protocol WorkspaceObservationService {
 
 @MainActor
 protocol WorkspaceExecutionService {
-    func responses(to message: BlotV3.Message) async throws -> AsyncThrowingStream<BlotV3.Message, Error>
+    func responses(to message: BlotV3.Message, profile: BlotInferenceProfile?) async throws -> AsyncThrowingStream<BlotV3.Message, Error>
     func cancelResponse(in conversationID: UUID) async throws -> WorkspaceSnapshot
     func stopAll() async
 }
@@ -31,6 +31,7 @@ protocol WorkspaceCommandService: WorkspaceObservationService, WorkspaceExecutio
     func markRead(conversationID: UUID, messageID: UUID) async throws -> WorkspaceSnapshot
     func deleteMemory(_ memory: BlotV3.MemoryEntry) async throws -> WorkspaceSnapshot
     func createGroup(commandID: UUID, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot
+    func branchConversation(commandID: UUID, messageID: UUID, agentID: UUID) async throws -> WorkspaceSnapshot
     func updateGroup(_ id: UUID, expectedVersion: Int, title: String, agentIDs: [UUID]) async throws -> WorkspaceSnapshot
     func fileURL(_ id: UUID) async throws -> URL
     func enqueueDueSchedules() async throws -> WorkspaceSnapshot

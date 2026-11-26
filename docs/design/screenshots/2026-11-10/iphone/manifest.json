@@ -1,0 +1,202 @@
+[
+  {
+    "file": "01-welcome.png",
+    "screen": "01-welcome",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "02-sign-in.png",
+    "screen": "02-sign-in",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "03-create-account.png",
+    "screen": "03-create-account",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "04-verify-email.png",
+    "screen": "04-verify-email",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "05-first-agent.png",
+    "screen": "05-first-agent",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "06-create-agent.png",
+    "screen": "06-create-agent",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "07-all-chats.png",
+    "screen": "07-all-chats",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "08-search.png",
+    "screen": "08-search",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "09-new-chat.png",
+    "screen": "09-new-chat",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "10-chat-with-ceo.png",
+    "screen": "10-chat-with-ceo",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "11-task-running.png",
+    "screen": "11-task-running",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "12-approval.png",
+    "screen": "12-approval",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "13-result.png",
+    "screen": "13-result",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "14-file-preview.png",
+    "screen": "14-file-preview",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "15-my-agents.png",
+    "screen": "15-my-agents",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "16-agent-profile.png",
+    "screen": "16-agent-profile",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "17-schedules.png",
+    "screen": "17-schedules",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "18-new-schedule.png",
+    "screen": "18-new-schedule",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "19-computers.png",
+    "screen": "19-computers",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "20-connect-computer.png",
+    "screen": "20-connect-computer",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "21-computer-offline.png",
+    "screen": "21-computer-offline",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "22-connections.png",
+    "screen": "22-connections",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "23-settings.png",
+    "screen": "23-settings",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "24-ai-models.png",
+    "screen": "24-ai-models",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  },
+  {
+    "file": "25-browser-view.png",
+    "screen": "25-browser-view",
+    "source": "physical iPhone 13 Pro Max",
+    "mode": "installed app, workspace-preview",
+    "language": "ru",
+    "appVersion": "1.0 (2)"
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "installCommand": "npm ci",
+  "buildCommand": "node scripts/migrate-accounts.mjs && node scripts/check-account-database.mjs && node scripts/verify-account-handoff.mjs && next build"
+}

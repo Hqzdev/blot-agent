@@ -55,6 +55,8 @@ public struct BlotButtonStyle: ButtonStyle {
 private struct BlotButtonBody<Label: View>: View {
     @Environment(\.isEnabled) private var enabled
     @State private var hovering = false
+    @Environment(\.blotReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     let label: Label
     let pressed: Bool
     let kind: BlotButtonKind
@@ -73,17 +75,21 @@ private struct BlotButtonBody<Label: View>: View {
             .overlay { shape.fill(veil) }
             .overlay { shape.strokeBorder(border, lineWidth: BlotLayout.hairlineWidth) }
             .contentShape(shape)
+            .blotFocusRing(radius: 16)
+            .modifier(BlotPressFeedback(pressed: enabled && pressed, scale: 0.98))
             .onHover { hovering = $0 }
+            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.quick, value: hovering)
+            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.press, value: pressed)
     }
 
     /// The pill uses an oversized radius, which SwiftUI clamps to a capsule.
     private var shape: RoundedRectangle {
-        RoundedRectangle(cornerRadius: kind == .pill ? 999 : BlotRadius.control, style: .continuous)
+        RoundedRectangle(cornerRadius: kind == .pill ? 999 : 16, style: .continuous)
     }
 
     private var foreground: Color {
         guard enabled else { return BlotColor.textTertiary }
-        return kind == .primary ? BlotColor.onInverse : BlotColor.text
+        return kind == .primary ? BlotColor.onInverse : kind == .destructive ? .red : BlotColor.text
     }
 
     private var fill: Color {
@@ -143,6 +149,8 @@ private struct BlotIconButtonBody<Label: View>: View {
             .frame(width: size, height: size)
             .background(shape.fill(fill))
             .contentShape(shape)
+            .blotFocusRing()
+            .modifier(BlotPressFeedback(pressed: enabled && pressed, scale: 0.96))
             .onHover { hovering = $0 }
     }
 

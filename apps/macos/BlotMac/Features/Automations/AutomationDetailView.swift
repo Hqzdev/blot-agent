@@ -43,7 +43,7 @@ struct AutomationDetailView: View {
                     Chip(icon: "clock", label: AutomationSchedule.describe(item), chevron: false, bordered: true)
                 }
                 SettingsDivider()
-                SettingsRow(title: "Project", detail: "Blot works in a fresh workspace of this project.") {
+                SettingsRow(title: "Project", detail: "Ori works in a fresh workspace of this project.") {
                     Chip(icon: "folder", label: app.workspace.find("PROJECT", item.projectId)?.data.text("name") ?? "Unavailable",
                          chevron: false, bordered: true)
                 }

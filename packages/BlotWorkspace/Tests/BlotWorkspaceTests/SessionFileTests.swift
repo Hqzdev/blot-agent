@@ -42,7 +42,9 @@ private struct SessionFixture {
         repository = try await workspaceTestRepository(url: folder.appendingPathComponent("workspace.sqlite"))
         identity = try await repository.localIdentity()
         executor = SessionExecutor(home: home)
-        files = WorkspaceSessionFileService(repository: repository, identity: identity, credentials: SessionCredentials(), makeExecutor: { [executor] in executor }, choose: { _, _ in choice })
+        files = WorkspaceSessionFileService(repository: repository, identity: identity, credentials: SessionCredentials(),
+            files: WorkspaceFileService(repository: repository, identity: identity, directory: folder.appendingPathComponent("Artifacts")),
+            makeExecutor: { [executor] in executor }, choose: { _, _ in choice })
         agent = try await WorkspaceAgentService(repository: repository, identity: identity).save(commandID: UUID(), draft: .init(name: "File worker", instructions: "Use builtin file tools", toolIDs: WorkspaceSessionFileCatalog.toolIDs.sorted(), accessMode: observe ? .observe : .ask_first))
         conversation = try await WorkspaceChatService(repository: repository, identity: identity).createConversation(commandID: UUID(), title: "File session", agentID: agent)
         source = try await WorkspaceChatService(repository: repository, identity: identity).sendMessage(commandID: UUID(), conversationID: conversation, content: request)
@@ -79,6 +81,29 @@ private struct SessionFixture {
     let changed = try await f.tools.execute(f.call("workspace_write_file", ["path": .string("Reports/June/report.txt"), "content": .string("Updated result"), "expected_hash": read.mcpFields["sha256"]!]), context: f.context)
     #expect(changed.mcpFields["state"] == .string("succeeded"))
     #expect(try String(contentsOf: file, encoding: .utf8) == "Updated result")
+    let changeID = try #require(changed.mcpFields["change_artifact_id"]?.mcpString.flatMap(UUID.init(uuidString:)))
+    let change = try await f.files.fileChange(changeID)
+    #expect(change.before == "First result" && change.after == "Updated result" && change.canUndo)
+    #expect(change.difference.added == 1 && change.difference.removed == 1)
+    #expect(try await f.files.readFileChange(changeID) == "Updated result")
+    try await f.files.undoFileChange(changeID)
+    #expect(try await f.files.readFileChange(changeID) == "First result")
+    #expect(try String(contentsOf: file, encoding: .utf8) == "First result")
+    do { try await f.files.undoFileChange(changeID); Issue.record("A second undo must not overwrite the changed file") }
+    catch { #expect(try String(contentsOf: file, encoding: .utf8) == "First result") }
+    await f.files.suspend()
+}
+
+@Test func fileChangeUndoPreservesNewerUserEdits() async throws {
+    let f = try await SessionFixture(); defer { cleanupWorkspaceTestStorage(f.folder) }
+    let root = try await f.root()
+    let created = try await f.tools.execute(f.call("workspace_write_file", ["path": .string("report.txt"), "content": .string("Original"), "expected_hash": .string("missing")]), context: f.context)
+    let changed = try await f.tools.execute(f.call("workspace_write_file", ["path": .string("report.txt"), "content": .string("Agent edit"), "expected_hash": created.mcpFields["sha256"]!]), context: f.context)
+    let id = try #require(changed.mcpFields["change_artifact_id"]?.mcpString.flatMap(UUID.init(uuidString:)))
+    let file = root.appendingPathComponent("report.txt")
+    try Data("Newer user edit".utf8).write(to: file)
+    do { try await f.files.undoFileChange(id); Issue.record("Undo must reject a newer file version") } catch { }
+    #expect(try String(contentsOf: file, encoding: .utf8) == "Newer user edit")
     await f.files.suspend()
 }
 

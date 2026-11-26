@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A20000000000000000000001"
-               BuildableName = "BlotIOS.app"
+               BuildableName = "Ori.app"
                BlueprintName = "BlotIOS"
                ReferencedContainer = "container:Blot.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A20000000000000000000001"
-            BuildableName = "BlotIOS.app"
+            BuildableName = "Ori.app"
             BlueprintName = "BlotIOS"
             ReferencedContainer = "container:Blot.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A20000000000000000000001"
-            BuildableName = "BlotIOS.app"
+            BuildableName = "Ori.app"
             BlueprintName = "BlotIOS"
             ReferencedContainer = "container:Blot.xcodeproj">
          </BuildableReference>

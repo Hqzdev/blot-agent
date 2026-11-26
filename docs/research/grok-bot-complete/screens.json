@@ -1,0 +1,874 @@
+[
+  {
+    "title": "Официальный сайт Grok Bot целиком",
+    "file": "screenshots/01-official-landing-full.jpg",
+    "kind": "official-marketing-demo",
+    "source": "https://x.ai/bot",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S001"
+  },
+  {
+    "title": "Bots take initiative and get work done",
+    "file": "screenshots/02-official-feature-1.jpg",
+    "rect": {
+      "height": 442,
+      "width": 354,
+      "x": 16,
+      "y": 2446
+    },
+    "bytes": 21193,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S002"
+  },
+  {
+    "title": "Every Bot has its own computer",
+    "file": "screenshots/03-official-feature-2.jpg",
+    "rect": {
+      "height": 442,
+      "width": 354,
+      "x": 401,
+      "y": 2446
+    },
+    "bytes": 24430,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S003"
+  },
+  {
+    "title": "Show a Bot how it’s done",
+    "file": "screenshots/04-official-feature-3.jpg",
+    "rect": {
+      "height": 466,
+      "width": 354,
+      "x": 16,
+      "y": 2920
+    },
+    "bytes": 22912,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S004"
+  },
+  {
+    "title": "Invite a Bot to your meetings",
+    "file": "screenshots/05-official-feature-4.jpg",
+    "rect": {
+      "height": 466,
+      "width": 354,
+      "x": 401,
+      "y": 2920
+    },
+    "bytes": 30156,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S005"
+  },
+  {
+    "title": "Bots work with your team, and each other",
+    "file": "screenshots/06-official-feature-5.jpg",
+    "rect": {
+      "height": 494,
+      "width": 354,
+      "x": 16,
+      "y": 3418
+    },
+    "bytes": 27955,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S006"
+  },
+  {
+    "title": "Bots get smarter over time",
+    "file": "screenshots/07-official-feature-6.jpg",
+    "rect": {
+      "height": 494,
+      "width": 354,
+      "x": 401,
+      "y": 3418
+    },
+    "bytes": 22054,
+    "source": "https://x.ai/bot",
+    "kind": "official-marketing-demo",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S007"
+  },
+  {
+    "title": "Официальный макет: sidebar, chat, computer и routines",
+    "file": "screenshots/08-design-app-shell.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S008"
+  },
+  {
+    "title": "Email готов к отправке",
+    "file": "screenshots/09-widget-01.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S009"
+  },
+  {
+    "title": "Вопрос с вариантами ответа",
+    "file": "screenshots/09-widget-02.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S010"
+  },
+  {
+    "title": "Согласование платежа",
+    "file": "screenshots/09-widget-03.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S011"
+  },
+  {
+    "title": "Согласование команды",
+    "file": "screenshots/09-widget-04.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S012"
+  },
+  {
+    "title": "Передача компьютера пользователю",
+    "file": "screenshots/09-widget-05.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S013"
+  },
+  {
+    "title": "Результат Cloud Agent и PR",
+    "file": "screenshots/09-widget-06.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S014"
+  },
+  {
+    "title": "Черновик сообщения Slack",
+    "file": "screenshots/09-widget-07.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S015"
+  },
+  {
+    "title": "Приложение добавлено",
+    "file": "screenshots/09-widget-08.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S016"
+  },
+  {
+    "title": "Защищённый запрос токена",
+    "file": "screenshots/09-widget-09.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S017"
+  },
+  {
+    "title": "Разрешение копирования cookies",
+    "file": "screenshots/09-widget-10.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S018"
+  },
+  {
+    "title": "Ошибка отправки email",
+    "file": "screenshots/09-widget-11.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S019"
+  },
+  {
+    "title": "Avatar state: Idle",
+    "file": "screenshots/10-state-idle.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S020"
+  },
+  {
+    "title": "Avatar state: Working",
+    "file": "screenshots/10-state-working.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S021"
+  },
+  {
+    "title": "Avatar state: Waiting",
+    "file": "screenshots/10-state-waiting.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S022"
+  },
+  {
+    "title": "Avatar state: Blocked",
+    "file": "screenshots/10-state-blocked.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S023"
+  },
+  {
+    "title": "Avatar state: Thinking",
+    "file": "screenshots/10-state-thinking.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S024"
+  },
+  {
+    "title": "Avatar state: Done",
+    "file": "screenshots/10-state-done.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S025"
+  },
+  {
+    "title": "Система геометрических аватаров",
+    "file": "screenshots/11-avatar-system.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S026"
+  },
+  {
+    "title": "Обои компьютера: день и ночь",
+    "file": "screenshots/12-computer-wallpapers.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S027"
+  },
+  {
+    "title": "Показ текущей активности агента",
+    "file": "screenshots/13-activity-patterns.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S028"
+  },
+  {
+    "title": "Marketplace: категории и шаблоны",
+    "file": "screenshots/14-marketplace.jpg",
+    "kind": "official-website",
+    "source": "https://x.ai/bot/marketplace",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S029"
+  },
+  {
+    "title": "Шаблон dr eggbot: сведения и Import Bot",
+    "file": "screenshots/15-marketplace-template.jpg",
+    "kind": "official-website",
+    "source": "https://x.ai/bot/marketplace/bots/dr-eggbot-v2",
+    "captured": "2026-11-16",
+    "note": "Снято с публичной страницы. Демонстрационный интерфейс не подтверждает выполнение действия в приложении.",
+    "id": "S030"
+  },
+  {
+    "title": "Основной интерфейс и постоянная переписка",
+    "file": "../grok-bot-video/screenshots/0100-main-interface.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=60s",
+    "timecode": "1:00",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S031"
+  },
+  {
+    "title": "Создание бота и группового чата",
+    "file": "../grok-bot-video/screenshots/0120-create-bot.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=80s",
+    "timecode": "1:20",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S032"
+  },
+  {
+    "title": "Имя бота и панель профиля",
+    "file": "../grok-bot-video/screenshots/0135-bot-name.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=95s",
+    "timecode": "1:35",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S033"
+  },
+  {
+    "title": "Выбор формы и цвета аватара",
+    "file": "../grok-bot-video/screenshots/0140-avatar-picker.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=100s",
+    "timecode": "1:40",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S034"
+  },
+  {
+    "title": "Выбор роли и собственная задача",
+    "file": "../grok-bot-video/screenshots/0150-bot-onboarding.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=110s",
+    "timecode": "1:50",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S035"
+  },
+  {
+    "title": "Выбор Gmail прямо в диалоге",
+    "file": "../grok-bot-video/screenshots/0210-gmail-connect.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=130s",
+    "timecode": "2:10",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S036"
+  },
+  {
+    "title": "Авторизация подключения Gmail",
+    "file": "../grok-bot-video/screenshots/0215-gmail-authorize.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=135s",
+    "timecode": "2:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S037"
+  },
+  {
+    "title": "Каталог приложений и навыков",
+    "file": "../grok-bot-video/screenshots/0235-app-catalog.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=155s",
+    "timecode": "2:35",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S038"
+  },
+  {
+    "title": "Подключённый Gmail и начало чтения писем",
+    "file": "../grok-bot-video/screenshots/0240-gmail-added.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=160s",
+    "timecode": "2:40",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S039"
+  },
+  {
+    "title": "Найденный заказ и автоматическое расписание",
+    "file": "../grok-bot-video/screenshots/0250-inbox-routine.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=170s",
+    "timecode": "2:50",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S040"
+  },
+  {
+    "title": "Голосовая команда и запрос черновика",
+    "file": "../grok-bot-video/screenshots/0315-voice-command.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=195s",
+    "timecode": "3:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S041"
+  },
+  {
+    "title": "Просмотр черновика и отправка письма",
+    "file": "../grok-bot-video/screenshots/0325-email-review.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=205s",
+    "timecode": "3:25",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S042"
+  },
+  {
+    "title": "Правка стиля письма и подтверждение отправки",
+    "file": "../grok-bot-video/screenshots/0400-email-style.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=240s",
+    "timecode": "4:00",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S043"
+  },
+  {
+    "title": "Память бота и общие предпочтения",
+    "file": "../grok-bot-video/screenshots/0410-memory-list.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=250s",
+    "timecode": "4:10",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S044"
+  },
+  {
+    "title": "Предпросмотр облачного компьютера",
+    "file": "../grok-bot-video/screenshots/0445-computer-preview.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=285s",
+    "timecode": "4:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S045"
+  },
+  {
+    "title": "Кнопка Teach a task на Mac",
+    "file": "../grok-bot-video/screenshots/0505-teach-task-mac.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=305s",
+    "timecode": "5:05",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S046"
+  },
+  {
+    "title": "Запись обучения на примере QuickBooks",
+    "file": "../grok-bot-video/screenshots/0530-transaction-category.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=330s",
+    "timecode": "5:30",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S047"
+  },
+  {
+    "title": "Объяснение выученной процедуры",
+    "file": "../grok-bot-video/screenshots/0550-learned-workflow.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=350s",
+    "timecode": "5:50",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S048"
+  },
+  {
+    "title": "Завершённая обработка транзакций",
+    "file": "../grok-bot-video/screenshots/0645-transactions-result.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=405s",
+    "timecode": "6:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S049"
+  },
+  {
+    "title": "Запуск сохранённого навыка через слеш",
+    "file": "../grok-bot-video/screenshots/0650-saved-skill.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=410s",
+    "timecode": "6:50",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S050"
+  },
+  {
+    "title": "Бот поддержки и очередь Freshdesk",
+    "file": "../grok-bot-video/screenshots/0700-support-tickets.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=420s",
+    "timecode": "7:00",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S051"
+  },
+  {
+    "title": "Прикрепление документа с правилами",
+    "file": "../grok-bot-video/screenshots/0720-support-document.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=440s",
+    "timecode": "7:20",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S052"
+  },
+  {
+    "title": "Запрос расписания обычным сообщением",
+    "file": "../grok-bot-video/screenshots/0745-routine-prompt.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=465s",
+    "timecode": "7:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S053"
+  },
+  {
+    "title": "Инструкция расписания и кнопки управления",
+    "file": "../grok-bot-video/screenshots/0755-routine-settings.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=475s",
+    "timecode": "7:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S054"
+  },
+  {
+    "title": "Список регулярных задач и переключатель",
+    "file": "../grok-bot-video/screenshots/0800-routines-list.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=480s",
+    "timecode": "8:00",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S055"
+  },
+  {
+    "title": "Добавление трёх ботов в группу",
+    "file": "../grok-bot-video/screenshots/0815-group-create.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=495s",
+    "timecode": "8:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S056"
+  },
+  {
+    "title": "Передача сведений о возврате между ботами",
+    "file": "../grok-bot-video/screenshots/0830-group-collaboration.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=510s",
+    "timecode": "8:30",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S057"
+  },
+  {
+    "title": "Совместная сверка данных и вопрос пользователю",
+    "file": "../grok-bot-video/screenshots/0845-group-followup.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=525s",
+    "timecode": "8:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S058"
+  },
+  {
+    "title": "Меню профиля и недельное использование",
+    "file": "../grok-bot-video/screenshots/0847-weekly-usage.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=527s",
+    "timecode": "8:47",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S059"
+  },
+  {
+    "title": "Расход лимита и срок сброса",
+    "file": "../grok-bot-video/screenshots/0848-weekly-usage-details.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=G6AwOYT-Gbw&t=528s",
+    "timecode": "8:48",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S060"
+  },
+  {
+    "title": "Тарифы и лимиты на сайте из видео",
+    "file": "../grok-bot-charlie-chang/screenshots/0105-pricing.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=65s",
+    "timecode": "1:05",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S061"
+  },
+  {
+    "title": "Меню создания нового бота",
+    "file": "../grok-bot-charlie-chang/screenshots/0145-create-bot.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=105s",
+    "timecode": "1:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S062"
+  },
+  {
+    "title": "Название описание и уведомления бота",
+    "file": "../grok-bot-charlie-chang/screenshots/0155-bot-profile.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=115s",
+    "timecode": "1:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S063"
+  },
+  {
+    "title": "Настройка обязанностей исполнительного ассистента",
+    "file": "../grok-bot-charlie-chang/screenshots/0215-assistant-onboarding.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=135s",
+    "timecode": "2:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S064"
+  },
+  {
+    "title": "Настройки использования и оплаты",
+    "file": "../grok-bot-charlie-chang/screenshots/0245-usage-billing.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=165s",
+    "timecode": "2:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S065"
+  },
+  {
+    "title": "Обновление приложения и компьютера",
+    "file": "../grok-bot-charlie-chang/screenshots/0255-updates.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=175s",
+    "timecode": "2:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S066"
+  },
+  {
+    "title": "Запрос подключения Gmail в чате",
+    "file": "../grok-bot-charlie-chang/screenshots/0315-gmail-accounts.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=195s",
+    "timecode": "3:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S067"
+  },
+  {
+    "title": "Добавление второго Gmail с меткой work",
+    "file": "../grok-bot-charlie-chang/screenshots/0335-gmail-authorization.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=215s",
+    "timecode": "3:35",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S068"
+  },
+  {
+    "title": "Рабочий стол Linux после запуска",
+    "file": "../grok-bot-charlie-chang/screenshots/0435-desktop-ready.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=275s",
+    "timecode": "4:35",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S069"
+  },
+  {
+    "title": "Chrome и страница входа Gmail на компьютере бота",
+    "file": "../grok-bot-charlie-chang/screenshots/0505-browser-gmail.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=305s",
+    "timecode": "5:05",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S070"
+  },
+  {
+    "title": "Запись обучения через Teach a task",
+    "file": "../grok-bot-charlie-chang/screenshots/0520-teach-task.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=320s",
+    "timecode": "5:20",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S071"
+  },
+  {
+    "title": "Выдача Amazon с ограничением цены",
+    "file": "../grok-bot-charlie-chang/screenshots/0555-amazon-results.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=355s",
+    "timecode": "5:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S072"
+  },
+  {
+    "title": "Список ботов и параллельная работа с задачами",
+    "file": "../grok-bot-charlie-chang/screenshots/0620-team-roster.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=380s",
+    "timecode": "6:20",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S073"
+  },
+  {
+    "title": "Переименование и выбор роли исследователя",
+    "file": "../grok-bot-charlie-chang/screenshots/0635-researcher-profile.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=395s",
+    "timecode": "6:35",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S074"
+  },
+  {
+    "title": "Список регулярных задач ассистента",
+    "file": "../grok-bot-charlie-chang/screenshots/0725-routines-list.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=445s",
+    "timecode": "7:25",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S075"
+  },
+  {
+    "title": "Ежедневный отчёт по Slack и почте",
+    "file": "../grok-bot-charlie-chang/screenshots/0755-morning-report-routine.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=475s",
+    "timecode": "7:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S076"
+  },
+  {
+    "title": "Три подобранных саундбара со ссылками",
+    "file": "../grok-bot-charlie-chang/screenshots/0910-product-recommendations.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=550s",
+    "timecode": "9:10",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S077"
+  },
+  {
+    "title": "Каталог готовых ботов и плагинов",
+    "file": "../grok-bot-charlie-chang/screenshots/0945-marketplace.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=585s",
+    "timecode": "9:45",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S078"
+  },
+  {
+    "title": "Карточка dr eggbot и кнопка Import Bot",
+    "file": "../grok-bot-charlie-chang/screenshots/1000-dr-eggbot.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=600s",
+    "timecode": "10:00",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S079"
+  },
+  {
+    "title": "Подключение Gmail Drive Calendar Slack и Notion",
+    "file": "../grok-bot-charlie-chang/screenshots/1015-featured-plugins.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=615s",
+    "timecode": "10:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S080"
+  },
+  {
+    "title": "Подключение 1Password и менеджеров паролей",
+    "file": "../grok-bot-charlie-chang/screenshots/1025-password-manager.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=625s",
+    "timecode": "10:25",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S081"
+  },
+  {
+    "title": "Добавление ассистента Finance и COO в группу",
+    "file": "../grok-bot-charlie-chang/screenshots/1050-group-members.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=650s",
+    "timecode": "10:50",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S082"
+  },
+  {
+    "title": "Общая задача по неоплаченным счетам",
+    "file": "../grok-bot-charlie-chang/screenshots/1120-group-invoices.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=680s",
+    "timecode": "11:20",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S083"
+  },
+  {
+    "title": "Проверка почты и обновление утреннего расписания",
+    "file": "../grok-bot-charlie-chang/screenshots/1155-email-brief.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=715s",
+    "timecode": "11:55",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S084"
+  },
+  {
+    "title": "Начало отправки ответа на письмо",
+    "file": "../grok-bot-charlie-chang/screenshots/1210-email-reply.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=730s",
+    "timecode": "12:10",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S085"
+  },
+  {
+    "title": "Подтверждение отправки письма",
+    "file": "../grok-bot-charlie-chang/screenshots/1215-email-sent.jpg",
+    "kind": "prior-video-frame",
+    "source": "https://www.youtube.com/watch?v=q1IwR88mhaA&t=735s",
+    "timecode": "12:15",
+    "captured": "ранее сохранён в репозитории",
+    "note": "Кадр прежнего видеообзора. Текущая доступность функции проверяется по документации, а не по кадру.",
+    "id": "S086"
+  }
+]

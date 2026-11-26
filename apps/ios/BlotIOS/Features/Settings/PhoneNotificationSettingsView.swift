@@ -49,12 +49,9 @@ struct PhoneNotificationSettingsView: View {
                 ForEach(Array(store.snapshot.conversations.enumerated()), id: \.element.metadata.id) { index, chat in
                     if index > 0 { PhoneSettingsDivider() }
                     PhoneSettingsValueRow(title: chat.title) {
-                        Picker(chat.title, selection: Binding(get: { !store.chatInteractions.isMuted(chat.metadata.id) }, set: { enabled in
+                        Toggle(chat.title, isOn: Binding(get: { !store.chatInteractions.isMuted(chat.metadata.id) }, set: { enabled in
                             if enabled == store.chatInteractions.isMuted(chat.metadata.id) { store.toggleChatMute(chat.metadata.id) }
-                        })) {
-                            Text(store.settingsText("Enabled")).tag(true)
-                            Text(store.settingsText("Silent")).tag(false)
-                        }.labelsHidden()
+                        })).toggleStyle(BlotToggleStyle(showsLabel: false)).labelsHidden()
                     }
                 }
             }

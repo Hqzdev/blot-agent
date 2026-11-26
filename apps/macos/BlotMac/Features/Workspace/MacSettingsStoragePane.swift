@@ -37,11 +37,15 @@ struct MacSettingsStoragePane: View {
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                         .background(WorkspaceStyle.ink.opacity(0.1)).clipShape(RoundedRectangle(cornerRadius: 9))
-                }.frame(height: 24).accessibilityLabel("Объём содержимого: " + bytes(total))
+                }.frame(height: 24)
+                    .accessibilityLabel((store.language == "ru" ? "Объём содержимого: " : "Content size: ") + bytes(total))
                 HStack(alignment: .top, spacing: 28) {
                     ForEach(content) { item in
                         VStack(alignment: .leading, spacing: 8) {
-                            HStack(spacing: 7) { Circle().fill(item.color).frame(width: 8, height: 8); Text(item.id) }
+                            HStack(spacing: 7) {
+                                Circle().fill(item.color).frame(width: 8, height: 8).accessibilityHidden(true)
+                                WorkspaceLocalizedText(item.id)
+                            }
                             Text(bytes(item.bytes)).foregroundStyle(.secondary)
                         }.font(.system(size: 12))
                     }
@@ -83,15 +87,15 @@ private struct MacSettingsStoredChats: View {
                     if chats.isEmpty { Text("Здесь пока нет переписок").foregroundStyle(.secondary).padding(40) }
                     ForEach(chats, id: \.metadata.id) { chat in
                         HStack(spacing: 14) {
-                            Image(systemName: chat.archived ? "archivebox" : "bubble.left").foregroundStyle(.secondary)
+                            BlotIcon(symbol: chat.archived ? "archivebox" : "bubble.left").foregroundStyle(.secondary)
                             VStack(alignment: .leading, spacing: 5) {
                                 Text(chat.title).lineLimit(1)
                                 Text(chat.metadata.updatedAt, format: .dateTime.day().month().year()).font(.caption).foregroundStyle(.secondary)
                             }.frame(maxWidth: .infinity, alignment: .leading)
                             Button(chat.archived ? "Восстановить" : "В архив") { store.setChatArchived(chat.metadata.id, archived: !chat.archived) }
                                 .buttonStyle(MacSettingsActionStyle())
-                            Button(role: .destructive) { deleting = chat } label: { Image(systemName: "trash") }
-                                .buttonStyle(.plain).accessibilityLabel("Удалить чат: " + chat.title)
+                            Button(role: .destructive) { deleting = chat } label: { BlotIcon(symbol: "trash") }
+                                .buttonStyle(.plain).accessibilityLabel(store.t("Delete chat") + ": " + chat.title)
                         }.padding(.vertical, 14)
                         Divider()
                     }
@@ -100,7 +104,7 @@ private struct MacSettingsStoredChats: View {
             WorkspaceFeedback().padding(.horizontal, 24)
         }.frame(width: min(640, sheetSize.width), height: min(500, sheetSize.height))
             .background(MacTeamSettingsStyle.canvas).disabled(store.busy)
-            .confirmationDialog("Удалить переписку?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), presenting: deleting) { chat in
+            .workspaceConfirmationDialog("Удалить переписку?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), presenting: deleting) { chat in
                 Button("Удалить чат", role: .destructive) { store.deleteChat(chat.metadata.id); deleting = nil }
                 Button("Отмена", role: .cancel) { deleting = nil }
             } message: { _ in Text("История сообщений будет удалена. Агент останется в команде.") }

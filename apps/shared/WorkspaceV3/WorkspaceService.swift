@@ -4,7 +4,7 @@ import Foundation
 enum WorkspaceAction: String {
     case signIn, register, verify, recover, resetPassword, resendVerification, oauth, createConversation, send, start, pause, stop, approve, deny, grantRule
     case createAgent, saveAgent, createSchedule, updateSchedule, revokeDevice, connect, saveFile, applyChanges, saveSetting, saveModelKey, addMcp, saveMemory
-    case addConnection, removeConnection
+    case addConnection, removeConnection, deleteSchedule, acceptMemory, rejectMemory
 }
 
 struct WorkspaceRequest {

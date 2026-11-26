@@ -36,7 +36,7 @@ struct RunCreationView: View {
             if app.projects.isEmpty && !app.workspace.loading {
                 Spacer()
                 EmptyState(icon: "git-branch", title: "Connect a repository",
-                           detail: "Blot works on Git repositories on this Mac. Add one to start \(team ? "a team run" : "a task").",
+                           detail: "Ori works on Git repositories on this Mac. Add one to start \(team ? "a team run" : "a task").",
                            actionTitle: "Add repository…", actionIcon: "plus") {
                     app.openProfileSettings(.git)
                 }
@@ -49,7 +49,7 @@ struct RunCreationView: View {
                         .font(KFont.pageTitle(.regular)).foregroundStyle(K.text)
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
-                    Text("Blot drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result.")
+                    Text("Ori drafts a plan first. Work starts after you approve it, and an independent reviewer checks the result.")
                         .font(KFont.ui(13)).foregroundStyle(K.text2).lineSpacing(3)
                         .multilineTextAlignment(.center).frame(maxWidth: 460)
                         .fixedSize(horizontal: false, vertical: true)
@@ -105,7 +105,7 @@ struct RunCreationView: View {
                     payload: .object(["goal": .string(content), "tokenBudget": .integer(tokens)]),
                     projectID: projectID, key: key)
                 goal.wrappedValue = ""
-                app.toasts.show("Blot is drafting the plan")
+                app.toasts.show("Ori is drafting the plan")
                 if team {
                     app.openWorkRun(receipt.operationId.uuidString)
                 } else {

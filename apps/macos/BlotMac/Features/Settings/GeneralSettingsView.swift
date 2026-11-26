@@ -18,14 +18,14 @@ struct GeneralSettingsView: View {
                 SettingsChoice(title: "Open files in", value: $settings.editor, options: ["VS Code", "Xcode", "Cursor", "System default"])
             }
             SettingsDivider()
-            SettingsRow(title: "Language", detail: "Language of the app interface. Blot answers in the language you write in.") {
+            SettingsRow(title: "Language", detail: "Language of the app interface. Ori answers in the language you write in.") {
                 SettingsChoice(title: "Language", value: $settings.language, options: ["Auto detect", "English", "Русский"])
             }
         }
         SettingsGroup(title: "Behavior") {
-            SettingsToggleRow(title: "Show in menu bar", detail: "Keep Blot in the menu bar while tasks run with the window closed.", value: $settings.menuBar)
+            SettingsToggleRow(title: "Show in menu bar", detail: "Keep Ori in the menu bar while tasks run with the window closed.", value: $settings.menuBar)
             SettingsDivider()
-            SettingsToggleRow(title: "Prevent sleep while a task runs", detail: "Keep the Mac awake until Blot finishes or stops to ask you.", value: $settings.preventSleep)
+            SettingsToggleRow(title: "Prevent sleep while a task runs", detail: "Keep the Mac awake until Ori finishes or stops to ask you.", value: $settings.preventSleep)
             SettingsDivider()
             SettingsRow(title: "Notify when a task finishes", detail: "Send a macOS notification when a task completes or needs approval.") {
                 SettingsChoice(title: "Task finished notifications", value: $settings.completionNotice, options: ["When in background", "Always", "Never"])
@@ -38,7 +38,7 @@ struct GeneralSettingsView: View {
                 SettingsChoice(title: "Release channel", value: $settings.releaseChannel, options: ["Stable", "Beta"])
             }
             SettingsDivider()
-            SettingsRow(title: "Blot \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")",
+            SettingsRow(title: "Ori \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "")",
                         detail: checked ? "No update service is connected in this build." : "Updates are installed with the app.") {
                 KButton(title: "Check now", height: 28) { checked = true }
             }

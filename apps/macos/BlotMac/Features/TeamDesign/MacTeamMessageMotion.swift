@@ -15,15 +15,18 @@ struct MacTeamMessageEntrance: ViewModifier {
     let inputFrame: CGRect?
     @Environment(\.blotReduceMotion) private var reduceMotion
     @State private var progress: CGFloat
+    @State private var finished: Bool
 
     init(animated: Bool, outgoing: Bool, inputFrame: CGRect? = nil) {
         self.outgoing = outgoing
         self.inputFrame = inputFrame
         _progress = State(initialValue: animated ? 0 : 1)
+        _finished = State(initialValue: !animated)
     }
 
     func body(content: Content) -> some View {
-        content
+        if finished { content }
+        else { content
             .visualEffect { [inputFrame, outgoing, progress, reduceMotion] content, geometry in
                 let target = geometry.frame(in: .named(MacTeamMessageMotion.coordinateSpace))
                 let source = inputFrame ?? target
@@ -38,9 +41,10 @@ struct MacTeamMessageEntrance: ViewModifier {
             }
             .onAppear {
                 guard progress == 0 else { return }
-                withKAnimation(reduceMotion, outgoing ? MacTeamMessageMotion.send : MacTeamMessageMotion.receive) {
+                withAnimation(reduceMotion ? nil : (outgoing ? MacTeamMessageMotion.send : MacTeamMessageMotion.receive)) {
                     progress = 1
-                }
+                } completion: { finished = true }
             }
+        }
     }
 }

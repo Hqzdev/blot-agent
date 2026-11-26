@@ -13,7 +13,7 @@ public struct WorkspaceChatService: Sendable {
             guard !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw WorkspaceStorageError.invalidRecord }
             if let agentID { _ = try tx.require(BlotV3.AgentProfile.self, id: agentID) }
             let index = WorkspaceDirectConversations(try tx.records(BlotV3.Conversation.self))
-            if let existing = index.conversations.first(where: { $0.kind != .group && $0.agentId == agentID }) {
+            if let existing = index.conversations.first(where: { $0.kind != .group && $0.agentId == agentID && $0.parentMessageId == nil }) {
                 if existing.archived {
                     let reopened = try BlotV3.Conversation(metadata: tx.metadata(id: existing.metadata.id, now: now, replacing: existing.metadata),
                         agentId: existing.agentId, title: existing.title, mobileOwned: existing.mobileOwned,

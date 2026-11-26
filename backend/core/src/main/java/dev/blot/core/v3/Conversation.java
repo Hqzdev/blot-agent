@@ -10,7 +10,9 @@ public record Conversation(
     boolean mobileOwned,
     boolean pinned,
     boolean archived,
-    ConversationKind kind) {
+    ConversationKind kind,
+    UUID parentConversationId,
+    UUID parentMessageId) {
   public Conversation {
     Objects.requireNonNull(metadata, "metadata");
     Objects.requireNonNull(title, "title");

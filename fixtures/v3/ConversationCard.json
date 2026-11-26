@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "id": "00000000-0000-4000-8000-000000000041",
+    "ownerId": "00000000-0000-4000-8000-000000000003",
+    "workspaceId": "00000000-0000-4000-8000-000000000006",
+    "version": 1,
+    "createdAt": "2026-11-02T09:00:00Z",
+    "updatedAt": "2026-11-02T09:00:00Z"
+  },
+  "messageId": "00000000-0000-4000-8000-000000000011",
+  "operationId": "00000000-0000-4000-8000-000000000041",
+  "executorDeviceId": "00000000-0000-4000-8000-000000000004",
+  "kind": "question",
+  "state": "pending",
+  "expiresAt": null,
+  "payloadJSON": "{\"question\":{\"_0\":{\"prompt\":\"Which language should we use?\",\"choices\":[\"Swift\",\"Java\"],\"allowsCustomAnswer\":true}}}",
+  "responseJSON": null,
+  "updatedByDeviceId": "00000000-0000-4000-8000-000000000004"
+}

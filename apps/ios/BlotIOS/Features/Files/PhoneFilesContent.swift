@@ -8,13 +8,14 @@ struct PhoneFilesContent: View {
 
     private var query: String { store.navigation.filesQuery.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var files: [BlotV3.Artifact] {
-        store.snapshot.artifacts.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
+        store.visibleFiles.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
     }
 
     var body: some View {
         let visibleFiles = files
         VStack(alignment: .leading, spacing: 20) {
             WorkspaceHeading(title: "Files", subtitle: "Workspace results and documents")
+            WorkspacePagesButton()
             WorkspaceFilesImportButton()
             search
             if visibleFiles.isEmpty {

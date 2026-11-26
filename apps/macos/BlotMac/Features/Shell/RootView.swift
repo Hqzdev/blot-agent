@@ -68,7 +68,7 @@ struct RootView: View {
                 }
             }
             .background(K.bg)
-            .navigationTitle(state.isNewConversation && state.workChat.selectedProjectID == nil ? "Blot" : state.shellTitle)
+            .navigationTitle(state.isNewConversation && state.workChat.selectedProjectID == nil ? "Ori" : state.shellTitle)
         }
         .navigationSplitViewStyle(.balanced)
         .toolbar { ShellToolbar() }

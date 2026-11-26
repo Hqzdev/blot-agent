@@ -15,6 +15,7 @@ const secret = (await readFile(secretPath, "utf8")).trim();
 if (!/^[a-f0-9]{64}$/.test(secret)) throw new Error("Invalid local account secret");
 const child = spawn(process.execPath, ["node_modules/next/dist/bin/next", "dev", "--hostname", "127.0.0.1"], {
   cwd: root, stdio: "inherit", env: { ...process.env, BLOT_LOCAL_ACCOUNTS: "1",
+    BLOT_WEB_APP_URL: process.env.BLOT_WEB_APP_URL || "http://127.0.0.1:3001/app",
     BLOT_WEB_SESSION_SECRET: secret, BLOT_AUTH_CHALLENGE_SECRET: secret,
     BLOT_GOOGLE_WEB_REDIRECT_URI: "http://127.0.0.1:3000/auth/google/callback" },
 });

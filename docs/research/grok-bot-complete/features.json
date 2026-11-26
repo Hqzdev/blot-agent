@@ -1,0 +1,2801 @@
+[
+  {
+    "id": "F001",
+    "group": "Боты и организация",
+    "name": "Создание бота с именем, формой и цветом",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F002",
+    "group": "Боты и организация",
+    "name": "Назначение постоянной роли через чат",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F003",
+    "group": "Боты и организация",
+    "name": "Создание бота другим ботом",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F004",
+    "group": "Боты и организация",
+    "name": "Выбор и замена primary Bot",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F005",
+    "group": "Боты и организация",
+    "name": "Переименование и метка роли",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F006",
+    "group": "Боты и организация",
+    "name": "Генерация аватара по описанию",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F007",
+    "group": "Боты и организация",
+    "name": "Загрузка и кадрирование аватара",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F008",
+    "group": "Боты и организация",
+    "name": "Закрепление ботов",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F009",
+    "group": "Боты и организация",
+    "name": "Секции по проектам и клиентам",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F010",
+    "group": "Боты и организация",
+    "name": "Скрытие и восстановление бота",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F011",
+    "group": "Боты и организация",
+    "name": "Дублирование на iPhone без истории и памяти",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F012",
+    "group": "Боты и организация",
+    "name": "Удаление бота",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F013",
+    "group": "Боты и организация",
+    "name": "Публикация шаблона",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F014",
+    "group": "Боты и организация",
+    "name": "Обновление и отключение ссылки шаблона",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F015",
+    "group": "Боты и организация",
+    "name": "Импорт своей копии шаблона",
+    "availability": "Desktop и mobile, отдельные действия зависят от платформы",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F016",
+    "group": "Память",
+    "name": "Сохранение устойчивых предпочтений",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F017",
+    "group": "Память",
+    "name": "Сохранение правил и истории работы",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F018",
+    "group": "Память",
+    "name": "Общие факты о пользователе между ботами",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F019",
+    "group": "Память",
+    "name": "Просмотр памяти вопросом в чате",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F020",
+    "group": "Память",
+    "name": "Исправление и забывание фактов",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F021",
+    "group": "Память",
+    "name": "Использование контекста прошлых звонков",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F022",
+    "group": "Память",
+    "name": "Импорт памяти из другого ассистента",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F023",
+    "group": "Память",
+    "name": "Сохранение памяти при Reset переписки",
+    "availability": "Личная память и командное обучение имеют разные правила",
+    "source": "https://docs.x.ai/grok-bot/bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F024",
+    "group": "Переписка и поиск",
+    "name": "Текст, ссылки и вставленные изображения",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F025",
+    "group": "Переписка и поиск",
+    "name": "Прикрепление локальных файлов",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F026",
+    "group": "Переписка и поиск",
+    "name": "Упоминания бота, группы, routine и приложения",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F027",
+    "group": "Переписка и поиск",
+    "name": "Ответ на конкретное сообщение",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F028",
+    "group": "Переписка и поиск",
+    "name": "Реакции на сообщения",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F029",
+    "group": "Переписка и поиск",
+    "name": "Дополнительная инструкция во время работы",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F030",
+    "group": "Переписка и поиск",
+    "name": "Остановка текущей работы сообщением",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F031",
+    "group": "Переписка и поиск",
+    "name": "Лента действий инструментов и компьютера",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F032",
+    "group": "Переписка и поиск",
+    "name": "Редактируемые черновики email и Slack",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F033",
+    "group": "Переписка и поиск",
+    "name": "Отправка и отклонение черновика",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F034",
+    "group": "Переписка и поиск",
+    "name": "Вложения в Gmail и Outlook черновиках",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F035",
+    "group": "Переписка и поиск",
+    "name": "Поиск по сообщениям, файлам и routines",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F036",
+    "group": "Переписка и поиск",
+    "name": "Поиск более старых сообщений",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F037",
+    "group": "Переписка и поиск",
+    "name": "Палитра команд и горячие клавиши",
+    "availability": "Desktop и mobile",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F038",
+    "group": "Группы и передача работы",
+    "name": "Создание и переименование группы",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F039",
+    "group": "Группы и передача работы",
+    "name": "Изменение состава группы",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F040",
+    "group": "Группы и передача работы",
+    "name": "Адресация через @ и @everyone",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F041",
+    "group": "Группы и передача работы",
+    "name": "Общий контекст нескольких специалистов",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F042",
+    "group": "Группы и передача работы",
+    "name": "Асинхронная передача задачи другому боту",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F043",
+    "group": "Группы и передача работы",
+    "name": "Ответы на вопросы и формы в группе",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F044",
+    "group": "Группы и передача работы",
+    "name": "Вложения пользователя в группе",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F045",
+    "group": "Группы и передача работы",
+    "name": "Выбор владельца этапа инструкцией",
+    "availability": "Группа из 2–6 ботов; голосовой звонок одному боту",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F046",
+    "group": "Голос и телефонные звонки",
+    "name": "Диктовка с редактированием перед отправкой",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F047",
+    "group": "Голос и телефонные звонки",
+    "name": "Живой голосовой разговор",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F048",
+    "group": "Голос и телефонные звонки",
+    "name": "Голосовые заметки и расшифровка",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F049",
+    "group": "Голос и телефонные звонки",
+    "name": "Mute, Hang up и показ transcript",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F050",
+    "group": "Голос и телефонные звонки",
+    "name": "Выбор голоса, скорости и языка",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F051",
+    "group": "Голос и телефонные звонки",
+    "name": "Возврат к продолжающемуся звонку",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F052",
+    "group": "Голос и телефонные звонки",
+    "name": "Карточка завершённого звонка",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F053",
+    "group": "Голос и телефонные звонки",
+    "name": "Звонок организации с подтверждением адресата",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F054",
+    "group": "Голос и телефонные звонки",
+    "name": "Передача телефонного звонка пользователю",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F055",
+    "group": "Голос и телефонные звонки",
+    "name": "Ответ на вопрос во время звонка",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F056",
+    "group": "Голос и телефонные звонки",
+    "name": "Запись, копирование и экспорт transcript звонка",
+    "availability": "Исходящие телефонные звонки доступны только в США",
+    "source": "https://docs.x.ai/grok-bot/chat-and-collaboration",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F057",
+    "group": "Облачный компьютер",
+    "name": "Работа в облаке при закрытом ноутбуке",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F058",
+    "group": "Облачный компьютер",
+    "name": "Браузер, командная строка и файловая система",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F059",
+    "group": "Облачный компьютер",
+    "name": "Постоянные файлы и сессии входа",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F060",
+    "group": "Облачный компьютер",
+    "name": "Параллельная работа на отдельных экранах",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F061",
+    "group": "Облачный компьютер",
+    "name": "Предпросмотр компьютера в правой панели",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F062",
+    "group": "Облачный компьютер",
+    "name": "Наблюдение за действиями",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F063",
+    "group": "Облачный компьютер",
+    "name": "Take control и возврат управления",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F064",
+    "group": "Облачный компьютер",
+    "name": "Работа с сайтом без коннектора",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F065",
+    "group": "Облачный компьютер",
+    "name": "Общий каталог /workspace",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F066",
+    "group": "Облачный компьютер",
+    "name": "Обновление программного обеспечения и образа",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F067",
+    "group": "Облачный компьютер",
+    "name": "Recover и Reset компьютера",
+    "availability": "Один постоянный компьютер аккаунта; отдельный экран у каждого бота",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F068",
+    "group": "Приложения и MCP",
+    "name": "Поиск и установка приложения",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F069",
+    "group": "Приложения и MCP",
+    "name": "Карточка подключения прямо в чате",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F070",
+    "group": "Приложения и MCP",
+    "name": "OAuth-вход и повторная авторизация",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F071",
+    "group": "Приложения и MCP",
+    "name": "Просмотр установленных приложений",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F072",
+    "group": "Приложения и MCP",
+    "name": "Включение отдельных инструментов приложения",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F073",
+    "group": "Приложения и MCP",
+    "name": "Несколько аккаунтов у поддерживающих приложений",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F074",
+    "group": "Приложения и MCP",
+    "name": "Метки аккаунтов work и personal",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F075",
+    "group": "Приложения и MCP",
+    "name": "Удаление приложения и отключение входа",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F076",
+    "group": "Приложения и MCP",
+    "name": "Подключение Remote HTTPS MCP",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F077",
+    "group": "Приложения и MCP",
+    "name": "MCP с headers и OAuth client",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F078",
+    "group": "Приложения и MCP",
+    "name": "MCP через Command и Arguments",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F079",
+    "group": "Приложения и MCP",
+    "name": "Подключение MCP по просьбе в чате",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F080",
+    "group": "Приложения и MCP",
+    "name": "1Password с подтверждением выбранных логинов",
+    "availability": "Доступ общий для личных ботов аккаунта; ограничения конкретного провайдера",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F081",
+    "group": "Почта и поиск в X",
+    "name": "Собственный адрес mail.grokbot.com",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F082",
+    "group": "Почта и поиск в X",
+    "name": "Plus aliases для одного адреса",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F083",
+    "group": "Почта и поиск в X",
+    "name": "Чтение, поиск, черновики и отправка почты",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F084",
+    "group": "Почта и поиск в X",
+    "name": "Пересылка с форматированием и вложениями",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F085",
+    "group": "Почта и поиск в X",
+    "name": "Routine по письму, отправителю или домену",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F086",
+    "group": "Почта и поиск в X",
+    "name": "Публичный поиск X без входа",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F087",
+    "group": "Почта и поиск в X",
+    "name": "Чтение постов, упоминаний и трендов X",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F088",
+    "group": "Почта и поиск в X",
+    "name": "Личные данные X через авторизованный plugin",
+    "availability": "Собственная почта может требовать включения администратором",
+    "source": "https://docs.x.ai/grok-bot/computer-and-apps",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F089",
+    "group": "Навыки",
+    "name": "Сохранение выполненной процедуры как skill",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F090",
+    "group": "Навыки",
+    "name": "Создание навыка из письменной инструкции",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F091",
+    "group": "Навыки",
+    "name": "Общие private skills нескольких ботов",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F092",
+    "group": "Навыки",
+    "name": "Включение private skill для бота",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F093",
+    "group": "Навыки",
+    "name": "Запуск навыка по имени",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F094",
+    "group": "Навыки",
+    "name": "Teach a task по демонстрации",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F095",
+    "group": "Навыки",
+    "name": "Проверка и правка созданного навыка",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F096",
+    "group": "Навыки",
+    "name": "Публикация навыка команде",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F097",
+    "group": "Навыки",
+    "name": "Sync, Copy link и Unpublish навыка",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F098",
+    "group": "Навыки",
+    "name": "Навык только для одного командного бота",
+    "availability": "Общая библиотека; включение навыка для конкретного бота",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F099",
+    "group": "Расписания и события",
+    "name": "Создание расписания естественным языком",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F100",
+    "group": "Расписания и события",
+    "name": "Расписание с часовым поясом",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F101",
+    "group": "Расписания и события",
+    "name": "Запуск по событию Slack",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F102",
+    "group": "Расписания и события",
+    "name": "Запуск по GitHub, Linear, Sentry, PagerDuty",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F103",
+    "group": "Расписания и события",
+    "name": "Запуск по входящей почте",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F104",
+    "group": "Расписания и события",
+    "name": "Webhook с URL и Bearer key",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F105",
+    "group": "Расписания и события",
+    "name": "Передача JSON body webhook в задачу",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F106",
+    "group": "Расписания и события",
+    "name": "Просмотр Instruction и When to run",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F107",
+    "group": "Расписания и события",
+    "name": "Pause и Resume",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F108",
+    "group": "Расписания и события",
+    "name": "Test с результатом в переписке",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F109",
+    "group": "Расписания и события",
+    "name": "Изменение routine через чат",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F110",
+    "group": "Расписания и события",
+    "name": "Удаление с подтверждением",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F111",
+    "group": "Расписания и события",
+    "name": "История Running, Succeeded и Failed",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F112",
+    "group": "Расписания и события",
+    "name": "Видимость routine на Team Bot",
+    "availability": "Облако; Test доступен в desktop не у всех routines",
+    "source": "https://docs.x.ai/grok-bot/skills-routines-and-automations",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F113",
+    "group": "Файлы и результаты",
+    "name": "Изображения, аудио и видео на входе",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F114",
+    "group": "Файлы и результаты",
+    "name": "PDF, Word, Excel и PowerPoint",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F115",
+    "group": "Файлы и результаты",
+    "name": "CSV, JSON, YAML, код и notebooks",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F116",
+    "group": "Файлы и результаты",
+    "name": "Перенос файлов в Drive, OneDrive, SharePoint",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F117",
+    "group": "Файлы и результаты",
+    "name": "Загрузка файлов и вложений на компьютер",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F118",
+    "group": "Файлы и результаты",
+    "name": "Предпросмотр результатов в карточках",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F119",
+    "group": "Файлы и результаты",
+    "name": "Документы, таблицы, презентации и отчёты",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F120",
+    "group": "Файлы и результаты",
+    "name": "Генерация изображений по описанию и референсам",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F121",
+    "group": "Файлы и результаты",
+    "name": "Генерация коротких видео",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F122",
+    "group": "Файлы и результаты",
+    "name": "Видео по первому и последнему кадру",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F123",
+    "group": "Файлы и результаты",
+    "name": "Просмотр медиа с увеличением и навигацией",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F124",
+    "group": "Файлы и результаты",
+    "name": "Скачивание одного или всех файлов",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F125",
+    "group": "Файлы и результаты",
+    "name": "Видеоплеер со скоростью и перемоткой",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F126",
+    "group": "Файлы и результаты",
+    "name": "Файлы и View PR из Cloud Agent",
+    "availability": "Лимиты desktop описаны отдельно в отчёте",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F127",
+    "group": "Pages и Library",
+    "name": "Создание отчёта, dashboard или tracker как Page",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F128",
+    "group": "Pages и Library",
+    "name": "Карточка страницы и Open",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F129",
+    "group": "Pages и Library",
+    "name": "Страница рядом с чат-панелью",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F130",
+    "group": "Pages и Library",
+    "name": "Изменение той же страницы через чат",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F131",
+    "group": "Pages и Library",
+    "name": "Фильтры и переключатели внутри страницы",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F132",
+    "group": "Pages и Library",
+    "name": "Обновление страницы из routine",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F133",
+    "group": "Pages и Library",
+    "name": "Переименование страницы на desktop",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F134",
+    "group": "Pages и Library",
+    "name": "Library с группами по времени",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F135",
+    "group": "Pages и Library",
+    "name": "Фильтры Pages, Media, Links, Files, Apps",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F136",
+    "group": "Pages и Library",
+    "name": "Pin и Unpin в Library",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F137",
+    "group": "Pages и Library",
+    "name": "Доступ лично, команде или по ссылке",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F138",
+    "group": "Pages и Library",
+    "name": "Приглашение людей и групп Viewer",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F139",
+    "group": "Pages и Library",
+    "name": "Copy link и Open in browser",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F140",
+    "group": "Pages и Library",
+    "name": "Управление опубликованными страницами в dashboard",
+    "availability": "Постепенное включение; документация отдельно оговаривает Enterprise",
+    "source": "https://docs.x.ai/grok-bot/files-and-results",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F141",
+    "group": "Согласования",
+    "name": "Проверка действия перед инструментом",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F142",
+    "group": "Согласования",
+    "name": "Карточка с операцией и входными данными",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F143",
+    "group": "Согласования",
+    "name": "Allow once, Always allow и Deny",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F144",
+    "group": "Согласования",
+    "name": "Создание Allow-правила из карточки",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F145",
+    "group": "Согласования",
+    "name": "Custom Rules Ask first и Allow automatically",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F146",
+    "group": "Согласования",
+    "name": "Редактирование и удаление правил",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F147",
+    "group": "Согласования",
+    "name": "Показ заблокированных правил администратора",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F148",
+    "group": "Согласования",
+    "name": "Приоритет Ask first при конфликте",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F149",
+    "group": "Согласования",
+    "name": "Истечение фонового согласования",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F150",
+    "group": "Согласования",
+    "name": "Отдельное разрешение локального выполнения",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F151",
+    "group": "Согласования",
+    "name": "Защищённый ввод и ручная передача управления",
+    "availability": "Auto Review включён по умолчанию; правила зависят от команды",
+    "source": "https://docs.x.ai/grok-bot/approvals-security-and-privacy",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F152",
+    "group": "Vault и платежи",
+    "name": "Хранилище Login, Card и Contact info",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F153",
+    "group": "Vault и платежи",
+    "name": "Добавление и изменение записей",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F154",
+    "group": "Vault и платежи",
+    "name": "Импорт логинов CSV из менеджеров паролей",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F155",
+    "group": "Vault и платежи",
+    "name": "Сканирование или фото карты",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F156",
+    "group": "Vault и платежи",
+    "name": "Подсказки Hints для выбора записи",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F157",
+    "group": "Vault и платежи",
+    "name": "Сохранение из Secure Form",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F158",
+    "group": "Vault и платежи",
+    "name": "Secure secret card для API keys",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F159",
+    "group": "Vault и платежи",
+    "name": "Write-only замена секрета",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F160",
+    "group": "Vault и платежи",
+    "name": "Платёжные аккаунты Link, X Money, Shop Pay",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F161",
+    "group": "Vault и платежи",
+    "name": "Default payment method",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F162",
+    "group": "Vault и платежи",
+    "name": "Карточка заказа с итоговой суммой",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F163",
+    "group": "Vault и платежи",
+    "name": "Пакет карточных платежей с одним согласованием",
+    "availability": "Vault аккаунта недоступен чужому Team Bot",
+    "source": "https://docs.x.ai/grok-bot/vault",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F164",
+    "group": "Инициатива",
+    "name": "Предложение взять обнаруженную работу",
+    "availability": "Основной личный бот; уведомления и check-ins различаются",
+    "source": "https://docs.x.ai/grok-bot/initiative",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F165",
+    "group": "Инициатива",
+    "name": "Предупреждение об отключившемся приложении",
+    "availability": "Основной личный бот; уведомления и check-ins различаются",
+    "source": "https://docs.x.ai/grok-bot/initiative",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F166",
+    "group": "Инициатива",
+    "name": "Предложение переподключения",
+    "availability": "Основной личный бот; уведомления и check-ins различаются",
+    "source": "https://docs.x.ai/grok-bot/initiative",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F167",
+    "group": "Инициатива",
+    "name": "Follow-up в X Chat",
+    "availability": "Основной личный бот; уведомления и check-ins различаются",
+    "source": "https://docs.x.ai/grok-bot/initiative",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F168",
+    "group": "Инициатива",
+    "name": "Координация основным ботом",
+    "availability": "Основной личный бот; уведомления и check-ins различаются",
+    "source": "https://docs.x.ai/grok-bot/initiative",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F169",
+    "group": "Team Bots",
+    "name": "Создание командного бота как draft",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F170",
+    "group": "Team Bots",
+    "name": "Publish общего бота",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F171",
+    "group": "Team Bots",
+    "name": "Sharing команде, организации, людям и группам",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F172",
+    "group": "Team Bots",
+    "name": "Роли Owner, Manager и Collaborator",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F173",
+    "group": "Team Bots",
+    "name": "Поиск Browse shared Bots",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F174",
+    "group": "Team Bots",
+    "name": "Приватная переписка каждого участника",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F175",
+    "group": "Team Bots",
+    "name": "Согласование общего обучения Review learnings",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F176",
+    "group": "Team Bots",
+    "name": "Командные apps, secrets, skills и files",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F177",
+    "group": "Team Bots",
+    "name": "Разрешение на личный коннектор участника",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F178",
+    "group": "Team Bots",
+    "name": "Shared connectors и service accounts",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F179",
+    "group": "Team Bots",
+    "name": "Bot-specific vault logins",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F180",
+    "group": "Team Bots",
+    "name": "Управление General и Knowledge",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F181",
+    "group": "Team Bots",
+    "name": "Аналитика использования и top users",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F182",
+    "group": "Team Bots",
+    "name": "Автоматическое добавление в sidebar администратором",
+    "availability": "Team и Enterprise; минимум два участника команды",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F183",
+    "group": "Slack и Microsoft Teams",
+    "name": "Подключение опубликованного Team Bot в Teams",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F184",
+    "group": "Slack и Microsoft Teams",
+    "name": "Согласование приложения администратором Teams",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F185",
+    "group": "Slack и Microsoft Teams",
+    "name": "Link Account участника",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F186",
+    "group": "Slack и Microsoft Teams",
+    "name": "Упоминание в канале и диалог один на один",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F187",
+    "group": "Slack и Microsoft Teams",
+    "name": "Добавление в групповой чат Teams",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F188",
+    "group": "Slack и Microsoft Teams",
+    "name": "Чтение текущей ветки и доступных каналов",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F189",
+    "group": "Slack и Microsoft Teams",
+    "name": "Работа с файлами через OneDrive",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F190",
+    "group": "Slack и Microsoft Teams",
+    "name": "Обновление имени и аватара в Teams",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F191",
+    "group": "Slack и Microsoft Teams",
+    "name": "Удаление приложения из Teams",
+    "availability": "Канал Team Bot и коннектор сервиса выполняют разные функции",
+    "source": "https://docs.x.ai/grok-bot/microsoft-teams",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F192",
+    "group": "Slack как канал",
+    "name": "Отдельный Slack handle командного бота",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F193",
+    "group": "Slack как канал",
+    "name": "DM и упоминания в каналах",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F194",
+    "group": "Slack как канал",
+    "name": "Передача работы личным ботам участника",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F195",
+    "group": "Slack как канал",
+    "name": "Ответ в той же Slack-ветке",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F196",
+    "group": "Slack как канал",
+    "name": "Согласование действия инициатором запроса",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F197",
+    "group": "Slack как канал",
+    "name": "Ответы в ветке routine без нового упоминания",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F198",
+    "group": "Slack как канал",
+    "name": "Настройка Slack Workspace Access",
+    "availability": "Связывание аккаунта выполняется для workspace",
+    "source": "https://docs.x.ai/grok-bot/team-bots",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F199",
+    "group": "Встречи",
+    "name": "Вход в Google Meet, Zoom и Teams по ссылке",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F200",
+    "group": "Встречи",
+    "name": "Подтверждение перед присоединением",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F201",
+    "group": "Встречи",
+    "name": "Вход по календарю",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F202",
+    "group": "Встречи",
+    "name": "Транскрибирование и заметки",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F203",
+    "group": "Встречи",
+    "name": "Ответы по имени в чате встречи",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F204",
+    "group": "Встречи",
+    "name": "Приватный ответ в Zoom chat",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F205",
+    "group": "Встречи",
+    "name": "Upcoming с обратным отсчётом",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F206",
+    "group": "Встречи",
+    "name": "Disable Interactivity",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F207",
+    "group": "Встречи",
+    "name": "Cancel или Quit встречи",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F208",
+    "group": "Встречи",
+    "name": "Итоги, action items и transcript",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F209",
+    "group": "Встречи",
+    "name": "Развёрнутый отчёт на Page",
+    "availability": "Team, Enterprise и Ultra; Enterprise admin может отключить",
+    "source": "https://docs.x.ai/grok-bot/meetings",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F210",
+    "group": "Мобильное приложение",
+    "name": "Синхронизация ботов и переписки с desktop",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F211",
+    "group": "Мобильное приложение",
+    "name": "Создание ботов и групп",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F212",
+    "group": "Мобильное приложение",
+    "name": "Системное меню Share в Grok Bot",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F213",
+    "group": "Мобильное приложение",
+    "name": "Черновик сообщения для каждой беседы",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F214",
+    "group": "Мобильное приложение",
+    "name": "Выделение текста и Add to Chat",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F215",
+    "group": "Мобильное приложение",
+    "name": "Голос, диктовка, фото и файлы",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F216",
+    "group": "Мобильное приложение",
+    "name": "Просмотр и управление облачным экраном",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F217",
+    "group": "Мобильное приложение",
+    "name": "Рoutines и Run history",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F218",
+    "group": "Мобильное приложение",
+    "name": "Поиск Messages, Bots, Groups, Files, Routines",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F219",
+    "group": "Мобильное приложение",
+    "name": "Library и sharing Pages",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F220",
+    "group": "Мобильное приложение",
+    "name": "Push-уведомления и haptics",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F221",
+    "group": "Мобильное приложение",
+    "name": "Siri, Spotlight и Shortcuts на iPhone",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F222",
+    "group": "Мобильное приложение",
+    "name": "Live Activities и Action Button на iPhone",
+    "availability": "iPhone и Android; отдельные функции различаются",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F223",
+    "group": "Приложения физического телефона",
+    "name": "Чтение и изменение календаря",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F224",
+    "group": "Приложения физического телефона",
+    "name": "Поиск контактов только для чтения",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F225",
+    "group": "Приложения физического телефона",
+    "name": "Чтение текущего положения телефона",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F226",
+    "group": "Приложения физического телефона",
+    "name": "Установка будильника и таймера",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F227",
+    "group": "Приложения физического телефона",
+    "name": "Reminders на iPhone",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F228",
+    "group": "Приложения физического телефона",
+    "name": "Управление Apple Home на iPhone",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F229",
+    "group": "Приложения физического телефона",
+    "name": "Разрешения Allow, Allowed и Denied",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F230",
+    "group": "Приложения физического телефона",
+    "name": "Согласование действия на нужном устройстве",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F231",
+    "group": "Приложения физического телефона",
+    "name": "Переименование устройств и их статусы",
+    "availability": "Нужны разрешения и открытый Grok Bot; собственный личный бот",
+    "source": "https://docs.x.ai/grok-bot/mobile",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F232",
+    "group": "Настройки",
+    "name": "Несколько аккаунтов и переключение",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F233",
+    "group": "Настройки",
+    "name": "Follow System, Light и Dark",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F234",
+    "group": "Настройки",
+    "name": "Accent Bot color или Black",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F235",
+    "group": "Настройки",
+    "name": "Язык интерфейса и проверка орфографии",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F236",
+    "group": "Настройки",
+    "name": "Выбор микрофона",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F237",
+    "group": "Настройки",
+    "name": "Аппаратное ускорение",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F238",
+    "group": "Настройки",
+    "name": "Timezone и Auto-detect",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F239",
+    "group": "Настройки",
+    "name": "Manage devices",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F240",
+    "group": "Настройки",
+    "name": "Execution on this computer",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F241",
+    "group": "Настройки",
+    "name": "Route traffic through this computer",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F242",
+    "group": "Настройки",
+    "name": "Обновления приложения и автоперезапуск",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F243",
+    "group": "Настройки",
+    "name": "Уведомления конкретного бота",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F244",
+    "group": "Настройки",
+    "name": "Needs attention, unread и working",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F245",
+    "group": "Настройки",
+    "name": "Mark read и unread",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F246",
+    "group": "Настройки",
+    "name": "Ошибки с Copy request ID",
+    "availability": "Набор пунктов зависит от аккаунта и rollout",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F247",
+    "group": "Использование и оплата",
+    "name": "План и Manage billing",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F248",
+    "group": "Использование и оплата",
+    "name": "Недельный расход и время сброса",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F249",
+    "group": "Использование и оплата",
+    "name": "Графики By Bot и By source",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F250",
+    "group": "Использование и оплата",
+    "name": "Additional usage и monthly limit",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F251",
+    "group": "Использование и оплата",
+    "name": "Credits и Auto top-up",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F252",
+    "group": "Использование и оплата",
+    "name": "Usage reset",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F253",
+    "group": "Использование и оплата",
+    "name": "Referral на дополнительный reset",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F254",
+    "group": "Использование и оплата",
+    "name": "Разбор расхода по запросу в личном чате",
+    "availability": "Доступные расходы и reset зависят от тарифа",
+    "source": "https://docs.x.ai/grok-bot/settings-and-notifications",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F255",
+    "group": "Администрирование",
+    "name": "Доступ команды и групп к Grok Bot",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F256",
+    "group": "Администрирование",
+    "name": "SSO и SCIM",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F257",
+    "group": "Администрирование",
+    "name": "Разрешение Cloud Agents",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F258",
+    "group": "Администрирование",
+    "name": "Политики sharing Bots, templates и Pages",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F259",
+    "group": "Администрирование",
+    "name": "Allow Shared Logins",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F260",
+    "group": "Администрирование",
+    "name": "Включение Meetings и Agent Email",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F261",
+    "group": "Администрирование",
+    "name": "Разрешённые plugins и MCP",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F262",
+    "group": "Администрирование",
+    "name": "Ограничение local execution",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F263",
+    "group": "Администрирование",
+    "name": "Team Rules и Group Rules",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F264",
+    "group": "Администрирование",
+    "name": "Enforce Auto-review и team rules",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F265",
+    "group": "Администрирование",
+    "name": "Team Setup Scripts и Team Secrets",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F266",
+    "group": "Администрирование",
+    "name": "Разрешение sudo",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F267",
+    "group": "Администрирование",
+    "name": "Action Recording",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F268",
+    "group": "Администрирование",
+    "name": "Audit logs и OpenTelemetry Export",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F269",
+    "group": "Администрирование",
+    "name": "Групповые настройки и Admin API",
+    "availability": "Часть настроек только Enterprise",
+    "source": "https://docs.x.ai/grok-bot/teams-and-enterprises",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F270",
+    "group": "Сеть и безопасность",
+    "name": "Allow All Network Access",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F271",
+    "group": "Сеть и безопасность",
+    "name": "Allow All Sites Except These",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F272",
+    "group": "Сеть и безопасность",
+    "name": "Defaults + Team Allowlist",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F273",
+    "group": "Сеть и безопасность",
+    "name": "Team Allowlist Only",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F274",
+    "group": "Сеть и безопасность",
+    "name": "Домены и IP-диапазоны в allowlist",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F275",
+    "group": "Сеть и безопасность",
+    "name": "Отдельная политика группы и блокировка изменений",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F276",
+    "group": "Сеть и безопасность",
+    "name": "Apply to MCP servers",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F277",
+    "group": "Сеть и безопасность",
+    "name": "Статические egress IP",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F278",
+    "group": "Сеть и безопасность",
+    "name": "Ограничения локального выполнения",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F279",
+    "group": "Сеть и безопасность",
+    "name": "Контроль retention и удаления данных",
+    "availability": "Enterprise; blocked sites являются best effort",
+    "source": "https://docs.x.ai/grok-bot/security",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F280",
+    "group": "Корпоративная инфраструктура",
+    "name": "Доступ к частной сети через desktop route",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F281",
+    "group": "Корпоративная инфраструктура",
+    "name": "Сетевой клиент через Team Setup",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F282",
+    "group": "Корпоративная инфраструктура",
+    "name": "Tailscale как вариант подключения",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F283",
+    "group": "Корпоративная инфраструктура",
+    "name": "Cloudflare Tunnel как вариант подключения",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F284",
+    "group": "Корпоративная инфраструктура",
+    "name": "Setup Script и Check Script",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F285",
+    "group": "Корпоративная инфраструктура",
+    "name": "Повторное применение setup при пересоздании",
+    "availability": "Enterprise и управляемый setup",
+    "source": "https://docs.x.ai/grok-bot/private-networks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F286",
+    "group": "Inference hooks",
+    "name": "Подписанный prompt frame перед моделью",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F287",
+    "group": "Inference hooks",
+    "name": "Вердикт allow или deny",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F288",
+    "group": "Inference hooks",
+    "name": "Validate Tool Calls перед выполнением",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F289",
+    "group": "Inference hooks",
+    "name": "Custom HTTPS endpoint и headers",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F290",
+    "group": "Inference hooks",
+    "name": "Ротация signing secret",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F291",
+    "group": "Inference hooks",
+    "name": "Test Connection",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F292",
+    "group": "Inference hooks",
+    "name": "Shadow mode и enforcement",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F293",
+    "group": "Inference hooks",
+    "name": "Настройка поведения при сбое",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F294",
+    "group": "Inference hooks",
+    "name": "Поэтапный rollout и circuit breaker",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F295",
+    "group": "Inference hooks",
+    "name": "События проверки в audit log",
+    "availability": "Enterprise beta",
+    "source": "https://docs.x.ai/grok-bot/inference-hooks",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F296",
+    "group": "Управление компьютерами команды",
+    "name": "Recreate с сохранением durable disk",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F297",
+    "group": "Управление компьютерами команды",
+    "name": "Terminate текущей VM",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F298",
+    "group": "Управление компьютерами команды",
+    "name": "Delete VMs and Data",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F299",
+    "group": "Управление компьютерами команды",
+    "name": "Delete All Grok Bot Data",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F300",
+    "group": "Управление компьютерами команды",
+    "name": "Отслеживание массовой операции",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F301",
+    "group": "Управление компьютерами команды",
+    "name": "Повтор отказавших операций",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F302",
+    "group": "Управление компьютерами команды",
+    "name": "Операции через API",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F303",
+    "group": "Управление компьютерами команды",
+    "name": "Удаление неактивных компьютеров по retention",
+    "availability": "Enterprise; массовые операции администратора",
+    "source": "https://docs.x.ai/grok-bot/computers",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F304",
+    "group": "Внешние точки входа",
+    "name": "Передача поста или ветки через @bot",
+    "availability": "Доступность @bot зависит от страны аккаунта X",
+    "source": "https://docs.x.ai/grok-bot/tag-on-x",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F305",
+    "group": "Внешние точки входа",
+    "name": "Подтверждение принятия задачи в X",
+    "availability": "Доступность @bot зависит от страны аккаунта X",
+    "source": "https://docs.x.ai/grok-bot/tag-on-x",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F306",
+    "group": "Внешние точки входа",
+    "name": "Выполнение и результат в Grok Bot",
+    "availability": "Доступность @bot зависит от страны аккаунта X",
+    "source": "https://docs.x.ai/grok-bot/tag-on-x",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F307",
+    "group": "Внешние точки входа",
+    "name": "Контекст исходного, родительского и цитируемого поста",
+    "availability": "Доступность @bot зависит от страны аккаунта X",
+    "source": "https://docs.x.ai/grok-bot/tag-on-x",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F308",
+    "group": "Deep links",
+    "name": "Открытие чата через grokbot URL scheme",
+    "availability": "Приложение должно быть установлено и авторизовано",
+    "source": "https://docs.x.ai/grok-bot/deep-links",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F309",
+    "group": "Deep links",
+    "name": "Выбор бота параметром id",
+    "availability": "Приложение должно быть установлено и авторизовано",
+    "source": "https://docs.x.ai/grok-bot/deep-links",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F310",
+    "group": "Deep links",
+    "name": "Подстановка до 1000 символов без отправки",
+    "availability": "Приложение должно быть установлено и авторизовано",
+    "source": "https://docs.x.ai/grok-bot/deep-links",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  },
+  {
+    "id": "F311",
+    "group": "Deep links",
+    "name": "Переход к primary Bot без id",
+    "availability": "Приложение должно быть установлено и авторизовано",
+    "source": "https://docs.x.ai/grok-bot/deep-links",
+    "evidence": "official-documentation",
+    "validated_in_app": false
+  }
+]

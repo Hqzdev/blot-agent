@@ -92,7 +92,7 @@ final class BackendRuntime {
         process = server
         if let configuration { try responses.fileHandleForWriting.write(contentsOf: configuration) }
         for _ in 0..<600 {
-            if !server.isRunning { throw NSError(domain: "BlotBackend", code: 2, userInfo: [NSLocalizedDescriptionKey: "The Blot server stopped while starting. Diagnostics: \(log.path)"]) }
+            if !server.isRunning { throw NSError(domain: "BlotBackend", code: 2, userInfo: [NSLocalizedDescriptionKey: "The Ori server stopped while starting. Diagnostics: \(log.path)"]) }
             if let bytes = try? Data(contentsOf: ready), let state = try? JSONDecoder().decode(Ready.self, from: bytes), state.pid == Int(server.processIdentifier) {
                 let endpoint = URL(string: "\(state.scheme ?? "http")://127.0.0.1:\(state.port)/")!
                 let session = state.fingerprint.map { PinnedBackendSession(fingerprint: $0).makeSession() } ?? .shared

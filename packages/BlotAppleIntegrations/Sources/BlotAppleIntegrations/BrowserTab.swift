@@ -6,6 +6,8 @@ import WebKit
 @MainActor @Observable
 public final class BrowserTab: Identifiable {
     public let id: UUID
+    public internal(set) var sessionKey: WorkspaceBrowserSessionKey
+    public internal(set) var localPage: String?
     let initialURL: URL?
     public internal(set) var title = "Новая вкладка"
     public internal(set) var url: URL?
@@ -18,19 +20,21 @@ public final class BrowserTab: Identifiable {
     public internal(set) var error: String?
     public internal(set) var authenticationURL: URL?
     public internal(set) var documentID = UUID()
+    public internal(set) var agentPointer: BrowserAgentPointer?
     var interactionRevision = 0
     var sensitiveInput = false
     @ObservationIgnored var scope: WorkspaceBrowserScope?
     @ObservationIgnored var allowedOrigins: Set<String> = []
     @ObservationIgnored var lastUsed = Date()
     @ObservationIgnored var stopped = false
-    init(id: UUID = UUID(), url: URL? = nil, scope: WorkspaceBrowserScope? = nil, origins: Set<String> = []) {
-        self.id = id; self.url = url; initialURL = url; self.scope = scope; allowedOrigins = origins
+    init(id: UUID = UUID(), url: URL? = nil, scope: WorkspaceBrowserScope? = nil, origins: Set<String> = [], sessionKey: WorkspaceBrowserSessionKey = .workspace, localPage: String? = nil) {
+        self.id = id; self.url = url; initialURL = url; self.scope = scope; allowedOrigins = origins; self.sessionKey = sessionKey; self.localPage = localPage
     }
 }
 
 @MainActor @Observable
 public final class BrowserDownload: Identifiable {
+    public let sessionKey: WorkspaceBrowserSessionKey
     public let id = UUID()
     public internal(set) var name = "Загрузка"
     public internal(set) var state = "running"
@@ -38,5 +42,5 @@ public final class BrowserDownload: Identifiable {
     public internal(set) var error: String?
     @ObservationIgnored let download: WKDownload
     @ObservationIgnored let tabID: UUID
-    init(_ download: WKDownload, tabID: UUID) { self.download = download; self.tabID = tabID }
+    init(_ download: WKDownload, tabID: UUID, sessionKey: WorkspaceBrowserSessionKey) { self.download = download; self.tabID = tabID; self.sessionKey = sessionKey }
 }

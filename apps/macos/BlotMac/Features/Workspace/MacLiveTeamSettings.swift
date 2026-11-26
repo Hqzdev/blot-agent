@@ -10,10 +10,15 @@ struct MacLiveTeamSettings: View {
     private var initialPane: MacTeamSettingsPane {
         switch route {
         case .account: .account
+        case .settingsProfile: .profile
+        case .settingsStorage: .storage
+        case .models: .models
+        case .browserSettings: .browser
         case .appearance: .appearance
         case .notifications: .notifications
         case .personalization: .personalization
         case .usage: .usage
+        case .settingsUpdates: .updates
         case .memory: .memory
         case .devices, .pair: .devices
         case .connections: .connections
@@ -40,25 +45,23 @@ private struct MacLiveTeamSettingsContent: View {
         case .appearance: MacTeamPersonalSettingsContent(pane: .appearance)
         case .personalization: MacSettingsPersonalizationPane()
         case .shortcuts: MacSettingsShortcutsPane()
-        case .general: MacSettingsGeneralPane()
+        case .general:
+            WorkspaceTeamBotsButton()
+            MacSettingsGeneralPane()
         case .profile: MacSettingsProfilePane()
         case .account: MacSettingsAccountPane()
         case .storage: MacSettingsStoragePane()
-        case .updates:
-            MacTeamSettingsSection(title: "Версия приложения") {
-                MacTeamSettingsRow(title: "Blot") {
-                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
-                        .foregroundStyle(.secondary)
-                }
-            }
+        case .updates: WorkspaceUpdatesView()
         case .usage: MacSettingsUsagePane()
         case .notifications: MacSettingsNotificationsPane()
         case .memory:
             MacTeamSettingsSection(title: "Память агентов") {
+                WorkspaceMemoryImportButton().padding(.vertical, 12)
                 if store.snapshot.memories.isEmpty {
                     MacTeamSettingsRow(title: "Сохранённых воспоминаний пока нет", detail: "Выберите «Запомнить» в действиях сообщения.") { EmptyView() }
                 }
                 ForEach(store.snapshot.memories, id: \.metadata.id) { memory in
+                    WorkspaceMemoryReview(memory: memory).padding(.vertical, 8)
                     MacTeamSettingsRow(localizesTitle: false, title: memory.content) {
                         Button("Изменить") {
                             editingMemoryID = memory.metadata.id; store.selectedRecordID = memory.metadata.id
@@ -66,7 +69,7 @@ private struct MacLiveTeamSettingsContent: View {
                         }.buttonStyle(WorkspaceButtonStyle(.secondary))
                     }
                     if editingMemoryID == memory.metadata.id {
-                        TextEditor(text: $store.form.memory.content).frame(height: 100).padding(.vertical, 12)
+                        TextEditor(text: $store.form.memory.content).frame(height: 100).blotEditorSurface().padding(.vertical, 12)
                         HStack {
                             Button("Сохранить") { _Concurrency.Task {
                                 await store.perform(.saveMemory)
@@ -97,7 +100,12 @@ private struct MacLiveTeamSettingsContent: View {
             }
         case .mcp: WorkspaceMCPSettingsView()
         case .devices: WorkspacePairedDevicesView()
+        case .models: WorkspaceSettingsView(route: .models, embedded: true)
+        case .browser: WorkspaceSettingsView(route: .browserSettings, embedded: true)
         case .privacy:
+            WorkspaceTeamBotsButton()
+            WorkspaceVaultButton()
+            WorkspaceRulesView()
             MacTeamSettingsSection(title: "Данные и приватность") {
                 MacTeamSettingsRow(title: "Учётные данные", detail: "Токены входа хранятся в системной Связке ключей.") { EmptyView() }
                 Divider()
@@ -109,6 +117,6 @@ private struct MacLiveTeamSettingsContent: View {
                 }
             }
         }
-        WorkspaceFeedback()
+        if pane != .models && pane != .browser { WorkspaceFeedback() }
     }
 }

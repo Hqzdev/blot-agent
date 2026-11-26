@@ -31,7 +31,7 @@ struct BlotWidgetState: View {
     let state: WidgetWorkState
     let snapshot: WidgetSnapshot
     var body: some View {
-        Label(title, systemImage: symbol).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+        BlotLabel(title, symbol: symbol, size: 12).font(.caption2).foregroundStyle(.secondary).lineLimit(1)
     }
     private var title: String {
         switch state {
@@ -63,7 +63,7 @@ struct BlotWidgetEmpty: View {
     let symbol: String
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Image(systemName: symbol).font(.title3).widgetAccentable().accessibilityHidden(true)
+            BlotIcon(symbol: symbol, size: 22).widgetAccentable().accessibilityHidden(true)
             Spacer(minLength: 0)
             Text(title).font(.subheadline.weight(.semibold)).lineLimit(3)
             Text(detail).font(.caption2).foregroundStyle(.secondary).lineLimit(3)

@@ -20,7 +20,7 @@ struct StartConversationView: View {
                     .multilineTextAlignment(.center)
             }
             ContentColumn {
-                Composer(text: $app.workChatDraft, placeholder: "Напишите Blot…", showsModel: false) {
+                Composer(text: $app.workChatDraft, placeholder: "Напишите Ori…", showsModel: false) {
                     app.sendWorkChatMessage()
                 }
             }

@@ -48,6 +48,35 @@ async function registered() {
 before(async () => { await database.initialize(); });
 after(async () => { await pool.close(); });
 
+test("public account tables reject public API access through row-level security", async () => {
+  const { rows } = await database.query(`SELECT relname, relrowsecurity FROM pg_class
+    WHERE relnamespace = 'public'::regnamespace AND relkind = 'r' AND relname LIKE 'blot_%'`);
+  assert.ok(rows.length >= 7);
+  assert.ok(rows.every(row => row.relrowsecurity === true));
+});
+
+test("web login exchanges a single PKCE code for the existing Blot owner", async () => {
+  const previous = process.env.BLOT_WEB_APP_URL;
+  try {
+    process.env.BLOT_WEB_APP_URL = "https://web.blot.example";
+    const { tokens } = await registered();
+    const client = { clientID: "blot-web", redirectURI: "https://web.blot.example/api/auth/blot/callback" };
+    const codeVerifier = randomToken();
+    const codeChallenge = createHash("sha256").update(codeVerifier).digest("base64url");
+    const { code } = await service.request("browser/code", { accessToken: tokens.accessToken, body: { ...client, codeChallenge } });
+    await assert.rejects(service.request("browser/token", { body: { ...client, code, codeVerifier: randomToken() } }), rejectCode("browser_authorization_invalid"));
+    const web = await service.request("browser/token", { body: { ...client, code, codeVerifier } });
+    assert.equal(web.ownerID, tokens.ownerID);
+    assert.notEqual(web.sessionID, tokens.sessionID);
+    await assert.rejects(service.request("browser/token", { body: { ...client, code, codeVerifier } }), rejectCode("browser_authorization_invalid"));
+    await service.request("logout", { accessToken: web.accessToken });
+    await assert.rejects(service.request("me", { method: "GET", accessToken: web.accessToken }), rejectCode("session_expired"));
+    assert.equal((await service.request("me", { method: "GET", accessToken: tokens.accessToken })).id, tokens.ownerID);
+  } finally {
+    if (previous === undefined) delete process.env.BLOT_WEB_APP_URL; else process.env.BLOT_WEB_APP_URL = previous;
+  }
+});
+
 test("registration verifies email once; hashes, refresh rotation and logout persist", async () => {
   const { email, tokens, code } = await registered();
   const stored = (await database.query("SELECT * FROM blot_accounts WHERE email = $1", [email])).rows[0];

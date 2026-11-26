@@ -28,7 +28,7 @@ struct WorkspaceMessageActionsMenu: View {
         }
         if store.mode == .live {
             BlotIconButton(store.t("Remember"), symbol: "brain") { store.rememberMessage(message.metadata.id) }
-            Menu(store.t("Export")) {
+            WorkspaceMenu(store.t("Export")) {
                 ForEach(WorkspaceExportFormat.allCases, id: \.self) { format in
                     Button(format.rawValue.uppercased()) { store.exportMessage(message.metadata.id, format: format) }
                 }

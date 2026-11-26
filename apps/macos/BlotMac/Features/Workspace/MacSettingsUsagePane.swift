@@ -18,7 +18,8 @@ struct MacSettingsUsagePane: View {
                 }
             }
             if tab == "Обзор" {
-                MacTeamSettingsSection(title: "Ваше пространство", detail: "Учёт использования моделей в этом аккаунте Blot.") {
+                WorkspaceBillingView()
+                MacTeamSettingsSection(title: "Ваше пространство", detail: "Учёт использования моделей в этом аккаунте Ori.") {
                     MacTeamSettingsRow(title: store.accountDisplayName, detail: store.form.account.email) {
                         Text("Личное").foregroundStyle(.secondary)
                     }
@@ -36,6 +37,10 @@ struct MacSettingsUsagePane: View {
                 }
                 MacTeamSettingsSection(title: "Активность", detail: "Записанные обращения к модели за время работы пространства.") {
                     MacTeamSettingsRow(title: "Вызовов модели") { Text(activity.calls, format: .number).monospacedDigit() }
+                    Divider()
+                    MacTeamSettingsRow(title: "За один вызов") { Text(activity.peakTokens, format: .number).monospacedDigit() }
+                    Divider()
+                    MacTeamSettingsRow(title: "Активных дней") { Text(activity.activeDays, format: .number).monospacedDigit() }
                     if activity.uncountedSteps > 0 {
                         Divider()
                         MacTeamSettingsRow(title: "Без данных о токенах", detail: "Точный расход для этих вызовов неизвестен.") {

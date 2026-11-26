@@ -23,7 +23,8 @@ public struct WorkspaceConversationService: Sendable {
             for member in conversations where index.canonicalID(member.metadata.id) == index.canonicalID(chat.metadata.id) {
                 let updated = try BlotV3.Conversation(metadata: tx.metadata(id: member.metadata.id, now: now, replacing: member.metadata),
                     agentId: member.agentId, title: member.metadata.id == conversationID ? title ?? member.title : member.title,
-                    mobileOwned: member.mobileOwned, pinned: pinned ?? member.pinned, archived: archived ?? member.archived, kind: member.kind)
+                    mobileOwned: member.mobileOwned, pinned: pinned ?? member.pinned, archived: archived ?? member.archived, kind: member.kind,
+                    parentConversationId: member.parentConversationId, parentMessageId: member.parentMessageId)
                 try tx.put(updated, expectedVersion: member.metadata.version)
             }
             return conversationID
@@ -47,6 +48,7 @@ public struct WorkspaceConversationService: Sendable {
             for record in try tx.records(BlotV3.ConversationParticipant.self) where family.contains(record.conversationId) { try tx.delete(record) }
             for record in try tx.records(BlotV3.ConversationReadPosition.self) where family.contains(record.conversationId) { try tx.delete(record) }
             for record in try tx.records(BlotV3.ContextSummary.self) where family.contains(record.conversationId) { try tx.delete(record) }
+            for card in try tx.records(BlotV3.ConversationCard.self) where ids.contains(card.messageId) { try tx.delete(card) }
             for message in messages { try tx.delete(message) }
             for conversation in conversations where family.contains(conversation.metadata.id) { try tx.delete(conversation) }
             return conversationID

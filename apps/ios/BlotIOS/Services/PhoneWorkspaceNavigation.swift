@@ -7,21 +7,17 @@ import UIKit
 final class PhoneWorkspaceNavigation {
     var filesQuery = ""
     var scheduleDate = Date()
-    private(set) var tabActivationCount = 0
-    private var tabActivations: [WorkspaceRoute: Int] = [:]
     private let selectionFeedback = UISelectionFeedbackGenerator()
     #if DEBUG
+    private var tabActivationCount = 0
     let tabInteractionRecorder = PhoneTabInteractionRecorder()
     #endif
     private var positions: [WorkspaceRoute: ScrollPosition] = [:]
     private var offsets: [WorkspaceRoute: CGFloat] = [:]
 
-    func activation(for route: WorkspaceRoute) -> Int { tabActivations[route, default: 0] }
-
     func activateTab(_ route: WorkspaceRoute) {
-        tabActivations[route, default: 0] += 1
-        tabActivationCount += 1
         #if DEBUG
+        tabActivationCount += 1
         tabInteractionRecorder?.tapped(route, sequence: tabActivationCount)
         #endif
         selectionFeedback.selectionChanged()

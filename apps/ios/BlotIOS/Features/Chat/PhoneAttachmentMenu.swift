@@ -4,13 +4,13 @@ import PhotosUI
 import SwiftUI
 
 enum PhoneAttachmentSource: String, CaseIterable, Identifiable {
-    case camera, photos, files, plugins
+    case camera, photos, files, plugins, skills
     var id: String { rawValue }
     var title: String {
-        switch self { case .camera: "Camera"; case .photos: "Photo"; case .files: "Files"; case .plugins: "Plug-ins" }
+        switch self { case .camera: "Camera"; case .photos: "Photo"; case .files: "Files"; case .plugins: "Plug-ins"; case .skills: "Skills" }
     }
     var symbol: String {
-        switch self { case .camera: "camera"; case .photos: "photo.on.rectangle"; case .files: "paperclip"; case .plugins: "puzzlepiece.extension" }
+        switch self { case .camera: "camera"; case .photos: "photo.on.rectangle"; case .files: "paperclip"; case .plugins: "puzzlepiece.extension"; case .skills: "shippingbox" }
     }
 }
 

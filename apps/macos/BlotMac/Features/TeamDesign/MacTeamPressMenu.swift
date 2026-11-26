@@ -4,11 +4,15 @@ import SwiftUI
 
 /// One menu surface for holding a message or chat row, with optional secondary-click support.
 struct MacTeamPressMenu<Actions: View>: ViewModifier {
+    enum Surface { case message, sidebar }
+
     var secondaryClick = false
     var preservesTap = false
+    var surface: Surface = .message
     let actions: (@escaping () -> Void) -> Actions
     @Environment(\.blotReduceMotion) private var reduceMotion
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    @Environment(\.locale) private var locale
     @GestureState private var pressing = false
     @State private var expanded = false
     @State private var pressState = MacTeamPressState()
@@ -16,26 +20,22 @@ struct MacTeamPressMenu<Actions: View>: ViewModifier {
     func body(content: Content) -> some View {
         interactive(content)
             .environment(\.macTeamPressState, pressState)
-            .scaleEffect(reduceMotion || systemReduceMotion ? 1 : expanded ? 1.025 : pressing ? 0.965 : 1)
-            .animation(reduceMotion || systemReduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.56), value: pressing)
-            .animation(reduceMotion || systemReduceMotion ? nil : .spring(response: 0.34, dampingFraction: 0.56), value: expanded)
-            .accessibilityAction(named: Text("Открыть действия")) { open() }
+            .scaleEffect(reduceMotion || systemReduceMotion ? 1 : expanded ? 1.01 : pressing ? 0.985 : 1)
+            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: pressing)
+            .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: expanded)
+            .accessibilityAction(named: Text(locale.language.languageCode?.identifier == "ru" ? "Открыть действия" : "Open actions")) { open() }
             .overlay {
                 if secondaryClick {
-                    MacTeamPointerInput(onSecondaryClick: open)
+                    MacTeamPointerInput(onSecondaryClick: open, restrictSecondaryClickToConversation: surface == .message)
                         .frame(maxWidth: .infinity, maxHeight: .infinity).allowsHitTesting(false)
                 }
             }
             .popover(isPresented: $expanded, arrowEdge: .bottom) {
-                VStack(alignment: .leading, spacing: 3) {
+                MacActionMenuPanel {
                     actions { expanded = false }
                 }
-                .padding(6).frame(width: 264)
                 .environment(\.macTeamPressState, nil)
-                .foregroundStyle(WorkspaceStyle.ink)
-                .teamControls()
-                .glassEffect(.regular.interactive(), in: .rect(cornerRadius: 22))
-                .presentationBackground(.clear)
+                .onExitCommand { expanded = false }
             }
             .onChange(of: expanded) { _, value in
                 if !value { pressState.endMenu() }

@@ -1,0 +1,128 @@
+[
+  {
+    "title": "Официальный макет: sidebar, chat, computer и routines",
+    "file": "screenshots/08-design-app-shell.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+    "title": "Inline widget 1",
+    "file": "screenshots/09-widget-01.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 2",
+    "file": "screenshots/09-widget-02.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 3",
+    "file": "screenshots/09-widget-03.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 4",
+    "file": "screenshots/09-widget-04.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 5",
+    "file": "screenshots/09-widget-05.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 6",
+    "file": "screenshots/09-widget-06.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 7",
+    "file": "screenshots/09-widget-07.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 8",
+    "file": "screenshots/09-widget-08.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 9",
+    "file": "screenshots/09-widget-09.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 10",
+    "file": "screenshots/09-widget-10.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Inline widget 11",
+    "file": "screenshots/09-widget-11.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#the-shape-of-information"
+  },
+  {
+    "title": "Avatar state: Idle",
+    "file": "screenshots/10-state-idle.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Avatar state: Working",
+    "file": "screenshots/10-state-working.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Avatar state: Waiting",
+    "file": "screenshots/10-state-waiting.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Avatar state: Blocked",
+    "file": "screenshots/10-state-blocked.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Avatar state: Thinking",
+    "file": "screenshots/10-state-thinking.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Avatar state: Done",
+    "file": "screenshots/10-state-done.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot#what-are-they-doing"
+  },
+  {
+    "title": "Система геометрических аватаров",
+    "file": "screenshots/11-avatar-system.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+    "title": "Обои компьютера: день и ночь",
+    "file": "screenshots/12-computer-wallpapers.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot"
+  },
+  {
+    "title": "Показ текущей активности агента",
+    "file": "screenshots/13-activity-patterns.jpg",
+    "kind": "official-design-demo",
+    "source": "https://x.ai/news/designing-grok-bot"
+  }
+]

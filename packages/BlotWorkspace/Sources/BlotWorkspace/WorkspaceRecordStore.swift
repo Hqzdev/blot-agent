@@ -81,6 +81,8 @@ final class WorkspaceRecordStore {
             INSERT INTO records(kind, id, workspace_id, version, payload, deleted) VALUES (?, ?, ?, ?, ?, ?)
             ON CONFLICT(kind, id) DO UPDATE SET version = excluded.version, payload = excluded.payload, deleted = excluded.deleted
             """, [.text(mutation.kind), .text(mutation.id.uuidString), .text(mutation.workspaceID.uuidString), .integer(Int64(mutation.version)), payload, deleted])
+        // Cards use the optional snapshot extension; legacy encrypted deltas retain their sequence space.
+        if mutation.kind == BlotV3.ConversationCard.recordKind { return }
         let pending = try coalescingChange(for: mutation)
         let changeID = pending ?? UUID()
         if pending != nil {

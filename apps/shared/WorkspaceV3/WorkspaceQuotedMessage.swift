@@ -4,14 +4,15 @@ import SwiftUI
 
 struct WorkspaceQuotedMessage: View {
     let message: BlotV3.Message
+    var onDarkSurface = false
     @Environment(WorkspaceStore.self) private var store
 
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
-            RoundedRectangle(cornerRadius: 2).fill(WorkspaceStyle.ink.opacity(0.35)).frame(width: 3)
+            RoundedRectangle(cornerRadius: 2).fill(onDarkSurface ? Color.white.opacity(0.45) : WorkspaceStyle.ink.opacity(0.35)).frame(width: 3)
             VStack(alignment: .leading, spacing: 3) {
-                Text(store.messageAuthor(message)).font(.caption.weight(.semibold)).lineLimit(1)
-                Text(store.t(message.content)).font(.footnote).foregroundStyle(WorkspaceStyle.secondary).lineLimit(2)
+                Text(store.messageAuthor(message)).foregroundStyle(onDarkSurface ? Color.white : WorkspaceStyle.ink).font(.caption.weight(.semibold)).lineLimit(1)
+                Text(store.t(message.content)).font(.footnote).foregroundStyle(onDarkSurface ? Color.white.opacity(0.8) : WorkspaceStyle.secondary).lineLimit(2)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }.fixedSize(horizontal: false, vertical: true)
             .accessibilityElement(children: .combine)

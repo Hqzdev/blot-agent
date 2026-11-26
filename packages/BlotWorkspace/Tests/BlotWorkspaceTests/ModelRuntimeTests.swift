@@ -69,7 +69,11 @@ private actor LoopModel: ChatModel {
         state: .completed, calls: [.init(id: "one", name: "record_value", arguments: .object(["value": .string("saved")]))],
         results: ["one": .object(["saved": .bool(true)])], usage: .init(inputTokens: 10, outputTokens: 5))
     #expect(try await repository.record(BlotV3.ModelStep.self, id: firstStep.metadata.id, workspaceID: identity.workspaceID)?.metadata.version == firstStep.metadata.version)
-    #expect(saved.messages.first { $0.metadata.id == responseID }?.content == "Result")
+    #expect(saved.messages.first { $0.metadata.id == responseID }?.content.isEmpty == true)
+    let resultStep = try #require(saved.modelSteps.first { $0.stepIndex == 1 })
+    #expect(firstStep.responseMessageId == responseID && resultStep.responseMessageId != responseID)
+    #expect(saved.messages.first { $0.metadata.id == resultStep.responseMessageId }?.content == "Result")
+    #expect(saved.messages.filter { $0.role == .assistant && $0.delivery == .completed }.count == 2)
     #expect(saved.messages.first { $0.metadata.id == responseID }?.delivery == .completed)
     let restrictedID = UUID(), restrictedModel = LoopModel()
     _ = try await WorkspaceResponseRecorder(repository: repository, identity: identity).begin(id: restrictedID, replyingTo: source, agentID: agentID)

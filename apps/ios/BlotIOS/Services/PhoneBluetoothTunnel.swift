@@ -48,7 +48,7 @@ final class PhoneBluetoothTunnel: NSObject, @preconcurrency CBCentralManagerDele
         if enabled { scan() }
     }
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: (any Error)?) {
-        guard error == nil, let service = peripheral.services?.first else { onError?("Blot Bluetooth service is unavailable"); return }
+        guard error == nil, let service = peripheral.services?.first else { onError?("Ori Bluetooth service is unavailable"); return }
         peripheral.discoverCharacteristics([CBUUID(string: BlotBluetoothIdentifiers.incoming), CBUUID(string: BlotBluetoothIdentifiers.outgoing)], for: service)
     }
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: (any Error)?) {

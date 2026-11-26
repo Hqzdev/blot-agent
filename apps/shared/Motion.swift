@@ -1,6 +1,6 @@
 //
 //  Motion.swift
-//  Blot
+//  Ori
 //
 //  One motion system for the Mac and iPhone apps. Every animation uses these tokens so timing
 //  stays consistent. Animations are springs without bounce: they start on the same frame as the

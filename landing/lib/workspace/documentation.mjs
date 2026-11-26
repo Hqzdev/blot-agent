@@ -46,13 +46,21 @@ export const futureDocuments = Object.freeze([
   document("google-workspace", "integrations/google-workspace.md", "Будущая интеграция Google Workspace", "План Gmail, Calendar и Drive; статус за пределами первой поставки.", null),
 ]);
 export const currentProductDocuments = Object.freeze([
+  document("workspace-workflows", "implementation/workspace-workflows.md", "Сценарии и подключения рабочего пространства", "Настройка расписаний, памяти, файлов, документов и команд агентов.", null),
+  document("web-same-domain", "status/web-same-domain.md", "Веб на основном домене", "Размещение /app, исправления входа и результаты HTTPS-проверки.", null),
+  document("blot-unification-plan", "product/blot-unification-plan.md", "Объединение приложений Blot", "План веба и терминала, общий вход и хранение данных.", null),
+  document("web-terminal-import", "status/web-terminal-import.md", "Перенос веба и терминала", "Размещение исходников и проверки переноса.", null),
+  document("web-blot-auth", "status/web-blot-auth.md", "Общий вход веба", "Контракт аккаунта и PKCE для браузерного приложения.", null),
+  document("web-postgres-release", "status/web-postgres-release.md", "Веб и PostgreSQL", "Подключение веба к общей базе и выпуск на Vercel.", null),
+  document("shared-chat-history", "status/shared-chat-history.md", "Общая история чатов", "Синхронизация чатов между вебом и Apple-клиентами.", null),
   document("apple-apps", "integrations/apple-apps.md", "Системные приложения Apple", "Подключение, разрешения, инструменты и ограничения нативных интеграций.", null),
   document("apple-v3-implementation", "status/apple-v3-implementation.md", "Интерфейс Apple v3", "Сверка сущностей, каталог экранов и границы проверки серверных функций.", null),
   document("module-map", "architecture/module-map.md", "Карта модулей Blot", "Кто за что отвечает: 16 блоков ядра, клиенты, облако и приёмка.", null),
   document("domain-model", "architecture/domain-model.md", "Сущности и состояния", "25 сущностей ТЗ, состояния задачи и расхождения с кодом.", null),
   document("grok-bot-character-catalog", "design/grok-bot-character-catalog.md", "Персонажи роли и движения", "Сохранённые варианты Grok Bot, наблюдаемая анимация и требования к компоненту Blot.", null),
   document("blot-product-plan", "product/blot-product-plan.md", "План Blot для четырёх платформ", "Требования от 1 ноября: блоки, архитектура, инфраструктура, сроки и оценка кода.", null),
-  document("blot-technical-specification", "product/blot-technical-specification.md", "Техническое задание Blot", "Четыре платформы, CEO и агенты, локальные данные, инструменты, интеграции и приёмка.", null),
+  document("ori-defense-specification", "product/ori-defense-specification.md", "Техническое задание демонстрационной версии Ori", "Локальные сценарии macOS, критерии приёмки и сценарий защиты.", null),
+  document("blot-technical-specification", "product/blot-technical-specification.md", "Исходное техническое задание Blot", "Исторический план четырёх платформ и исходная матрица приёмки.", null),
   document("mcp-developer-guide", "integrations/mcp-developer-guide.md", "Подключение MCP серверов", "Целевой контракт внешних инструментов: transports, авторизация, разрешения и проверка совместимости.", null),
   document("native-terminal-git", "status/native-terminal-git.md", "Нативный терминал и Git", "Архитектура исполнителя на Mac, границы доступа и результаты проверки.", null),
 ]);

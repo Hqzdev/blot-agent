@@ -20,7 +20,7 @@ struct WorkspaceGroupAgentRow: View {
                     Text(agent.instructions).font(.caption).foregroundStyle(WorkspaceStyle.secondary).lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }.frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                BlotIcon(symbol: selected ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 21, weight: .regular))
                     .foregroundStyle(selected ? WorkspaceStyle.ink : WorkspaceStyle.secondary.opacity(0.4))
             }.padding(12).frame(maxWidth: .infinity, minHeight: 76, alignment: .leading)

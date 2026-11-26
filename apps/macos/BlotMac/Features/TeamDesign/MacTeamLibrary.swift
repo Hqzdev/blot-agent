@@ -211,7 +211,7 @@ struct MacTeamItemEditor: View {
                 presentation.editingMemoryID = nil
                 presentation.editingSkillID = nil
             }
-            .confirmationDialog("Удалить запись из демо?", isPresented: $confirmDelete) {
+            .workspaceConfirmationDialog("Удалить запись из демо?", isPresented: $confirmDelete) {
                 Button("Удалить", role: .destructive) {
                     let id = editingID
                     presentation.demo.update { state in

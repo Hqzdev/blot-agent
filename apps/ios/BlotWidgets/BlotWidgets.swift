@@ -27,7 +27,7 @@ enum BlotWidgetKind: String {
     }
     var summary: String {
         switch self {
-        case .compose: "Начните новый чат с Blot одним касанием."
+        case .compose: "Начните новый чат с Ori одним касанием."
         case .decisions: "Задачи и действия, которым нужен ваш ответ."
         case .currentTask: "Вернитесь к текущей работе агента."
         case .team: "Ваши агенты и их последние состояния."

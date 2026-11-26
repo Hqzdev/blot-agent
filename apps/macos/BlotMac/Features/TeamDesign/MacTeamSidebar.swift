@@ -24,8 +24,7 @@ struct MacTeamSidebar: View {
                                 }
                             }
                         }
-                        .modifier(MacTeamPressMenu(preservesTap: true) { close in MacTeamChatMenu(selection: .agent(agent.id), close: close) })
-                        .contextMenu { MacTeamChatContextActions(selection: .agent(agent.id)) }
+                        .modifier(MacTeamPressMenu(secondaryClick: true, preservesTap: true, surface: .sidebar) { close in MacTeamChatMenu(selection: .agent(agent.id), close: close) })
                     }
                     sectionTitle("Группы").padding(.top, 16)
                     ForEach(presentation.demo.state.groups) { group in
@@ -42,14 +41,13 @@ struct MacTeamSidebar: View {
                                 }
                             }
                         }
-                        .modifier(MacTeamPressMenu(preservesTap: true) { close in MacTeamChatMenu(selection: .group(group.id), close: close) })
-                        .contextMenu { MacTeamChatContextActions(selection: .group(group.id)) }
+                        .modifier(MacTeamPressMenu(secondaryClick: true, preservesTap: true, surface: .sidebar) { close in MacTeamChatMenu(selection: .group(group.id), close: close) })
                     }
 
                 }.kAnimation(KMotion.standard, value: presentation.agents.map(\.id))
                     .kAnimation(KMotion.standard, value: presentation.demo.state.groups.map(\.id))
                     .padding(.horizontal, 10).padding(.bottom, 16)
-            }.scrollIndicators(.hidden)
+            }.scrollIndicators(.hidden).macSidebarHoverSection(radius: 14)
             VStack(spacing: 6) {
                 MacTeamNavigationButton(selected: presentation.selection == .library(.marketplace)) {
                     presentation.open(.library(.marketplace))
@@ -75,7 +73,7 @@ struct MacTeamSidebar: View {
                         BlotIcon(symbol: "gearshape", size: BlotIconSize.control).foregroundStyle(WorkspaceStyle.ink)
                     }
                 }
-            }.font(.system(size: 12)).padding(.horizontal, 10).padding(.bottom, 12)
+            }.macSidebarHoverSection(radius: 14).font(.system(size: 12)).padding(.horizontal, 10).padding(.bottom, 12)
         }.background(MacTeamStyle.sidebar)
     }
     private func sectionTitle(_ title: String) -> some View {

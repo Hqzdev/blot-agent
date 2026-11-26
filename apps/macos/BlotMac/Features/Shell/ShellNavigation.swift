@@ -63,7 +63,7 @@ extension AppState {
             case .task: return currentTask?.title ?? "Task"
             case .automations: return "Scheduled"
             case .skills: return "Skills"
-            case .blot: return "Blot"
+            case .blot: return "Ori"
             case .motes:
                 switch teamRoute {
                 case .newRun: return "New Motes run"
@@ -75,7 +75,7 @@ extension AppState {
         switch workRoute {
         case .home: return workChat.selectedProject?.name ?? "Новый чат"
         case .chat: return currentWorkChat?.title ?? "Chat"
-        case .blot: return "Blot"
+        case .blot: return "Ori"
         case .automations: return "Scheduled"
         case .skills: return "Skills"
         }

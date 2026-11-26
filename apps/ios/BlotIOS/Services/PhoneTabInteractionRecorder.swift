@@ -1,11 +1,5 @@
 #if DEBUG
 import Foundation
-import SwiftUI
-
-extension EnvironmentValues {
-    @Entry var phoneTabInteractionRecorder: PhoneTabInteractionRecorder? = nil
-}
-
 /// Records UI-test input and feedback requests without changing accessibility labels.
 @MainActor
 final class PhoneTabInteractionRecorder {
@@ -16,7 +10,6 @@ final class PhoneTabInteractionRecorder {
     private struct Snapshot: Codable {
         var taps: [Event] = []
         var feedback: [Event] = []
-        var playbacks: [Event] = []
     }
 
     private let url: URL
@@ -36,18 +29,6 @@ final class PhoneTabInteractionRecorder {
 
     func requestedFeedback(_ route: WorkspaceRoute, sequence: Int) {
         snapshot.feedback.append(Event(route: route.rawValue, sequence: sequence))
-        save()
-    }
-
-    func activatedIcon(_ kind: PhoneTabIcon.Kind, sequence: Int) {
-        let route: String
-        switch kind {
-        case .chats: route = "chats"
-        case .calendar: route = "schedules"
-        case .overview: route = "overview"
-        case .settings: route = "settings"
-        }
-        snapshot.playbacks.append(Event(route: route, sequence: sequence))
         save()
     }
 

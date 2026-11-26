@@ -128,7 +128,7 @@ final class MacDemoSession {
             state.agents.append(
                 .init(
                     id: id, name: template.name, role: template.role, instructions: template.instructions,
-                    color: template.color, avatarShape: template.shape, preview: "Добавлен из коллекции Blot"))
+                    color: template.color, avatarShape: template.shape, preview: "Добавлен из коллекции Ori"))
             state.memories += template.memories.map { .init(id: UUID().uuidString, text: $0, agentID: id) }
             state.skills += template.skills.map {
                 .init(id: UUID().uuidString, title: $0, instructions: template.instructions, agentID: id)

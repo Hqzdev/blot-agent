@@ -1,0 +1,677 @@
+diff --git a/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift b/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
+--- a/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
++++ b/apps/macos/BlotMac/Features/Agents/MacAgentCreationView.swift
+@@ -5,6 +5,7 @@
+ struct MacAgentCreationView: View {
+     var isEditing = false
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @FocusState private var nameFocused: Bool
+     @State private var nameGenerator = MacAgentNameGenerator()
+     private let colors = ["brown", "red", "orange", "amber", "green", "teal", "blue", "purple", "pink", "gray"]
+@@ -131,7 +132,14 @@
+     private func save() {
+         guard !store.busy, !store.form.agent.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
+         _Concurrency.Task {
+-            if isEditing { await store.perform(.saveAgent, next: .agentProfile) }
++            if isEditing {
++                await store.perform(.saveAgent, next: panelNavigation == nil ? .agentProfile : nil)
++                if store.error == nil { panelNavigation?.open(.agentProfile) }
++            }
++            else if let panelNavigation {
++                await store.perform(.createAgent)
++                if store.error == nil { panelNavigation.open(.agentProfile) }
++            }
+             else { await store.createDesktopAgentAndStartChat() }
+         }
+     }
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamInspector.swift b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamInspector.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacLiveTeamInspector.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacLiveTeamInspector.swift
+@@ -5,6 +5,8 @@
+
+ struct MacLiveTeamInspector: View {
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
++    @State private var editingGroup = false
+     @State private var tab = "Обзор"
+     private var isGroup: Bool { store.currentConversation?.kind == .group }
+     private var agent: BlotV3.AgentProfile? {
+@@ -36,12 +38,12 @@
+                                 ForEach(store.snapshot.memories.filter { $0.scopeId == agent?.metadata.id || $0.scopeId == nil }, id: \.metadata.id) { memory in
+                                     Text(memory.content).font(.system(size: 12)).textSelection(.enabled)
+                                 }
+-                                Button("Вся память") { store.navigate(.memory) }.buttonStyle(.plain)
++                                Button("Вся память") { navigate(.memory) }.buttonStyle(.plain)
+                             case "Навыки":
+                                 ForEach((store.snapshot.skills ?? []).filter { skill in !skill.archived && (store.snapshot.skillAssignments ?? []).contains { $0.skillID == skill.metadata.id && $0.agentID == agent?.metadata.id && $0.assigned } }, id: \.metadata.id) { skill in
+                                     Label(skill.name, systemImage: "shippingbox")
+                                 }
+-                                Button("Навыки агента") { store.navigate(.skills) }
++                                Button("Навыки агента") { navigate(.skills) }
+                                     .buttonStyle(.plain).disabled(agent == nil)
+                             default: overview
+                             }
+@@ -51,38 +53,48 @@
+             }.scrollIndicators(.hidden)
+         }
+     }
++    private func navigate(_ route: WorkspaceRoute) {
++        if let panelNavigation { panelNavigation.open(route) } else { store.navigate(route) }
++    }
++    private func editAgent(_ id: UUID) {
++        store.selectAgent(id, destination: .editAgent, navigating: panelNavigation == nil)
++        panelNavigation?.open(.editAgent)
++    }
+     private var overview: some View {
+         VStack(alignment: .leading, spacing: 22) {
+             if !members.isEmpty {
+                 Text("Участники").foregroundStyle(.secondary)
+                 ForEach(members, id: \.metadata.id) { member in
+-                    Button { store.selectAgent(member.metadata.id, destination: .editAgent) } label: {
++                    Button { editAgent(member.metadata.id) } label: {
+                         HStack(spacing: 10) { WorkspaceAvatarView(agent: member, size: 30); Text(member.name); Spacer(); Image(systemName: "chevron.right") }
+                     }.buttonStyle(.plain)
+                 }
+             }
+             if isGroup, let group = store.currentConversation {
+-                Button("Управлять участниками") { store.editGroup(group.metadata.id) }
++                Button("Управлять участниками") { if panelNavigation != nil { editingGroup = true } else { store.editGroup(group.metadata.id) } }
+                     .buttonStyle(WorkspaceButtonStyle(.secondary))
+                 if let agent { Text("Координатор: " + agent.name).font(.caption).foregroundStyle(.secondary) }
+             } else if let agent {
+                 Text(agent.instructions).font(.system(size: 12)).foregroundStyle(.secondary).lineSpacing(4)
+-                Button("Настроить агента") { store.selectAgent(agent.metadata.id, destination: .editAgent) }.buttonStyle(.plain)
++                Button("Настроить агента") { editAgent(agent.metadata.id) }.buttonStyle(.plain)
+             }
+             HStack {
+                 Text("Расписания").foregroundStyle(.secondary)
+                 Spacer()
+-                MacTeamIconButton(title: "Новое расписание", symbol: "plus") { store.navigate(.createSchedule) }
++                MacTeamIconButton(title: "Новое расписание", symbol: "plus") { navigate(.createSchedule) }
+             }
+             ForEach(store.snapshot.schedules.filter { $0.agentId == agent?.metadata.id }, id: \.metadata.id) { schedule in
+-                Button { store.selectedRecordID = schedule.metadata.id; store.navigate(.schedules) } label: {
++                Button { store.selectedRecordID = schedule.metadata.id; navigate(.schedules) } label: {
+                     Label(schedule.name, systemImage: "clock.arrow.circlepath")
+                 }.buttonStyle(.plain)
+             }
+-            Button("Все расписания") { store.navigate(.schedules) }.buttonStyle(.plain)
++            Button("Все расписания") { navigate(.schedules) }.buttonStyle(.plain)
+             Text("Подключения").foregroundStyle(.secondary)
+-            Button("Все приложения") { store.navigate(.marketplace) }.buttonStyle(.plain)
+-            Button { store.navigate(.files) } label: { Label("Файлы и документы", systemImage: "folder") }.buttonStyle(.plain)
++            Button("Все приложения") { navigate(.marketplace) }.buttonStyle(.plain)
++            Button { navigate(.files) } label: { Label("Файлы и документы", systemImage: "folder") }.buttonStyle(.plain)
+         }.font(.system(size: 12))
++        .workspacePanelSheet(isPresented: $editingGroup) {
++            WorkspaceGroupEditor(conversation: store.currentConversation, participants: store.snapshot.participants ?? [])
++        }
+     }
+ }
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePage.swift b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePage.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePage.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePage.swift
+@@ -47,7 +47,7 @@
+         }
+         .frame(maxWidth: .infinity, maxHeight: .infinity)
+         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
+-        .sheet(item: $detail) { item in
++        .workspacePanelSheet(item: $detail) { item in
+             switch item {
+             case .plugin(let plugin): MacMarketplacePluginDetail(plugin: plugin).environment(store)
+             case .template(let template): MacMarketplaceTemplateDetail(template: template).environment(store)
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacMarketplacePluginDetail.swift
+@@ -7,6 +7,7 @@
+     let plugin: MacTeamPlugin
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @Environment(\.macSheetSize) private var sheetSize
+     @State private var confirmingDisconnect = false
+     @State private var disconnecting = false
+@@ -59,7 +60,10 @@
+                     .disabled(accounts.isEmpty || store.busy || disconnecting)
+                 Spacer()
+             }.padding(18)
+-        }.frame(width: min(560, sheetSize.width), height: min(460, sheetSize.height)).background(WorkspaceStyle.canvas)
++        }.frame(width: panelNavigation == nil ? min(560, sheetSize.width) : nil, height: panelNavigation == nil ? min(460, sheetSize.height) : nil).background(WorkspaceStyle.canvas)
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if panelNavigation != nil { WorkspacePanelFormHeader(title: store.t(plugin.name)) { Button(store.t("Close")) { dismiss() }.disabled(store.busy || disconnecting) } }
++            }
+             .interactiveDismissDisabled(store.busy || disconnecting)
+             .onExitCommand { if !store.busy && !disconnecting { dismiss() } }
+             .confirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
+diff --git a/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift b/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
+--- a/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
++++ b/apps/macos/BlotMac/Features/Workspace/MacMarketplaceTemplateDetail.swift
+@@ -5,6 +5,7 @@
+     let template: MacDemoTemplate
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @Environment(\.macSheetSize) private var sheetSize
+     @State private var commandID = UUID()
+     @State private var saveError: String?
+@@ -60,7 +61,7 @@
+                     }
+                 }.buttonStyle(WorkspaceButtonStyle()).keyboardShortcut(.defaultAction)
+             }.padding(18).disabled(store.busy)
+-        }.frame(width: min(620, sheetSize.width), height: min(610, sheetSize.height)).background(WorkspaceStyle.canvas)
++        }.frame(width: panelNavigation == nil ? min(620, sheetSize.width) : nil, height: panelNavigation == nil ? min(610, sheetSize.height) : nil).background(WorkspaceStyle.canvas)
+             .interactiveDismissDisabled(store.busy)
+     }
+
+diff --git a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+--- a/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
++++ b/apps/shared/WorkspaceV3/ApplePluginConnectionView.swift
+@@ -8,6 +8,7 @@
+     let plugin: ApplePluginID
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     #if os(macOS)
+     @Environment(\.macSheetSize) private var sheetSize
+     #endif
+@@ -78,9 +79,14 @@
+         }
+         .scrollBounceBehavior(.basedOnSize)
+         #if os(macOS)
+-        .frame(width: min(480, sheetSize.width), height: min(520, sheetSize.height))
++        .frame(width: panelNavigation == nil ? min(480, sheetSize.width) : nil, height: panelNavigation == nil ? min(520, sheetSize.height) : nil)
+         #endif
+         .background(WorkspaceStyle.canvas)
++        .safeAreaInset(edge: .top, spacing: 0) {
++            if panelNavigation != nil {
++                WorkspacePanelFormHeader(title: store.t(plugin.name)) { Button(store.t("Close")) { dismiss() }.disabled(busy) }
++            }
++        }
+         .interactiveDismissDisabled(busy)
+         #if os(macOS)
+         .onExitCommand { if !busy { dismiss() } }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserStartPage.swift
+@@ -12,6 +12,7 @@
+ final class WorkspacePanelNavigation {
+     var path: [WorkspaceToolDestination] = []
+     var fileID: UUID?
++    var taskID: UUID?
+     func open(_ route: WorkspaceRoute) { path.append(.page(route)) }
+ }
+
+@@ -48,7 +49,11 @@
+             case .mcp: "MCP"
+             case .devices: russian ? "Устройства" : "Devices"
+             case .browserSettings: russian ? "Доступ браузера" : "Browser access"
+-            default: russian ? "Приложения" : "Apps"
++            case .connections: russian ? "Приложения" : "Apps"
++            #if os(macOS)
++            case .marketplace: russian ? "Приложения" : "Apps"
++            #endif
++            default: WorkspaceCopy.text(route.title, language: russian ? "ru" : "en")
+             }
+         }
+     }
+@@ -137,7 +142,7 @@
+         case .page(.files):
+             ScrollView { WorkspaceTeamView(route: .files, openFile: { id in navigation.fileID = id; navigation.open(.file) }).padding(18) }
+         case .page(.file): WorkspaceLocalFileView(artifactID: navigation.fileID)
+-        case .page(.running): ScrollView { WorkspaceTaskExecutionView().padding(18) }
++        case .page(.running): ScrollView { WorkspaceTaskExecutionView(taskID: navigation.taskID).padding(18) }
+         default:
+             if case .page(let route) = destination { WorkspacePage(route: route) }
+         }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceBrowserView.swift
+@@ -23,6 +23,7 @@
+     private var ru: Bool { store.language == "ru" }
+     private func text(_ ru: String, _ en: String) -> String { self.ru ? ru : en }
+     var body: some View {
++        NavigationStack {
+         VStack(spacing: 0) {
+             toolbar
+             if !controller.tabs.isEmpty { tabs }
+@@ -52,11 +53,13 @@
+             } else { empty }
+             if let error = controller.error { Text(error).font(.caption).foregroundStyle(.red).padding(8) }
+         }
++        .workspacePanelSheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
++        }
++        .environment(\.workspacePanelNavigation, compact ? toolNavigation : nil)
+         .background(WorkspaceStyle.canvas)
+         .task { if let tab = controller.selectedTab, !tab.isLive, tab.url != nil { work { try controller.select(tab.id) } } }
+         .onChange(of: controller.selectedID, initial: true) { _, _ in toolNavigation.path.removeAll(); address = controller.selectedTab?.url?.absoluteString ?? "" }
+         .onChange(of: controller.selectedTab?.url) { _, url in address = url?.absoluteString ?? "" }
+-        .sheet(isPresented: $showsDownloads) { downloads.frame(minWidth: 300, minHeight: 260).padding(20).quickLookPreview($preview) }
+         .confirmationDialog(text("Покинуть несохранённую форму?", "Leave the unsaved form?"), isPresented: Binding(get: { pendingNavigation != nil }, set: { if !$0 { pendingNavigation = nil } }), titleVisibility: .visible) {
+             Button(text("Покинуть без сохранения", "Leave without saving"), role: .destructive) {
+                 if let action = pendingNavigation, let id = navigationTab, controller.selectedID == id {
+@@ -95,7 +98,6 @@
+                 Button(text("Все инструменты", "All tools")) { store.showTools(); toolNavigation.path.removeAll() }
+                 Button(text("Загрузки", "Downloads")) { showsDownloads = true }
+                 Button(text("Доступ агентов", "Agent access")) { toolNavigation.path = [.page(.browserSettings)] }
+-                if compact { Button(text("Развернуть", "Expand")) { controller.presented = false; store.navigate(.browser) } }
+             } label: { Image(systemName: "ellipsis") }.menuStyle(.borderlessButton)
+             button("xmark", text("Вернуться к чату", "Return to chat")) {
+                 controller.presented = false
+@@ -120,7 +122,9 @@
+         }.scrollIndicators(.hidden)
+     }
+     private var empty: some View {
+-        WorkspaceBrowserStartPage(controller: controller) { toolNavigation.path = [$0] }
++        WorkspaceBrowserStartPage(controller: controller) {
++            toolNavigation.fileID = nil; toolNavigation.taskID = nil; toolNavigation.path = [$0]
++        }
+     }
+     private var downloads: some View {
+         VStack(alignment: .leading, spacing: 12) {
+diff --git a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceGroupEditor.swift
+@@ -6,6 +6,7 @@
+     let conversationID: UUID?
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var draft: WorkspaceGroupDraft
+     @State private var query = ""
+     @State private var saveError: String?
+@@ -36,8 +37,8 @@
+             header
+             #if os(macOS)
+             Divider().opacity(0.5)
+-            if sheetSize.height < 560 {
+-                ScrollView { editorContent.frame(height: 420) }
++            if panelNavigation != nil || sheetSize.height < 560 {
++                ScrollView { editorContent.frame(height: panelNavigation == nil ? 420 : nil) }
+             } else { editorContent }
+             #else
+             ScrollView { editorContent }.scrollDismissesKeyboard(.interactively)
+@@ -47,7 +48,7 @@
+         }
+         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
+         #if os(macOS)
+-        .frame(width: sheetSize.width, height: sheetSize.height)
++        .frame(width: panelNavigation == nil ? sheetSize.width : nil, height: panelNavigation == nil ? sheetSize.height : nil)
+         #else
+         .presentationDetents([.large]).presentationDragIndicator(.visible)
+         #endif
+@@ -65,9 +66,12 @@
+         VStack(alignment: .leading, spacing: sectionSpacing) {
+             nameField
+             #if os(macOS)
+-            HStack(alignment: .top, spacing: 24) {
+-                agentPicker.frame(maxWidth: .infinity)
+-                selectionPanel.frame(width: 228)
++            if panelNavigation != nil { selectionPanel; agentPicker }
++            else {
++                HStack(alignment: .top, spacing: 24) {
++                    agentPicker.frame(maxWidth: .infinity)
++                    selectionPanel.frame(width: 228)
++                }
+             }
+             #else
+             selectionPanel
+diff --git a/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift b/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceMCPSettingsView.swift
+@@ -45,7 +45,7 @@
+             Button(text("Добавить MCP-сервер", "Add MCP server")) { sheet = .new }.buttonStyle(WorkspaceButtonStyle()).disabled(store.mcpCommands == nil || busy)
+         }
+         .task { await reload() }
+-        .sheet(item: $sheet, onDismiss: { _Concurrency.Task { await reload() } }) { item in
++        .workspacePanelSheet(item: $sheet, onDismiss: { _Concurrency.Task { await reload() } }) { item in
+             WorkspaceMCPEditor(initial: item.access, agents: store.snapshot.agents, russian: russian, commands: store.mcpCommands)
+         }
+         .confirmationDialog(text("Проверьте фактический результат на сервере. Это решение не повторяет вызов.", "Verify the actual outcome on the server. This decision does not repeat the call."),
+@@ -88,6 +88,7 @@
+     let russian: Bool
+     let commands: (any WorkspaceMCPProviding)?
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var name = ""
+     @State private var configuration = MCPConfiguration()
+     @State private var arguments = "[]"
+@@ -125,14 +126,17 @@
+                 }.textFieldStyle(.roundedBorder).padding(24).disabled(busy)
+             }
+             .navigationTitle(text("Подключение MCP", "MCP connection"))
+-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } }
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if panelNavigation != nil { WorkspacePanelFormHeader(title: text("Подключение MCP", "MCP connection")) { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } }
++            }
++            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(text("Закрыть", "Close")) { dismiss() }.disabled(busy) } } }
+             .task { if let initial { tools = initial.tools; selected = initial.selectedTools; selectedAgents = initial.agentIDs } }
+             .confirmationDialog(text("Удалить локальные параметры и отозвать доступ агентов?", "Remove local settings and revoke agent access?"), isPresented: $removing, titleVisibility: .visible) {
+                 Button(text("Отключить", "Disconnect"), role: .destructive) { disconnect() }
+             }
+         }
+         #if os(macOS)
+-        .frame(width: 640, height: 650)
++        .frame(width: panelNavigation == nil ? 640 : nil, height: panelNavigation == nil ? 650 : nil)
+         #endif
+         .interactiveDismissDisabled(busy)
+     }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift b/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceNativeProjectsView.swift
+@@ -92,7 +92,7 @@
+                 } catch { return }
+             }
+         }
+-        .sheet(item: $folder, onDismiss: { _Concurrency.Task { await reload() } }) { folder in NativeProjectSetup(folder: folder.url, agents: store.snapshot.agents, russian: ru, commands: store.nativeCommands) }
++        .workspacePanelSheet(item: $folder, onDismiss: { _Concurrency.Task { await reload() } }) { folder in NativeProjectSetup(folder: folder.url, agents: store.snapshot.agents, russian: ru, commands: store.nativeCommands) }
+         .fileImporter(isPresented: $importing, allowedContentTypes: [.folder]) { result in
+             if case .success(let url) = result { folder = NativeFolderChoice(url: url) }
+             else if case .failure(let error) = result { self.error = error.localizedDescription }
+@@ -136,10 +136,14 @@
+ struct WorkspaceNativeProjectButton: View {
+     @State private var visible = false
+     @Environment(WorkspaceStore.self) private var store
+-    var body: some View {
+-        Button { visible = true } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
++    var body: some View {
++        Button {
++            if let panelNavigation { panelNavigation.path.append(.projects) }
++            else { visible = true }
++        } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
+             .font(.caption).disabled(store.nativeCommands == nil)
+-            .sheet(isPresented: $visible) {
++            .workspacePanelSheet(isPresented: $visible) {
+                 NavigationStack {
+                     ScrollView { WorkspaceNativeProjectsView().padding(24) }
+                         .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.language == "ru" ? "Закрыть" : "Close") { visible = false } } }
+@@ -177,6 +181,7 @@
+     let russian: Bool
+     let commands: (any WorkspaceNativeProviding)?
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var selected: Set<UUID> = []
+     @State private var trusted: Set<String> = []
+     @State private var trustCLI = false
+@@ -213,11 +218,14 @@
+                 if let error { Text(error).foregroundStyle(.red) }
+                 Button(russian ? "Подключить проект" : "Connect project") { connect() }.disabled(busy || !trustCLI || selected.isEmpty)
+             }.formStyle(.grouped).disabled(busy)
+-                .navigationTitle(russian ? "Доступ к проекту" : "Project access")
+-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
++            .navigationTitle(russian ? "Доступ к проекту" : "Project access")
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if panelNavigation != nil { WorkspacePanelFormHeader(title: russian ? "Доступ к проекту" : "Project access") { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
++            }
++            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } } }
+         }
+         #if os(macOS)
+-        .frame(width: 660, height: 650)
++        .frame(width: panelNavigation == nil ? 660 : nil, height: panelNavigation == nil ? 650 : nil)
+         #endif
+         .interactiveDismissDisabled(busy)
+     }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceScheduleRunSummary.swift b/apps/shared/WorkspaceV3/WorkspaceScheduleRunSummary.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceScheduleRunSummary.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceScheduleRunSummary.swift
+@@ -5,6 +5,7 @@
+ struct WorkspaceScheduleRunSummary: View {
+     let schedule: BlotV3.Automation
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     private var latest: BlotV3.AutomationRun? {
+         (store.snapshot.automationRuns ?? []).filter { $0.automationId == schedule.metadata.id }
+             .max { $0.metadata.createdAt < $1.metadata.createdAt }
+@@ -27,9 +28,14 @@
+                 }.environment(\.timeZone, TimeZone(identifier: schedule.timezone) ?? .current)
+                 if let task = (store.snapshot.tasks ?? []).first(where: { $0.metadata.id == run.execution.taskId }) {
+                     Button(store.t("Task details")) {
+-                        store.openConversation(task.conversationId)
+-                        store.selectedRecordID = task.metadata.id
+-                        store.navigate(.running)
++                        if let panelNavigation {
++                            panelNavigation.taskID = task.metadata.id
++                            panelNavigation.open(.running)
++                        } else {
++                            store.openConversation(task.conversationId)
++                            store.selectedRecordID = task.metadata.id
++                            store.navigate(.running)
++                        }
+                     }.buttonStyle(.plain)
+                 }
+             }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift b/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSkillRunner.swift
+@@ -6,6 +6,7 @@
+     let skill: BlotV3.Skill
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var revisionID: UUID?
+     @State private var agentID: UUID?
+     @State private var values: [String: String] = [:]
+@@ -47,10 +48,13 @@
+                 if let failure { Text(failure).foregroundStyle(.red) }
+             }.formStyle(.grouped).disabled(busy)
+             .navigationTitle(skill.name)
+-            .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if panelNavigation != nil { WorkspacePanelFormHeader(title: skill.name) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
++            }
++            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } } }
+         }.interactiveDismissDisabled(busy)
+         #if os(macOS)
+-        .frame(width: 560, height: 620)
++        .frame(width: panelNavigation == nil ? 560 : nil, height: panelNavigation == nil ? 620 : nil)
+         #endif
+         .onAppear {
+             revisionID = skill.activeRevisionId
+@@ -66,7 +70,8 @@
+                 if schedule {
+                     let goal = try await commands.renderSkill(revision.metadata.id, values: values)
+                     try await store.refreshSkills()
+-                    dismiss(); store.navigate(.createSchedule)
++                    dismiss()
++                    if let panelNavigation { panelNavigation.open(.createSchedule) } else { store.navigate(.createSchedule) }
+                     store.form.schedule = WorkspaceScheduleForm()
+                     store.form.schedule.name = skill.name; store.form.schedule.goal = goal
+                     store.form.schedule.skillRevisionID = revision.metadata.id; store.form.schedule.agentID = agentID
+@@ -76,7 +81,10 @@
+                     let isMember = store.snapshot.participants?.contains { $0.conversationId == chat?.metadata.id && $0.kind == .agent && $0.participantId == agentID && !$0.removed } ?? false
+                     let chatID = (chat?.kind == .group ? isMember : chat?.agentId == agentID) ? chat?.metadata.id : nil
+                     let id = try await commands.runSkill(skill.metadata.id, revisionID: revision.metadata.id, agentID: agentID, values: values, conversationID: chatID)
+-                    try await store.refreshSkills(taskID: id); dismiss()
++                    if let panelNavigation {
++                        try await store.refreshSkills()
++                        dismiss(); panelNavigation.taskID = id; panelNavigation.open(.running)
++                    } else { try await store.refreshSkills(taskID: id); dismiss() }
+                 }
+             } catch { failure = WorkspaceSkillFailure.text(error, russian: ru) }
+         }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift b/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceSkillsView.swift
+@@ -42,8 +42,8 @@
+                 }
+             }
+         }
+-        .sheet(item: $editor) { selection in WorkspaceSkillEditor(skill: selection.skill).environment(store) }
+-        .sheet(item: $runner) { selection in
++        .workspacePanelSheet(item: $editor) { selection in WorkspaceSkillEditor(skill: selection.skill).environment(store) }
++        .workspacePanelSheet(item: $runner) { selection in
+             if let skill = selection.skill { WorkspaceSkillRunner(skill: skill).environment(store) }
+         }
+     }
+@@ -53,6 +53,7 @@
+     let skill: BlotV3.Skill?
+     @Environment(WorkspaceStore.self) private var store
+     @Environment(\.dismiss) private var dismiss
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     @State private var name = ""
+     @State private var instructions = ""
+     @State private var parameters: [SkillParameter] = []
+@@ -118,18 +119,16 @@
+                 if let failure { Text(failure).foregroundStyle(.red) }
+             }.formStyle(.grouped).disabled(busy)
+             .navigationTitle(ru ? "Настройка навыка" : "Skill settings")
++            .safeAreaInset(edge: .top, spacing: 0) {
++                if panelNavigation != nil { WorkspacePanelFormHeader(title: ru ? "Настройка навыка" : "Skill settings") { cancelButton; saveButton } }
++            }
+             .toolbar {
+-                ToolbarItem(placement: .cancellationAction) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
+-                ToolbarItem(placement: .confirmationAction) {
+-                    Button(store.t("Save")) { perform { commands in
+-                        _ = try await commands.saveSkill(id: skill?.metadata.id, version: skill?.metadata.version ?? 0, name: name,
+-                            instructions: instructions, parameters: parameters, tools: tools.sorted())
+-                    } }.disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+-                }
++                ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { cancelButton } }
++                ToolbarItem(placement: .confirmationAction) { if panelNavigation == nil { saveButton } }
+             }
+         }.interactiveDismissDisabled(busy)
+         #if os(macOS)
+-        .frame(width: 620, height: 720)
++        .frame(width: panelNavigation == nil ? 620 : nil, height: panelNavigation == nil ? 720 : nil)
+         #endif
+         .onAppear {
+             name = skill?.name ?? ""
+@@ -137,6 +136,13 @@
+                 instructions = revision.instructions; parameters = (try? WorkspaceSkillService.parameters(revision)) ?? []; tools = Set(revision.toolIds)
+             }
+         }
++    }
++    private var cancelButton: some View { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
++    private var saveButton: some View {
++        Button(store.t("Save")) { perform { commands in
++            _ = try await commands.saveSkill(id: skill?.metadata.id, version: skill?.metadata.version ?? 0, name: name,
++                instructions: instructions, parameters: parameters, tools: tools.sorted())
++        } }.disabled(busy || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || instructions.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+     }
+     private func perform(close: Bool = true, _ action: @escaping @MainActor (any WorkspaceSkillCommands) async throws -> Void) {
+         guard !busy, let commands = store.skillCommands else { return }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceStore.swift b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceStore.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceStore.swift
+@@ -601,7 +601,7 @@
+         tab = destination; rootRoute = destination; route = destination; history = []
+         error = nil
+     }
+-    func selectAgent(_ id: UUID, destination: WorkspaceRoute = .agentProfile) {
++    func selectAgent(_ id: UUID, destination: WorkspaceRoute = .agentProfile, navigating: Bool = true) {
+         selectedAgentID = id
+         if let agent = snapshot.agents.first(where: { $0.metadata.id == id }) {
+             form.agent.name = agent.name; form.agent.instructions = agent.instructions
+@@ -609,7 +609,7 @@
+             form.agent.modelID = agent.modelId
+             form.agent.toolIDs = snapshot.configurations?.filter { $0.agentId == id }.max(by: { $0.revision < $1.revision })?.toolIds ?? []
+         }
+-        navigate(destination)
++        if navigating { navigate(destination) }
+     }
+     func perform(_ action: WorkspaceAction, next: WorkspaceRoute? = nil) async {
+         guard !busy else { return }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTaskExecutionView.swift
+@@ -4,12 +4,16 @@
+ import SwiftUI
+
+ struct WorkspaceTaskExecutionView: View {
++    var taskID: UUID? = nil
+     @Environment(WorkspaceStore.self) private var store
+     @State private var goal = ""
+     @State private var executorID: UUID?
+     @State private var projectID: UUID?
+     private var tasks: [BlotV3.Task] {
+-        let tasks = (store.snapshot.tasks ?? []).filter { $0.conversationId == store.selectedConversationID }
++        let tasks = (store.snapshot.tasks ?? []).filter { task in
++            if let taskID { return task.metadata.id == taskID }
++            return task.conversationId == store.selectedConversationID
++        }
+             .sorted { $0.metadata.createdAt > $1.metadata.createdAt }
+         #if os(iOS)
+         if let selected = tasks.first(where: { $0.metadata.id == store.selectedRecordID }) { return [selected] }
+diff --git a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+--- a/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
++++ b/apps/shared/WorkspaceV3/WorkspaceTeamViews.swift
+@@ -7,6 +7,7 @@
+     let route: WorkspaceRoute
+     var openFile: ((UUID) -> Void)? = nil
+     @Environment(WorkspaceStore.self) private var store
++    @Environment(\.workspacePanelNavigation) private var panelNavigation
+     var body: some View {
+         switch route {
+         case .createAgent, .editAgent: editor
+@@ -36,7 +37,10 @@
+             WorkspaceHeading(title: "Your team", subtitle: "Each has its own role and context.")
+             LazyVGrid(columns: agentColumns, spacing: 16) {
+                 ForEach(visibleAgents, id: \.metadata.id) { agent in
+-                    Button { store.selectAgent(agent.metadata.id) } label: {
++                    Button {
++                        store.selectAgent(agent.metadata.id, navigating: panelNavigation == nil)
++                        panelNavigation?.open(.agentProfile)
++                    } label: {
+                         WorkspaceCard(isButtonLabel: true) {
+                             VStack(alignment: .leading, spacing: 18) {
+                                 WorkspaceAvatarView(agent: agent, size: 52)
+diff --git a/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift b/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift
+new file mode 100644
+--- /dev/null
++++ b/apps/shared/WorkspaceV3/WorkspacePanelPresentation.swift
+@@ -0,0 +1,54 @@
++import SwiftUI
++
++/// Tool details use the pane's navigation stack; standalone screens retain their normal sheets.
++extension View {
++    func workspacePanelSheet<Item: Identifiable, Destination: View>(item: Binding<Item?>, onDismiss: (() -> Void)? = nil,
++        @ViewBuilder content: @escaping (Item) -> Destination) -> some View {
++        modifier(WorkspacePanelItemPresentation(item: item, onDismiss: onDismiss, destination: content))
++    }
++    func workspacePanelSheet<Destination: View>(isPresented: Binding<Bool>, onDismiss: (() -> Void)? = nil,
++        @ViewBuilder content: @escaping () -> Destination) -> some View {
++        modifier(WorkspacePanelPresentation(isPresented: isPresented, onDismiss: onDismiss, destination: content))
++    }
++}
++
++private struct WorkspacePanelItemPresentation<Item: Identifiable, Destination: View>: ViewModifier {
++    @Binding var item: Item?
++    let onDismiss: (() -> Void)?
++    let destination: (Item) -> Destination
++    @Environment(\.workspacePanelNavigation) private var panel
++    func body(content: Content) -> some View {
++        if panel != nil {
++            content.navigationDestination(isPresented: Binding(get: { item != nil }, set: { shown in
++                if !shown, item != nil { item = nil; onDismiss?() }
++            })) { if let item { destination(item) } }
++        } else { content.sheet(item: $item, onDismiss: onDismiss, content: destination) }
++    }
++}
++
++private struct WorkspacePanelPresentation<Destination: View>: ViewModifier {
++    @Binding var isPresented: Bool
++    let onDismiss: (() -> Void)?
++    let destination: () -> Destination
++    @Environment(\.workspacePanelNavigation) private var panel
++    func body(content: Content) -> some View {
++        if panel != nil {
++            content.navigationDestination(isPresented: Binding(get: { isPresented }, set: { shown in
++                let dismissed = isPresented && !shown; isPresented = shown
++                if dismissed { onDismiss?() }
++            }), destination: destination)
++        } else { content.sheet(isPresented: $isPresented, onDismiss: onDismiss, content: destination) }
++    }
++}
++
++/// Form controls remain reachable when the window toolbar belongs to the chat.
++struct WorkspacePanelFormHeader<Actions: View>: View {
++    let title: String
++    @ViewBuilder let actions: () -> Actions
++    var body: some View {
++        VStack(spacing: 0) {
++            HStack(spacing: 10) { Text(title).font(.headline).lineLimit(2); Spacer(minLength: 8); actions() }.padding(14)
++            Divider()
++        }
++    }
++}

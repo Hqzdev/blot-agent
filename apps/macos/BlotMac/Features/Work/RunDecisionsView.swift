@@ -57,7 +57,7 @@ private struct RunQuestionView: View {
     private var busy: Bool { sending != nil || !app.workspace.commands.active.isEmpty }
 
     var body: some View {
-        DecisionCard(icon: "message-square", tint: K.text2, title: "Blot needs your answer") {
+        DecisionCard(icon: "message-square", tint: K.text2, title: "Ori needs your answer") {
             Text(question.data.text("question")).font(KFont.body()).foregroundStyle(K.text).lineSpacing(4)
                 .textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
             let options = question.data.strings("options")

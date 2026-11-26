@@ -21,14 +21,13 @@ struct MacTeamIconButton: View {
     let title: String
     let symbol: String
     var action: () -> Void
-    @State private var hovered = false
     var body: some View {
         Button(action: action) {
             BlotIcon(symbol: symbol, size: BlotIconSize.control).frame(width: 28, height: 28)
-                .background(WorkspaceStyle.ink.opacity(hovered ? 0.055 : 0), in: Circle()).contentShape(Circle())
+                .contentShape(Circle())
         }
-        .buttonStyle(BlotPlainButtonStyle()).foregroundStyle(WorkspaceStyle.ink).help(Text(LocalizedStringKey(title))).accessibilityLabel(Text(LocalizedStringKey(title)))
-        .onHover { hovered = $0 }.kAnimation(KMotion.quick, value: hovered)
+        .buttonStyle(BlotPlainButtonStyle(hoverIn: Circle())).foregroundStyle(WorkspaceStyle.ink)
+        .help(Text(LocalizedStringKey(title))).accessibilityLabel(Text(LocalizedStringKey(title)))
     }
 }
 
@@ -76,7 +75,7 @@ struct MacTeamPluginIcon: View {
 
 struct MacTeamSheetHeader: View {
     let title: String
-    @Environment(\.dismiss) private var dismiss
+    @WorkspacePresentationDismiss private var dismiss
     var body: some View {
         HStack {
             WorkspaceLocalizedText(title).font(.system(size: 16, weight: .semibold))

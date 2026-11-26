@@ -5,19 +5,18 @@ struct PhoneTabBar: View {
     private struct Item: Identifiable {
         let route: WorkspaceRoute
         let title: String
-        let icon: PhoneTabIcon.Kind
+        let icon: BlotGlyph
         var id: WorkspaceRoute { route }
     }
 
     private static let items: [Item] = [
         .init(route: .chats, title: "Chats", icon: .chats),
         .init(route: .schedules, title: "Schedules", icon: .calendar),
-        .init(route: .overview, title: "Overview", icon: .overview),
+        .init(route: .overview, title: "Overview", icon: .grid),
         .init(route: .settings, title: "Settings", icon: .settings)
     ]
 
     @Environment(WorkspaceStore.self) private var store
-    @Namespace private var selection
     @State private var availableWidth: CGFloat = 340
     @ScaledMetric(relativeTo: .subheadline) private var minimumLabeledWidth: CGFloat = 340
 
@@ -34,22 +33,20 @@ struct PhoneTabBar: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     var body: some View {
-        surface
+        bar
+            .background { surface }
             .padding(.horizontal, 16).padding(.vertical, 2)
             .accessibilityElement(children: .contain)
             .accessibilityLabel(store.t("Main navigation"))
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { availableWidth = $0 }
-            #if DEBUG
-            .environment(\.phoneTabInteractionRecorder, store.navigation.tabInteractionRecorder)
-            #endif
     }
 
     @ViewBuilder private var surface: some View {
-        if reduceTransparency {
-            bar.background(BlotColor.panel, in: .rect(cornerRadius: 28))
+        if reduceTransparency || ![WorkspaceRoute.chats, .home].contains(store.route) {
+            RoundedRectangle(cornerRadius: 28).fill(BlotColor.panel)
                 .overlay { RoundedRectangle(cornerRadius: 28).strokeBorder(BlotColor.hairline) }
         } else {
-            bar.glassEffect(.regular, in: .rect(cornerRadius: 28))
+            Color.clear.glassEffect(.regular, in: .rect(cornerRadius: 28))
         }
     }
 
@@ -57,6 +54,17 @@ struct PhoneTabBar: View {
         VStack(spacing: 6) {
             HStack(spacing: 4) {
                 ForEach(Self.items) { item in tab(item) }
+            }
+            .backgroundPreferenceValue(PhoneTabSelectionBounds.self) { anchor in
+                GeometryReader { geometry in
+                    PhoneTabSelectionIndicator(
+                        target: anchor.map { geometry[$0] } ?? .zero,
+                        color: BlotColor.inverse.opacity(reduceTransparency ? 1 : 0.88),
+                        reduceMotion: reduceMotion || systemReduceMotion
+                    )
+                }
+                .allowsHitTesting(false)
+                .accessibilityHidden(true)
             }
             if !showsInlineTitle,
                let selected = Self.items.first(where: { $0.route == store.tab }) {
@@ -66,7 +74,6 @@ struct PhoneTabBar: View {
             }
         }
         .padding(6).frame(maxWidth: .infinity)
-        .animation(reduceMotion || systemReduceMotion ? nil : BlotInterfaceMotion.standard, value: store.tab)
     }
 
     private var showsInlineTitle: Bool { !dynamicTypeSize.isAccessibilitySize && availableWidth >= minimumLabeledWidth }
@@ -79,7 +86,7 @@ struct PhoneTabBar: View {
             store.navigation.activateTab(item.route)
         } label: {
             HStack(spacing: 9) {
-                PhoneTabIcon(kind: item.icon, activation: store.navigation.activation(for: item.route))
+                BlotIcon(item.icon, size: 22)
                 if showsTitle {
                     Text(store.t(item.title)).font(.subheadline.weight(.medium))
                         .lineLimit(1).fixedSize(horizontal: true, vertical: false).transition(.opacity)
@@ -89,16 +96,11 @@ struct PhoneTabBar: View {
             .frame(minWidth: showsTitle ? 124 : 44,
                    maxWidth: showsTitle ? nil : .infinity, minHeight: 50)
             .foregroundStyle(selected ? BlotColor.onInverse : WorkspaceStyle.ink)
-            .background {
-                if selected {
-                    Capsule().fill(BlotColor.inverse.opacity(reduceTransparency ? 1 : 0.88))
-                        .matchedGeometryEffect(id: "selected-tab", in: selection)
-                }
-            }
+            .anchorPreference(key: PhoneTabSelectionBounds.self, value: .bounds) { selected ? $0 : nil }
             .contentShape(Capsule())
         }
         .layoutPriority(selected ? 1 : 0)
-        .buttonStyle(BlotPlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(store.t(item.title))
         .accessibilityAddTraits(selected ? .isSelected : [])
