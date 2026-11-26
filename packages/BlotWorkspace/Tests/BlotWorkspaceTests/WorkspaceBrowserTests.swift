@@ -93,6 +93,31 @@ private struct BrowserFixture {
     await f.service.suspend()
 }
 
+@Test func browserAttachWithEmptyArgumentsCreatesAnApprovalCard() async throws {
+    let fixture = try await BrowserFixture(request: "Да, подключись к открытой вкладке")
+    defer { cleanupWorkspaceTestStorage(fixture.folder) }
+    let registry = try WorkspaceToolRegistry(providers: [fixture.tools()], inlineCards: true)
+    let call = ChatToolCall(id: "attach-current", name: "browser_attach", arguments: .object([:]))
+    let worker = _Concurrency.Task { try await registry.execute(call, context: fixture.context) }
+    defer { worker.cancel() }
+    var pending: BlotV3.ConversationCard?
+    for _ in 0..<200 {
+        pending = try await fixture.repository.projection(identity: fixture.identity).cards.first { $0.state == "pending" }
+        if pending != nil { break }
+        try await _Concurrency.Task.sleep(for: .milliseconds(10))
+    }
+    let card = try #require(pending)
+    #expect(card.kind == "command")
+    let payload = try JSONDecoder().decode(WorkspaceCardContent.self, from: Data(card.payloadJSON.utf8))
+    guard case .command(let approval) = payload else { Issue.record("Expected a tab approval card"); return }
+    #expect(approval.details.contains("https://example.com"))
+    #expect(await fixture.driver.executions == 0)
+    try await WorkspaceConversationCardService(repository: fixture.repository, identity: fixture.identity)
+        .respond(commandID: UUID(), cardID: card.metadata.id, expectedVersion: card.metadata.version, response: .init(action: "allow"))
+    #expect(try await worker.value.mcpFields["state"] == .string("completed"))
+    #expect(await fixture.driver.executions == 1)
+}
+
 @Test func browserUnknownOutcomeBlocksWritesUntilOwnerVerificationAndReadOnlyNarrowsGrant() async throws {
     let f = try await BrowserFixture(); defer { cleanupWorkspaceTestStorage(f.folder) }
     await f.driver.setUncertain()
@@ -130,6 +155,16 @@ private struct BrowserFixture {
     await f.service.suspend()
 }
 
+@Test func browserDraftCanBeFilledWhenTheUserForbidsSending() async throws {
+    let fixture = try await BrowserFixture(request: "Заполни форму на открытом сайте, но не отправляй")
+    defer { cleanupWorkspaceTestStorage(fixture.folder) }
+    let names = try await fixture.tools().availableDefinitions(context: fixture.context).map(\.name)
+    #expect(names.contains("browser_attach"))
+    #expect(names.contains("browser_type"))
+    #expect(!names.contains("browser_click"))
+    #expect(!names.contains("browser_purchase"))
+}
+
 @Test func automaticBrowserDoesNotRequirePerSiteCredentialsOrAssignments() async throws {
     let f = try await BrowserFixture(); defer { cleanupWorkspaceTestStorage(f.folder) }
     let automatic = WorkspaceBrowserService(repository: f.repository, identity: f.identity, credentials: InaccessibleBrowserCredentials(), driver: f.driver, automaticAccess: true)
@@ -151,4 +186,34 @@ private struct BrowserFixture {
     let grouped = try await f.service.authorize("browser_tabs", context: .init(sourceMessageID: source, taskID: nil, allowedToolIDs: Set(WorkspaceBrowserCatalog.toolIDs), agentID: f.agent))
     #expect(grouped.sessionKey == .group(group))
     #expect(grouped.scope.agentID == direct.scope.agentID)
+}
+
+@Test func browserPurchaseRequiresItsOwnCardAndRechecksThePageBeforeClicking() async throws {
+    for changed in [false, true] {
+        let f = try await BrowserFixture(request: "Prepare this order and ask me before paying")
+        defer { cleanupWorkspaceTestStorage(f.folder) }
+        let order = WorkspacePurchaseOrder(merchant: "Fixture merchant", checkoutURL: URL(string: "https://example.com/form")!, currency: "RUB",
+            items: [.init(title: "Book", quantity: 1, unitAmountMinor: 10000)], taxMinor: 0, deliveryMinor: 0, totalMinor: 10000)
+        let call = ChatToolCall(id: "purchase-1", name: "browser_purchase", arguments: .object([
+            "tab_id": .string(UUID().uuidString), "document_id": .string(UUID().uuidString), "element_id": .string("1:0"),
+            "order_json": .string(String(decoding: try JSONEncoder().encode(order), as: UTF8.self))]))
+        let worker = _Concurrency.Task { try await f.tools().execute(call, context: f.context) }
+        defer { worker.cancel() }
+        var pending: BlotV3.ConversationCard?
+        for _ in 0..<200 {
+            pending = try await f.repository.projection(identity: f.identity).cards.first { $0.kind == "purchase" && $0.state == "pending" }
+            if pending != nil { break }
+            try await _Concurrency.Task.sleep(for: .milliseconds(10))
+        }
+        let card = try #require(pending)
+        #expect(await f.driver.executions == 0)
+        if changed { await f.driver.changePage() }
+        try await WorkspaceConversationCardService(repository: f.repository, identity: f.identity).respond(commandID: UUID(), cardID: card.metadata.id, expectedVersion: card.metadata.version, response: .init(action: "allow"))
+        _ = try await worker.value
+        #expect(await f.driver.executions == (changed ? 0 : 1))
+        if !changed {
+            _ = try await f.tools().execute(call, context: f.context)
+            #expect(await f.driver.executions == 1)
+        }
+    }
 }

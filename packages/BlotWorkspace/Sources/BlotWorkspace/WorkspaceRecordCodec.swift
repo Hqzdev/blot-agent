@@ -9,7 +9,7 @@ struct DecodedWorkspaceRecord {
 
 /// Generated from the v3 model catalog. New wire entities must pass typed validation before persistence.
 enum WorkspaceRecordCodec {
-    static let supportedKinds: Set<String> = ["Account", "Device", "TrustedPair", "Workspace", "Project", "AgentProfile", "AgentConfigurationRevision", "Conversation", "Message", "Task", "TaskAttempt", "Assignment", "AgentSession", "AgentMessage", "PreparedAction", "ApprovalGrant", "ToolInvocation", "Artifact", "MemoryEntry", "ContextSummary", "Connection", "McpConnection", "Automation", "AutomationRun", "BudgetLedger", "SyncCursor", "ConversationParticipant", "MessageReaction", "ConversationReadPosition", "Skill", "SkillRevision", "RecordChange", "RecordTombstone", "ReplicationCheckpoint", "ConflictingRevision", "ExecutionLease", "ModelStep"]
+    static let supportedKinds: Set<String> = ["Account", "Device", "TrustedPair", "Workspace", "Project", "AgentProfile", "AgentConfigurationRevision", "Conversation", "Message", "Task", "TaskAttempt", "Assignment", "AgentSession", "AgentMessage", "PreparedAction", "ApprovalGrant", "ToolInvocation", "Artifact", "MemoryEntry", "ContextSummary", "Connection", "McpConnection", "Automation", "AutomationRun", "BudgetLedger", "SyncCursor", "ConversationParticipant", "MessageReaction", "ConversationReadPosition", "Skill", "SkillRevision", "RecordChange", "RecordTombstone", "ReplicationCheckpoint", "ConflictingRevision", "ExecutionLease", "ModelStep", "ConversationCard"]
     static func decode(kind: String, payload: String) throws -> DecodedWorkspaceRecord {
         switch kind {
         case "Account": return try record(BlotV3.Account.self, payload: payload)
@@ -49,6 +49,7 @@ enum WorkspaceRecordCodec {
         case "ConflictingRevision": return try record(BlotV3.ConflictingRevision.self, payload: payload)
         case "ExecutionLease": return try record(BlotV3.ExecutionLease.self, payload: payload)
         case "ModelStep": return try record(BlotV3.ModelStep.self, payload: payload)
+        case "ConversationCard": return try record(BlotV3.ConversationCard.self, payload: payload)
         default: throw WorkspaceSyncError.unsupportedRecord
         }
     }

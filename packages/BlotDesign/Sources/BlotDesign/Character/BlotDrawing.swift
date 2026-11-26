@@ -11,11 +11,11 @@ import SwiftUI
 nonisolated public enum BlotFraming: Sendable, Equatable {
     /// Free-standing pet on a 170 × 170 artboard with room for bubbles and badges.
     case stage
-    /// Circle avatar: Blot rises from the bottom edge, accessories may be cropped.
+    /// Circle avatar: Ori rises from the bottom edge, accessories may be cropped.
     case avatar
 }
 
-/// Static Blot for a single pose.
+/// Static Ori for a single pose.
 public struct BlotDrawing: View {
     private let role: BlotRole
     private let pose: BlotPose

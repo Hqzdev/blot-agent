@@ -9,6 +9,7 @@ struct WorkspaceSkillRunner: View {
     @Environment(\.workspacePanelNavigation) private var panelNavigation
     @State private var revisionID: UUID?
     @State private var agentID: UUID?
+    @State private var executorDeviceID: UUID?
     @State private var values: [String: String] = [:]
     @State private var busy = false
     @State private var failure: String?
@@ -16,6 +17,14 @@ struct WorkspaceSkillRunner: View {
     private var revisions: [BlotV3.SkillRevision] { (store.snapshot.skillRevisions ?? []).filter { $0.skillId == skill.metadata.id }.sorted { $0.metadata.createdAt > $1.metadata.createdAt } }
     private var revision: BlotV3.SkillRevision? { revisions.first { $0.metadata.id == (revisionID ?? skill.activeRevisionId) } }
     private var parameters: [SkillParameter] { revision.flatMap { try? WorkspaceSkillService.parameters($0) } ?? [] }
+    private var needsMac: Bool { revision?.toolIds.contains("desktop_replay") == true }
+    private var deviceReady: Bool {
+        #if os(iOS)
+        !needsMac || executorDeviceID != nil && executorDeviceID != store.snapshot.localDeviceID
+        #else
+        true
+        #endif
+    }
     private var agents: [BlotV3.AgentProfile] {
         let assigned = Set((store.snapshot.skillAssignments ?? []).filter { $0.skillID == skill.metadata.id && $0.assigned }.map(\.agentID))
         return store.snapshot.agents.filter { assigned.contains($0.metadata.id) }
@@ -29,6 +38,8 @@ struct WorkspaceSkillRunner: View {
                         .onChange(of: revisionID) { _, _ in values = [:] }
                     WorkspaceChoice(title: ru ? "Агент" : "Agent", selection: $agentID,
                         options: agents.map { .init(Optional($0.metadata.id), $0.name) })
+                    WorkspaceChoice(title: ru ? "Устройство выполнения" : "Execution device", selection: $executorDeviceID, options: [.init(store.snapshot.localDeviceID, ru ? "Это устройство" : "This device")] + (store.snapshot.pairedDevices ?? []).filter { !$0.revoked && $0.kind == .desktop }.map { .init(Optional($0.id), $0.name) })
+                    if !deviceReady { Text(ru ? "Для записанной задачи выберите связанный Mac." : "Choose a paired Mac for this recorded task.").foregroundStyle(.secondary) }
                     if agents.isEmpty { Text(ru ? "Назначьте навык агенту в настройках навыка." : "Assign the skill to an agent in its settings.").foregroundStyle(.secondary) }
                 }
                 if let revision { Section(ru ? "Инструкция" : "Instructions") { Text(revision.instructions).textSelection(.enabled) } }
@@ -41,20 +52,28 @@ struct WorkspaceSkillRunner: View {
                     Button(ru ? "Запустить задачу" : "Run task") { submit(schedule: false) }
                     Button(ru ? "Добавить расписание" : "Schedule") { submit(schedule: true) }
                     Text(ru ? "Выбранная версия и параметры сохранятся в задаче." : "The selected revision and parameters are saved with the task.").font(.caption).foregroundStyle(.secondary)
-                }.disabled(agentID == nil || revision == nil)
+                }.disabled(agentID == nil || revision == nil || !deviceReady)
                 if let failure { Text(failure).foregroundStyle(.red) }
             }.disabled(busy)
-            .navigationTitle(skill.name)
+
             .safeAreaInset(edge: .top, spacing: 0) {
                 if panelNavigation != nil { WorkspacePanelFormHeader(title: skill.name) { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } }
             }
-            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(store.t("Cancel")) { dismiss() }.disabled(busy) } } }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: skill.name) {
+                    if panelNavigation == nil { Button(store.t("Cancel")) { dismiss() }.disabled(busy) }
+                }
+            }.workspaceEditorChrome()
         }.interactiveDismissDisabled(busy)
         #if os(macOS)
         .frame(width: panelNavigation == nil ? 560 : nil, height: panelNavigation == nil ? 620 : nil)
         #endif
         .onAppear {
             revisionID = skill.activeRevisionId
+            executorDeviceID = store.snapshot.localDeviceID
+            #if os(iOS)
+            if needsMac { executorDeviceID = store.snapshot.pairedDevices?.first { !$0.revoked && $0.kind == .desktop }?.id }
+            #endif
             agentID = agents.first { $0.metadata.id == store.selectedAgentID }?.metadata.id ?? agents.first?.metadata.id
         }
     }
@@ -72,12 +91,12 @@ struct WorkspaceSkillRunner: View {
                     store.form.schedule = WorkspaceScheduleForm()
                     store.form.schedule.name = skill.name; store.form.schedule.goal = goal
                     store.form.schedule.skillRevisionID = revision.metadata.id; store.form.schedule.agentID = agentID
-                    store.form.schedule.deviceID = store.snapshot.localDeviceID
+                    store.form.schedule.deviceID = executorDeviceID ?? store.snapshot.localDeviceID
                 } else {
                     let chat = store.currentConversation
                     let isMember = store.snapshot.participants?.contains { $0.conversationId == chat?.metadata.id && $0.kind == .agent && $0.participantId == agentID && !$0.removed } ?? false
                     let chatID = (chat?.kind == .group ? isMember : chat?.agentId == agentID) ? chat?.metadata.id : nil
-                    let id = try await commands.runSkill(skill.metadata.id, revisionID: revision.metadata.id, agentID: agentID, values: values, conversationID: chatID)
+                    let id = try await commands.runSkill(skill.metadata.id, revisionID: revision.metadata.id, agentID: agentID, values: values, conversationID: chatID, executorDeviceID: executorDeviceID)
                     if let panelNavigation {
                         try await store.refreshSkills()
                         dismiss(); panelNavigation.taskID = id; panelNavigation.open(.running)

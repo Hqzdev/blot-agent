@@ -13,7 +13,7 @@ struct SMTPSetupView: View {
     @State private var busy = false
     private nonisolated struct Configuration: Encodable, Sendable { let host: String; let port: Int; let username: String; let password: String; let from: String }
     var body: some View {
-        KSheet("Email delivery", subtitle: "Blot sends verification and password reset codes through this SMTP account using STARTTLS.",
+        KSheet("Email delivery", subtitle: "Ori sends verification and password reset codes through this SMTP account using STARTTLS.",
                width: 480) {
             HStack(alignment: .top, spacing: KSpace.md) {
                 KTextField("SMTP host", text: $host, placeholder: "smtp.example.com", required: true, autofocus: true)

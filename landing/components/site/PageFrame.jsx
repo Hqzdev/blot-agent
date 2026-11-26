@@ -4,7 +4,7 @@ import { ArrowUpRight } from "lucide-react";
 
 export function PageFrame({ eyebrow, title, intro, children, className = "" }) {
   return <main id="main-content" tabIndex={-1} className={`site-page ${className}`}>
-    <header className="site-page-header"><Link className="site-eyebrow" href="/">Blot{eyebrow && <><span>/</span><SiteText>{eyebrow}</SiteText></>}</Link><h1><SiteText>{title}</SiteText></h1>{intro && <p><SiteText>{intro}</SiteText></p>}</header>
+    <header className="site-page-header"><Link className="site-eyebrow" href="/">Ori{eyebrow && <><span>/</span><SiteText>{eyebrow}</SiteText></>}</Link><h1><SiteText>{title}</SiteText></h1>{intro && <p><SiteText>{intro}</SiteText></p>}</header>
     {children}
   </main>;
 }

@@ -67,6 +67,18 @@ public struct WorkspaceScheduleService: Sendable {
         }
     }
 
+    /// Removing a schedule does not cancel or erase tasks that have already started.
+    public func delete(commandID: UUID, scheduleID: UUID, expectedVersion: Int) async throws {
+        struct Input: Encodable { let scheduleID: UUID; let expectedVersion: Int }
+        let command = try WorkspaceCommand(type: "automation.delete", workspaceID: identity.workspaceID,
+            payload: Input(scheduleID: scheduleID, expectedVersion: expectedVersion)).data()
+        _ = try await repository.execute(commandID: commandID, command: command, identity: identity) { tx in
+            try tx.requireResolved(kind: "Automation", id: scheduleID)
+            try tx.delete(tx.require(BlotV3.Automation.self, id: scheduleID, version: expectedVersion))
+            return scheduleID
+        }
+    }
+
     public func fire(scheduleID: UUID, scheduledAt: Date, expectedVersion: Int? = nil, now: Date = Date()) async throws -> UUID {
         let id = WorkspaceLogicalID.make(kind: "AutomationRun", workspaceID: identity.workspaceID,
             parts: [scheduleID.uuidString, ISO8601DateFormatter().string(from: scheduledAt)])

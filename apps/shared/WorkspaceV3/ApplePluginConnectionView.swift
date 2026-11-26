@@ -44,15 +44,12 @@ struct ApplePluginConnectionView: View {
                 #endif
                 WorkspaceLocalizedText(plugin.summary).foregroundStyle(.secondary).multilineTextAlignment(.center)
                 if !connected {
-                    Text("Доступ получат все текущие агенты команды. Результаты запросов могут передаваться выбранной вами модели. Отправка и удаление требуют отдельного подтверждения.")
+                    Text(store.language == "ru" ? "Доступ получат все агенты на этом устройстве. Результаты запросов могут передаваться выбранной модели. Отправка и удаление требуют отдельного подтверждения." : "All agents on this device get access. Results may be shared with the selected model. Sending and deleting require separate confirmation.")
                         .font(.callout).foregroundStyle(.secondary).multilineTextAlignment(.center)
                     if plugin == .shortcuts {
                         TextField("Название команды", text: $shortcutName).textFieldStyle(WorkspacePanelTextFieldStyle())
                         Text("При подключении команда выполнится один раз для проверки. Её действия могут изменить данные.")
                             .font(.caption).foregroundStyle(.secondary)
-                    }
-                    if store.snapshot.agents.isEmpty {
-                        Text("Сначала создайте агента в команде.").font(.callout).foregroundStyle(.secondary)
                     }
                 }
                 if let error = failure ?? store.error {
@@ -61,13 +58,13 @@ struct ApplePluginConnectionView: View {
                 Button(action: activate) {
                     HStack(spacing: 8) {
                         if busy { ProgressView().controlSize(.small) }
-                        else if connected { Image(systemName: "checkmark") }
+                        else if connected { BlotIcon(symbol: "checkmark") }
                         WorkspaceLocalizedText(busy ? "Подождите…" : connected ? "Подключено" : "Подключить")
                     }.frame(minWidth: 150)
                 }
                 .buttonStyle(WorkspaceButtonStyle()).controlSize(.large)
                 .tint(connected ? .green : WorkspaceStyle.ink)
-                .disabled(busy || !plugin.available || store.appleIntegrations == nil || (!connected && store.snapshot.agents.isEmpty))
+                .disabled(busy || !plugin.available || store.appleIntegrations == nil)
                 .help(connected ? "Отключить приложение" : "Разрешить доступ и подключить приложение")
                 .accessibilityIdentifier("apple.connection.toggle")
             }
@@ -94,7 +91,7 @@ struct ApplePluginConnectionView: View {
         .task(id: store.snapshot.connections) { await refreshAccess() }
         .task(id: store.appleIntegrations?.revision) { await refreshAccess() }
         .task(id: scenePhase) { if scenePhase == .active { await refreshAccess() } }
-        .confirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
+        .workspaceConfirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
             Button("Отключить", role: .destructive) {
                 _Concurrency.Task {
                     guard let connection else { return }
@@ -103,8 +100,8 @@ struct ApplePluginConnectionView: View {
                 }
             }
             Button("Отмена", role: .cancel) {}
-        } message: { Text("Агенты потеряют доступ к этому приложению в Blot.") }
-        .confirmationDialog("Подключить команду «\(shortcutName)»?", isPresented: $confirmingShortcut, titleVisibility: .visible) {
+        } message: { Text("Агенты потеряют доступ к этому приложению в Ori.") }
+        .workspaceConfirmationDialog("Подключить команду «\(shortcutName)»?", isPresented: $confirmingShortcut, titleVisibility: .visible) {
             Button("Запустить и подключить") { working = true; _Concurrency.Task { await connect() } }
             Button("Отмена", role: .cancel) {}
         } message: { Text("Команда выполнится с пустым входом для проверки доступа. Её действия могут изменить данные.") }
@@ -150,8 +147,7 @@ struct ApplePluginConnectionView: View {
                 failure = "Нет доступных данных для подключения. Проверьте разрешения и повторите попытку."
                 return
             }
-            await store.connectApple(plugin, resources: Array(Set(resources.map(\.id))).sorted(),
-                agentIDs: store.snapshot.agents.map(\.metadata.id))
+            await store.connectApple(plugin, resources: Array(Set(resources.map(\.id))).sorted())
             await refreshAccess()
         } catch { failure = error.localizedDescription }
     }

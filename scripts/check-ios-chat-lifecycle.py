@@ -12,6 +12,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--device-udid", required=True)
     parser.add_argument("--team", help="Defaults to the BlotIOS signing team")
+    parser.add_argument("--only-testing", action="append", default=[], help="Run a specific XCTest target/class/method")
+    parser.add_argument("--result-bundle", type=Path, help="Write a new xcresult bundle at this path")
+    parser.add_argument("--derived-data", type=Path, default=ROOT / ".build/ios", help="Reusable physical iOS build directory")
     args = parser.parse_args()
     team = args.team
     if not team:
@@ -41,7 +44,7 @@ def main():
     text = text.replace("files = (D40000000000000000000020, D40000000000000000000021,);",
                         "files = (D40000000000000000000020, D40000000000000000000021, D40000000000000000000029, D4000000000000000000002A, D4000000000000000000002D, D40000000000000000000030,);")
     # Product presentation sources use the same isolation and Swift mode as BlotIOS.
-    text = text.replace('BUNDLE_LOADER = "$(TEST_HOST)";', 'SWIFT_VERSION = 5.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; BUNDLE_LOADER = "$(TEST_HOST)";')
+    text = text.replace('BUNDLE_LOADER = "$(TEST_HOST)";', 'SWIFT_VERSION = 5.0; SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor; SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES; BUNDLE_LOADER = "$(TEST_HOST)";')
     additions = f'''
         D40000000000000000000022 = {{ isa = PBXFileSystemSynchronizedRootGroup; path = "{ROOT}/apps/ios/BlotIOS"; sourceTree = "<absolute>"; exceptions = (D40000000000000000000024,); }};
         D40000000000000000000023 = {{ isa = PBXFileSystemSynchronizedRootGroup; path = "{ROOT}/apps/shared"; sourceTree = "<absolute>"; }};
@@ -66,10 +69,14 @@ def main():
     scheme = "BlotWorkspaceVerification.xcscheme"
     (schemes / scheme).write_bytes((source / "xcshareddata/xcschemes" / scheme).read_bytes())
     with (directory / "tests.log").open("w") as log:
-        result = subprocess.run(["xcodebuild", "-project", str(project), "-scheme", "BlotWorkspaceVerification",
+        command = ["xcodebuild", "-jobs", "2", "-project", str(project), "-scheme", "BlotWorkspaceVerification",
                                  "-destination", "platform=iOS,id=" + args.device_udid,
-                                 "-derivedDataPath", str(directory / "DerivedData"), "DEVELOPMENT_TEAM=" + team,
-                                 "-allowProvisioningUpdates", "test"], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                                 "-derivedDataPath", str(args.derived_data.resolve()), "DEVELOPMENT_TEAM=" + team,
+                                 "-allowProvisioningUpdates", "-disableAutomaticPackageResolution", "-parallel-testing-enabled", "NO"]
+        command.extend("-only-testing:" + selection for selection in args.only_testing)
+        if args.result_bundle:
+            command.extend(["-resultBundlePath", str(args.result_bundle.resolve())])
+        result = subprocess.run(command + ["test"], cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
     print("PASS" if result.returncode == 0 else "FAIL", directory / "tests.log")
     return result.returncode
 

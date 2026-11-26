@@ -42,7 +42,7 @@ public actor WorkspaceSessionMirror {
     public func synchronize() async {
         do { try await update(); lastError = nil }
         catch is CancellationError {}
-        catch { lastError = "Не удалось сохранить историю сессии в папке Blot. Данные чата сохранены в приложении." }
+        catch { lastError = "Не удалось сохранить историю сессии в папке сессии. Данные чата сохранены в приложении." }
     }
     private func update() async throws {
         try _Concurrency.Task.checkCancellation()

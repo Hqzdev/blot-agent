@@ -289,6 +289,12 @@
                           "items": {
                             "$ref": "./entities.schema.json#/$defs/ModelStep"
                           }
+                        },
+                        "ConversationCard": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "./entities.schema.json#/$defs/ConversationCard"
+                          }
                         }
                       }
                     },

@@ -1,3 +1,5 @@
+import { isCliCallback } from "./cli-callback.mjs";
+
 /** Owns one in-flight app handoff, including React's repeated effect calls. */
 export class AppHandoff {
   #prepare;
@@ -23,9 +25,15 @@ export class AppHandoff {
     const attempt = new URLSearchParams(query);
     const callback = new URL(result.callbackURL);
     const expected = new URL(attempt.get("redirect_uri"));
-    if (callback.protocol !== expected.protocol || callback.host || callback.pathname !== expected.pathname
+    const web = attempt.get("client_id") === "blot-web";
+    const cli = attempt.get("client_id") === "blot-cli";
+    const validDestination = cli
+      ? callback.origin === expected.origin && isCliCallback("blot-cli", expected.href)
+      : web
+        ? callback.origin === expected.origin && (callback.protocol === "https:" || (callback.protocol === "http:" && ["localhost", "127.0.0.1"].includes(callback.hostname)))
+        : !callback.host && /^blot-agent-(ios|macos):$/.test(callback.protocol);
+    if (!validDestination || callback.protocol !== expected.protocol || callback.pathname !== expected.pathname
         || callback.hash || callback.username || callback.password
-        || !/^blot-agent-(ios|macos):$/.test(callback.protocol)
         || callback.searchParams.getAll("state").length !== 1
         || callback.searchParams.get("state") !== attempt.get("state")
         || callback.searchParams.getAll("code").length !== 1

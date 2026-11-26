@@ -46,6 +46,12 @@ export const futureDocuments = Object.freeze([
   document("google-workspace", "integrations/google-workspace.md", "Будущая интеграция Google Workspace", "План Gmail, Calendar и Drive; статус за пределами первой поставки.", null),
 ]);
 export const currentProductDocuments = Object.freeze([
+  document("web-same-domain", "status/web-same-domain.md", "Веб на основном домене", "Размещение /app, исправления входа и результаты HTTPS-проверки.", null),
+  document("blot-unification-plan", "product/blot-unification-plan.md", "Объединение приложений Blot", "План веба и терминала, общий вход и хранение данных.", null),
+  document("web-terminal-import", "status/web-terminal-import.md", "Перенос веба и терминала", "Размещение исходников и проверки переноса.", null),
+  document("web-blot-auth", "status/web-blot-auth.md", "Общий вход веба", "Контракт аккаунта и PKCE для браузерного приложения.", null),
+  document("web-postgres-release", "status/web-postgres-release.md", "Веб и PostgreSQL", "Подключение веба к общей базе и выпуск на Vercel.", null),
+  document("shared-chat-history", "status/shared-chat-history.md", "Общая история чатов", "Синхронизация чатов между вебом и Apple-клиентами.", null),
   document("apple-apps", "integrations/apple-apps.md", "Системные приложения Apple", "Подключение, разрешения, инструменты и ограничения нативных интеграций.", null),
   document("apple-v3-implementation", "status/apple-v3-implementation.md", "Интерфейс Apple v3", "Сверка сущностей, каталог экранов и границы проверки серверных функций.", null),
   document("module-map", "architecture/module-map.md", "Карта модулей Blot", "Кто за что отвечает: 16 блоков ядра, клиенты, облако и приёмка.", null),

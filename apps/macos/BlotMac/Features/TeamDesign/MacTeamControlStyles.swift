@@ -12,8 +12,8 @@ struct MacTeamNavigationButton<Label: View>: View {
     var selected = false
     let action: () -> Void
     @ViewBuilder let label: Label
-    @State private var hovered = false
     @FocusState private var focused: Bool
+    @Environment(\.macSidebarTracksHover) private var tracksHover
     @Environment(\.macTeamPressState) private var pressState
 
     var body: some View {
@@ -26,19 +26,18 @@ struct MacTeamNavigationButton<Label: View>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12).padding(.vertical, 10)
                 .background(
-                    WorkspaceStyle.ink.opacity(selected ? 0.08 : hovered ? 0.035 : 0),
+                    WorkspaceStyle.ink.opacity(selected ? 0.08 : 0),
                     in: RoundedRectangle(cornerRadius: 14, style: .continuous)
                 )
                 .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
-        .buttonStyle(BlotPlainButtonStyle())
+        .buttonStyle(tracksHover ? BlotPlainButtonStyle(showsHover: false) : BlotPlainButtonStyle(hoverIn: RoundedRectangle(cornerRadius: 14)))
+        .macSidebarHoverTarget()
         .focused($focused).focusEffectDisabled()
         .overlay {
             RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .strokeBorder(WorkspaceStyle.ink.opacity(focused ? 0.45 : 0), lineWidth: 1)
         }
-        .onHover { hovered = $0 }
-        .kAnimation(KMotion.quick, value: hovered)
         .kAnimation(KMotion.standard, value: selected)
         .kAnimation(KMotion.quick, value: focused)
         .accessibilityAddTraits(selected ? [.isSelected] : [])
@@ -46,47 +45,16 @@ struct MacTeamNavigationButton<Label: View>: View {
 }
 
 struct MacTeamTextFieldStyle: TextFieldStyle {
-    @FocusState private var focused: Bool
-
     func _body(configuration: TextField<Self._Label>) -> some View {
-        configuration
-            .textFieldStyle(.plain)
-            .padding(.horizontal, 12).padding(.vertical, 10)
-            .background(MacTeamStyle.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .focused($focused).focusEffectDisabled()
-            .overlay {
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(WorkspaceStyle.ink.opacity(focused ? 0.3 : 0), lineWidth: 1)
-            }
-            .kAnimation(KMotion.quick, value: focused)
+        configuration.textFieldStyle(BlotTextFieldStyle())
     }
 }
 
 struct MacTeamSwitchStyle: ToggleStyle {
     var showsLabel = true
-
     func makeBody(configuration: Configuration) -> some View {
-        Button {
-            configuration.isOn.toggle()
-        } label: {
-            HStack(spacing: 16) {
-                if showsLabel {
-                    configuration.label
-                    Spacer(minLength: 8)
-                }
-                Capsule()
-                    .fill(configuration.isOn ? BlotColor.inverse : WorkspaceStyle.ink.opacity(0.15))
-                    .frame(width: 36, height: 22)
-                    .overlay(alignment: .leading) {
-                        Circle().fill(configuration.isOn ? BlotColor.onInverse : Color.white)
-                            .frame(width: 18, height: 18).padding(2).offset(x: configuration.isOn ? 14 : 0)
-                    }
-            }.contentShape(Rectangle())
-        }
-        .buttonStyle(BlotPlainButtonStyle())
-        .kAnimation(KMotion.standard, value: configuration.isOn)
-        .accessibilityValue(configuration.isOn ? "Включено" : "Выключено")
-        .accessibilityAddTraits(configuration.isOn ? [.isSelected] : [])
+        Toggle(isOn: configuration.$isOn) { configuration.label }
+            .toggleStyle(BlotToggleStyle(showsLabel: showsLabel))
     }
 }
 
@@ -121,6 +89,7 @@ extension View {
         self.tint(BlotColor.inverse)
             .textFieldStyle(MacTeamTextFieldStyle())
             .toggleStyle(MacTeamSwitchStyle())
+            .disclosureGroupStyle(BlotDisclosureStyle()).progressViewStyle(BlotProgressStyle())
             .buttonStyle(WorkspaceButtonStyle(.secondary))
     }
 }

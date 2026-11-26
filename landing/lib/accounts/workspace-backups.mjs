@@ -1,5 +1,6 @@
 import { AuthError } from "../auth/errors.mjs";
 import { digest, validID, equal } from "./security.mjs";
+import { BlotChatSyncBridge } from "../../../apps/web/packages/chat-sync/src/bridge.mjs";
 
 const CHUNK_BYTES = 524288;
 const invalid = () => new AuthError("invalid_workspace_backup");
@@ -13,6 +14,7 @@ export class WorkspaceBackups {
   constructor(database) { this.#database = database; }
 
   async list(account) {
+    await new BlotChatSyncBridge(this.#database).synchronize(account.id);
     const { rows } = await this.#database.query(`SELECT DISTINCT ON (device_id) * FROM blot_workspace_backups
       WHERE owner_id = $1 AND committed ORDER BY device_id, created_at DESC, id DESC`, [account.id]);
     return rows.map(manifest);

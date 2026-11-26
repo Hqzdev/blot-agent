@@ -8,12 +8,14 @@ enum MacTeamScrollInput {
 /// Transparent geometry anchor. It never takes mouse hits or changes the text responder.
 struct MacTeamPointerInput: NSViewRepresentable {
     var onSecondaryClick: (() -> Void)? = nil
+    var restrictSecondaryClickToConversation = true
     var onScroll: ((MacTeamScrollInput) -> Bool)? = nil
     var viewportInsets: EdgeInsets? = nil
 
     func makeNSView(context: Context) -> Anchor {
         let view = Anchor()
         view.onSecondaryClick = onSecondaryClick
+        view.restrictSecondaryClickToConversation = restrictSecondaryClickToConversation
         view.onScroll = onScroll
         view.viewportInsets = viewportInsets
         MacTeamPointerRouter.shared.register(view)
@@ -22,6 +24,7 @@ struct MacTeamPointerInput: NSViewRepresentable {
 
     func updateNSView(_ view: Anchor, context: Context) {
         view.onSecondaryClick = onSecondaryClick
+        view.restrictSecondaryClickToConversation = restrictSecondaryClickToConversation
         view.onScroll = onScroll
         view.viewportInsets = viewportInsets
     }
@@ -32,6 +35,7 @@ struct MacTeamPointerInput: NSViewRepresentable {
 
     final class Anchor: NSView {
         var onSecondaryClick: (() -> Void)?
+        var restrictSecondaryClickToConversation = true
         var onScroll: ((MacTeamScrollInput) -> Bool)?
         var viewportInsets: EdgeInsets?
         override var isFlipped: Bool { true }
@@ -100,8 +104,10 @@ struct MacTeamPointerInput: NSViewRepresentable {
 
     private func route(_ event: NSEvent) -> NSEvent? {
         if event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)) {
-            guard insideConversation(event) else { return event }
-            guard let target = targets.reversed().compactMap(\.view).first(where: { $0.onSecondaryClick != nil && $0.contains(event) }) else { return event }
+            let inConversation = insideConversation(event)
+            guard let target = targets.reversed().compactMap(\.view).first(where: {
+                $0.onSecondaryClick != nil && (!$0.restrictSecondaryClickToConversation || inConversation) && $0.contains(event)
+            }) else { return event }
             target.onSecondaryClick?()
             return nil
         }

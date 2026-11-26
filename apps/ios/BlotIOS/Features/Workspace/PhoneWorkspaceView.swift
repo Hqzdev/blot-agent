@@ -69,7 +69,7 @@ struct PhoneWorkspaceView: View {
                 }
                 if !model.loading && model.loadError == nil && model.chats.isEmpty {
                     BlotEmptyState(symbol: "bubble.left.and.bubble.right", title: "No conversations yet",
-                                   message: "Create a chat above to start working with Blot.")
+                                   message: "Create a chat above to start working with Ori.")
                 }
             } header: { PhoneSectionHeader("Conversations") }
             .phoneRow()
@@ -85,7 +85,7 @@ struct PhoneWorkspaceView: View {
             loadStatus
             Section {
                 if model.projects.isEmpty {
-                    BlotStatusLabel("Add a project in Blot on your Mac to create a run.", status: .info, role: .body)
+                    BlotStatusLabel("Add a project in Ori on your Mac to create a run.", status: .info, role: .body)
                 } else {
                     Picker("Project", selection: $model.selectedProject) {
                         ForEach(model.projects, id: \.id) { Text($0.data.text("name")).tag(Optional($0.id)) }
@@ -93,7 +93,7 @@ struct PhoneWorkspaceView: View {
                     .frame(minHeight: BlotLayout.minimumTapTarget)
                     .disabled(model.busy || model.runPending)
                 }
-                TextField("What should Blot do?", text: $model.goal, axis: .vertical)
+                TextField("What should Ori do?", text: $model.goal, axis: .vertical)
                     .blotFont(.body)
                     .lineLimit(3...8)
                     .disabled(model.busy || model.runPending)
@@ -153,7 +153,7 @@ struct PhoneWorkspaceView: View {
             Section {
                 BlotStatusLabel("Connected to your Mac", status: .success, role: .body)
             } footer: {
-                Text("Keep Blot open on your Mac to receive updates and respond to decisions.")
+                Text("Keep Ori open on your Mac to receive updates and respond to decisions.")
                     .blotFont(.caption).foregroundStyle(BlotColor.textSecondary)
             }
             .phoneRow()
@@ -167,7 +167,7 @@ struct PhoneWorkspaceView: View {
                 .frame(minHeight: BlotLayout.minimumTapTarget)
                 .accessibilityLabel("Theme")
             } header: { PhoneSectionHeader("Appearance") } footer: {
-                Text("System follows your iPhone. Light and Dark apply to Blot on this iPhone only.")
+                Text("System follows your iPhone. Light and Dark apply to Ori on this iPhone only.")
                     .blotFont(.caption).foregroundStyle(BlotColor.textSecondary)
             }
             .phoneRow()

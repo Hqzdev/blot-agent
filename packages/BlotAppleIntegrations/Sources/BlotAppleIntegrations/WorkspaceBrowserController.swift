@@ -5,10 +5,29 @@ import WebKit
 
 @MainActor @Observable
 public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
+    public internal(set) var profiles: [WorkspaceBrowserProfileInfo]
+    let legacyProfileID: UUID
+    var sessionProfiles: [WorkspaceBrowserSessionKey: UUID] = [:]
     public private(set) var tabs: [BrowserTab] = []
     public private(set) var activeSession: WorkspaceBrowserSessionKey = .workspace
     private var selections: [WorkspaceBrowserSessionKey: UUID] = [:]
+    private var agentTabs: [WorkspaceBrowserSessionKey: UUID] = [:]
     public var selectedID: UUID? { selections[activeSession] }
+    public var agentPaused: Bool { manualSessions.contains(activeSession) }
+    public var agentHasControl: Bool {
+        sessionTabs.contains { attachments[$0.id] != nil || ($0.scope != nil && !$0.stopped) }
+    }
+    public func pauseAgent() {
+        pauseAgent(in: activeSession)
+    }
+    public func resumeAgent() { manualSessions.remove(activeSession) }
+    func pauseAgent(in session: WorkspaceBrowserSessionKey) {
+        manualSessions.insert(session)
+        for tab in tabs where tab.sessionKey == session {
+            tab.interactionRevision += 1
+            tab.agentPointer = nil
+        }
+    }
     public var sessionTabs: [BrowserTab] { tabs.filter { $0.sessionKey == activeSession } }
     @ObservationIgnored private var migratingLegacyTabs = false
     public var presented = false
@@ -22,21 +41,31 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
     @ObservationIgnored private let stateURL: URL?
     @ObservationIgnored var downloadHandler: BrowserDownloadHandler?
     @ObservationIgnored var busyTabs: Set<UUID> = []
+    var manualSessions: Set<WorkspaceBrowserSessionKey> = []
+    struct Attachment {
+        let scope: WorkspaceBrowserScope
+        let origin: String
+    }
+    var attachments: [UUID: Attachment] = [:]
     @ObservationIgnored var stopped = false
     @ObservationIgnored let chooseDownload: (@MainActor @Sendable (String) async -> URL?)?
     public init(profileID: UUID, directory: URL? = nil, ephemeral: Bool = false, maximumLiveTabs: Int? = nil,
                 chooseDownload: (@MainActor @Sendable (String) async -> URL?)? = nil) {
+        self.legacyProfileID = profileID
+        self.profiles = [.init(id: profileID, name: "Ori")]
         self.chooseDownload = chooseDownload
-        #if os(macOS)
         self.maximumLiveTabs = min(2, max(1, maximumLiveTabs ?? 2))
-        #else
-        self.maximumLiveTabs = 1
-        #endif
         dataStore = ephemeral ? .nonPersistent() : WKWebsiteDataStore(forIdentifier: profileID)
         stateURL = directory?.appendingPathComponent("BrowserTabs.json")
         downloadsDirectory = (directory ?? FileManager.default.temporaryDirectory.appendingPathComponent("BlotBrowser-" + profileID.uuidString)).appendingPathComponent("Downloads", isDirectory: true)
         if let stateURL, let data = try? Data(contentsOf: stateURL), data.count <= 512 * 1024 {
             if let saved = try? JSONDecoder().decode(BrowserSavedSession.self, from: data), saved.version == 2 {
+                if let savedProfiles = saved.profiles, savedProfiles.count <= 16, Set(savedProfiles.map(\.id)).count == savedProfiles.count {
+                    profiles = [.init(id: profileID, name: "Ori")] + savedProfiles.filter { $0.id != profileID }
+                }
+                for selection in saved.profileSelections ?? [] where profiles.contains(where: { $0.id == selection.profileID }) {
+                    sessionProfiles[selection.key] = selection.profileID
+                }
                 var ids: Set<UUID> = []
                 tabs = saved.tabs.prefix(32).compactMap { item in
                     guard ids.insert(item.id).inserted, item.localPage == nil || item.localPage!.utf8.count <= 100,
@@ -66,6 +95,11 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
     }
     func selectedID(in session: WorkspaceBrowserSessionKey) -> UUID? { selections[session] }
     public var selectedTab: BrowserTab? { tabs.first { $0.id == selectedID } }
+    public var agentSiteTab: BrowserTab? {
+        guard let id = agentTabs[activeSession] else { return nil }
+        return sessionTabs.first { $0.id == id && $0.url?.host != nil }
+    }
+    func noteAgentSite(_ tab: BrowserTab) { agentTabs[tab.sessionKey] = tab.id }
     public var sessionDownloads: [BrowserDownload] { downloads.filter { $0.sessionKey == activeSession } }
     public var liveTabCount: Int { pages.count }
     public func webView(for id: UUID) -> WKWebView? { pages[id]?.view }
@@ -92,6 +126,7 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
         let text = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         let url = try WorkspaceBrowserURL.validated(text.contains("://") ? text : "https://" + text)
         try select(tabID)
+        revokeAttachmentIfLeaving(tab, url: url)
         tab.localPage = nil
         try createPage(tab)
         guard permits(url, tab: tab) else { throw WorkspaceBrowserError.denied }
@@ -101,9 +136,11 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
         guard let tab = tabs.first(where: { $0.id == id }) else { return }
         if tab.unsaved && !discard { throw WorkspaceBrowserError.unsavedChanges }
         dialog?.finish(accepted: false)
+        detachAgent(from: tab)
         pages.removeValue(forKey: id)?.detach(); busyTabs.remove(id)
         for item in downloads where item.tabID == id && item.state == "running" { item.download.cancel(nil); item.state = "canceled" }
         tabs.removeAll { $0.id == id }
+        if agentTabs[tab.sessionKey] == id { agentTabs.removeValue(forKey: tab.sessionKey) }
         if selections[tab.sessionKey] == id {
             selections[tab.sessionKey] = tabs.last { $0.sessionKey == tab.sessionKey }?.id
             if tab.sessionKey == activeSession, let selectedID { try? select(selectedID) }
@@ -119,17 +156,62 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
         if tab.loading { pages[id]?.stop() } else { pages[id]?.view.reload() }
     }
     public func stop(scope: WorkspaceBrowserScope?) {
-        for tab in tabs where scope == nil || tab.scope == scope {
+        for tab in tabs where scope == nil || tab.scope == scope || attachments[tab.id]?.scope == scope {
+            detachAgent(from: tab)
             pages[tab.id]?.stop(); tab.loading = false
             if tab.scope != nil { tab.stopped = true }
             for item in downloads where item.tabID == tab.id && item.state == "running" { item.download.cancel(nil); item.state = "canceled" }
         }
     }
+    public func finishRun(taskID: UUID?, sourceID: UUID?) {
+        guard taskID != nil || sourceID != nil else { return }
+        func matches(_ scope: WorkspaceBrowserScope?) -> Bool {
+            guard let scope else { return false }
+            if let taskID { return scope.taskID == taskID }
+            return scope.taskID == nil && scope.sourceID == sourceID
+        }
+        for tab in tabs {
+            if matches(attachments[tab.id]?.scope) { detachAgent(from: tab) }
+            if matches(tab.scope) {
+                detachAgent(from: tab)
+                tab.scope = nil
+                tab.allowedOrigins = []
+                tab.stopped = false
+            }
+        }
+        saveTabs()
+    }
+    func detachAgent(from tab: BrowserTab) {
+        attachments.removeValue(forKey: tab.id)
+        tab.interactionRevision += 1
+        tab.agentPointer = nil
+    }
+    func revokeAttachmentIfLeaving(_ tab: BrowserTab, url: URL) {
+        if let attachment = attachments[tab.id], (try? WorkspaceBrowserURL.origin(url)) != attachment.origin {
+            detachAgent(from: tab)
+        }
+    }
+    func permitsAgentNavigation(_ url: URL, tab: BrowserTab) -> Bool {
+        guard let attachment = attachments[tab.id] else { return true }
+        if manualSessions.contains(tab.sessionKey) {
+            revokeAttachmentIfLeaving(tab, url: url)
+            return true
+        }
+        return (try? WorkspaceBrowserURL.origin(url)) == attachment.origin
+    }
     public func shutdown() {
         dialog?.finish(accepted: false); dialog = nil
         stopped = true; stop(scope: nil)
         for item in downloads where item.state == "running" { item.download.cancel(nil); item.state = "canceled" }
-        for page in pages.values { page.detach() }; pages.removeAll(); tabs.removeAll(); selections.removeAll(); presented = false
+        for page in pages.values { page.detach() }; pages.removeAll(); tabs.removeAll(); selections.removeAll(); agentTabs.removeAll(); presented = false
+    }
+    public static func eraseSavedProfiles(directory: URL) async {
+        let file = directory.appendingPathComponent("Browser/BrowserTabs.json")
+        guard let data = try? Data(contentsOf: file), data.count <= 512 * 1024,
+              let saved = try? JSONDecoder().decode(BrowserSavedSession.self, from: data) else { return }
+        for profile in (saved.profiles ?? []).dropFirst() {
+            await WKWebsiteDataStore(forIdentifier: profile.id).removeData(ofTypes: WKWebsiteDataStore.allWebsiteDataTypes(), modifiedSince: .distantPast)
+        }
     }
     public func resume() { stopped = false }
     public func newTab() throws {
@@ -145,6 +227,10 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
         let tab = BrowserTab(sessionKey: activeSession, localPage: page); tab.title = title
         tabsAppend(tab); return tab.id
     }
+    public func setLocalDocumentUnsaved(_ id: UUID, _ dirty: Bool) {
+        guard let tab = tabs.first(where: { $0.id == id }), (tab.localPage == "page:file" || tab.localPage?.hasPrefix("page:file:") == true) else { return }
+        tab.unsaved = dirty
+    }
     public func discardForm(_ id: UUID) { tabs.first { $0.id == id }?.unsaved = false }
     func permits(_ url: URL, tab: BrowserTab) -> Bool {
         guard (try? WorkspaceBrowserURL.validated(url.absoluteString)) != nil else { return false }
@@ -153,10 +239,10 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
     func createPage(_ tab: BrowserTab) throws {
         if pages[tab.id] != nil { return }
         if pages.count >= maximumLiveTabs {
-            guard let victim = tabs.filter({ tab in pages[tab.id] != nil && !tab.unsaved && !busyTabs.contains(tab.id) && !downloads.contains(where: { $0.tabID == tab.id && $0.state == "running" }) }).min(by: { $0.lastUsed < $1.lastUsed }) else { throw WorkspaceBrowserError.busy }
+            guard let victim = tabs.filter({ tab in pages[tab.id] != nil && !tab.unsaved && attachments[tab.id] == nil && !busyTabs.contains(tab.id) && !downloads.contains(where: { $0.tabID == tab.id && $0.state == "running" }) }).min(by: { $0.lastUsed < $1.lastUsed }) else { throw WorkspaceBrowserError.busy }
             pages.removeValue(forKey: victim.id)?.detach(); victim.isLive = false; victim.loading = false
         }
-        let page = BrowserPage(tab: tab, owner: self, dataStore: dataStore)
+        let page = BrowserPage(tab: tab, owner: self, dataStore: store(for: tab.sessionKey))
         pages[tab.id] = page; tab.isLive = true; tab.lastUsed = Date()
     }
     func saveTabs() {
@@ -165,15 +251,16 @@ public final class WorkspaceBrowserController: WorkspaceBrowserExecuting {
             let records = tabs.filter { $0.scope == nil }.map { tab in
                 BrowserSavedSession.Tab(id: tab.id, sessionKey: tab.sessionKey, url: tab.url.flatMap(WorkspaceBrowserURL.restorable), localPage: tab.localPage, title: String(tab.title.prefix(200)))
             }
-            let saved = BrowserSavedSession(version: 2, tabs: records, selections: selections.map { .init(key: $0.key, tabID: $0.value) })
+            let saved = BrowserSavedSession(version: 2, tabs: records, selections: selections.map { .init(key: $0.key, tabID: $0.value) }, profiles: profiles, profileSelections: sessionProfiles.map { .init(key: $0.key, profileID: $0.value) })
             try FileManager.default.createDirectory(at: stateURL.deletingLastPathComponent(), withIntermediateDirectories: true)
             try JSONEncoder().encode(saved).write(to: stateURL, options: .atomic)
         } catch { self.error = "Не удалось сохранить список вкладок." }
     }
-    func tabsAppend(_ tab: BrowserTab) {
+    func tabsAppend(_ tab: BrowserTab, presentsBrowser: Bool = true) {
         guard tabs.count < 32 else { pages.removeValue(forKey: tab.id)?.detach(); error = WorkspaceBrowserError.busy.localizedDescription; return }
         tabs.append(tab); selections[tab.sessionKey] = tab.id
-        if tab.sessionKey == activeSession { presented = true }; saveTabs()
+        if presentsBrowser, tab.sessionKey == activeSession { presented = true }
+        saveTabs()
     }
     func beginDownload(_ download: WKDownload, tabID: UUID) {
         if downloadHandler == nil { downloadHandler = BrowserDownloadHandler(owner: self) }
@@ -190,6 +277,9 @@ private struct BrowserSavedSession: Codable {
     let version: Int
     let tabs: [Tab]
     let selections: [Selection]
+    let profiles: [WorkspaceBrowserProfileInfo]?
+    let profileSelections: [ProfileSelection]?
+    struct ProfileSelection: Codable { let key: WorkspaceBrowserSessionKey; let profileID: UUID }
     struct Tab: Codable {
         let id: UUID
         let sessionKey: WorkspaceBrowserSessionKey

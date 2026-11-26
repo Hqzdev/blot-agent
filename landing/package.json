@@ -9,6 +9,7 @@
     "spec:generate": "node scripts/generate-workspace-spec.mjs",
     "test:plan": "node --test lib/workspace/task-execution-plan.test.mjs",
     "test:auth": "node --test lib/auth/*.test.mjs lib/accounts/*.test.mjs",
+    "test:auth:deployed": "node scripts/check-deployed-login.mjs",
     "dev:local": "node scripts/develop-local.mjs"
   },
   "dependencies": {

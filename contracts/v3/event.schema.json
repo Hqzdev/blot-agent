@@ -61,7 +61,8 @@
         "ReplicationCheckpoint",
         "ConflictingRevision",
         "ExecutionLease",
-        "ModelStep"
+        "ModelStep",
+        "ConversationCard"
       ]
     },
     "recordId": {

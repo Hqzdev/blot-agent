@@ -24,7 +24,7 @@ struct ModelsSettingsView: View {
     }
     private nonisolated struct Budget: Codable, Sendable { let limit: Int64; let reserved: Int64; let spent: Int64; let usageUnknown: Bool }
     var body: some View {
-        SettingsGroup(title: "GigaChat", detail: providerManaged == true ? "Model access is provided by Blot." : nil) {
+        SettingsGroup(title: "GigaChat", detail: providerManaged == true ? "Model access is provided by Ori." : nil) {
             if providerManaged == true {
                 SettingsRow(title: settings.model.isEmpty ? "Default model" : settings.model,
                             detail: "You can start conversations without an API key.") {

@@ -1,6 +1,7 @@
 import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
+import BlotWorkspace
 import SwiftUI
 
 struct PhonePluginConnectionView: View {
@@ -19,6 +20,10 @@ struct PhonePluginConnectionView: View {
     var body: some View {
         Group {
             if let apple = plugin.appleID { ApplePluginConnectionView(plugin: apple) }
+            else if let provider = WorkspaceMessagingProvider(rawValue: plugin.id) { WorkspaceMessagingConnectView(provider: provider) }
+            else if plugin.id == "1password" { WorkspacePasswordConnectView() }
+            else if let google = WorkspaceGooglePlugin(rawValue: plugin.id) { WorkspaceGoogleConnectView(plugin: google) }
+            else if let preset = WorkspacePluginPreset.find(plugin.id) { WorkspacePluginConnectView(preset: preset) }
             else { externalBody }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -38,8 +43,8 @@ struct PhonePluginConnectionView: View {
                 }
                 if !connected {
                     Text(store.language == "ru"
-                        ? "Подключение этого сервиса пока недоступно в этой версии Blot."
-                        : "Connecting this service is not available in this version of Blot yet.")
+                        ? "Подключение этого сервиса пока недоступно в этой версии Ori."
+                        : "Connecting this service is not available in this version of Ori yet.")
                         .font(.callout).foregroundStyle(WorkspaceStyle.secondary)
                 }
                 WorkspaceFeedback()
@@ -47,7 +52,7 @@ struct PhonePluginConnectionView: View {
         }
         .safeAreaInset(edge: .bottom) {
             Button(store.t(connected ? "Connected" : "Connect")) { confirmingDisconnect = true }
-                .buttonStyle(.borderedProminent).controlSize(.large)
+                .buttonStyle(WorkspaceButtonStyle(.primary)).controlSize(.large)
                 .tint(connected ? .green : WorkspaceStyle.ink)
                 .disabled(!connected || busy)
                 .accessibilityHint(connected ? store.t("Disconnect") : "")
@@ -60,8 +65,8 @@ struct PhonePluginConnectionView: View {
             Button(store.t("Cancel"), role: .cancel) {}
         } message: {
             Text(store.language == "ru"
-                ? "Агенты потеряют доступ к этому приложению в Blot."
-                : "Agents will lose access to this app in Blot.")
+                ? "Агенты потеряют доступ к этому приложению в Ori."
+                : "Agents will lose access to this app in Ori.")
         }
     }
 

@@ -20,6 +20,7 @@ public final class BrowserTab: Identifiable {
     public internal(set) var error: String?
     public internal(set) var authenticationURL: URL?
     public internal(set) var documentID = UUID()
+    public internal(set) var agentPointer: BrowserAgentPointer?
     var interactionRevision = 0
     var sensitiveInput = false
     @ObservationIgnored var scope: WorkspaceBrowserScope?

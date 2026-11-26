@@ -75,7 +75,7 @@ struct MacWorkspaceChatPage: View {
                             .transition(reduceMotion ? .opacity : .scale(scale: 0.82, anchor: message.role == .user ? .bottomTrailing : .bottomLeading)
                                 .combined(with: .offset(y: 18)).combined(with: .opacity))
                         ForEach(message.artifactIds.compactMap { store.chatContent.artifacts[$0] }, id: \.metadata.id) { file in
-                            attachment(file).padding(.trailing, 70)
+                            WorkspaceDocumentCard(file: file).padding(.trailing, 70)
                         }
                         ForEach(store.desktopContent.blocks(at: .after(message.metadata.id), in: store.selectedConversationID)) { block in
                             MacConversationBlockView(block: block)
@@ -138,24 +138,4 @@ struct MacWorkspaceChatPage: View {
         store.updateChatVisibility(scenePhase == .active && !isHome ? store.selectedConversationID : nil, atLatest: followsLatest)
     }
 
-    private func attachment(_ file: BlotV3.Artifact) -> some View {
-        Button {
-            store.selectedRecordID = file.metadata.id
-            store.navigate(.file)
-        } label: {
-            HStack(spacing: 10) {
-                BlotIcon(file.mediaType == "application/pdf" ? .pdf : file.mediaType.hasPrefix("image/") ? .image : .document, size: 22)
-                    .foregroundStyle(file.mediaType == "application/pdf" ? Color.red : WorkspaceStyle.secondary)
-                    .frame(width: 34, height: 38).background(WorkspaceStyle.surface, in: RoundedRectangle(cornerRadius: 12))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(file.name).font(.system(size: 12, weight: .medium)).lineLimit(1)
-                    Text(ByteCountFormatter.string(fromByteCount: Int64(file.byteCount), countStyle: .file))
-                        .font(.system(size: 11)).foregroundStyle(WorkspaceStyle.secondary)
-                }
-                Spacer(minLength: 0)
-                BlotIcon(.download, size: 14).foregroundStyle(WorkspaceStyle.secondary)
-            }.padding(7).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 18))
-                .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(MacWorkspaceStyle.edge))
-        }.buttonStyle(.plain)
-    }
 }

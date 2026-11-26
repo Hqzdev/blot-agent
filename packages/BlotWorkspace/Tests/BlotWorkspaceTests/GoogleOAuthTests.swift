@@ -4,6 +4,43 @@ import Testing
 @testable import BlotWorkspace
 
 struct GoogleOAuthTests {
+    @Test func desktopCallbackIsBoundToEphemeralLoopbackAndSecretStaysOutOfBrowser() throws {
+        let config = try GoogleOAuthConfiguration(clientID: "123456-test.apps.googleusercontent.com",
+            redirectURI: URL(string: "http://127.0.0.1/oauthredirect")!, clientSecret: "desktop-test+secret&value")
+        #expect(throws: GoogleOAuthError.invalidConfiguration) { try GoogleOAuthAuthorization(configuration: config, access: [.driveFile]) }
+        let bound = try config.loopback(port: 49152)
+        let auth = try GoogleOAuthAuthorization(configuration: bound, access: [.driveFile])
+        let query = URLComponents(url: auth.url, resolvingAgainstBaseURL: false)!.queryItems!
+        #expect(!auth.url.absoluteString.contains("desktop-test"))
+        #expect(!query.contains { $0.name == "client_secret" || $0.name == "code_verifier" })
+        let state = query.first { $0.name == "state" }!.value!
+        let callback = URL(string: bound.redirectURI.absoluteString + "?state=\(state)&code=test")!
+        let request = try auth.tokenRequest(callback: callback)
+        let fields = URLComponents(string: "https://test/?" + String(decoding: request.httpBody!, as: UTF8.self))!.queryItems!
+        #expect(fields.first { $0.name == "client_secret" }?.value == "desktop-test+secret&value")
+        #expect(fields.first { $0.name == "redirect_uri" }?.value == bound.redirectURI.absoluteString)
+        for invalid in ["http://127.0.0.1:49153/oauthredirect", "http://localhost:49152/oauthredirect", "http://127.0.0.2:49152/oauthredirect"] {
+            #expect(throws: GoogleOAuthError.invalidCallback) { try auth.tokenRequest(callback: URL(string: invalid + "?state=\(state)&code=test")!) }
+        }
+        #expect(throws: GoogleOAuthError.invalidConfiguration) {
+            try GoogleOAuthConfiguration(clientID: config.clientID, redirectURI: URL(string: "http://0.0.0.0:49152/oauthredirect")!, clientSecret: "test")
+        }
+    }
+
+    @Test func macBuildRequiresItsOwnDesktopCredentialAndIOSRejectsLoopback() throws {
+        let client: [String: String] = ["ClientID": "123456-test.apps.googleusercontent.com", "BundleID": "yaroslavstrelkov.blot-agent", "RedirectURI": "http://127.0.0.1/oauthredirect"]
+        func plist(_ client: [String: String], platform: String) throws -> Data {
+            try PropertyListSerialization.data(fromPropertyList: ["Enabled": true, "Clients": [platform: client]], format: .xml, options: 0)
+        }
+        #expect(throws: GoogleOAuthError.clientSecretRequired) {
+            try GoogleOAuthConfiguration.load(plist: plist(client, platform: "macOS"), platform: .macOS, bundleID: "yaroslavstrelkov.blot-agent")
+        }
+        let configured = client.merging(["ClientSecret": "test-native-secret"]) { $1 }
+        #expect(try GoogleOAuthConfiguration.load(plist: plist(configured, platform: "macOS"), platform: .macOS, bundleID: "yaroslavstrelkov.blot-agent").usesLoopback)
+        #expect(throws: GoogleOAuthError.invalidConfiguration) {
+            try GoogleOAuthConfiguration.load(plist: plist(configured, platform: "iOS"), platform: .iOS, bundleID: "yaroslavstrelkov.blot-agent")
+        }
+    }
     @Test func pkceBindsCallbackAndDoesNotSendVerifierToBrowser() throws {
         let config = try GoogleOAuthConfiguration(clientID: "123456-test.apps.googleusercontent.com",
             redirectURI: URL(string: "com.googleusercontent.apps.123456-test:/oauthredirect")!)

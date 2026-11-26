@@ -24,17 +24,31 @@ struct WorkspaceSkillsView: View {
             HStack {
                 Text(ru ? "Навыки" : "Skills").font(.largeTitle.bold())
                 Spacer()
-                Button { editor = .init(skill: nil) } label: { Label(ru ? "Создать" : "Create", systemImage: "plus") }
+                WorkspaceTeachButton()
+                WorkspaceSkillMarketplaceButton()
+                Button { editor = .init(skill: nil) } label: { BlotLabel(ru ? "Создать" : "Create", symbol: "plus") }
                     .disabled(store.skillCommands == nil)
+            }
+            if !archived && (search.isEmpty || "Skill Creator".localizedCaseInsensitiveContains(search)) {
+                WorkspaceCard {
+                    HStack {
+                        BlotLabel("Skill Creator", symbol: "sparkle").font(.headline)
+                        Spacer()
+                        Text(ru ? "Встроенный" : "Built in").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Text(ru ? "Попросите агента сохранить задачу как навык, чтобы запускать её снова." : "Ask your agent to save a task as a skill so you can run it again.")
+                        .foregroundStyle(.secondary)
+                }
             }
             TextField(ru ? "Найти навык" : "Find a skill", text: $search).textFieldStyle(WorkspacePanelTextFieldStyle())
             Toggle(ru ? "Архив" : "Archive", isOn: $archived).toggleStyle(WorkspacePanelToggleStyle())
             if skills.isEmpty { Text(ru ? "Здесь появятся сохранённые инструкции с параметрами для ваших агентов." : "Saved instructions with parameters for your agents will appear here.").foregroundStyle(.secondary) }
             ForEach(skills, id: \.metadata.id) { skill in
                 WorkspaceCard {
-                    Label(skill.name, systemImage: "shippingbox").font(.headline).foregroundStyle(.purple)
+                    BlotLabel(skill.name, symbol: "shippingbox").font(.headline).foregroundStyle(.purple)
                     if let revision = store.snapshot.skillRevisions?.first(where: { $0.metadata.id == skill.activeRevisionId }) {
                         Text(revision.instructions).lineLimit(3).foregroundStyle(.secondary)
+                        WorkspaceSkillShareButton(skill: skill, revision: revision)
                     }
                     HStack {
                         Button(ru ? "Изменить" : "Edit") { editor = .init(skill: skill) }
@@ -55,6 +69,8 @@ struct WorkspaceSkillEditor: View {
     @Environment(WorkspaceStore.self) private var store
     @WorkspacePresentationDismiss private var dismiss
     @Environment(\.workspacePanelNavigation) private var panelNavigation
+    @State private var taughtEditor = false
+    @State private var teachingSaved = false
     @State private var name = ""
     @State private var instructions = ""
     @State private var parameters: [SkillParameter] = []
@@ -73,7 +89,7 @@ struct WorkspaceSkillEditor: View {
             WorkspacePanelForm {
                 Section(ru ? "Инструкция" : "Instructions") {
                     TextField(ru ? "Название" : "Name", text: $name)
-                    TextEditor(text: $instructions).scrollContentBackground(.hidden).padding(10).frame(minHeight: 150).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12)).accessibilityLabel(ru ? "Инструкция" : "Instructions")
+                    TextEditor(text: $instructions).frame(minHeight: 150).blotEditorSurface().accessibilityLabel(ru ? "Инструкция" : "Instructions")
                     Text(ru ? "Для подстановки используйте {{parameter}}. Значения задаются при запуске." : "Use {{parameter}} for values supplied when running.").font(.caption).foregroundStyle(.secondary)
                 }
                 Section(ru ? "Параметры" : "Parameters") {
@@ -92,6 +108,9 @@ struct WorkspaceSkillEditor: View {
                     }
                 }
                 if let skill {
+                    if let revision = revisions.first(where: { $0.metadata.id == skill.activeRevisionId }), WorkspaceTaughtRecordingEditor.identifier(revision) != nil {
+                        Button(ru ? "Просмотреть и изменить записанные шаги" : "View and edit recorded steps") { taughtEditor = true }
+                    }
                     Section(ru ? "Агенты" : "Agents") {
                         ForEach(store.snapshot.agents, id: \.metadata.id) { agent in
                             let assignment = store.snapshot.skillAssignments?.first { $0.skillID == skill.metadata.id && $0.agentID == agent.metadata.id }
@@ -118,15 +137,23 @@ struct WorkspaceSkillEditor: View {
                 }
                 if let failure { Text(failure).foregroundStyle(.red) }
             }.disabled(busy)
-            .navigationTitle(ru ? "Настройка навыка" : "Skill settings")
+
             .safeAreaInset(edge: .top, spacing: 0) {
                 if panelNavigation != nil { WorkspacePanelFormHeader(title: ru ? "Настройка навыка" : "Skill settings") { cancelButton; saveButton } }
             }
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { cancelButton } }
-                ToolbarItem(placement: .confirmationAction) { if panelNavigation == nil { saveButton } }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: ru ? "Настройка навыка" : "Skill settings") {
+                    if panelNavigation == nil { cancelButton }
+                    if panelNavigation == nil { saveButton }
+                }
+            }.workspaceEditorChrome()
+        }
+        .workspacePanelSheet(isPresented: $taughtEditor, onDismiss: { if teachingSaved { dismiss() } }) {
+            if let skill, let revision = revisions.first(where: { $0.metadata.id == skill.activeRevisionId }), let id = WorkspaceTaughtRecordingEditor.identifier(revision) {
+                WorkspaceTaughtRecordingEditor(skill: skill, recordingID: id, onSaved: { teachingSaved = true }).environment(store)
             }
-        }.interactiveDismissDisabled(busy)
+        }
+        .interactiveDismissDisabled(busy)
         #if os(macOS)
         .frame(width: panelNavigation == nil ? 620 : nil, height: panelNavigation == nil ? 720 : nil)
         #endif
@@ -144,7 +171,7 @@ struct WorkspaceSkillEditor: View {
     private func parameterOptions(_ index: Int) -> some View {
         HStack(spacing: 12) {
             Toggle(ru ? "Обязательный" : "Required", isOn: Binding(get: { parameters[index].required }, set: { parameters[index] = .init(name: parameters[index].name, required: $0) }))
-            Button(role: .destructive) { parameters.remove(at: index) } label: { Image(systemName: "minus.circle") }
+            Button(role: .destructive) { parameters.remove(at: index) } label: { BlotIcon(symbol: "minus.circle") }
                 .buttonStyle(.plain).accessibilityLabel(ru ? "Удалить параметр" : "Remove parameter")
         }
     }

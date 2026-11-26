@@ -13,7 +13,7 @@ final class WorkspaceMigrations {
       try (var r = s.executeQuery("SELECT version FROM workspace_schema")) {
         if (r.next()) version = r.getInt(1);
       }
-      if (version > 8) throw new SQLException("База создана более новой версией Blot");
+      if (version > 8) throw new SQLException("База создана более новой версией Ori");
       if (version == 8) return;
       // VACUUM INTO создаёт согласованную копию, включая зафиксированный WAL.
       if (Files.exists(database)) backup(connection, database);

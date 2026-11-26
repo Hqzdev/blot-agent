@@ -40,7 +40,9 @@ public struct WorkspacePermissionService: Sendable {
             guard task.execution.executorDeviceId == tx.identity.deviceID else { throw WorkspaceStorageError.permissionDenied }
             guard let configurationID = task.configurationId else { throw WorkspaceStorageError.invalidRecord }
             let configuration = try tx.require(BlotV3.AgentConfigurationRevision.self, id: configurationID)
-            guard configuration.toolIds.contains(draft.toolID) else { throw WorkspaceStorageError.permissionDenied }
+            guard try configuration.toolIds.contains(draft.toolID)
+                || WorkspacePluginAccess.permitsPreparation(toolID: draft.toolID, resource: draft.resource, in: tx)
+            else { throw WorkspaceStorageError.permissionDenied }
             let id = actionID ?? commandID
             let digest = try Self.digest(preparationID: commandID, actionID: id, execution: task.execution, toolID: draft.toolID,
                 resource: draft.resource, parameters: parameters, consequences: draft.consequences, expiresAt: expiresAt)

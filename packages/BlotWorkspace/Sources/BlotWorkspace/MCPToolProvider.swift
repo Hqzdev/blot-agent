@@ -53,7 +53,7 @@ public struct MCPToolProvider: WorkspaceToolExecuting {
         let actionID = WorkspaceToolCallIdentity.actionID(workspaceID: identity.workspaceID, sourceID: context.sourceMessageID, callID: call.id)
         if let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) {
             guard action.toolId == call.name, action.resource == entry.id.uuidString,
-                  try JSONDecoder().decode(ChatJSON.self, from: Data(action.parameters.utf8)) == call.arguments else { throw WorkspaceToolError.invalidArguments }
+                  Self.originalArguments(try JSONDecoder().decode(ChatJSON.self, from: Data(action.parameters.utf8))) == call.arguments else { throw WorkspaceToolError.invalidArguments }
             let projection = try await repository.projection(identity: identity)
             if let invocation = projection.invocations.first(where: { $0.preparedActionId == actionID }), [.succeeded, .failed].contains(invocation.state), let result = invocation.result {
                 return try JSONDecoder().decode(ChatJSON.self, from: Data(result.utf8))
@@ -75,14 +75,35 @@ public struct MCPToolProvider: WorkspaceToolExecuting {
             else { taskID = try await WorkspaceTaskService(repository: repository, identity: identity).create(commandID: UUID(),
                 conversationID: source.conversationId, agentID: agentID, goal: "MCP: " + entry.name + " / " + tool.name,
                 executorDeviceID: identity.deviceID, runnable: false) }
+            var invocationArguments = call.arguments
             let parameters = String(decoding: try WorkspaceCoding.encode(call.arguments), as: UTF8.self)
             let details = "Сервер: \(entry.name)\nАдрес / программа: \(entry.configuration.endpoint)\nИнструмент: \(tool.name)\nУстройство: \(identity.deviceID.uuidString)\n\nАргументы:\n\(parameters)\n\nСервер получит эти данные и может изменить внешние ресурсы."
             _ = try await permission.prepare(commandID: actionID, taskID: taskID,
                 draft: .init(toolID: call.name, resource: entry.id.uuidString, parametersJSON: parameters,
                     consequences: "MCP: \(entry.name) / \(tool.name). Сервер получит точные параметры действия и может изменить внешние ресурсы."), expiresAt: Date().addingTimeInterval(600))
-            guard let action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) else { throw MCPError.uncertain }
+            guard var action = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) else { throw MCPError.uncertain }
             do {
-                guard try await confirm("MCP: " + entry.name + " / " + tool.name, details) else { throw MCPError.denied }
+                let needsReview = try await WorkspaceRuleService(repository: repository, identity: identity).requiresReview(toolID: call.name,
+                    resource: entry.id.uuidString, agentID: context.agentID, default: true)
+                if needsReview, context.inlineCards, let draft = Self.slackDraft(entry: entry, tool: tool, arguments: call.arguments) {
+                    let response = try await WorkspaceConversationCardService(repository: repository, identity: identity).review(action: action, context: context, content: .slack(draft))
+                    guard response.action == "send", let body = response.value, case .object(var fields) = call.arguments else { throw MCPError.denied }
+                    fields["text"] = .string(body); invocationArguments = .object(fields)
+                    try validate(.init(id: call.id, name: call.name, arguments: invocationArguments), definition: definition)
+                    if invocationArguments != call.arguments {
+                        let reviewed = ChatJSON.object(["arguments": call.arguments, "review": invocationArguments])
+                        _ = try await permission.prepare(commandID: UUID(), taskID: taskID, actionID: actionID, expectedVersion: action.metadata.version,
+                            draft: .init(toolID: call.name, resource: action.resource, parametersJSON: String(decoding: WorkspaceCoding.encode(reviewed), as: UTF8.self),
+                                consequences: action.consequences), expiresAt: action.expiresAt)
+                        guard let revised = try await repository.record(BlotV3.PreparedAction.self, id: actionID, workspaceID: identity.workspaceID) else { throw MCPError.uncertain }
+                        action = revised
+                    }
+                } else if needsReview {
+                    let accepted = context.inlineCards
+                        ? try await WorkspaceConversationCardService(repository: repository, identity: identity).review(action: action, context: context, title: entry.name + " / " + tool.name, details: details)
+                        : try await confirm("MCP: " + entry.name + " / " + tool.name, details)
+                    guard accepted else { throw MCPError.denied }
+                }
                 try _Concurrency.Task.checkCancellation()
                 try await service.authorize(entry, tool: tool, context: context)
                 guard try await !hasUnknown(entry.id) else { throw MCPError.uncertain }
@@ -99,7 +120,9 @@ public struct MCPToolProvider: WorkspaceToolExecuting {
             do {
                 try await service.authorize(entry, tool: tool, context: context)
                 try _Concurrency.Task.checkCancellation()
-                let raw = redact(try await client.call(name: tool.name, arguments: call.arguments), configuration: entry.configuration)
+                let resultValue = try await client.call(name: tool.name, arguments: invocationArguments)
+                let current = try await service.currentConfiguration(entry.id)
+                let raw = redact(redact(resultValue, configuration: current), configuration: entry.configuration)
                 let failed = raw.mcpFields["isError"] == .bool(true)
                 let result = ChatJSON.object(["state": .string(failed ? "failed" : "succeeded"), "untrusted_content": raw])
                 try await permission.finish(commandID: UUID(), invocationID: outcome.resultID, state: failed ? .failed : .succeeded,
@@ -112,6 +135,18 @@ public struct MCPToolProvider: WorkspaceToolExecuting {
                 if error is CancellationError { throw error }; throw MCPError.uncertain
             }
         } catch { await service.close(clientID); throw error }
+    }
+    private static func originalArguments(_ saved: ChatJSON) -> ChatJSON {
+        if case .object(let values) = saved, let arguments = values["arguments"], values["review"] != nil { return arguments }; return saved
+    }
+    private static func slackDraft(entry: MCPLocalConnection, tool: MCPTool, arguments: ChatJSON) -> WorkspaceCardContent.SlackDraft? {
+        let names = ["slack_post_message", "slack_send_message", "chat_postMessage", "chat.postMessage"]
+        guard entry.name.caseInsensitiveCompare("Slack") == .orderedSame, names.contains(tool.name),
+              case .object(let values) = arguments, values["blocks"] == nil, values["attachments"] == nil,
+              case .string(let channel) = values["channel"], case .string(let body) = values["text"] else { return nil }
+        let thread: String?
+        if case .string(let value) = values["thread_ts"] { thread = value } else { thread = nil }
+        return .init(workspace: entry.name, channel: channel, thread: thread, body: body)
     }
     private func hasUnknown(_ id: UUID) async throws -> Bool {
         let projection = try await repository.projection(identity: identity)

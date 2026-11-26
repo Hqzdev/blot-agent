@@ -31,15 +31,14 @@ struct MacSettingsPersonalizationPane: View {
             }
             MacTeamSettingsSection(title: "Новые агенты", detail: "Готовые настройки для создания специалиста. Существующие агенты сохраняют свои инструкции.") {
                 MacTeamSettingsRow(title: "Роль по умолчанию") {
-                    TextField("Ассистент", text: $defaultRole).textFieldStyle(.plain).multilineTextAlignment(.trailing)
-                        .frame(width: 200).accessibilityLabel("Роль по умолчанию")
+                    TextField(store.t("Ассистент"), text: $defaultRole).textFieldStyle(.plain).multilineTextAlignment(.trailing)
+                        .frame(width: 200).accessibilityLabel(store.t("Роль по умолчанию"))
                 }
                 Divider()
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Инструкции по умолчанию")
-                    TextEditor(text: $defaultInstructions).font(.system(size: 13)).scrollContentBackground(.hidden)
-                        .frame(height: 110).padding(10).background(MacTeamStyle.field, in: RoundedRectangle(cornerRadius: 10))
-                        .accessibilityLabel("Инструкции по умолчанию")
+                    WorkspaceLocalizedText("Инструкции по умолчанию")
+                    TextEditor(text: $defaultInstructions).font(.system(size: 13)).frame(height: 110).blotEditorSurface()
+                        .accessibilityLabel(store.t("Инструкции по умолчанию"))
                 }.padding(.vertical, 16)
             }
         }.onChange(of: store.form.personalization) { _, _ in store.persistChatState() }

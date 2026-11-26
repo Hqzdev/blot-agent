@@ -3,6 +3,8 @@ import BlotWorkspace
 import Foundation
 
 struct WorkspaceSnapshot: Codable, Equatable, Sendable {
+    var localConnectedPluginIDs: [String]?
+    var cards: [BlotV3.ConversationCard]?
     var projects: [BlotV3.Project]?
     var pairedDevices: [WorkspacePairedDevice]?
     var messagePins: [WorkspaceMessagePin]?

@@ -19,7 +19,7 @@ nonisolated struct ProfileDetails: Codable, Equatable, Sendable {
     }
 
     static func account(_ user: AuthUser?) -> ProfileDetails {
-        let name = user?.name ?? "Blot"
+        let name = user?.name ?? "Ori"
         let localName = user?.email.split(separator: "@").first.map(String.init) ?? "blot"
         let username = localName.map { character -> Character in
             character.isASCII && (character.isLetter || character.isNumber || character == "_") ? character : "_"

@@ -25,9 +25,11 @@ public actor GoogleOAuthTokenClient {
 
     public func refresh(configuration: GoogleOAuthConfiguration, previous: GoogleOAuthTokens) async throws -> GoogleOAuthTokens {
         guard let refresh = previous.refreshToken, !refresh.isEmpty else { throw GoogleOAuthError.authorizationExpired }
-        return try await perform(Self.request([
+        var fields = [
             "client_id": configuration.clientID, "refresh_token": refresh, "grant_type": "refresh_token",
-        ]), previous: previous)
+        ]
+        if let secret = configuration.clientSecret { fields["client_secret"] = secret }
+        return try await perform(Self.request(fields), previous: previous)
     }
 
     public func revoke(_ tokens: GoogleOAuthTokens) async throws {
@@ -42,7 +44,18 @@ public actor GoogleOAuthTokenClient {
     private func perform(_ request: URLRequest, previous: GoogleOAuthTokens?) async throws -> GoogleOAuthTokens {
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw GoogleOAuthError.serviceUnavailable }
-        if http.statusCode == 400 || http.statusCode == 401 { throw GoogleOAuthError.authorizationExpired }
+        if http.statusCode == 400 || http.statusCode == 401 {
+            struct Failure: Decodable { let error: String; let error_description: String? }
+            let failure = try? JSONDecoder().decode(Failure.self, from: data)
+            if failure?.error_description?.contains("client_secret") == true { throw GoogleOAuthError.clientSecretRequired }
+            switch failure?.error {
+            case "invalid_request": throw GoogleOAuthError.invalidConfiguration
+            case "invalid_client", "unauthorized_client", "redirect_uri_mismatch": throw GoogleOAuthError.invalidConfiguration
+            case "invalid_scope": throw GoogleOAuthError.invalidScopes
+            case "access_denied": throw GoogleOAuthError.accessDenied
+            default: throw GoogleOAuthError.authorizationExpired
+            }
+        }
         guard http.statusCode == 200, data.count <= 65_536 else { throw GoogleOAuthError.serviceUnavailable }
         guard let token = try? JSONDecoder().decode(Response.self, from: data),
               !token.access_token.isEmpty, token.access_token.utf8.count <= 16_384,

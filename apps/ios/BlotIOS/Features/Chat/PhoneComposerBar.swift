@@ -1,3 +1,4 @@
+import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
 import SwiftUI
@@ -19,7 +20,8 @@ struct PhoneComposerBar: View {
             Button {
                 withKAnimation(reduceMotion, KMotion.panel) { menu.open() }
             } label: {
-                BlotIcon(.plus, size: 26).frame(width: 44, height: 48)
+                BlotIcon(.plus, size: 23).frame(width: 34, height: 34)
+                    .background(WorkspaceStyle.ink.opacity(0.055), in: Circle()).frame(width: 44, height: 48)
                     .foregroundStyle(colorScheme == .dark ? Color.white : WorkspaceStyle.ink)
                     .contentShape(Rectangle())
             }
@@ -52,6 +54,8 @@ struct PhoneComposerBar: View {
                 }.buttonStyle(.plain).accessibilityLabel(store.t("Message"))
             }
         }
+        .kAnimation(KMotion.standard, value: canSend)
+        .kAnimation(KMotion.standard, value: store.isReplying)
         .frame(maxWidth: .infinity, alignment: .trailing)
         .anchorPreference(key: PhoneComposerMenuAnchor.self, value: .bounds) { bounds in
             .init(bounds: bounds, menu: menu)
@@ -64,7 +68,7 @@ struct PhoneComposerBar: View {
     }
 
     private var agentName: String {
-        store.snapshot.agents.first { $0.metadata.id == store.currentConversation?.agentId }?.name ?? "Blot Agent"
+        store.snapshot.agents.first { $0.metadata.id == store.currentConversation?.agentId }?.name ?? "Ori"
     }
 
     @ViewBuilder private var sendingControl: some View {
@@ -74,14 +78,17 @@ struct PhoneComposerBar: View {
             Button {
                 if store.isReplying { store.stopReply() }
                 else if canSend && !store.busy { send() }
+                else if store.voice.isActive { store.voice.end() }
+                else { store.beginVoiceConversation() }
             } label: {
-                BlotIcon(symbol: store.isReplying ? "stop.fill" : "arrow.up", size: store.isReplying ? 13 : 18)
+                BlotIcon(symbol: store.isReplying ? "stop.fill" : (canSend ? "arrow.up" : (store.voice.isActive ? "mic.slash.fill" : "mic.fill")), size: store.isReplying ? 13 : 18)
                     .foregroundStyle(BlotColor.onInverse)
                     .frame(width: 34, height: 34).background(BlotColor.inverse, in: Circle())
                     .frame(width: 44, height: 48).contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : "Send message"))
+            .disabled(!store.isReplying && !store.voice.isActive && (store.busy || (!canSend && (store.mode != .live || store.selectedConversationID == nil || store.route != .chat))))
+            .accessibilityLabel(store.t(store.isReplying ? "Stop reply" : (canSend ? "Send message" : (store.voice.isActive ? "End voice conversation" : "Call agent"))))
         }
     }
 }

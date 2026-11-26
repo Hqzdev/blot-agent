@@ -8,6 +8,12 @@
 import SwiftUI
 
 public extension View {
+    /// Multiline editing uses the same filled, rounded field surface as single-line input.
+    func blotEditorSurface() -> some View {
+        scrollContentBackground(.hidden).padding(12)
+            .blotPanel(fill: BlotColor.fill, radius: 16).blotFocusRing(radius: 16)
+    }
+
     /// Panel, card, menu or popover: filled shape with a hairline border and 10 pt corners.
     func blotPanel(fill: Color = BlotColor.panel, radius: CGFloat = BlotRadius.panel,
                    border: Color = BlotColor.hairline) -> some View {
@@ -94,7 +100,7 @@ public struct BlotDivider: View {
     }
 }
 
-/// Low-prominence label with square corners.
+/// Low-prominence rounded label.
 public struct BlotTag: View {
     private let text: String
     private let mono: Bool
@@ -111,7 +117,7 @@ public struct BlotTag: View {
             .lineLimit(1)
             .padding(.horizontal, BlotSpace.element)
             .padding(.vertical, 2)
-            .background(Rectangle().fill(BlotColor.tag))
+            .background(Capsule().fill(BlotColor.tag))
             .fixedSize()
     }
 }

@@ -8,14 +8,14 @@ struct BlotMotionPreview: View {
     var body: some View {
         PageContent {
             VStack(alignment: .leading, spacing: 24) {
-                Text("Blot").font(KFont.pageTitle()).foregroundStyle(K.text)
+                Text("Ori").font(KFont.pageTitle()).foregroundStyle(K.text)
                 HStack {
                     BlotView(state: selection, size: 160, replay: replay, followsPointer: true,
                              behavior: .lively, tappable: selection == .idle)
                         .frame(maxWidth: .infinity)
                     VStack(alignment: .leading, spacing: 14) {
                         Text(selection.title).font(KFont.ui(20, .medium)).foregroundStyle(K.text)
-                        Text(selection == .idle ? "Idle = Blot lives on his own: beats by mood, reacts to the pointer, click him" : "Motion from agent.pen · 18 · Blot").font(KFont.body()).foregroundStyle(K.text3)
+                        Text(selection == .idle ? "Idle = Ori lives on his own: beats by mood, reacts to the pointer, click him" : "Motion from agent.pen · 18 · Ori").font(KFont.body()).foregroundStyle(K.text3)
                         KButton(title: "Replay", icon: "play") { replay += 1 }
                         if app.settings.reduceMotion {
                             Text("Reduce motion is enabled in Appearance.").font(KFont.body()).foregroundStyle(K.text3)

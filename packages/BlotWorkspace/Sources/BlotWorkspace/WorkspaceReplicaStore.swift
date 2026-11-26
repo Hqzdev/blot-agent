@@ -82,11 +82,11 @@ final class WorkspaceReplicaStore {
         let records = try database.query("SELECT kind, id FROM records WHERE workspace_id = ?", [.text(identity.workspaceID.uuidString)]) { row in
             (SQLiteDatabase.text(row, 0), SQLiteDatabase.text(row, 1))
         }.compactMap { kind, id -> WorkspaceReplicaRecord? in
-            guard !Self.cloudKinds.contains(kind), let id = UUID(uuidString: id) else { return nil }
+            guard !Self.cloudKinds.contains(kind), kind != BlotV3.ConversationCard.recordKind, let id = UUID(uuidString: id) else { return nil }
             return try state(kind: kind, id: id)
         }
         return WorkspaceReplicaSnapshot(id: UUID(), workspaceID: identity.workspaceID, ownerID: identity.ownerID,
-            watermark: try clock(), relayCursor: cursor, records: records, messagePins: try WorkspaceMessagePinStore(database: database).states())
+            watermark: try clock(), relayCursor: cursor, records: records, messagePins: try WorkspaceMessagePinStore(database: database).states(), conversationCards: try WorkspaceCardSnapshotStore(database: database).records(identity: identity))
     }
 
     func install(_ snapshot: WorkspaceReplicaSnapshot, identity: WorkspaceIdentity) throws {
@@ -101,6 +101,7 @@ final class WorkspaceReplicaStore {
             try advanceClock(id, to: sequence)
         }
         try WorkspaceMessagePinStore(database: database).merge(snapshot.messagePins ?? [], identity: identity)
+        try WorkspaceCardSnapshotStore(database: database).merge(snapshot.conversationCards ?? [], identity: identity)
         // Keep the local nonce/sequence monotonic if this device's own history is part of the snapshot.
         let ownSequence = snapshot.watermark.sequence(for: identity.deviceID)
         let stored = try database.query("SELECT seq FROM sqlite_sequence WHERE name = 'outbox'", row: { sqlite3_column_int64($0, 0) }).first

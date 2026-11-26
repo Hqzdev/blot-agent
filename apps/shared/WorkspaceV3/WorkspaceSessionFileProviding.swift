@@ -14,7 +14,7 @@ final class WorkspaceSessionDirectoryPicker {
         let panel = NSOpenPanel(); panel.canChooseFiles = false; panel.canChooseDirectories = true
         panel.canCreateDirectories = true; panel.allowsMultipleSelection = false
         panel.title = name.map { "Создать папку «\($0)»" } ?? "Доступ агента к папке"
-        panel.message = purpose + "\n\n" + (name.map { "Выберите родительскую папку. Blot создаст в ней «\($0)» и разрешит агенту читать и изменять файлы только в этой папке." } ?? "Выбранная папка будет доступна этому агенту для чтения и изменения файлов в текущем чате.")
+        panel.message = purpose + "\n\n" + (name.map { "Выберите родительскую папку. Ori создаст в ней «\($0)» и разрешит агенту читать и изменять файлы только в этой папке." } ?? "Выбранная папка будет доступна этому агенту для чтения и изменения файлов в текущем чате.")
         panel.prompt = name == nil ? "Разрешить доступ" : "Создать и разрешить"
         pending = panel; defer { pending = nil }
         return try await withTaskCancellationHandler {
@@ -53,7 +53,7 @@ extension LocalWorkspaceService {
         guard automaticSessionFiles else { return nil }
         if let sessionFiles { return sessionFiles }
         let picker = sessionDirectoryPicker
-        let value = WorkspaceSessionFileService(repository: repository, identity: try await context(), credentials: mcpCredentials,
+        let value = WorkspaceSessionFileService(repository: repository, identity: try await context(), credentials: mcpCredentials, files: try await fileService(),
             makeExecutor: makeNativeExecutor, choose: { purpose, name in try await picker.choose(purpose: purpose, name: name) })
         sessionFiles = value; return value
     }
@@ -85,7 +85,7 @@ extension LocalWorkspaceService {
                 sessionMirror = try await WorkspaceSessionMirror(repository: repository, identity: context(), files: service, indexURL: sessionMirrorIndex, artifacts: fileService())
             }
             await sessionMirror?.start(); sessionFilesFailure = nil
-        } catch { sessionFilesFailure = (error as? NativeExecutionError)?.localizedDescription ?? "Не удалось подготовить рабочую папку Blot." }
+        } catch { sessionFilesFailure = (error as? NativeExecutionError)?.localizedDescription ?? "Не удалось подготовить рабочую папку Ori." }
     }
     static func eraseSessionFiles(ownerID: UUID) async throws {
         #if os(macOS)

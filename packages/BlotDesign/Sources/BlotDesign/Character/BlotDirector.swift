@@ -16,7 +16,7 @@ nonisolated public enum BlotBehavior: Sendable, Equatable {
     case none
     /// Small avatars: glances, nods, rare winks.
     case subtle
-    /// Hero Blot (Home, empty states, composer): full personality and reactions.
+    /// Hero Ori (Home, empty states, composer): full personality and reactions.
     case lively
 }
 

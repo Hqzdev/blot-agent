@@ -50,6 +50,9 @@ struct WorkspaceNativeProjectsView: View {
                     Text(text("Доверенные операции: ", "Trusted operations: ") + (project.trustedClasses.isEmpty ? text("каждое изменение подтверждается", "confirm every change") : project.trustedClasses.sorted().map { NativeOperationLabel.title($0, russian: ru) }.joined(separator: ", "))).font(.caption)
                     HStack {
                         Button(text("Посмотреть diff", "View diff")) { readDiff(project.id) }
+                        Button(text("Сбросить разрешения команд", "Reset command approvals")) {
+                            _Concurrency.Task { do { try await store.nativeCommands?.nativeService().revokeCommandApprovals(projectID: project.id) } catch { self.error = error.localizedDescription } }
+                        }
                         Button(text("Отозвать доступ", "Revoke access"), role: .destructive) { disconnect(project.id) }
                     }.disabled(busy)
                 }
@@ -95,7 +98,7 @@ struct WorkspaceNativeProjectsView: View {
             if case .success(let url) = result { folder = NativeFolderChoice(url: url) }
             else if case .failure(let error) = result { self.error = error.localizedDescription }
         }
-        .confirmationDialog(text("Сначала проверьте результат в проекте. Решение не повторяет действие.", "Verify the outcome in the project first. This decision does not repeat the action."), isPresented: Binding(get: { resolving != nil }, set: { if !$0 { resolving = nil } }), titleVisibility: .visible) {
+        .workspaceConfirmationDialog(text("Сначала проверьте результат в проекте. Решение не повторяет действие.", "Verify the outcome in the project first. This decision does not repeat the action."), isPresented: Binding(get: { resolving != nil }, set: { if !$0 { resolving = nil } }), titleVisibility: .visible) {
             Button(text("Проверено: выполнено", "Verified: completed")) { resolve(true) }
             Button(text("Проверено: не выполнено", "Verified: not completed")) { resolve(false) }
         }
@@ -139,12 +142,16 @@ struct WorkspaceNativeProjectButton: View {
         Button {
             if let panelNavigation { panelNavigation.path.append(.projects) }
             else { visible = true }
-        } label: { Label(store.language == "ru" ? "Проект и терминал" : "Project and terminal", systemImage: "terminal") }
+        } label: { BlotLabel(store.language == "ru" ? "Проект и терминал" : "Project and terminal", symbol: "terminal") }
             .font(.caption).disabled(store.nativeCommands == nil)
             .workspacePanelSheet(isPresented: $visible) {
                 NavigationStack {
                     ScrollView { WorkspaceNativeProjectsView().padding(24) }
-                        .toolbar { ToolbarItem(placement: .cancellationAction) { Button(store.language == "ru" ? "Закрыть" : "Close") { visible = false } } }
+                        .safeAreaInset(edge: .top, spacing: 0) {
+                            WorkspacePanelFormHeader(title: store.language == "ru" ? "Проект и терминал" : "Project and terminal") {
+                                Button(store.t("Close")) { visible = false }
+                            }
+                        }.workspaceEditorChrome()
                 }
                 #if os(macOS)
                 .frame(width: 760, height: 650)
@@ -216,11 +223,15 @@ private struct NativeProjectSetup: View {
                 if let error { Text(error).foregroundStyle(.red) }
                 Button(russian ? "Подключить проект" : "Connect project") { connect() }.disabled(busy || !trustCLI || selected.isEmpty)
             }.disabled(busy)
-            .navigationTitle(russian ? "Доступ к проекту" : "Project access")
+
             .safeAreaInset(edge: .top, spacing: 0) {
                 if panelNavigation != nil { WorkspacePanelFormHeader(title: russian ? "Доступ к проекту" : "Project access") { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } }
             }
-            .toolbar { ToolbarItem(placement: .cancellationAction) { if panelNavigation == nil { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) } } }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: russian ? "Доступ к проекту" : "Project access") {
+                    if panelNavigation == nil { Button(russian ? "Отмена" : "Cancel") { dismiss() }.disabled(busy) }
+                }
+            }.workspaceEditorChrome()
         }
         #if os(macOS)
         .frame(width: panelNavigation == nil ? 660 : nil, height: panelNavigation == nil ? 650 : nil)

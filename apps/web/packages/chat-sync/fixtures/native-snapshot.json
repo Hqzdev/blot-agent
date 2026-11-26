@@ -1,0 +1,398 @@
+{
+  "id": "96AD5E79-02B5-49A5-B3C9-163712679666",
+  "messagePins": [],
+  "ownerID": "11111111-1111-4111-A111-111111111111",
+  "records": [
+    {
+      "deleted": false,
+      "fields": {
+        "accessMode": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "avatarColor": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "avatarShape": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "instructions": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "modelId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "name": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        },
+        "roleId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 1,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 }
+        }
+      },
+      "kind": "AgentProfile",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"accessMode\":\"ASK_FIRST\",\"avatarColor\":\"blue\",\"avatarShape\":\"circle\",\"configurationId\":null,\"instructions\":\"\",\"metadata\":{\"createdAt\":\"2026-11-15T10:00:00Z\",\"id\":\"37A523BB-CBB3-5FB9-A7EC-6A4A0CA1FC8E\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"modelId\":\"gigachat\",\"name\":\"From web\",\"roleId\":\"custom\"}",
+      "recordID": "37A523BB-CBB3-5FB9-A7EC-6A4A0CA1FC8E",
+      "sequence": 1,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 1 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "accessMode": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "avatarColor": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "avatarShape": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "instructions": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "modelId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "name": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        },
+        "roleId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 3,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 }
+        }
+      },
+      "kind": "AgentProfile",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"accessMode\":\"ASK_FIRST\",\"avatarColor\":\"blue\",\"avatarShape\":\"circle\",\"configurationId\":null,\"instructions\":\"\",\"metadata\":{\"createdAt\":\"2026-11-15T10:00:01Z\",\"id\":\"3B31E5BF-345F-5793-AF7D-4F1A4043CAD5\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"modelId\":\"gigachat\",\"name\":\"Second web chat\",\"roleId\":\"custom\"}",
+      "recordID": "3B31E5BF-345F-5793-AF7D-4F1A4043CAD5",
+      "sequence": 3,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 3 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "agentId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        },
+        "archived": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        },
+        "kind": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        },
+        "mobileOwned": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        },
+        "pinned": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        },
+        "title": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 2,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 }
+        }
+      },
+      "kind": "Conversation",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"agentId\":\"37A523BB-CBB3-5FB9-A7EC-6A4A0CA1FC8E\",\"archived\":false,\"kind\":\"DIRECT\",\"metadata\":{\"createdAt\":\"2026-11-15T10:00:00Z\",\"id\":\"33333333-3333-4333-A333-333333333333\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"mobileOwned\":false,\"pinned\":false,\"title\":\"From web\"}",
+      "recordID": "33333333-3333-4333-A333-333333333333",
+      "sequence": 2,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 2 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "agentId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        },
+        "archived": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        },
+        "kind": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        },
+        "mobileOwned": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        },
+        "pinned": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        },
+        "title": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 4,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 }
+        }
+      },
+      "kind": "Conversation",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"agentId\":\"3B31E5BF-345F-5793-AF7D-4F1A4043CAD5\",\"archived\":false,\"kind\":\"DIRECT\",\"metadata\":{\"createdAt\":\"2026-11-15T10:00:01Z\",\"id\":\"44444444-4444-4444-A444-444444444444\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"mobileOwned\":false,\"pinned\":false,\"title\":\"Second web chat\"}",
+      "recordID": "44444444-4444-4444-A444-444444444444",
+      "sequence": 4,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 4 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "artifactIds": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "commandId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "content": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "conversationId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "delivery": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "position": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        },
+        "role": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 5,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 }
+        }
+      },
+      "kind": "Message",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"artifactIds\":[],\"authorAgentId\":null,\"commandId\":\"55555555-5555-4555-A555-555555555555\",\"content\":\"Written in the web\",\"conversationId\":\"33333333-3333-4333-A333-333333333333\",\"delivery\":\"COMPLETED\",\"executorDeviceId\":null,\"mentions\":null,\"metadata\":{\"createdAt\":\"2026-11-15T10:00:02Z\",\"id\":\"55555555-5555-4555-A555-555555555555\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"position\":1,\"replyToMessageId\":null,\"role\":\"USER\"}",
+      "recordID": "55555555-5555-4555-A555-555555555555",
+      "sequence": 5,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 5 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "artifactIds": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "authorAgentId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "commandId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "content": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "conversationId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "delivery": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "executorDeviceId": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "position": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        },
+        "role": {
+          "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+          "sequence": 6,
+          "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 }
+        }
+      },
+      "kind": "Message",
+      "origin": "3E710D8D-4180-553E-A6C6-0B02642D4AD6",
+      "payload": "{\"artifactIds\":[],\"authorAgentId\":\"37A523BB-CBB3-5FB9-A7EC-6A4A0CA1FC8E\",\"commandId\":\"77777777-7777-4777-A777-777777777777\",\"content\":\"Web assistant answer\",\"conversationId\":\"33333333-3333-4333-A333-333333333333\",\"delivery\":\"COMPLETED\",\"executorDeviceId\":\"3E710D8D-4180-553E-A6C6-0B02642D4AD6\",\"mentions\":null,\"metadata\":{\"createdAt\":\"2026-11-15T10:00:03Z\",\"id\":\"77777777-7777-4777-A777-777777777777\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:14:50Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"position\":2,\"replyToMessageId\":null,\"role\":\"ASSISTANT\"}",
+      "recordID": "77777777-7777-4777-A777-777777777777",
+      "sequence": 6,
+      "vector": { "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6 },
+      "version": 1
+    },
+    {
+      "deleted": false,
+      "fields": {
+        "artifactIds": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "authorAgentId": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "commandId": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "content": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "conversationId": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "delivery": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "executorDeviceId": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "mentions": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "position": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "replyToMessageId": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        },
+        "role": {
+          "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+          "sequence": 1,
+          "vector": {
+            "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+            "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+          }
+        }
+      },
+      "kind": "Message",
+      "origin": "A6253460-C6D7-475C-BD01-5D1451BFCBAB",
+      "payload": "{\"artifactIds\":[],\"authorAgentId\":null,\"commandId\":\"F8AC8FBB-BE8E-45D6-AA90-AC0A16B4EAA0\",\"content\":\"Reply from iPhone\",\"conversationId\":\"33333333-3333-4333-A333-333333333333\",\"delivery\":\"SAVED\",\"executorDeviceId\":null,\"mentions\":[],\"metadata\":{\"createdAt\":\"2026-11-15T11:15:39Z\",\"id\":\"F8AC8FBB-BE8E-45D6-AA90-AC0A16B4EAA0\",\"ownerId\":\"11111111-1111-4111-A111-111111111111\",\"updatedAt\":\"2026-11-15T11:15:39Z\",\"version\":1,\"workspaceId\":\"22222222-2222-4222-A222-222222222222\"},\"position\":3,\"replyToMessageId\":null,\"role\":\"USER\"}",
+      "recordID": "F8AC8FBB-BE8E-45D6-AA90-AC0A16B4EAA0",
+      "sequence": 1,
+      "vector": {
+        "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+        "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+      },
+      "version": 1
+    }
+  ],
+  "relayCursor": 0,
+  "watermark": {
+    "3e710d8d-4180-553e-a6c6-0b02642d4ad6": 6,
+    "a6253460-c6d7-475c-bd01-5d1451bfcbab": 1
+  },
+  "workspaceID": "22222222-2222-4222-A222-222222222222"
+}

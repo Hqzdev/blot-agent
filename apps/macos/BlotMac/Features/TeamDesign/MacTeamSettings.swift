@@ -6,8 +6,10 @@ struct MacTeamSettings: View {
     @Environment(MacTeamPresentation.self) private var presentation
     var body: some View {
         MacTeamSettingsLayout(close: { presentation.closeSettings() },
-            searchFocusRequest: presentation.settingsSearchFocusRequest, footer: "Blot · Демо на этом Mac") { pane in
+            searchFocusRequest: presentation.settingsSearchFocusRequest, footer: "Ori · Демо на этом Mac") { pane in
             switch pane {
+            case .models: WorkspaceSettingsView(route: .models, embedded: true)
+            case .browser: WorkspaceSettingsView(route: .browserSettings, embedded: true)
             case .devices:
                 MacTeamSettingsSection(title: "Устройства") { Text("Войдите в аккаунт, чтобы связать iPhone и Mac и передавать задачи.").foregroundStyle(.secondary) }
             case .memory, .storage, .privacy: MacTeamWorkspaceSettingsContent(pane: pane)
@@ -22,12 +24,15 @@ struct MacTeamSettings: View {
 struct MacTeamSettingsLayout<PaneContent: View>: View {
     let close: () -> Void
     var searchFocusRequest = 0
-    var footer = "Blot"
+    var footer = "Ori"
     var initialPane: MacTeamSettingsPane = .general
     @ViewBuilder let paneContent: (MacTeamSettingsPane) -> PaneContent
     @State private var pane: MacTeamSettingsPane = .general
     @State private var search = ""
     @FocusState private var searchFocused: Bool
+    @Environment(\.locale) private var locale
+    private var russian: Bool { locale.language.languageCode?.identifier == "ru" }
+    private var searchTitle: String { russian ? "Поиск настроек" : "Search settings" }
     private var query: String { search.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var results: [MacTeamSettingsPane] {
         MacTeamSettingsPane.allCases.filter { query.isEmpty || $0.matches(query) }
@@ -46,7 +51,8 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
                                 WorkspaceLocalizedText(query.isEmpty ? pane.title : "Результаты поиска").font(.system(size: 28, weight: .medium))
                                     .accessibilityAddTraits(.isHeader)
                                 if !query.isEmpty {
-                                    Text("Настройки по запросу «\(query)»").font(.system(size: 13)).foregroundStyle(.secondary)
+                                    Text(russian ? "Настройки по запросу «\(query)»" : "Settings matching “\(query)”")
+                                        .font(.system(size: 13)).foregroundStyle(.secondary)
                                 }
                             }
                             if query.isEmpty {
@@ -77,7 +83,10 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
         .font(.system(size: 13)).foregroundStyle(WorkspaceStyle.ink).teamControls()
         .onAppear { pane = initialPane }
         .onChange(of: initialPane) { _, value in pane = value; search = "" }
-        .onExitCommand { close() }
+        .onExitCommand {
+            if search.isEmpty { close() }
+            else { search = "" }
+        }
         .onChange(of: searchFocusRequest) { _, _ in searchFocused = true }
     }
 
@@ -85,10 +94,10 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
         VStack(spacing: 12) {
             HStack(spacing: 12) {
                 Button(action: close) {
-                    Label("К команде", systemImage: "chevron.left")
-                }.buttonStyle(.plain).accessibilityLabel("Вернуться к команде")
+                    BlotLabel(russian ? "К команде" : "Back to team", symbol: "chevron.left")
+                }.buttonStyle(.plain).accessibilityLabel(russian ? "Вернуться к команде" : "Back to team")
                 Spacer(minLength: 8)
-                Menu {
+                WorkspaceMenu {
                     ForEach(["Личное", "Пространство", "Интеграции"], id: \.self) { group in
                         Section(group) {
                             ForEach(MacTeamSettingsPane.allCases.filter { $0.group == group }) { item in
@@ -97,7 +106,7 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
                         }
                     }
                 } label: { WorkspaceLocalizedText(pane.title).lineLimit(1) }
-                .accessibilityLabel("Раздел настроек")
+                .accessibilityLabel(russian ? "Раздел настроек" : "Settings section")
             }.frame(height: 36).padding(.leading, 108).padding(.trailing, 24)
             searchField.padding(.horizontal, 24)
         }.padding(.top, 14).padding(.bottom, 12).background(MacTeamStyle.sidebar)
@@ -106,10 +115,13 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
     private var searchField: some View {
         HStack(spacing: 8) {
             BlotIcon(.search, size: BlotIconSize.control).foregroundStyle(.secondary)
-            TextField("Поиск настроек", text: $search).textFieldStyle(.plain).focused($searchFocused)
-                .accessibilityLabel("Поиск настроек")
+            TextField(searchTitle, text: $search).textFieldStyle(.plain).focused($searchFocused)
+                .accessibilityLabel(searchTitle)
+                .onSubmit {
+                    if !query.isEmpty, let first = results.first { pane = first; search = ""; searchFocused = false }
+                }
             if !search.isEmpty {
-                MacTeamIconButton(title: "Очистить поиск", symbol: "xmark") { search = "" }
+                MacTeamIconButton(title: russian ? "Очистить поиск" : "Clear search", symbol: "xmark") { search = "" }
             }
         }.padding(.horizontal, 10).frame(height: 36).background(MacTeamStyle.field, in: Capsule())
     }
@@ -117,16 +129,17 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                Text("Настройки").font(.system(size: 17, weight: .semibold))
+                WorkspaceLocalizedText("Settings").font(.system(size: 17, weight: .semibold))
                 Spacer()
-                Button(action: close) { Image(systemName: "arrow.left").font(.system(size: 14)) }
-                    .buttonStyle(.plain).help("Вернуться к команде").accessibilityLabel("Вернуться к команде")
+                Button(action: close) { BlotIcon(symbol: "arrow.left", size: 14) }
+                    .buttonStyle(.plain).help(russian ? "Вернуться к команде" : "Back to team")
+                    .accessibilityLabel(russian ? "Вернуться к команде" : "Back to team")
             }.padding(.horizontal, 20).frame(height: 54)
             searchField.padding(.horizontal, 16).padding(.bottom, 20)
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     ForEach(["Личное", "Пространство", "Интеграции"], id: \.self) { group in
-                        let items = results.filter { $0.group == group }
+                        let items = MacTeamSettingsPane.allCases.filter { $0.group == group }
                         if !items.isEmpty {
                             VStack(alignment: .leading, spacing: 3) {
                                 WorkspaceLocalizedText(group).font(.system(size: 13, weight: .regular)).foregroundStyle(.secondary)
@@ -154,8 +167,10 @@ struct MacTeamSettingsLayout<PaneContent: View>: View {
         VStack(spacing: 12) {
             if results.isEmpty {
                 ContentUnavailableView {
-                    BlotLabel("Ничего не найдено", symbol: "magnifyingglass", size: BlotIconSize.illustration)
-                } description: { Text("Попробуйте «тема», «Enter» или название приложения.") }
+                    BlotLabel(russian ? "Ничего не найдено" : "No results", symbol: "magnifyingglass", size: BlotIconSize.illustration)
+                } description: {
+                    Text(russian ? "Попробуйте «тема», «Enter» или название приложения." : "Try “theme,” “Enter,” or the name of an app.")
+                }
             }
             ForEach(results) { result in
                 MacTeamNavigationButton {

@@ -101,7 +101,7 @@ struct MacTeamPluginConnection: View {
         }.frame(width: 580, height: editing ? 660 : 520)
             .kAnimation(KMotion.panel, value: editing)
             .onAppear { if accounts.isEmpty { newAccount() } }
-            .confirmationDialog("Отключить аккаунт в демо?", isPresented: $disconnect) {
+            .workspaceConfirmationDialog("Отключить аккаунт в демо?", isPresented: $disconnect) {
                 Button("Отключить", role: .destructive) {
                     presentation.demo.update { $0.connections.removeAll { $0.id == connection.id } }
                     if accounts.isEmpty { newAccount() } else { editing = false }

@@ -17,6 +17,8 @@ enum VerifyMacMessageTimeline {
         let restored = MacTeamMessageTimeline(messages: [history, outgoing, reply])
         check(restored.visibleIDs == Set([history.id, outgoing.id, reply.id]), "restored history is ready for the first layout")
         check(restored.entranceIDs.isEmpty && restored.lastRevealedID == nil, "restored history does not animate or scroll")
+        restored.synchronize([history, outgoing, reply], immediate: true)
+        check(restored.lastRevealedID == nil, "reduced-motion history does not request a second initial scroll")
         check(!restored.synchronize([history, outgoing, reply], immediate: false) && !restored.revealNext(),
               "first appearance does not restage restored history")
         let timeline = MacTeamMessageTimeline()
@@ -78,6 +80,9 @@ enum VerifyMacMessageTimeline {
         check(live.visibleIDs == [liveHistory.id], "live deletion removes stale presentation IDs")
         live.synchronize(items: [liveHistory, liveSend, liveReply], immediate: true)
         check(live.visibleIDs.count == 3 && live.entranceIDs.isEmpty, "live reduced motion exposes every message immediately")
+        let scrollRequest = live.lastRevealedID
+        live.synchronize(items: [liveHistory, liveSend, liveReply], immediate: true)
+        check(live.lastRevealedID == scrollRequest, "repeated layout synchronization does not issue another scroll")
         print("Passed \(checks) message timeline checks")
     }
 }

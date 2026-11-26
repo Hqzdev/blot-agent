@@ -1,3 +1,4 @@
+import enum BlotDomain.BlotV3
 import CryptoKit
 import Foundation
 import OSLog
@@ -137,7 +138,7 @@ public actor WorkspaceCloudBackup {
         try Task.checkCancellation()
         let snapshot = try await repository.replicaSnapshot(identity: identity)
         let fingerprint = try Self.fingerprint(snapshot)
-        guard fingerprint != uploadedFingerprint, (!snapshot.records.isEmpty || !(snapshot.messagePins ?? []).isEmpty) else { return }
+        guard fingerprint != uploadedFingerprint, (!snapshot.records.isEmpty || !(snapshot.messagePins ?? []).isEmpty || !(snapshot.conversationCards ?? []).isEmpty) else { return }
         let bytes = try WorkspaceCoding.encode(snapshot)
         guard bytes.count <= Self.maximumBytes else { throw WorkspaceSyncError.invalidSnapshot }
         pending = (.init(snapshotID: snapshot.id, deviceID: identity.deviceID, digest: Self.digest(bytes),
@@ -208,8 +209,9 @@ public actor WorkspaceCloudBackup {
             let watermark: WorkspaceVersionVector
             let records: [WorkspaceReplicaRecord]
             let messagePins: [WorkspaceMessagePin]
+            let cards: [BlotV3.ConversationCard]
         }
         let records = snapshot.records.sorted { $0.kind + $0.recordID.uuidString < $1.kind + $1.recordID.uuidString }
-        return digest(try WorkspaceCoding.encode(Content(watermark: snapshot.watermark, records: records, messagePins: (snapshot.messagePins ?? []).sorted { $0.messageID.uuidString < $1.messageID.uuidString })))
+        return digest(try WorkspaceCoding.encode(Content(watermark: snapshot.watermark, records: records, messagePins: (snapshot.messagePins ?? []).sorted { $0.messageID.uuidString < $1.messageID.uuidString }, cards: (snapshot.conversationCards ?? []).sorted { $0.metadata.id.uuidString < $1.metadata.id.uuidString })))
     }
 }

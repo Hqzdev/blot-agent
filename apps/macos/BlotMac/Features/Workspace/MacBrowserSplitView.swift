@@ -3,19 +3,26 @@ import SwiftUI
 
 /// Bounds both panes, including when the window shrinks after a drag.
 struct MacBrowserSplitLayout {
+    static let widthPreferenceKey = "blot.browser.panelWidth"
     static let minimumWidth: CGFloat = 760
     static let minimumChatWidth: CGFloat = 336
+    static let minimumBrowserWidth: CGFloat = 300
     static let dividerWidth: CGFloat = 8
     let width: CGFloat
     func browserWidth(_ requested: CGFloat) -> CGFloat {
         let maximum = max(0, width - Self.minimumChatWidth - Self.dividerWidth)
-        return min(maximum, max(min(300, maximum), requested.isFinite ? requested : 500))
+        return min(maximum, max(min(Self.minimumBrowserWidth, maximum), requested.isFinite ? requested : 500))
     }
 }
 
 struct MacBrowserSplitView<Chat: View, Browser: View>: View {
-    @AppStorage("blot.browser.panelWidth") private var savedWidth = 500.0
+    private let resizeHitWidth: CGFloat = 24
+
+    @AppStorage(MacBrowserSplitLayout.widthPreferenceKey) private var savedWidth = 500.0
     @State private var dragWidth: CGFloat?
+    @State private var hoveringDivider = false
+    @Environment(\.locale) private var locale
+    var isPresented = true
     @ViewBuilder let chat: () -> Chat
     @ViewBuilder let browser: () -> Browser
 
@@ -25,43 +32,73 @@ struct MacBrowserSplitView<Chat: View, Browser: View>: View {
             let width = layout.browserWidth(dragWidth ?? savedWidth)
             HStack(spacing: 0) {
                 chat().frame(minWidth: 0, maxWidth: .infinity, maxHeight: .infinity)
-                MacBrowserDivider(width: width) { requested, finished in
-                    let next = layout.browserWidth(requested)
-                    if finished { savedWidth = Double(next); dragWidth = nil }
-                    else { dragWidth = next }
-                }
-                    .frame(width: MacBrowserSplitLayout.dividerWidth)
-                    .overlay { Rectangle().fill(Color(nsColor: .separatorColor)).frame(width: 1).allowsHitTesting(false) }
-                    .accessibilityElement()
-                    .accessibilityLabel("Ширина браузера")
-                    .accessibilityValue("\(Int(width))")
-                    .accessibilityAdjustableAction { direction in
-                        savedWidth = Double(layout.browserWidth(width + (direction == .increment ? 40 : -40)))
+                // The outer frame animates while the page keeps its own width.
+                ZStack(alignment: .leading) {
+                    if isPresented {
+                        HStack(spacing: 0) {
+                            MacWorkspaceDividerLine(highlighted: hoveringDivider || dragWidth != nil)
+                                .frame(width: MacBrowserSplitLayout.dividerWidth)
+                                .allowsHitTesting(false)
+                            browser().frame(width: width)
+                        }
+                        .transition(.opacity)
                     }
-                    .accessibilityIdentifier("workspace.browser.resize")
-                browser().frame(width: width)
+                }
+                .frame(width: isPresented ? width + MacBrowserSplitLayout.dividerWidth : 0, alignment: .leading)
+                .clipped()
+                .allowsHitTesting(isPresented)
+                .accessibilityHidden(!isPresented)
+                .overlay(alignment: .leading) {
+                    if isPresented {
+                        MacBrowserDivider(width: width, hovering: $hoveringDivider) { requested, finished in
+                            let next = layout.browserWidth(requested)
+                            if finished { savedWidth = Double(next); dragWidth = nil }
+                            else { dragWidth = next }
+                        }
+                        .frame(width: resizeHitWidth)
+                        .offset(x: (MacBrowserSplitLayout.dividerWidth - resizeHitWidth) / 2)
+                        .accessibilityElement()
+                        .accessibilityLabel(locale.language.languageCode?.identifier == "ru" ? "Ширина браузера" : "Browser width")
+                        .accessibilityValue("\(Int(width))")
+                        .accessibilityAdjustableAction { direction in
+                            savedWidth = Double(layout.browserWidth(width + (direction == .increment ? 40 : -40)))
+                        }
+                        .accessibilityIdentifier("workspace.browser.resize")
+                        .onDisappear { dragWidth = nil }
+                    }
+                }
+                .zIndex(10)
             }
         }
     }
 }
 
-/// AppKit keeps mouse capture when the pointer crosses the embedded WKWebView.
-private struct MacBrowserDivider: NSViewRepresentable {
+private struct MacBrowserDivider: View {
     let width: CGFloat
+    @Binding var hovering: Bool
     let resize: (CGFloat, Bool) -> Void
-    func makeNSView(context: Context) -> DividerView { DividerView() }
-    func updateNSView(_ view: DividerView, context: Context) { view.width = width; view.resize = resize }
+    @State private var startingWidth: CGFloat?
 
-    final class DividerView: NSView {
-        var width: CGFloat = 500
-        var resize: ((CGFloat, Bool) -> Void)?
-        private var startX: CGFloat = 0
-        private var startWidth: CGFloat = 0
-        override var acceptsFirstResponder: Bool { true }
-        override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
-        override func resetCursorRects() { addCursorRect(bounds, cursor: .resizeLeftRight) }
-        override func mouseDown(with event: NSEvent) { startX = event.locationInWindow.x; startWidth = width }
-        override func mouseDragged(with event: NSEvent) { resize?(startWidth - (event.locationInWindow.x - startX), false) }
-        override func mouseUp(with event: NSEvent) { resize?(startWidth - (event.locationInWindow.x - startX), true) }
+    var body: some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .onHover(perform: hover)
+            .gesture(DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                .onChanged { value in
+                    let initial = startingWidth ?? width
+                    startingWidth = initial
+                    resize(initial - value.translation.width, false)
+                }
+                .onEnded { value in
+                    if let initial = startingWidth { resize(initial - value.translation.width, true) }
+                    startingWidth = nil
+                })
+            .onDisappear { hover(false) }
+    }
+
+    private func hover(_ value: Bool) {
+        guard value != hovering else { return }
+        hovering = value
+        if value { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() }
     }
 }

@@ -154,36 +154,74 @@ struct WorkspaceFeedback: View {
 
 struct WorkspaceDataState: View {
     let state: WorkspaceStore.ScreenState
+    var route: WorkspaceRoute? = nil
     @Environment(WorkspaceStore.self) private var store
+    @State private var retrying = false
     private var symbol: String {
-        switch state { case .loading: "arrow.clockwise"; case .error: "exclamationmark.triangle"; case .offline: "laptopcomputer"; case .limit: "gauge"; case .unavailable: "lock"; case .unknown: "questionmark.circle"; default: "bubble.left.and.bubble.right" }
+        if route == .files && state == .empty { return "folder" }
+        return switch state { case .loading: "arrow.clockwise"; case .error: "exclamationmark.triangle"; case .offline: "laptopcomputer"; case .limit: "gauge"; case .unavailable: "lock"; case .unknown: "questionmark.circle"; default: "bubble.left.and.bubble.right" }
     }
     private var title: String {
+        if route == .files {
+            if state == .loading { return "Loading files…" }
+            if state == .error { return "Couldn’t load files" }
+            if state == .empty { return "No files yet" }
+        }
         switch state {
-        case .loading: "Connecting to your computer…"
-        case .error: "Couldn’t reach the model"
-        case .offline: "Your computer is offline"
-        case .limit: "Daily model limit reached"
-        case .unavailable: "This action is unavailable"
-        case .unknown: "Outcome unknown"
-        default: "Nothing here yet"
+        case .loading: return "Connecting to your computer…"
+        case .error: return "Couldn’t reach the model"
+        case .offline: return "Your computer is offline"
+        case .limit: return "Daily model limit reached"
+        case .unavailable: return "This action is unavailable"
+        case .unknown: return "Outcome unknown"
+        default: return "Nothing here yet"
         }
     }
+    private var detail: String? {
+        if state == .loading { return nil }
+        if route == .files && state == .empty { return store.language == "ru" ? "Добавленные файлы и результаты агентов появятся здесь." : "Imported files and agent results will appear here." }
+        if route == .files && state == .error { return nil }
+        if state == .unknown { return store.t("The result has not been confirmed. Check before retrying.") }
+        if state == .empty { return store.t("Start a conversation or add an item to continue.") }
+        return store.t("Your input is saved. You can continue when the service is available.")
+    }
+
     var body: some View {
         WorkspaceCard {
             VStack(alignment: .leading, spacing: 18) {
-                if state == .loading { ProgressView() } else { BlotIcon(symbol: symbol, size: 40).font(.largeTitle) }
+                if state == .loading || retrying { ProgressView() } else { BlotIcon(symbol: symbol, size: 40).font(.largeTitle) }
                 Text(store.t(title)).font(.title2)
-                Text(store.t(state == .unknown ? "The result has not been confirmed. Check before retrying." :
-                    state == .empty ? "Start a conversation or add an item to continue." : "Your input is saved. You can continue when the service is available."))
-                    .foregroundStyle(WorkspaceStyle.secondary)
+                if let detail { Text(detail).foregroundStyle(WorkspaceStyle.secondary) }
                 if state == .error {
-                    Button(store.t("Retry")) { store.screenState = .normal }.buttonStyle(WorkspaceButtonStyle(.secondary))
+                    Button(store.t(store.mode == .live ? "Retry" : "Back")) { retry() }
+                        .buttonStyle(WorkspaceButtonStyle(.secondary)).disabled(retrying)
                 }
                 if state == .offline { WorkspaceLink(title: "Choose computer", route: .devices) }
-                if state == .limit { WorkspaceLink(title: "AI models", route: .models) }
+                if state == .limit {
+                    #if os(macOS)
+                    WorkspaceLink(title: "Usage", route: .usage, symbol: "gauge")
+                    #else
+                    WorkspaceLink(title: "AI models", route: .models)
+                    #endif
+                }
+                if state == .error { WorkspaceFeedback() }
             }
         }.accessibilityElement(children: .contain)
+    }
+
+    private func retry() {
+        guard store.mode == .live else { store.screenState = .normal; return }
+        retrying = true
+        _Concurrency.Task {
+            defer { retrying = false }
+            do {
+                try await store.refreshContent()
+                store.error = nil
+                store.screenState = .normal
+            } catch {
+                store.error = WorkspaceFailureCopy.message(error)
+            }
+        }
     }
 }
 

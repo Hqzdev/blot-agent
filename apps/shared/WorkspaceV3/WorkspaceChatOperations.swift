@@ -5,7 +5,8 @@ import Foundation
 enum WorkspaceChatOperations {
     static func updating(_ chat: BlotV3.Conversation, pinned: Bool? = nil, archived: Bool? = nil, title: String? = nil) throws -> BlotV3.Conversation {
         try .init(metadata: chat.metadata, agentId: chat.agentId, title: title ?? chat.title, mobileOwned: chat.mobileOwned,
-                  pinned: pinned ?? chat.pinned, archived: archived ?? chat.archived)
+                  pinned: pinned ?? chat.pinned, archived: archived ?? chat.archived, kind: chat.kind,
+                  parentConversationId: chat.parentConversationId, parentMessageId: chat.parentMessageId)
     }
 
     static func migratePins(in snapshot: WorkspaceSnapshot, agentIDs: Set<UUID>) throws -> WorkspaceSnapshot {

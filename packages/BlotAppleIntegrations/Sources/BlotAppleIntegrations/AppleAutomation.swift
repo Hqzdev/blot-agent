@@ -50,6 +50,15 @@ final class AppleAutomation {
         let objects = rows(result).map { row in appleObject(Dictionary(uniqueKeysWithValues: zip(names, row))) }
         return objects.first ?? appleObject(["state": "succeeded"])
     }
+    func mailDraft(operation: String, arguments: AppleArguments) async throws -> ChatJSON {
+        guard ["update_draft", "discard_draft"].contains(operation) else { throw AppleIntegrationError.invalidArguments }
+        try requireRunning(.mail)
+        guard await authorized(.mail) else { throw AppleIntegrationError.permissionDenied }
+        try _Concurrency.Task.checkCancellation()
+        let result = try run(.mail, values: [operation, arguments.required("resource_id"), arguments.required("id"), "",
+            arguments["subject"] ?? "", arguments["body"] ?? "", "", arguments["recipient"] ?? ""])
+        return appleObject(["state": result.stringValue ?? "updated"])
+    }
     func compileScripts() throws {
         try requireRunning(.notes); try requireRunning(.mail)
         for source in [Self.notesScript, Self.mailScript] {
@@ -156,6 +165,39 @@ final class AppleAutomation {
                     tell m to make new to recipient at end of to recipients with properties {address:item 8 of a}
                     save m
                     return {{id of m as text, subject of m as text, sender of m as text, item 8 of a, content of m as text}}
+                end if
+                if op is "update_draft" or op is "discard_draft" then
+                    set m to outgoing message id ((item 3 of a) as integer)
+                    set senderAddress to extract address from (sender of m)
+                    if addresses does not contain senderAddress then error "Черновик принадлежит другому аккаунту."
+                    if op is "discard_draft" then
+                        delete m
+                        return "discarded"
+                    end if
+                    set recipientList to item 8 of a
+                    set oldDelimiters to AppleScript's text item delimiters
+                    set AppleScript's text item delimiters to ";"
+                    set recipientItems to text items of recipientList
+                    set AppleScript's text item delimiters to oldDelimiters
+                    delete every to recipient of m
+                    delete every cc recipient of m
+                    delete every bcc recipient of m
+                    repeat with addressText in recipientItems
+                        set addr to addressText as text
+                        if addr is not "" and addr is not " " then
+                            if addr starts with " CC: " then
+                                tell m to make new cc recipient at end of cc recipients with properties {address:text 6 thru -1 of addr}
+                            else if addr starts with " BCC: " then
+                                tell m to make new bcc recipient at end of bcc recipients with properties {address:text 7 thru -1 of addr}
+                            else
+                                tell m to make new to recipient at end of to recipients with properties {address:addr}
+                            end if
+                        end if
+                    end repeat
+                    set subject of m to item 5 of a
+                    set content of m to item 6 of a
+                    save m
+                    return "updated"
                 end if
                 if op is "send" or op is "preview" then
                     set m to outgoing message id ((item 3 of a) as integer)

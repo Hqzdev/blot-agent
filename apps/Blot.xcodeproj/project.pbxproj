@@ -44,8 +44,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		13CB0E71307BE25300C7CE8A /* Blot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Blot.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		A20000000000000000000004 /* BlotIOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BlotIOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		13CB0E71307BE25300C7CE8A /* Ori.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000004 /* Ori.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Ori.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F60000000000000000000003 /* BlotWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = BlotWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -129,8 +129,8 @@
 		13CB0E72307BE25300C7CE8A /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				13CB0E71307BE25300C7CE8A /* Blot.app */,
-				A20000000000000000000004 /* BlotIOS.app */,
+				13CB0E71307BE25300C7CE8A /* Ori.app */,
+				A20000000000000000000004 /* Ori.app */,
 				F60000000000000000000003 /* BlotWidgets.appex */,
 			);
 			name = Products;
@@ -163,7 +163,7 @@
 				E50000000000000000000002 /* BlotAppleIntegrations */,
 			);
 			productName = BlotMac;
-			productReference = 13CB0E71307BE25300C7CE8A /* Blot.app */;
+			productReference = 13CB0E71307BE25300C7CE8A /* Ori.app */;
 			productType = "com.apple.product-type.application";
 		};
 		A20000000000000000000001 /* BlotIOS */ = {
@@ -194,7 +194,7 @@
 				F6000000000000000000000E /* BlotWidgetSupport */,
 			);
 			productName = BlotIOS;
-			productReference = A20000000000000000000004 /* BlotIOS.app */;
+			productReference = A20000000000000000000004 /* Ori.app */;
 			productType = "com.apple.product-type.application";
 		};
 		F60000000000000000000001 /* BlotWidgets */ = {
@@ -501,22 +501,23 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Blot;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_CFBundleDisplayName = Ori;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Ori automates Mail and Notes only after you connect them.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ori uses Bluetooth to connect your trusted devices.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Ori reads and updates the calendars you connect for your agents.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
-				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Ori finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Ori connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Ori uses the microphone only during a voice conversation you start.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Ori manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Ori transcribes your speech into chat messages during a voice conversation.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "yaroslavstrelkov.blot-agent";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Blot;
+				PRODUCT_NAME = Ori;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -548,22 +549,23 @@
 				ENABLE_USER_SELECTED_FILES = readwrite;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Blot;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_CFBundleDisplayName = Ori;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Ori automates Mail and Notes only after you connect them.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ori uses Bluetooth to connect your trusted devices.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Ori reads and updates the calendars you connect for your agents.";
 				INFOPLIST_KEY_NSCameraUsageDescription = "Scan the pairing QR code displayed by your Mac.";
-				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Ori finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Ori connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Ori uses the microphone only during a voice conversation you start.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Ori manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Ori transcribes your speech into chat messages during a voice conversation.";
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "yaroslavstrelkov.blot-agent";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = Blot;
+				PRODUCT_NAME = Ori;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = macosx;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -589,16 +591,16 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Blot;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
-				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+				INFOPLIST_KEY_CFBundleDisplayName = Ori;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Ori automates Mail and Notes only after you connect them.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ori uses Bluetooth to connect your trusted devices.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Ori reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Ori uses the camera to attach photos and scan pairing QR codes.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Ori finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Ori connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Ori uses the microphone only during a voice conversation you start.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Ori manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Ori transcribes your speech into chat messages during a voice conversation.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -615,7 +617,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "yaroslavstrelkov.blot-agent.ios";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = BlotIOS;
+				PRODUCT_NAME = Ori;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -644,16 +647,16 @@
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = BackendInfo.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Blot;
-				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Blot automates Mail and Notes only after you connect them.";
-				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Blot uses Bluetooth to connect your trusted devices.";
-				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Blot reads and updates the calendars you connect for your agents.";
-				INFOPLIST_KEY_NSCameraUsageDescription = "Blot uses the camera to attach photos and scan pairing QR codes.";
-				INFOPLIST_KEY_NSContactsUsageDescription = "Blot finds and updates contacts you allow your agents to use.";
-				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Blot connects your iPhone to the agent running on your Mac.";
-				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Blot uses the microphone only during a voice conversation you start.";
-				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Blot manages reminders in the lists you connect.";
-				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Blot transcribes your speech into chat messages during a voice conversation.";
+				INFOPLIST_KEY_CFBundleDisplayName = Ori;
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "Ori automates Mail and Notes only after you connect them.";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "Ori uses Bluetooth to connect your trusted devices.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Ori reads and updates the calendars you connect for your agents.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Ori uses the camera to attach photos and scan pairing QR codes.";
+				INFOPLIST_KEY_NSContactsUsageDescription = "Ori finds and updates contacts you allow your agents to use.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "Ori connects your iPhone to the agent running on your Mac.";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Ori uses the microphone only during a voice conversation you start.";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Ori manages reminders in the lists you connect.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "Ori transcribes your speech into chat messages during a voice conversation.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -670,7 +673,8 @@
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "yaroslavstrelkov.blot-agent.ios";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_MODULE_NAME = BlotIOS;
+				PRODUCT_NAME = Ori;
 				REGISTER_APP_GROUPS = YES;
 				SDKROOT = iphoneos;
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
@@ -696,7 +700,7 @@
 				DEVELOPMENT_TEAM = 9RPQ7DDSR4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ios/BlotWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Blot Widgets";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ori Widgets";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -727,7 +731,7 @@
 				DEVELOPMENT_TEAM = 9RPQ7DDSR4;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ios/BlotWidgets/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Blot Widgets";
+				INFOPLIST_KEY_CFBundleDisplayName = "Ori Widgets";
 				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

@@ -35,8 +35,12 @@ struct WorkspaceConflictsView: View {
                     WorkspaceFeedback()
                 }.padding(24)
             }
-            .navigationTitle(store.t("Conflicting changes"))
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button(store.t("Done")) { dismiss() } } }
+
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: store.t("Conflicting changes")) {
+                    Button(store.t("Done")) { dismiss() }
+                }
+            }.workspaceEditorChrome()
         }
         #if os(macOS)
         .frame(minWidth: 560, idealWidth: 680, minHeight: 440)

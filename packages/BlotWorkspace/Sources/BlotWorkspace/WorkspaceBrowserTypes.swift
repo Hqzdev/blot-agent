@@ -96,10 +96,25 @@ public enum WorkspaceBrowserResult: Sendable {
     case value(ChatJSON)
     case image(Data)
 }
+public struct WorkspaceBrowserProfileInfo: Codable, Equatable, Sendable, Identifiable {
+    public let id: UUID
+    public let name: String
+    public init(id: UUID, name: String) { self.id = id; self.name = name }
+}
 public protocol WorkspaceBrowserExecuting: Sendable {
     func prepare(_ command: WorkspaceBrowserCommand) async throws -> WorkspaceBrowserBinding
     func execute(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult
+    func browserProfiles() async -> [WorkspaceBrowserProfileInfo]
+    func copyCookies(_ transfer: WorkspaceCardContent.CookieTransfer) async throws -> Int
+    func beginManual(session: WorkspaceBrowserSessionKey, tabID: UUID) async throws
+    func endManual(session: WorkspaceBrowserSessionKey) async
     func stop(scope: WorkspaceBrowserScope?) async
+}
+public extension WorkspaceBrowserExecuting {
+    func browserProfiles() async -> [WorkspaceBrowserProfileInfo] { [] }
+    func copyCookies(_ transfer: WorkspaceCardContent.CookieTransfer) async throws -> Int { throw WorkspaceBrowserError.unavailable }
+    func beginManual(session: WorkspaceBrowserSessionKey, tabID: UUID) async throws { throw WorkspaceBrowserError.unavailable }
+    func endManual(session: WorkspaceBrowserSessionKey) async {}
 }
 public struct WorkspaceBrowserAccess: Codable, Equatable, Sendable {
     public var agents: Set<UUID>

@@ -4,6 +4,60 @@
   "completedTasks": 12,
   "documents": [
     {
+      "id": "web-same-domain",
+      "taskId": null,
+      "source": "docs/status/web-same-domain.md",
+      "downloadUrl": "/project-docs/status/web-same-domain.md",
+      "sha256": "97211d28f88dd8f9e9432eb7cfd9c7f70c07dd11b0e02b9e301fff97548bfa08",
+      "bytes": 6645,
+      "taskCompleted": false
+    },
+    {
+      "id": "blot-unification-plan",
+      "taskId": null,
+      "source": "docs/product/blot-unification-plan.md",
+      "downloadUrl": "/project-docs/product/blot-unification-plan.md",
+      "sha256": "d6ec3af3c758d656ca74325d89bfb10ba442ea772317d628bc93be3cc9b44602",
+      "bytes": 35129,
+      "taskCompleted": false
+    },
+    {
+      "id": "web-terminal-import",
+      "taskId": null,
+      "source": "docs/status/web-terminal-import.md",
+      "downloadUrl": "/project-docs/status/web-terminal-import.md",
+      "sha256": "2f1230132bda59b7684d272343f062e7798635f9cf97b3c97126558c16614404",
+      "bytes": 8407,
+      "taskCompleted": false
+    },
+    {
+      "id": "web-blot-auth",
+      "taskId": null,
+      "source": "docs/status/web-blot-auth.md",
+      "downloadUrl": "/project-docs/status/web-blot-auth.md",
+      "sha256": "b347f3da802ec7b5bd6886c85b1fd286f79c3bb6929a075ea16d3a6d09ee7709",
+      "bytes": 8607,
+      "taskCompleted": false
+    },
+    {
+      "id": "web-postgres-release",
+      "taskId": null,
+      "source": "docs/status/web-postgres-release.md",
+      "downloadUrl": "/project-docs/status/web-postgres-release.md",
+      "sha256": "601339ec452336b720c2a03bf64b9d5c7300299da091dc352a8741ebe7ecd3a7",
+      "bytes": 9612,
+      "taskCompleted": false
+    },
+    {
+      "id": "shared-chat-history",
+      "taskId": null,
+      "source": "docs/status/shared-chat-history.md",
+      "downloadUrl": "/project-docs/status/shared-chat-history.md",
+      "sha256": "fd2d6358d6cd9f332e36258a759432b30bc756136ce64d0fe1e85204f0ba6700",
+      "bytes": 10493,
+      "taskCompleted": false
+    },
+    {
       "id": "apple-apps",
       "taskId": null,
       "source": "docs/integrations/apple-apps.md",
@@ -53,8 +107,8 @@
       "taskId": null,
       "source": "docs/product/blot-product-plan.md",
       "downloadUrl": "/project-docs/product/blot-product-plan.md",
-      "sha256": "6b3c1edc332e71fd12de11f2911947121a1266f641059e99e0d0878057d2001c",
-      "bytes": 16670,
+      "sha256": "5b1fe3a04484426953aa86a1eb6ebc1cf315431692f81d9383ed69669691a5ca",
+      "bytes": 17217,
       "taskCompleted": false
     },
     {
@@ -62,8 +116,8 @@
       "taskId": null,
       "source": "docs/product/blot-technical-specification.md",
       "downloadUrl": "/project-docs/product/blot-technical-specification.md",
-      "sha256": "7f1c1326d59608b1bf0b6ba008b5dfe31db2398ea0791711ec4a9b8a5b41c4d9",
-      "bytes": 90317,
+      "sha256": "3eba01e7d30f20b8160dfe3d94d6712c1566f3d643e62a249ac7efa5fb7cda85",
+      "bytes": 91052,
       "taskCompleted": false
     },
     {
@@ -287,8 +341,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "3ba2c58f74b09bbfaf0a2e1d55405d79c7115e10a4fd4df21c656697f8fdc94c",
-      "bytes": 8488,
+      "sha256": "7153729dd6b3d693a6c01dc83aae7b8af3a3542b8b0583f65101a6406ae3135b",
+      "bytes": 9551,
       "taskCompleted": false
     },
     {

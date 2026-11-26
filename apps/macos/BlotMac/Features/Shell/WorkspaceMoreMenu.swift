@@ -57,7 +57,7 @@ struct WorkspaceMoreMenuCard: View {
             }
         }
         .padding(6).frame(width: 230)
-        .kPopover()
+        .kPopover(radius: 16)
     }
 }
 
@@ -73,8 +73,6 @@ private struct WorkspaceMenuRow: View {
                 Text(title).font(KFont.ui(13)).foregroundStyle(K.text).lineLimit(1)
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 10).frame(height: 30).contentShape(Rectangle())
-            .kHover(radius: K.rMd)
-        }.buttonStyle(KIconButtonStyle()).kFocusRing(radius: K.rMd)
+        }.buttonStyle(MacMenuRowStyle()).kFocusRing(radius: K.rMd)
     }
 }

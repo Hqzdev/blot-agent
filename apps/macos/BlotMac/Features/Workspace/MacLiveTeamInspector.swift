@@ -41,7 +41,7 @@ struct MacLiveTeamInspector: View {
                                 Button("Вся память") { navigate(.memory) }.buttonStyle(.plain)
                             case "Навыки":
                                 ForEach((store.snapshot.skills ?? []).filter { skill in !skill.archived && (store.snapshot.skillAssignments ?? []).contains { $0.skillID == skill.metadata.id && $0.agentID == agent?.metadata.id && $0.assigned } }, id: \.metadata.id) { skill in
-                                    Label(skill.name, systemImage: "shippingbox")
+                                    BlotLabel(skill.name, symbol: "shippingbox")
                                 }
                                 Button("Навыки агента") { navigate(.skills) }
                                     .buttonStyle(.plain).disabled(agent == nil)
@@ -66,7 +66,7 @@ struct MacLiveTeamInspector: View {
                 Text("Участники").foregroundStyle(.secondary)
                 ForEach(members, id: \.metadata.id) { member in
                     Button { editAgent(member.metadata.id) } label: {
-                        HStack(spacing: 10) { WorkspaceAvatarView(agent: member, size: 30); Text(member.name); Spacer(); Image(systemName: "chevron.right") }
+                        HStack(spacing: 10) { WorkspaceAvatarView(agent: member, size: 30); Text(member.name); Spacer(); BlotIcon(symbol: "chevron.right") }
                     }.buttonStyle(.plain)
                 }
             }
@@ -85,13 +85,13 @@ struct MacLiveTeamInspector: View {
             }
             ForEach(store.snapshot.schedules.filter { $0.agentId == agent?.metadata.id }, id: \.metadata.id) { schedule in
                 Button { store.selectedRecordID = schedule.metadata.id; navigate(.schedules) } label: {
-                    Label(schedule.name, systemImage: "clock.arrow.circlepath")
+                    BlotLabel(schedule.name, symbol: "clock.arrow.circlepath")
                 }.buttonStyle(.plain)
             }
             Button("Все расписания") { navigate(.schedules) }.buttonStyle(.plain)
             Text("Подключения").foregroundStyle(.secondary)
             Button("Все приложения") { navigate(.marketplace) }.buttonStyle(.plain)
-            Button { navigate(.files) } label: { Label("Файлы и документы", systemImage: "folder") }.buttonStyle(.plain)
+            Button { navigate(.files) } label: { BlotLabel("Файлы и документы", symbol: "folder") }.buttonStyle(.plain)
         }.font(.system(size: 12))
         .workspacePanelSheet(isPresented: $editingGroup) {
             WorkspaceGroupEditor(conversation: store.currentConversation, participants: store.snapshot.participants ?? [])

@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13CB0E70307BE25300C7CE8A"
-               BuildableName = "Blot.app"
+               BuildableName = "Ori.app"
                BlueprintName = "Blot"
                ReferencedContainer = "container:Blot.xcodeproj">
             </BuildableReference>
@@ -45,7 +45,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13CB0E70307BE25300C7CE8A"
-            BuildableName = "Blot.app"
+            BuildableName = "Ori.app"
             BlueprintName = "Blot"
             ReferencedContainer = "container:Blot.xcodeproj">
          </BuildableReference>
@@ -62,7 +62,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13CB0E70307BE25300C7CE8A"
-            BuildableName = "Blot.app"
+            BuildableName = "Ori.app"
             BlueprintName = "Blot"
             ReferencedContainer = "container:Blot.xcodeproj">
          </BuildableReference>

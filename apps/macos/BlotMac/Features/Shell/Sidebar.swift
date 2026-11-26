@@ -8,7 +8,7 @@ struct Sidebar: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                Text("Blot").font(KFont.sidebarTitle()).foregroundStyle(K.text)
+                Text("Ori").font(KFont.sidebarTitle()).foregroundStyle(K.text)
                 Spacer()
                 IconButton(icon: "magnifyingglass", help: "Поиск · ⌘K") { app.openCommandPalette() }
             }.padding(.leading, 18).padding(.trailing, 10).frame(height: K.headerHeight)
@@ -41,7 +41,7 @@ struct Sidebar: View {
             }.padding(10)
             HStack(spacing: 6) {
                 ProfileMenuButton()
-                Text(app.currentUser?.name ?? "Blot").font(KFont.label()).lineLimit(1)
+                Text(app.currentUser?.name ?? "Ori").font(KFont.label()).lineLimit(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 WorkspaceMoreMenu()
                 IconButton(icon: "gearshape", help: "Настройки · ⌘,") { app.openProfileSettings(.general) }

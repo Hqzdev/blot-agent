@@ -10,124 +10,6 @@ import SwiftUI
 
 // MARK: - Icon
 
-/// Hugeicons icons from agent.pen, bundled as vector template PDFs in Icons.xcassets
-/// (`hugeicons-<name>`). Call sites may pass either a Hugeicons name (kebab-case key) («square-pen») or the
-/// SF Symbol name used earlier («square.and.pencil»); unknown names fall back to SF Symbols.
-enum HugeIcons {
-    static let fromSFSymbol: [String: String] = [
-        "terminal": "terminal",
-        "plus": "plus",
-        "minus": "minus",
-        "pencil": "pencil",
-        "doc.text": "file-text",
-        "sidebar.left": "panel-left",
-        "sidebar.right": "panel-right",
-        "magnifyingglass": "search",
-        "bubble.left": "message-square",
-        "bubble.left.and.bubble.right": "messages-square",
-        "xmark": "x",
-        "square.and.pencil": "square-pen",
-        "puzzlepiece.extension": "puzzle",
-        "line.3.horizontal.decrease": "list-filter",
-        "envelope": "mail",
-        "clock": "clock",
-        "checkmark.circle": "circle-check",
-        "checkmark": "check",
-        "arrow.triangle.pull": "git-pull-request",
-        "arrow.triangle.branch": "workflow",
-        "point.3.connected.trianglepath.dotted": "network",
-        "waveform.path.ecg": "activity",
-        "stop": "square",
-        "sparkle": "sparkle",
-        "smallcircle.filled.circle": "circle-dot",
-        "circle": "circle",
-        "play": "play",
-        "pause": "pause",
-        "person": "user",
-        "person.2": "users",
-        "person.badge.plus": "user-plus",
-        "mic": "mic",
-        "lock": "lock",
-        "list.bullet": "list",
-        "gearshape": "settings",
-        "gauge.with.dots.needle.33percent": "gauge",
-        "flag": "flag",
-        "eye": "eye",
-        "exclamationmark.shield": "shield-alert",
-        "checkmark.shield": "shield-check",
-        "exclamationmark.circle": "circle-alert",
-        "ellipsis": "ellipsis",
-        "cursorarrow.click": "mouse-pointer-click",
-        "chevron.down": "chevron-down",
-        "chevron.up": "chevron-up",
-        "bell": "bell",
-        "arrow.up.left.and.arrow.down.right": "maximize-2",
-        "arrow.up": "arrow-up",
-        "arrow.right": "arrow-right",
-        "folder": "folder",
-        "folder.fill": "folder-open",
-        "square.grid.2x2": "grid-2x2",
-        "server": "server",
-        "desktopcomputer": "laptop",
-        "display": "monitor",
-        "rectangle.portrait.and.arrow.right": "log-out",
-        "bolt": "zap",
-        "arrow.counterclockwise": "rotate-ccw",
-        "chevron.left": "chevron-left",
-        "chevron.right": "chevron-right",
-        "trash": "trash-2",
-        "keyboard": "keyboard",
-        "cpu": "cpu",
-        "globe": "globe",
-        "shield": "shield",
-        "key": "key",
-        "sun.max": "sun",
-        "chart.bar": "chart-bar",
-        "slider.horizontal.3": "sliders-horizontal",
-        "chevron.left.forwardslash.chevron.right": "code",
-        "arrow.up.right.square": "square-arrow-out-up-right",
-    ]
-
-    /// Kebab-case names bundled as `hugeicons-<name>` that have no SF Symbol alias above.
-    private static let extra: Set<String> = ["git-branch", "laptop", "monitor", "log-out", "zap", "rotate-ccw",
-                                             "chevron-left", "chevron-right", "trash-2", "sun", "chart-bar",
-                                             "sliders-horizontal", "code", "square-arrow-out-up-right"]
-
-    private static let bundled = Set(fromSFSymbol.values).union(extra)
-
-    /// Asset name for a Hugeicons or SF Symbol name, or nil if there is no Hugeicons equivalent.
-    static func asset(for name: String) -> String? {
-        if bundled.contains(name) { return "hugeicons-" + name }
-        return fromSFSymbol[name].map { "hugeicons-" + $0 }
-    }
-}
-
-/// Hugeicons glyph that takes the surrounding foreground style (for buttons and chips).
-struct HugeIconImage: View {
-    let name: String
-    var size: CGFloat = 16
-
-    init(_ name: String, size: CGFloat = 16) {
-        self.name = name
-        self.size = size
-    }
-
-    var body: some View {
-        if let asset = HugeIcons.asset(for: name) {
-            Image(asset)
-                .renderingMode(.template)
-                .resizable()
-                .interpolation(.high)
-                .aspectRatio(contentMode: .fit)
-                .frame(width: size, height: size)
-        } else {
-            Image(systemName: name)
-                .font(.system(size: size * 0.82))
-                .frame(width: size, height: size)
-        }
-    }
-}
-
 struct KIcon: View {
     let name: String
     var size: CGFloat = 16
@@ -142,7 +24,7 @@ struct KIcon: View {
     }
 
     var body: some View {
-        HugeIconImage(name, size: size)
+        BlotIcon(symbol: name, size: size)
             .fontWeight(weight)
             .foregroundStyle(color)
     }
@@ -258,7 +140,7 @@ struct KButton: View {
                         .tint(kind == .primary ? K.onInverse : K.text2)
                         .frame(width: 14, height: 14)
                 } else if let icon {
-                    HugeIconImage(icon, size: 14)
+                    BlotIcon(symbol: icon, size: 14)
                 }
                 Text(title).lineLimit(1)
             }
@@ -511,7 +393,7 @@ struct SectionDisclosure: View {
 
 // MARK: - Avatars and brand
 
-/// Role avatar from agent.pen («Face 34 / …»): the role's Blot in a circle, no motion.
+/// Role avatar from agent.pen («Face 34 / …»): the role's Ori in a circle, no motion.
 struct FaceAvatar: View {
     let role: AgentRole
     var size: CGFloat = 32

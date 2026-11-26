@@ -18,7 +18,7 @@ struct PhoneRootView: View {
                             VStack(alignment: .leading, spacing: BlotSpace.s10) {
                                 Text("Connect to your Mac").blotFont(.heading).foregroundStyle(BlotColor.text)
                                     .accessibilityAddTraits(.isHeader)
-                                Text("Open Blot on your Mac, choose Devices → Connect iPhone, then scan the QR code.")
+                                Text("Open Ori on your Mac, choose Devices → Connect iPhone, then scan the QR code.")
                                     .blotFont(.body).foregroundStyle(BlotColor.textSecondary)
                             }
                             .padding(.vertical, BlotSpace.element)
@@ -54,7 +54,7 @@ struct PhoneRootView: View {
                         }
                     }
                     .phoneList()
-                    .navigationTitle("Blot")
+                    .navigationTitle("Ori")
                 }
             }
         }

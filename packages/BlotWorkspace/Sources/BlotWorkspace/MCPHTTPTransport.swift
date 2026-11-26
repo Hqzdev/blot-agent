@@ -20,6 +20,7 @@ public actor MCPHTTPTransport: MCPTransport {
         guard !closed else { throw MCPError.unavailable }
         var request = URLRequest(url: URL(string: configuration.endpoint)!)
         request.httpMethod = "POST"; request.httpBody = try WorkspaceCoding.encode(message)
+        for (key, value) in configuration.httpHeaders ?? [:] { request.setValue(value, forHTTPHeaderField: key) }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json, text/event-stream", forHTTPHeaderField: "Accept")
         if !configuration.bearerToken.isEmpty { request.setValue("Bearer " + configuration.bearerToken, forHTTPHeaderField: "Authorization") }

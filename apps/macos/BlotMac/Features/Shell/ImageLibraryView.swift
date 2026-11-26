@@ -68,7 +68,7 @@ private struct LibraryImageCell: View {
                 self.error = error.localizedDescription
             }
         }
-        .contextMenu { Button("Remove from library", role: .destructive, action: remove) }
+        .macCommandMenu { Button("Remove from library", role: .destructive, action: remove) }
         .sheet(isPresented: $previewing) {
             KSheet(item.name, width: 700) {
                 if let image { Image(nsImage: image).resizable().scaledToFit().frame(maxWidth: .infinity, maxHeight: 500) }

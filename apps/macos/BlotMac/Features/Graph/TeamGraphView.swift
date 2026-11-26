@@ -94,7 +94,7 @@ private struct RunGraphCanvas: View {
                     let to = point(edge.to)
                     Button { select(.edge(edge.source)) } label: {
                         HStack(spacing: 6) {
-                            Image(systemName: "arrow.right").font(.system(size: 10, weight: .semibold))
+                            BlotIcon(symbol: "arrow.right", size: 10)
                                 .foregroundStyle(K.text2).accessibilityHidden(true)
                             Text(edge.label).font(KFont.ui(11)).foregroundStyle(K.text2).lineLimit(1)
                         }
@@ -117,7 +117,7 @@ private struct RunGraphCanvas: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(node.title).font(KFont.label()).foregroundStyle(K.text).lineLimit(2)
                                 HStack(spacing: 6) {
-                                    Image(systemName: status.tone.icon).font(.system(size: 10, weight: .semibold))
+                                    BlotIcon(symbol: status.tone.icon, size: 10)
                                         .foregroundStyle(status.tone.color).accessibilityHidden(true)
                                     Text(status.label + " · " + (node.kind == "TASK" ? "task" : "specialist"))
                                         .font(KFont.mono(11)).foregroundStyle(K.text2).lineLimit(1)

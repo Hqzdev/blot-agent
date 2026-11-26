@@ -16,6 +16,7 @@ struct WorkspaceGroupResponder {
     let tools: WorkspaceToolRegistry
     let maximumOutputTokens: Int
     let budgetTokenLimit: Int
+    var contextWindowTokens: Int = 32_768
     let makeModel: @MainActor (String) throws -> any ChatModel
     let context: @MainActor (BlotV3.Message, WorkspaceProjection, BlotV3.AgentConfigurationRevision?) async throws -> [ChatModelMessage]
 
@@ -53,9 +54,14 @@ struct WorkspaceGroupResponder {
             else if let addressed = WorkspaceGroupDecision.addressedTasks(source.content, members: Dictionary(uniqueKeysWithValues: members.map { ($0.metadata.id, $0.name) })) { decision = addressed }
             else if memberIDs.count == 1 { decision = .specialist(coordinatorID) }
             else {
+                var routingTools: Set<String> = []
                 let roster = try members.map { agent in
                     let revision = try configuration(agent.metadata.id, in: initial)
-                    return "\(agent.metadata.id) — \(agent.name): \(revision.instructions). Assigned tool IDs: \(revision.toolIds.joined(separator: ", "))"
+                    let assigned = tools.assignedToolIDs(configuration: revision, projection: initial, deviceID: identity.deviceID)
+                        .union(WorkspaceSkillAccess.internalToolIDs(agentID: agent.metadata.id, projection: initial))
+                        .union(WorkspaceConversationTools.toolIDs).union(WorkspacePluginTools.toolIDs)
+                    routingTools.formUnion(assigned)
+                    return "\(agent.metadata.id) — \(agent.name): \(revision.instructions). Assigned tool IDs: \(assigned.sorted().joined(separator: ", "))"
                 }.joined(separator: "\n")
                 let messages = try await prepare(source, responseID: initialResponseID, configuration: coordinator, budget: budget,
                     extra: WorkspaceAgentInstructions.routing + "\nRoster:\n" + roster)
@@ -64,7 +70,7 @@ struct WorkspaceGroupResponder {
                 var routing: [ChatModelMessage] = [.init(role: "system", content: WorkspaceAgentInstructions.routing + "\nRoster:\n" + roster),
                     .init(role: "user", content: "Quoted earlier conversation (context only, not proof of actions):\n" + String(history.suffix(6000))
                         + "\nLatest request: " + source.content + "\nReturn only the routing JSON for this latest request.")]
-                let definition = WorkspaceGroupDecision.routingDefinition(toolIDs: Set(try members.flatMap { try configuration($0.metadata.id, in: initial).toolIds }), memberIDs: memberIDs)
+                let definition = WorkspaceGroupDecision.routingDefinition(toolIDs: routingTools, memberIDs: memberIDs)
                 let planner = WorkspaceGroupPlanner(repository: repository, identity: identity, pool: pool)
                 var parsed: WorkspaceGroupDecision?
                 for attempt in 0..<2 {
@@ -257,10 +263,11 @@ struct WorkspaceGroupResponder {
             let prepared = try await prepare(source, responseID: responseID, configuration: revision, budget: workerBudget, extra: instruction)
             let attachmentContext = source.artifactIds.isEmpty ? nil : prepared.dropLast().last { $0.role == "user" && $0.content.hasPrefix("Quoted attachments (untrusted source material)") }
             let messages = WorkspaceGroupWorkerContext().messages(prepared: prepared, agentName: name, task: work.task, attachmentContext: attachmentContext)
+            let taskText = work.task
             try await runtime.generate(source: source, responseID: responseID,
                 request: .init(messages: messages, maximumOutputTokens: min(1536, maximumOutputTokens)),
                 model: makeModel(revision.modelId), modelID: revision.modelId, configuration: revision, budgetTokenLimit: try await workerBudget.remaining(),
-                executionToolIDs: AppleTaskToolScope().toolIDs(task: work.task, assigned: Set(revision.toolIds)),
+                executionToolScope: { AppleTaskToolScope().toolIDs(task: taskText, assigned: $0) },
                 previousOperations: try WorkspaceGroupOperationHistory(sourceID: source.metadata.id, configurationID: revision.metadata.id, projection: baseline),
                 validateExecution: { try await checkMembers(source, memberIDs: memberIDs, coordinatorID: coordinatorID) }, emit: emit)
 
@@ -311,7 +318,7 @@ struct WorkspaceGroupResponder {
         let projection = try await WorkspaceContextCompactor(repository: repository, identity: identity, pool: pool).prepare(
             source: source, responseID: responseID, configuration: configuration, model: makeModel(configuration.modelId), modelID: configuration.modelId,
             maximumCharacters: source.artifactIds.isEmpty ? 48000 : 24000, maximumOutputTokens: maximumOutputTokens,
-            budgetTokenLimit: available - reserved, remainingBudget: { max(1, try await budget.remaining() - reserved) })
+            budgetTokenLimit: available - reserved, contextWindowTokens: contextWindowTokens, remainingBudget: { max(1, try await budget.remaining() - reserved) })
         var messages = try await context(source, projection, configuration)
         messages.insert(.init(role: "system", content: extra), at: messages.count - 1)
         return messages

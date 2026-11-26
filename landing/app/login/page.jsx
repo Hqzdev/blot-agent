@@ -1,10 +1,14 @@
 import { LoginPage } from "@/components/auth/LoginPage";
 import { nativeAttempt, attemptQuery } from "@/lib/auth/browser-session.mjs";
 import { yandexConfiguration } from "@/lib/auth/config.mjs";
+import { websiteLoginDestination } from "@/lib/auth/browser-clients.mjs";
+import { redirect } from "next/navigation";
 
-export const metadata = { title: "Войти в Blot", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata = { title: "Войти в Ori", robots: { index: false, follow: false }, referrer: "no-referrer" };
 export default async function Login({ searchParams }) {
   const values = await searchParams;
+  const destination = websiteLoginDestination(values);
+  if (destination) redirect(destination);
   const query = new URLSearchParams();
   const standalone = Object.keys(values).every(key => ["intent", "auth_error"].includes(key));
   for (const [key, value] of Object.entries(values)) {

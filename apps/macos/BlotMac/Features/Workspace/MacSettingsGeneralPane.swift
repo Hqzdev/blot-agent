@@ -16,7 +16,7 @@ struct MacSettingsGeneralPane: View {
                 }
                 Divider()
                 MacTeamSettingsRow(title: "Учётные данные", detail: "Ключи и токены входа хранятся в системной Связке ключей.") {
-                    Image(systemName: "lock.shield").foregroundStyle(.secondary)
+                    BlotIcon(symbol: "lock.shield").foregroundStyle(.secondary)
                 }
             }
             MacTeamSettingsSection(title: "Общие") {
@@ -25,7 +25,7 @@ struct MacSettingsGeneralPane: View {
                         options: [.init("System default", "system"), .init("Русский", "ru"), .init("English", "en")], showsTitle: false)
                 }
                 Divider()
-                MacTeamSettingsToggle(title: "Открывать при входе в систему", detail: "Запускать Blot вместе с macOS.",
+                MacTeamSettingsToggle(title: "Открывать при входе в систему", detail: "Запускать Ori вместе с macOS.",
                     isOn: Binding(get: { launchesAtLogin }, set: setLaunchAtLogin))
             }
             WorkspaceVoiceSettingsView()

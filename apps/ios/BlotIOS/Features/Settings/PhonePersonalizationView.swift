@@ -45,8 +45,6 @@ struct PhonePersonalizationView: View {
     }
     private func options<Value>(_ values: [Value], title: String, selection: Binding<Value>) -> some View
     where Value: RawRepresentable & Identifiable & Hashable, Value.RawValue == String {
-        Picker(store.settingsText(title), selection: selection) {
-            ForEach(values) { value in Text(store.t(value.rawValue)).tag(value) }
-        }.labelsHidden()
+        WorkspaceChoice(title: store.settingsText(title), selection: selection, options: values.map { .init($0, store.t($0.rawValue)) }, showsTitle: false)
     }
 }

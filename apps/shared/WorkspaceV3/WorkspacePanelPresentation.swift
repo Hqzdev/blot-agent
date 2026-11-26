@@ -1,3 +1,4 @@
+import BlotDesign
 import SwiftUI
 
 extension EnvironmentValues {
@@ -97,7 +98,18 @@ struct WorkspacePanelFormHeader<Actions: View>: View {
                     HStack { Spacer(minLength: 0); HStack(spacing: 8, content: actions).fixedSize() }
                 }
             }.padding(14)
-            Divider()
-        }
+            BlotDivider()
+        }.background(WorkspaceStyle.canvas).workspacePanelControls()
+    }
+}
+
+
+extension View {
+    @ViewBuilder func workspaceEditorChrome() -> some View {
+        #if os(macOS)
+        self.toolbarVisibility(.hidden, for: .windowToolbar)
+        #else
+        self.toolbarVisibility(.hidden, for: .navigationBar)
+        #endif
     }
 }

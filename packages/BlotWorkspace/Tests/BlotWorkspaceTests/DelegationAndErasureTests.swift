@@ -122,13 +122,17 @@ private actor DelegatedModel: ChatModel {
     try Data("other owner".utf8).write(to: unrelated.appendingPathComponent("keep.txt"))
     let credentials = DelegationCredentials()
     await credentials.write(Data("secret".utf8), name: "device-keys:" + identity.workspaceID.uuidString + ":old-device")
+    await credentials.write(Data("vault secret".utf8), name: "vault:" + identity.ownerID.uuidString)
     await credentials.write(Data("other".utf8), name: "profile:" + other.uuidString)
     let erasure = WorkspaceAccountErasure(root: directory, credentials: credentials)
     try erasure.mark(identity)
     await #expect(throws: WorkspaceCredentialError.invalidValue) { try await erasure.resume { _ in throw WorkspaceCredentialError.invalidValue } }
-    #expect(!FileManager.default.fileExists(atPath: target.path))
+    // Cleanup needs the account's browser profile identifiers until its callback succeeds.
+    #expect(FileManager.default.fileExists(atPath: target.path))
     #expect(FileManager.default.fileExists(atPath: directory.appendingPathComponent("pending-account-deletion.json").path))
     try await erasure.resume()
+    #expect(!FileManager.default.fileExists(atPath: target.path))
+    #expect(await credentials.read("vault:" + identity.ownerID.uuidString) == nil)
     #expect(!FileManager.default.fileExists(atPath: directory.appendingPathComponent("pending-account-deletion.json").path))
     #expect(await credentials.read("device-keys:" + identity.workspaceID.uuidString + ":old-device") == nil)
     #expect(await credentials.read("profile:" + other.uuidString) != nil)
@@ -288,4 +292,19 @@ private actor DelegationCancellationProbe {
     #expect(received.goal == edited.goal)
     #expect(try await !p.mac.executionAdmitted(received, identity: p.macID))
     #expect(try await !WorkspaceTaskLifecycle(repository: p.mac, identity: p.macID).claim(id))
+}
+
+@Test func delegatedSkillPinsItsRevisionInTheSignedRequest() async throws {
+    let pair = try await DelegationPair(); defer { cleanupWorkspaceTestStorage(pair.directory) }
+    try await pair.pair()
+    let agent = try await WorkspaceAgentService(repository: pair.phone, identity: pair.phoneID).save(commandID: UUID(), draft: .init(name: "Taught worker", instructions: "Follow skills", toolIDs: ["desktop_replay"]))
+    let chat = try await WorkspaceChatService(repository: pair.phone, identity: pair.phoneID).createConversation(commandID: UUID(), title: "Skill", agentID: agent)
+    let skill = try await WorkspaceSkillService(repository: pair.phone, identity: pair.phoneID).save(commandID: UUID(), name: "Recorded task", instructions: "Run the selected recording", parameters: [], toolIDs: ["desktop_replay"])
+    let saved = try #require(try await pair.phone.record(BlotV3.Skill.self, id: skill, workspaceID: pair.phoneID.workspaceID))
+    try await WorkspaceSkillAssignmentService(repository: pair.phone, identity: pair.phoneID).set(commandID: UUID(), skillID: skill, agentID: agent, assigned: true, expectedVersion: 0)
+    let id = try await pair.sender.create(commandID: UUID(), conversationID: chat, agentID: agent, executorID: pair.macID.deviceID, goal: "Run the selected recording", skillRevisionID: saved.activeRevisionId)
+    try await pair.transfer()
+    let task = try #require(try await pair.mac.record(BlotV3.Task.self, id: id, workspaceID: pair.macID.workspaceID))
+    #expect(task.skillRevisionId == saved.activeRevisionId)
+    try await pair.receiver.authorize(task)
 }

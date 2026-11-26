@@ -8,18 +8,18 @@ struct WorkspacePanelDateField: View {
     var calendarOnly = false
     @State private var expanded = false
     @State private var month = Date()
-    @Environment(\.workspacePanelNavigation) private var panel
+    @Environment(\.timeZone) private var timeZone
     @Environment(\.calendar) private var sourceCalendar
     @Environment(WorkspaceStore.self) private var store
     private var ru: Bool { store.language == "ru" }
-    private var calendar: Calendar { var value = sourceCalendar; value.locale = Locale(identifier: store.language); return value }
+    private var calendar: Calendar { var value = sourceCalendar; value.locale = Locale(identifier: store.language); value.timeZone = timeZone; return value }
     var body: some View {
-        if panel == nil { DatePicker(title, selection: $date, displayedComponents: calendarOnly ? .date : .hourAndMinute) }
-        else if calendarOnly {
+        if calendarOnly {
             Button { month = date; expanded = true } label: {
-                HStack { Text(title); Spacer(); Text(date, format: .dateTime.day().month().year()); Image(systemName: "calendar") }
-                    .padding(12).frame(maxWidth: .infinity).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 12))
-            }.buttonStyle(.plain).popover(isPresented: $expanded, arrowEdge: .bottom) { calendarPage }
+                HStack { Text(title); Spacer(); Text(date, format: .dateTime.day().month().year()); BlotIcon(.calendar, size: 18) }
+                    .padding(12).frame(maxWidth: .infinity, minHeight: 44).background(WorkspaceStyle.canvas, in: RoundedRectangle(cornerRadius: 16))
+                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(BlotColor.edge))
+            }.buttonStyle(BlotPlainButtonStyle()).blotFocusRing(radius: 16).popover(isPresented: $expanded, arrowEdge: .bottom) { calendarPage }
         } else {
             HStack(alignment: .top, spacing: 10) {
                 WorkspaceChoice(title: title, selection: component(.hour), options: (0..<24).map { .init($0, String(format: "%02d", $0)) })
@@ -33,11 +33,11 @@ struct WorkspacePanelDateField: View {
     private var calendarPage: some View {
         VStack(spacing: 16) {
             HStack {
-                Button { moveMonth(-1) } label: { Image(systemName: "chevron.left") }.accessibilityLabel(ru ? "Предыдущий месяц" : "Previous month")
+                Button { moveMonth(-1) } label: { BlotIcon(.chevronLeft, size: 18).frame(width: 44, height: 44) }.buttonStyle(BlotPlainButtonStyle()).accessibilityLabel(ru ? "Предыдущий месяц" : "Previous month")
                 Spacer()
                 Text(month.formatted(.dateTime.month(.wide).year().locale(Locale(identifier: store.language)))).font(.headline)
                 Spacer()
-                Button { moveMonth(1) } label: { Image(systemName: "chevron.right") }.accessibilityLabel(ru ? "Следующий месяц" : "Next month")
+                Button { moveMonth(1) } label: { BlotIcon(.chevronRight, size: 18).frame(width: 44, height: 44) }.buttonStyle(BlotPlainButtonStyle()).accessibilityLabel(ru ? "Следующий месяц" : "Next month")
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 4), count: 7), spacing: 4) {
                 ForEach(0..<7, id: \.self) { index in
@@ -46,14 +46,14 @@ struct WorkspacePanelDateField: View {
                 ForEach(Array(days.enumerated()), id: \.offset) { _, day in
                     if let day {
                         Button { select(day) } label: {
-                            Text(calendar.component(.day, from: day).formatted()).monospacedDigit().frame(width: 30, height: 30)
+                            Text(calendar.component(.day, from: day).formatted()).monospacedDigit().frame(maxWidth: .infinity, minHeight: 44)
                                 .foregroundStyle(calendar.isDate(day, inSameDayAs: date) ? BlotColor.onInverse : WorkspaceStyle.ink)
                                 .background(calendar.isDate(day, inSameDayAs: date) ? BlotColor.inverse : .clear, in: Circle())
-                        }.buttonStyle(.plain).accessibilityLabel(day.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: store.language))))
-                    } else { Color.clear.frame(width: 30, height: 30) }
+                        }.buttonStyle(BlotPlainButtonStyle()).blotFocusRing().accessibilityAddTraits(calendar.isDate(day, inSameDayAs: date) ? .isSelected : []).accessibilityLabel(day.formatted(.dateTime.weekday(.wide).day().month(.wide).year().locale(Locale(identifier: store.language))))
+                    } else { Color.clear.frame(maxWidth: .infinity, minHeight: 44) }
                 }
             }
-        }.padding(16).frame(width: 280).background(WorkspaceStyle.canvas).workspacePanelControls().presentationCompactAdaptation(.popover)
+        }.padding(16).frame(width: 364).background(WorkspaceStyle.canvas).workspacePanelControls().presentationBackground(WorkspaceStyle.canvas).presentationCornerRadius(22).presentationCompactAdaptation(.popover)
     }
     private var days: [Date?] {
         guard let start = calendar.dateInterval(of: .month, for: month)?.start, let range = calendar.range(of: .day, in: .month, for: start) else { return [] }

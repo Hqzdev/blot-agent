@@ -45,9 +45,10 @@ final class WorkspaceBrowserAuthenticator {
                 activeAttempt = attempt
                 let session = makeSession(authorization, attempt) { [weak self] callback, error in
                     _Concurrency.Task { @MainActor in
-                        let result: Result<URL, Error> = callback.map { .success($0) }
-                            ?? .failure(error ?? WorkspaceCloudError.authenticationRequired)
-                        self?.complete(id, with: result)
+                        if let callback { self?.complete(id, with: .success(callback)) }
+                        else if (error as? ASWebAuthenticationSessionError)?.code == .canceledLogin {
+                            self?.complete(id, with: .failure(CancellationError()))
+                        } else { self?.complete(id, with: .failure(error ?? WorkspaceCloudError.authenticationRequired)) }
                     }
                 }
                 attempt.session = session

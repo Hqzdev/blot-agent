@@ -45,7 +45,7 @@ struct WorkspacePairedDeviceCard: View {
         .overlay { RoundedRectangle(cornerRadius: 20).strokeBorder(WorkspaceStyle.secondary.opacity(0.12)) }
         .accessibilityIdentifier("paired-device.\(device.id)")
         .sheet(isPresented: $showingDetails) { details }
-        .confirmationDialog(ru ? "Отозвать доступ у «\(device.name)»?" : "Revoke access for “\(device.name)”?",
+        .workspaceConfirmationDialog(ru ? "Отозвать доступ у «\(device.name)»?" : "Revoke access for “\(device.name)”?",
                             isPresented: $confirmingRevoke, titleVisibility: .visible) {
             Button(ru ? "Отозвать доступ" : "Revoke access", role: .destructive) {
                 _Concurrency.Task { await revoke() }
@@ -59,7 +59,7 @@ struct WorkspacePairedDeviceCard: View {
 
     private var identity: some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol).font(.system(size: 24, weight: .medium))
+            BlotIcon(symbol: symbol, size: 24)
                 .frame(width: 48, height: 48)
                 .background(WorkspaceStyle.secondary.opacity(0.08), in: .rect(cornerRadius: 14))
                 .accessibilityHidden(true)
@@ -77,29 +77,29 @@ struct WorkspacePairedDeviceCard: View {
                 .padding(.horizontal, 8).padding(.vertical, 5)
                 .background(device.revoked ? WorkspaceStyle.secondary.opacity(0.08) : Color.green.opacity(0.12), in: Capsule())
                 .fixedSize()
-            Menu {
+            WorkspaceMenu {
                 Button { showingDetails = true } label: {
-                    Label(ru ? "Об устройстве" : "Device details", systemImage: "info.circle")
+                    BlotLabel(ru ? "Об устройстве" : "Device details", symbol: "info.circle")
                 }
                 Button {
                     WorkspaceClipboard.copy(device.id.uuidString)
                     copiedID = true
                 } label: {
-                    Label(ru ? (copiedID ? "ID скопирован" : "Скопировать ID") : (copiedID ? "ID copied" : "Copy device ID"), systemImage: "doc.on.doc")
+                    BlotLabel(ru ? (copiedID ? "ID скопирован" : "Скопировать ID") : (copiedID ? "ID copied" : "Copy device ID"), symbol: "doc.on.doc")
                 }
                 Button { _Concurrency.Task { await refresh() } } label: {
-                    Label(ru ? "Обновить статус" : "Refresh status", systemImage: "arrow.clockwise")
+                    BlotLabel(ru ? "Обновить статус" : "Refresh status", symbol: "arrow.clockwise")
                 }.disabled(store.pairingCommands == nil)
                 if !device.revoked && device.id != store.snapshot.localDeviceID {
-                    Divider()
+                    WorkspaceMenuGap()
                     Button(role: .destructive) { confirmingRevoke = true } label: {
-                        Label(ru ? "Отозвать доступ" : "Revoke access", systemImage: "xmark.shield")
+                        BlotLabel(ru ? "Отозвать доступ" : "Revoke access", symbol: "xmark.shield")
                     }.disabled(store.pairingCommands == nil)
                 }
             } label: {
                 Group {
                     if working { ProgressView().controlSize(.small) }
-                    else { Image(systemName: "ellipsis").font(.body.weight(.semibold)) }
+                    else { BlotIcon(symbol: "ellipsis").font(.body.weight(.semibold)) }
                 }
                 .frame(width: 44, height: 44).contentShape(Rectangle())
             }
@@ -112,7 +112,7 @@ struct WorkspacePairedDeviceCard: View {
 
     private var details: some View {
         NavigationStack {
-            Form {
+            WorkspacePanelForm {
                 LabeledContent(ru ? "Имя" : "Name") { Text(verbatim: device.name) }
                 LabeledContent(ru ? "Тип" : "Type", value: kind)
                 LabeledContent(ru ? "Статус" : "Status", value: status)
@@ -120,10 +120,12 @@ struct WorkspacePairedDeviceCard: View {
                     Text(device.id.uuidString).font(.caption.monospaced()).textSelection(.enabled)
                 }
             }
-            .navigationTitle(ru ? "Об устройстве" : "Device details")
-            .toolbar { ToolbarItem(placement: .confirmationAction) {
-                Button(ru ? "Готово" : "Done") { showingDetails = false }
-            } }
+
+            .safeAreaInset(edge: .top, spacing: 0) {
+                WorkspacePanelFormHeader(title: ru ? "Об устройстве" : "Device details") {
+                    Button(ru ? "Готово" : "Done") { showingDetails = false }
+                }
+            }.workspaceEditorChrome()
         }
         #if os(iOS)
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)

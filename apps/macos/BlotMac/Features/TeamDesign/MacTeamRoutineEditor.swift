@@ -104,7 +104,7 @@ struct MacTeamRoutineEditor: View {
                     routine.agentID = presentation.agent.id
                 }
             }
-            .confirmationDialog("Удалить расписание из демо?", isPresented: $confirmDelete) {
+            .workspaceConfirmationDialog("Удалить расписание из демо?", isPresented: $confirmDelete) {
                 Button("Удалить", role: .destructive) {
                     presentation.demo.update { $0.routines.removeAll { $0.id == routine.id } }
                     dismiss()

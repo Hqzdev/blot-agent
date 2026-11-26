@@ -626,7 +626,9 @@ extension BlotV3 {
         public let pinned: Bool
         public let archived: Bool
         public let kind: ConversationKind?
-        public init(metadata: RecordMetadata, agentId: UUID? = nil, title: String, mobileOwned: Bool, pinned: Bool, archived: Bool, kind: ConversationKind? = nil) throws {
+        public let parentConversationId: UUID?
+        public let parentMessageId: UUID?
+        public init(metadata: RecordMetadata, agentId: UUID? = nil, title: String, mobileOwned: Bool, pinned: Bool, archived: Bool, kind: ConversationKind? = nil, parentConversationId: UUID? = nil, parentMessageId: UUID? = nil) throws {
 
 
             self.metadata = metadata
@@ -636,6 +638,8 @@ extension BlotV3 {
             self.pinned = pinned
             self.archived = archived
             self.kind = kind
+            self.parentConversationId = parentConversationId
+            self.parentMessageId = parentMessageId
         }
         public func encode(to encoder: Encoder) throws {
             var c = encoder.container(keyedBy: CodingKeys.self)
@@ -646,8 +650,10 @@ extension BlotV3 {
             try c.encode(pinned, forKey: .pinned)
             try c.encode(archived, forKey: .archived)
             try c.encode(kind, forKey: .kind)
+            try c.encodeIfPresent(parentConversationId, forKey: .parentConversationId)
+            try c.encodeIfPresent(parentMessageId, forKey: .parentMessageId)
         }
-        private enum CodingKeys: String, CodingKey { case metadata, agentId, title, mobileOwned, pinned, archived, kind }
+        private enum CodingKeys: String, CodingKey { case metadata, agentId, title, mobileOwned, pinned, archived, kind, parentConversationId, parentMessageId }
         public init(from decoder: Decoder) throws {
             let c = try decoder.container(keyedBy: CodingKeys.self)
             try self.init(
@@ -657,7 +663,9 @@ extension BlotV3 {
                 mobileOwned: try c.decode(Bool.self, forKey: .mobileOwned),
                 pinned: try c.decode(Bool.self, forKey: .pinned),
                 archived: try c.decode(Bool.self, forKey: .archived),
-                kind: try c.decodeIfPresent(ConversationKind.self, forKey: .kind))
+                kind: try c.decodeIfPresent(ConversationKind.self, forKey: .kind),
+                parentConversationId: try c.decodeIfPresent(UUID.self, forKey: .parentConversationId),
+                parentMessageId: try c.decodeIfPresent(UUID.self, forKey: .parentMessageId))
         }
     }
 }
@@ -2066,6 +2074,64 @@ extension BlotV3 {
                 inputTokens: try c.decodeIfPresent(Int.self, forKey: .inputTokens),
                 outputTokens: try c.decodeIfPresent(Int.self, forKey: .outputTokens),
                 state: try c.decode(ModelStepState.self, forKey: .state))
+        }
+    }
+}
+
+extension BlotV3 {
+    public struct ConversationCard: BlotWorkspaceRecord {
+        public static let recordKind = "ConversationCard"
+        public let metadata: RecordMetadata
+        public let messageId: UUID
+        public let operationId: UUID
+        public let executorDeviceId: UUID
+        public let kind: String
+        public let state: String
+        public let expiresAt: Date?
+        public let payloadJSON: String
+        public let responseJSON: String?
+        public let updatedByDeviceId: UUID
+        public init(metadata: RecordMetadata, messageId: UUID, operationId: UUID, executorDeviceId: UUID, kind: String, state: String, expiresAt: Date? = nil, payloadJSON: String, responseJSON: String? = nil, updatedByDeviceId: UUID) throws {
+
+
+            self.metadata = metadata
+            self.messageId = messageId
+            self.operationId = operationId
+            self.executorDeviceId = executorDeviceId
+            self.kind = kind
+            self.state = state
+            self.expiresAt = expiresAt
+            self.payloadJSON = payloadJSON
+            self.responseJSON = responseJSON
+            self.updatedByDeviceId = updatedByDeviceId
+        }
+        public func encode(to encoder: Encoder) throws {
+            var c = encoder.container(keyedBy: CodingKeys.self)
+            try c.encode(metadata, forKey: .metadata)
+            try c.encode(messageId, forKey: .messageId)
+            try c.encode(operationId, forKey: .operationId)
+            try c.encode(executorDeviceId, forKey: .executorDeviceId)
+            try c.encode(kind, forKey: .kind)
+            try c.encode(state, forKey: .state)
+            try c.encode(expiresAt, forKey: .expiresAt)
+            try c.encode(payloadJSON, forKey: .payloadJSON)
+            try c.encode(responseJSON, forKey: .responseJSON)
+            try c.encode(updatedByDeviceId, forKey: .updatedByDeviceId)
+        }
+        private enum CodingKeys: String, CodingKey { case metadata, messageId, operationId, executorDeviceId, kind, state, expiresAt, payloadJSON, responseJSON, updatedByDeviceId }
+        public init(from decoder: Decoder) throws {
+            let c = try decoder.container(keyedBy: CodingKeys.self)
+            try self.init(
+                metadata: try c.decode(RecordMetadata.self, forKey: .metadata),
+                messageId: try c.decode(UUID.self, forKey: .messageId),
+                operationId: try c.decode(UUID.self, forKey: .operationId),
+                executorDeviceId: try c.decode(UUID.self, forKey: .executorDeviceId),
+                kind: try c.decode(String.self, forKey: .kind),
+                state: try c.decode(String.self, forKey: .state),
+                expiresAt: try c.decodeIfPresent(Date.self, forKey: .expiresAt),
+                payloadJSON: try c.decode(String.self, forKey: .payloadJSON),
+                responseJSON: try c.decodeIfPresent(String.self, forKey: .responseJSON),
+                updatedByDeviceId: try c.decode(UUID.self, forKey: .updatedByDeviceId))
         }
     }
 }

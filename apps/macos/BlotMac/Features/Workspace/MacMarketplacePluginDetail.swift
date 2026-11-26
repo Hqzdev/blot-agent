@@ -1,6 +1,7 @@
 import BlotAppleIntegrations
 import BlotDesign
 import BlotDomain
+import BlotWorkspace
 import SwiftUI
 
 struct MacMarketplacePluginDetail: View {
@@ -17,6 +18,10 @@ struct MacMarketplacePluginDetail: View {
 
     var body: some View {
         if let apple = ApplePluginID(rawValue: plugin.id) { ApplePluginConnectionView(plugin: apple) }
+        else if let provider = WorkspaceMessagingProvider(rawValue: plugin.id) { WorkspaceMessagingConnectView(provider: provider) }
+            else if plugin.id == "1password" { WorkspacePasswordConnectView() }
+            else if let google = WorkspaceGooglePlugin(rawValue: plugin.id) { WorkspaceGoogleConnectView(plugin: google) }
+            else if let preset = WorkspacePluginPreset.find(plugin.id) { WorkspacePluginConnectView(preset: preset) }
         else { externalBody }
     }
     private var externalBody: some View {
@@ -45,7 +50,7 @@ struct MacMarketplacePluginDetail: View {
                         }
                     }
                     if accounts.isEmpty {
-                        Text("Подключение этого сервиса пока недоступно в этой версии Blot.")
+                        Text("Подключение этого сервиса пока недоступно в этой версии Ori.")
                             .font(.callout).foregroundStyle(.secondary)
                     }
                     if let error = store.error { WorkspaceLocalizedText(error).font(.callout).foregroundStyle(.red) }
@@ -66,10 +71,10 @@ struct MacMarketplacePluginDetail: View {
             }
             .interactiveDismissDisabled(store.busy || disconnecting)
             .onExitCommand { if !store.busy && !disconnecting { dismiss() } }
-            .confirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
+            .workspaceConfirmationDialog("Отключить «\(plugin.name)»?", isPresented: $confirmingDisconnect, titleVisibility: .visible) {
                 Button("Отключить", role: .destructive) { _Concurrency.Task { await disconnect() } }
                 Button("Отмена", role: .cancel) {}
-            } message: { Text("Агенты потеряют доступ к этому приложению в Blot.") }
+            } message: { Text("Агенты потеряют доступ к этому приложению в Ori.") }
     }
 
     private func disconnect() async {

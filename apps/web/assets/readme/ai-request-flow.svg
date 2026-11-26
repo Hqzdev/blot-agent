@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="560" viewBox="0 0 1200 560" role="img" aria-labelledby="title desc">
+  <title id="title">AI response pipeline</title>
+  <desc id="desc">An authenticated chat request is validated, enriched with private context and installed skill metadata, streamed through the AI gateway, sanitized, and persisted.</desc>
+  <defs>
+    <marker id="flow-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0 0L10 5L0 10Z" fill="#60a5fa"/>
+    </marker>
+  </defs>
+  <rect width="1200" height="560" rx="28" fill="#0b0d10"/>
+  <text x="56" y="62" fill="#f4f6f8" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="700">AI response pipeline</text>
+  <text x="56" y="96" fill="#8c96a3" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20">Context is assembled server-side and the response is streamed back to the browser.</text>
+  <g id="request-stages" transform="translate(56 142)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <g>
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">1</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Authenticate</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">NextAuth session</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">actor ownership</text>
+    </g>
+    <path d="M96 38H198" stroke="#60a5fa" stroke-width="3" marker-end="url(#flow-arrow)"/>
+    <g transform="translate(210)">
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">2</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Validate</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">Zod request shape</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">rate limit</text>
+    </g>
+    <path d="M306 38H408" stroke="#60a5fa" stroke-width="3" marker-end="url(#flow-arrow)"/>
+    <g transform="translate(420)">
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">3</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Build context</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">project memory</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">skill metadata</text>
+    </g>
+    <path d="M516 38H618" stroke="#60a5fa" stroke-width="3" marker-end="url(#flow-arrow)"/>
+    <g transform="translate(630)">
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">4</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Generate</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">GigaChat stream</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">optional tools</text>
+    </g>
+    <path d="M726 38H828" stroke="#60a5fa" stroke-width="3" marker-end="url(#flow-arrow)"/>
+    <g transform="translate(840)">
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">5</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Sanitize</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">hide skill text</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">keep usage marker</text>
+    </g>
+    <path d="M936 38H1038" stroke="#60a5fa" stroke-width="3" marker-end="url(#flow-arrow)"/>
+    <g transform="translate(1050)">
+      <circle cx="38" cy="38" r="38" fill="#17243a" stroke="#60a5fa" stroke-width="2"/>
+      <text x="38" y="46" text-anchor="middle" fill="#9dc8ff" font-size="24" font-weight="700">6</text>
+      <text x="0" y="108" fill="#f4f6f8" font-size="22" font-weight="650">Persist</text>
+      <text x="0" y="138" fill="#8c96a3" font-size="17">messages</text>
+      <text x="0" y="163" fill="#8c96a3" font-size="17">artifacts</text>
+    </g>
+  </g>
+  <g id="request-controls" transform="translate(56 356)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <rect width="1088" height="142" rx="22" fill="#11151a" stroke="#313b47" stroke-width="2"/>
+    <text x="28" y="42" fill="#f4f6f8" font-size="21" font-weight="650">Controls applied before model output becomes conversation history</text>
+    <g transform="translate(28 68)" fill="#aeb7c2" font-size="18">
+      <text x="0" y="0">Private project boundary</text>
+      <text x="270" y="0">Installed-skill ownership check</text>
+      <text x="620" y="0">Tool and prompt budgets</text>
+      <text x="878" y="0">Error-safe fallback</text>
+    </g>
+    <g transform="translate(28 92)" fill="#60a5fa">
+      <rect width="204" height="4" rx="2"/>
+      <rect x="270" width="284" height="4" rx="2"/>
+      <rect x="620" width="202" height="4" rx="2"/>
+      <rect x="878" width="172" height="4" rx="2"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,62 @@
+name: Web application checks
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - 'mac/**'
+      - 'ios/**'
+      - 'windows/**'
+      - 'android/**'
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/web
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      AI_GATEWAY_URL: http://127.0.0.1:4004
+      AUTH_SECRET: ci-auth-secret-with-at-least-32-characters
+      AUTH_URL: http://127.0.0.1:3000
+      BILLING_SERVICE_URL: http://127.0.0.1:4003
+      BLOB_READ_WRITE_TOKEN: vercel_blob_rw_ci
+      CONVERSATION_SERVICE_URL: http://127.0.0.1:4002
+      BLOT_AUTH_URL: http://127.0.0.1:3000/login
+      BLOT_ACCOUNT_SERVICE_URL: http://127.0.0.1:3000
+      IDENTITY_SERVICE_URL: http://127.0.0.1:4001
+      INTERNAL_SERVICE_SECRET: ci-internal-secret-with-at-least-32-characters
+      POSTGRES_URL: postgresql://ci:ci@127.0.0.1:5432/teya
+      UPSTASH_REDIS_REST_TOKEN: ci-upstash-token
+      UPSTASH_REDIS_REST_URL: http://127.0.0.1:8079
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.9.0
+          package_json_file: apps/web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          cache: pnpm
+          cache-dependency-path: apps/web/pnpm-lock.yaml
+          node-version: 24
+      - run: pnpm install --frozen-lockfile
+      - name: Install shared Blot account test dependencies
+        run: npm ci --prefix ../../landing
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test:unit
+      - run: pnpm workspace:check
+      - run: pnpm db:check
+      - run: pnpm build
+      - name: Build the public site proxy for the HTTPS login check
+        working-directory: landing
+        run: npx next build
+      - name: Verify web login against the shared Blot account service
+        run: node ../../scripts/verify-web-blot-login.mjs

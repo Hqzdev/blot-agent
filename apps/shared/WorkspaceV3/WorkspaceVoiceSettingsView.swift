@@ -39,16 +39,13 @@ struct WorkspaceVoiceSettingsView: View {
     }
     private var picker: some View {
         @Bindable var preferences = store.voicePreferences
-        return Picker(russian ? "Язык распознавания" : "Recognition language", selection: $preferences.selection) {
-            Text(russian ? "Как в приложении" : "Same as app").tag(WorkspaceVoicePreferences.followInterface)
-            if preferences.selection != WorkspaceVoicePreferences.followInterface, !languageIDs.contains(preferences.selection) {
-                Text(name(preferences.selection) + (loaded ? (russian ? " — недоступен" : " — unavailable") : "")).tag(preferences.selection)
-            }
-            ForEach(languageIDs.sorted { name($0).localizedStandardCompare(name($1)) == .orderedAscending }, id: \.self) { id in
-                Text(name(id)).tag(id)
-            }
+        let fallback = WorkspaceVoicePreferences.followInterface
+        var options: [WorkspaceChoiceOption<String>] = [.init(fallback, russian ? "Как в приложении" : "Same as app")]
+        if preferences.selection != fallback, !languageIDs.contains(preferences.selection) {
+            options.append(.init(preferences.selection, name(preferences.selection) + (loaded ? (russian ? " — недоступен" : " — unavailable") : "")))
         }
-        .pickerStyle(.menu).labelsHidden()
+        options += languageIDs.sorted { name($0).localizedStandardCompare(name($1)) == .orderedAscending }.map { .init($0, name($0)) }
+        return WorkspaceChoice(title: russian ? "Язык распознавания" : "Recognition language", selection: $preferences.selection, options: options, showsTitle: false)
         .accessibilityLabel(russian ? "Язык распознавания речи" : "Speech recognition language")
         .accessibilityIdentifier("workspace.voice.recognition-language")
     }

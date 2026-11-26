@@ -7,7 +7,7 @@ nonisolated struct WorkspaceMessageMetadata: Codable, Equatable, Sendable {
 }
 
 nonisolated struct WorkspaceChatInteractions: Codable, Equatable, Sendable {
-    static let reactions = ["👍", "❤️", "😂", "😮", "😢", "🔥"]
+    static let reactions = ["👍", "👎", "❤️", "😂", "😮", "😢", "🔥"]
     var pinnedOrder: [UUID] = []
     var messages: [UUID: WorkspaceMessageMetadata] = [:]
     var unreadMessageIDs: [UUID: Set<UUID>]?

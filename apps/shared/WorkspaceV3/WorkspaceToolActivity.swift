@@ -4,7 +4,7 @@ import BlotWorkspace
 import Foundation
 
 struct WorkspaceToolActivity: Identifiable {
-    enum State { case queued, running, approval, succeeded, failed, denied, stopped, unknown }
+    enum State { case queued, running, waitingForAnswer, approval, succeeded, failed, denied, stopped, unknown }
     struct Detail { let label: String; let value: String }
     let id: String
     let tool: String
@@ -20,6 +20,7 @@ struct WorkspaceToolActivity: Identifiable {
         switch state {
         case .queued: return russian ? "Ожидает" : "Queued"
         case .running: return russian ? "В работе" : "Running"
+        case .waitingForAnswer: return russian ? "Ожидает вашего ответа" : "Waiting for your answer"
         case .approval: return russian ? "Нужно разрешение" : "Needs approval"
         case .succeeded: return russian ? "Готово" : "Done"
         case .failed: return russian ? "Ошибка" : "Failed"
@@ -32,10 +33,58 @@ struct WorkspaceToolActivity: Identifiable {
 
 /// Uses only explicit calls/results, not model prose or prior requests embedded in requestJSON.
 struct WorkspaceToolActivityBuilder {
+    private static let titles: [String: (String, String, String, String, String)] = [
+            "drive_create": ("doc", "Сохраняет файл в Drive", "Сохранил файл в Drive", "Saving file to Drive", "Saved file to Drive"),
+            "google_accounts": ("person.crop.circle", "Проверяет аккаунты Google", "Проверил аккаунты Google", "Checking Google accounts", "Checked Google accounts"),
+            "gmail_check_access": ("envelope", "Проверяет доступ к Gmail", "Проверил доступ к Gmail", "Checking Gmail access", "Checked Gmail access"),
+            "gmail_recent": ("tray", "Смотрит последние письма в Gmail", "Проверил последние письма в Gmail", "Checking recent Gmail messages", "Checked recent Gmail messages"),
+            "skill_list": ("shippingbox", "Ищет навыки", "Проверил навыки", "Finding skills", "Checked skills"),
+            "skill_read": ("shippingbox", "Читает навык", "Прочитал навык", "Reading skill", "Read skill"),
+            "skill_create": ("sparkle", "Создаёт навык", "Сохранил навык", "Creating skill", "Saved skill"),
+            "skill_run": ("shippingbox", "Запускает навык", "Поставил навык в очередь", "Starting skill", "Queued skill"),
+            "plugin_catalog": ("puzzlepiece.extension", "Проверяет приложения", "Проверил приложения", "Checking apps", "Checked apps"),
+            "plugin_connect": ("powerplug", "Ожидает подключения", "Подтвердил подключение", "Waiting for connection", "Verified connection"),
+            "conversation_ask": ("questionmark.circle", "Уточняет детали", "Получил ответ", "Asking for details", "Received answer"),
+            "subscription_plans": ("creditcard", "Открывает тарифы", "Показал тарифы", "Opening plans", "Showed plans"),
+            "connection_status": ("puzzlepiece.extension", "Проверяет подключение", "Проверил подключение", "Checking connection", "Checked connection"),
+            "secure_input_request": ("lock", "Ожидает защищённый ввод", "Завершил защищённый ввод", "Waiting for secure input", "Finished secure input"),
+            "browser_request_takeover": ("hand.raised", "Ожидает ручной шаг", "Получил управление", "Waiting for manual step", "Returned control"),
+            "browser_profiles": ("person.crop.circle", "Смотрит профили Ori", "Посмотрел профили Ori", "Inspecting Ori profiles", "Inspected Ori profiles"),
+            "browser_copy_cookies": ("globe", "Переносит вход", "Перенёс вход", "Transferring sign-in", "Transferred sign-in"),
+            "browser_tabs": ("globe", "Смотрит открытые вкладки", "Посмотрел открытые вкладки", "Inspecting open tabs", "Inspected open tabs"),
+            "browser_open": ("globe", "Открывает сайт", "Открыл сайт", "Opening website", "Opened website"),
+            "browser_snapshot": ("globe", "Читает страницу", "Прочитал страницу", "Reading page", "Read page"),
+            "browser_attach": ("cursorarrow", "Запрашивает управление вкладкой", "Подключился к вкладке", "Requesting tab control", "Attached to tab"),
+            "browser_click": ("cursorarrow.click", "Нажимает на странице", "Нажал на странице", "Clicking on page", "Clicked on page"),
+            "browser_type": ("keyboard", "Заполняет поле", "Заполнил поле", "Filling field", "Filled field"),
+            "browser_scroll": ("arrow.up.and.down", "Прокручивает страницу", "Прокрутил страницу", "Scrolling page", "Scrolled page"),
+            "browser_back": ("arrow.left", "Возвращается на предыдущую страницу", "Вернулся на предыдущую страницу", "Going back", "Went back"),
+            "browser_close": ("xmark", "Закрывает вкладку", "Закрыл вкладку", "Closing tab", "Closed tab"),
+            "browser_purchase": ("cart", "Подтверждает заказ на сайте", "Нажал кнопку оформления заказа", "Confirming website order", "Clicked the order button"),
+            "browser_screenshot": ("photo", "Сохраняет снимок страницы", "Сохранил снимок страницы", "Saving page image", "Saved page image"),
+            "process_run": ("terminal", "Выполняет команду", "Выполнил команду", "Running command", "Ran command"),
+            "process_status": ("terminal", "Проверяет команду", "Проверил команду", "Checking command", "Checked command"),
+            "process_stop": ("stop.circle", "Останавливает команду", "Остановил команду", "Stopping command", "Stopped command"),
+            "document_create": ("doc", "Создаёт документ", "Создал документ", "Creating document", "Created document"),
+            "file_read": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
+            "workspace_directory": ("folder", "Открывает рабочую папку", "Открыл рабочую папку", "Opening workspace folder", "Opened workspace folder"),
+            "workspace_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
+            "project_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
+            "project_search": ("magnifyingglass", "Ищет в проекте", "Проверил файлы проекта", "Searching project", "Searched project"),
+            "workspace_list_files": ("folder", "Просматривает файлы", "Просмотрел файлы", "Listing files", "Listed files"),
+            "workspace_write_file": ("doc.badge.plus", "Сохраняет файл", "Сохранил файл", "Saving file", "Saved file"),
+            "project_write_file": ("doc.badge.plus", "Изменяет файл", "Изменил файл", "Editing file", "Edited file"),
+            "workspace_create_directory": ("folder.badge.plus", "Создаёт папку", "Создал папку", "Creating folder", "Created folder"),
+            "workspace_request_directory": ("folder", "Запрашивает доступ к папке", "Получил доступ к папке", "Requesting folder access", "Obtained folder access"),
+            "git_status": ("arrow.triangle.branch", "Проверяет Git", "Проверил Git", "Checking Git", "Checked Git"),
+            "git_diff": ("arrow.triangle.branch", "Смотрит изменения", "Посмотрел изменения", "Inspecting changes", "Inspected changes"),
+            "git_commit": ("arrow.triangle.branch", "Создаёт коммит", "Создал коммит", "Creating commit", "Created commit"),
+            "git_push": ("arrow.up", "Отправляет коммит", "Отправил коммит", "Pushing commit", "Pushed commit")
+        ]
     private typealias State = WorkspaceToolActivity.State
     struct Result { var rows: [WorkspaceToolActivity]; let dependencies: Set<UUID> }
     func build(steps: [BlotV3.ModelStep], actions: [UUID: BlotV3.PreparedAction], invocations: [UUID: BlotV3.ToolInvocation],
-               connections: [BlotV3.McpConnection]) -> Result {
+               connections: [BlotV3.McpConnection], pendingQuestionIDs: Set<UUID> = []) -> Result {
         var rows: [WorkspaceToolActivity] = [], dependencies: Set<UUID> = []
         var positions: [String: Int] = [:]
         for step in steps.sorted(by: { $0.stepIndex < $1.stepIndex }) {
@@ -47,7 +96,10 @@ struct WorkspaceToolActivityBuilder {
                 let action = ids.compactMap { actions[$0] }.first { $0.toolId == call.name }
                 let invocation = action.flatMap { invocations[$0.metadata.id] }
                 let result = invocation?.result.flatMap { decode($0) as ChatJSON? } ?? results[call.id]
-                let state = state(step: step, result: result, action: action, invocation: invocation, queued: awaiting)
+                let executionState = state(step: step, result: result, action: action, invocation: invocation, queued: awaiting)
+                let waitingForAnswer = executionState == .running && result == nil && call.name == "conversation_ask"
+                    && ids.first.map(pendingQuestionIDs.contains) == true
+                let state: State = waitingForAnswer ? .waitingForAnswer : executionState
                 if results[call.id] == nil { awaiting = true }
                 let plugin = WorkspacePluginReference.plugin(forTool: call.name)
                     ?? connections.first { $0.toolIds.contains(call.name) }.flatMap { connection in
@@ -90,8 +142,10 @@ struct WorkspaceToolActivityBuilder {
             if case .number(let code) = values["exitCode"], code != 0 { return .failed }
             switch values["state"].flatMap(string)?.lowercased() {
             case "unknown": return .unknown
-            case "running", "queued", "pending": return .running
-            case "canceled", "cancelled", "stopped": return .stopped
+            case "queued": return values["task_id"] == nil ? .queued : .succeeded
+            case "running", "pending": return .running
+            case "canceled", "cancelled", "stopped", "dismissed": return .stopped
+            case "not_connected", "unavailable": return .failed
             case "denied", "expired": return .denied
             default: break
             }
@@ -109,40 +163,15 @@ struct WorkspaceToolActivityBuilder {
     }
     private func presentation(_ tool: String, state: State) -> (symbol: String, verb: (ru: String, en: String)) {
         let done = state == .succeeded
-        if state != .running && !done {
-            if tool.hasPrefix("browser_") { return ("globe", ("Действие браузера", "Browser action")) }
+        if state != .running && state != .waitingForAnswer && !done {
+            if tool.hasPrefix("browser_"), let entry = Self.titles[tool] { return (entry.0, (entry.1, entry.3)) }
             if tool.hasPrefix("process_") { return ("terminal", ("Команда", "Command")) }
             if tool.hasPrefix("git_") { return ("arrow.triangle.branch", ("Действие Git", "Git action")) }
             if tool.hasPrefix("workspace_") || tool.hasPrefix("project_") || tool == "file_read" || tool == "document_create" { return ("doc.text", ("Работа с файлами", "File operation")) }
             return ("puzzlepiece.extension", ("Действие инструмента", "Tool action"))
         }
-        let entries: [String: (String, String, String, String, String)] = [
-            "browser_tabs": ("globe", "Смотрит открытые вкладки", "Посмотрел открытые вкладки", "Inspecting open tabs", "Inspected open tabs"),
-            "browser_open": ("globe", "Открывает сайт", "Открыл сайт", "Opening website", "Opened website"),
-            "browser_snapshot": ("globe", "Читает страницу", "Прочитал страницу", "Reading page", "Read page"),
-            "browser_click": ("cursorarrow.click", "Нажимает на странице", "Нажал на странице", "Clicking on page", "Clicked on page"),
-            "browser_type": ("keyboard", "Заполняет поле", "Заполнил поле", "Filling field", "Filled field"),
-            "browser_screenshot": ("photo", "Сохраняет снимок страницы", "Сохранил снимок страницы", "Saving page image", "Saved page image"),
-            "process_run": ("terminal", "Выполняет команду", "Выполнил команду", "Running command", "Ran command"),
-            "process_status": ("terminal", "Проверяет команду", "Проверил команду", "Checking command", "Checked command"),
-            "process_stop": ("stop.circle", "Останавливает команду", "Остановил команду", "Stopping command", "Stopped command"),
-            "document_create": ("doc", "Создаёт документ", "Создал документ", "Creating document", "Created document"),
-            "file_read": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
-            "workspace_directory": ("folder", "Открывает рабочую папку", "Открыл рабочую папку", "Opening workspace folder", "Opened workspace folder"),
-            "workspace_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
-            "project_read_file": ("doc.text", "Читает файл", "Прочитал файл", "Reading file", "Read file"),
-            "project_search": ("magnifyingglass", "Ищет в проекте", "Проверил файлы проекта", "Searching project", "Searched project"),
-            "workspace_list_files": ("folder", "Просматривает файлы", "Просмотрел файлы", "Listing files", "Listed files"),
-            "workspace_write_file": ("doc.badge.plus", "Сохраняет файл", "Сохранил файл", "Saving file", "Saved file"),
-            "project_write_file": ("doc.badge.plus", "Изменяет файл", "Изменил файл", "Editing file", "Edited file"),
-            "workspace_create_directory": ("folder.badge.plus", "Создаёт папку", "Создал папку", "Creating folder", "Created folder"),
-            "workspace_request_directory": ("folder", "Запрашивает доступ к папке", "Получил доступ к папке", "Requesting folder access", "Obtained folder access"),
-            "git_status": ("arrow.triangle.branch", "Проверяет Git", "Проверил Git", "Checking Git", "Checked Git"),
-            "git_diff": ("arrow.triangle.branch", "Смотрит изменения", "Посмотрел изменения", "Inspecting changes", "Inspected changes"),
-            "git_commit": ("arrow.triangle.branch", "Создаёт коммит", "Создал коммит", "Creating commit", "Created commit"),
-            "git_push": ("arrow.up", "Отправляет коммит", "Отправил коммит", "Pushing commit", "Pushed commit")
-        ]
-        if let entry = entries[tool] { return (entry.0, (done ? entry.2 : entry.1, done ? entry.4 : entry.3)) }
+
+        if let entry = Self.titles[tool] { return (entry.0, (done ? entry.2 : entry.1, done ? entry.4 : entry.3)) }
         if let apple = AppleToolCatalog.all.first(where: { $0.definition.name == tool }) {
             let nouns: [ApplePluginID: (String, String)] = [.mail: ("письмо", "email"), .calendar: ("событие", "event"), .reminders: ("напоминание", "reminder"), .notes: ("заметку", "note"), .contacts: ("контакт", "contact"), .files: ("файл", "file"), .shortcuts: ("команду", "shortcut")]
             let noun = nouns[apple.plugin] ?? ("запись", "item")
@@ -162,9 +191,15 @@ struct WorkspaceToolActivityBuilder {
     private func details(_ call: ChatToolCall, result: ChatJSON?) -> [WorkspaceToolActivity.Detail] {
         let arguments = fields(call.arguments), output = fields(result)
         var items: [WorkspaceToolActivity.Detail] = []
+        if output["error"] == .string("invalid_arguments") {
+            items.append(.init(label: "Запрос / Request", value: "Не выполнен: агент должен исправить параметры. / Not executed: the agent must correct its arguments."))
+        }
         var truncated = false
         if let path = arguments["path"].flatMap(string) { items.append(.init(label: "Файл / File", value: clean(path, maximum: 240))) }
-        if let url = arguments["url"].flatMap(string).flatMap(URL.init(string:)), let host = url.host { items.append(.init(label: "Сайт / Site", value: clean(host))) }
+        if let url = (arguments["url"] ?? output["url"]).flatMap(string).flatMap(URL.init(string:)), let host = url.host { items.append(.init(label: "Сайт / Site", value: clean(host))) }
+        if call.name.hasPrefix("browser_"), let error = output["error"].flatMap(string), error != "invalid_arguments" {
+            items.append(.init(label: "Ошибка / Error", value: clean(error)))
+        }
         if let executable = arguments["executable"].flatMap(string) { items.append(.init(label: "Программа / Program", value: (executable as NSString).lastPathComponent)) }
         // Never echo arbitrary parameters, page text, environment variables or opaque plugin output.
         for (key, title) in [("title", "Название / Title"), ("name", "Название / Name"), ("exitCode", "Код выхода / Exit code"), ("stdout", "stdout"), ("stderr", "stderr")] {

@@ -11,13 +11,14 @@ struct WorkspacePage: View {
         GeometryReader { geometry in
             Group {
                 if store.screenState != .normal {
-                    ScrollView { WorkspaceDataState(state: store.screenState).padding(24) }
+                    ScrollView { WorkspaceDataState(state: store.screenState, route: route).padding(24) }
                 } else if usesAuthenticationLayout {
                     WorkspaceAuthView(route: route)
                 } else {
                     page(height: geometry.size.height)
                 }
             }
+            .workspacePanelControls()
             .workspaceGlassContainer()
             #if os(iOS)
             .onAppear {
@@ -43,6 +44,7 @@ struct WorkspacePage: View {
         #if os(macOS)
         if [.createAgent, .editAgent, .firstAgent].contains(route) { MacAgentCreationView(isEditing: route == .editAgent) }
         else if route == .marketplace { MacMarketplacePage() }
+        else if route == .agentMarketplace { MacMarketplacePage(showsAgents: true) }
         else if [.home, .chat, .newChat].contains(route) { MacWorkspaceChatPage(route: route) }
         else { scrollingPage(height: height) }
         #else
@@ -90,8 +92,12 @@ struct WorkspacePage: View {
     @ViewBuilder private var content: some View {
         switch route {
         case .skills: WorkspaceSkillsView()
+        case .pages: WorkspacePagesView()
         case .agents, .agentProfile, .createAgent, .editAgent, .files, .schedules, .createSchedule: WorkspaceTeamView(route: route)
         case .settings, .settingsProfile, .settingsStorage, .settingsUpdates, .appSettings, .account, .models, .permissions, .connections, .devices, .pair, .memory, .mcp, .browserSettings, .permissionRules, .appearance, .language, .notifications: WorkspaceSettingsView(route: route)
+        #if os(macOS)
+        case .usage, .personalization: WorkspaceSettingsView(route: route)
+        #endif
         default: WorkspaceTaskView(route: route)
         }
     }
@@ -132,7 +138,7 @@ struct WorkspaceRootView: View {
         .environment(\.locale, Locale(identifier: store.language == "ru" ? "ru_RU" : "en_GB"))
         .environment(\.timeZone, store.mode == .preview ? TimeZone(identifier: "Asia/Yekaterinburg")! : .current)
         .background(WorkspaceStyle.canvas).foregroundStyle(WorkspaceStyle.ink)
-        .blotTheme(effectiveTheme)
+        .blotTheme(theme)
         .tint(WorkspaceStyle.ink)
         .kMotionRoot(reduceMotion: reduceMotion)
         .sheet(isPresented: $store.catalogVisible) { WorkspaceCatalogView().environment(store) }
@@ -142,6 +148,9 @@ struct WorkspaceRootView: View {
         }
         .sheet(isPresented: $store.conflictsVisible) { WorkspaceConflictsView().environment(store) }
         .task { await store.loadWorkspace() }
+        .task(id: scenePhase == .active ? store.snapshot.ownerID : nil) {
+            if scenePhase == .active { await store.refreshBilling() }
+        }
         .task(id: scenePhase) {
             guard scenePhase == .active else { return }
             await store.synchronizeAccount()
@@ -156,7 +165,38 @@ struct WorkspaceRootView: View {
         }
         .onDisappear { store.persistChatState(immediately: true) }
         .modifier(AppleInteractionHost(center: store.appleIntegrations?.interactions))
+        .workspacePanelControls()
         .onOpenURL { url in
+            if url.scheme == WorkspaceBillingClient.callbackScheme, url.host == "billing" {
+                #if os(macOS)
+                let destination = WorkspaceRoute.usage
+                #else
+                let destination = WorkspaceRoute.settingsProfile
+                #endif
+                if url.path == "/settings" {
+                    store.navigate(destination)
+                    return
+                }
+                guard url.path == "/return" else { return }
+                #if os(iOS)
+                PhoneLinkBrowser.dismiss()
+                #endif
+                _Concurrency.Task {
+                    do {
+                        guard let commands = store.billingCommands else { throw WorkspaceServiceError.unavailable }
+                        let cardID = try await commands.billingClient().redeem(url)
+                        store.navigate(destination)
+                        await store.refreshBilling()
+                        if let cardID, let cards = store.subscriptionCardCommands {
+                            try await cards.refreshSubscriptionCard(cardID)
+                            try await store.refreshContent()
+                        }
+                        store.notice = store.language == "ru" ? "Тестовый платёж подтверждён" : "Test payment confirmed"
+                    }
+                    catch { store.error = WorkspaceFailureCopy.message(error) }
+                }
+                return
+            }
             #if os(iOS)
             if store.handleWidgetURL(url) { return }
             #endif
@@ -175,14 +215,14 @@ struct WorkspaceRootView: View {
         .onChange(of: scenePhase) { _, _ in store.publishWidgets(immediately: true) }
         .onChange(of: store.language) { _, _ in store.publishWidgets() }
         #endif
-        .confirmationDialog(store.t("Delete chat?"), isPresented: Binding(
+        .workspaceConfirmationDialog(store.t("Delete chat?"), isPresented: Binding(
             get: { store.pendingChatDeletionID != nil },
             set: { if !$0 { store.pendingChatDeletionID = nil } }), titleVisibility: .visible,
             presenting: store.pendingChatDeletionID) { id in
                 Button(store.t("Delete chat"), role: .destructive) { store.deleteChat(id) }.disabled(store.busy)
                 Button(store.t("Cancel"), role: .cancel) { store.pendingChatDeletionID = nil }
         } message: { _ in Text(store.t("The chat history will be deleted. The agent will stay in your team.")) }
-        .alert(store.t("Rename chat"), isPresented: Binding(
+        .workspaceConfirmationDialog(store.t("Rename chat"), isPresented: Binding(
             get: { store.pendingChatRenameID != nil },
             set: { if !$0 { store.pendingChatRenameID = nil } }), presenting: store.pendingChatRenameID) { id in
                 TextField(store.t("Chat name"), text: $store.chatTitleDraft)
@@ -194,13 +234,7 @@ struct WorkspaceRootView: View {
         .modifier(MacAdaptiveSheetHost())
         #endif
     }
-    private var effectiveTheme: ThemePreference {
-        #if os(macOS)
-        !store.isRestoringSession && store.route.isAuthentication && store.route != .firstAgent ? .dark : theme
-        #else
-        theme
-        #endif
-    }
+
     #if os(macOS)
     private var desktop: some View {
         Group {
@@ -224,7 +258,7 @@ struct WorkspaceRootView: View {
     }
     #else
     private var phone: some View {
-        PhoneWorkspaceNavigationStack()
+        ZStack { PhoneWorkspaceNavigationStack() }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !store.rootRoute.isAuthentication && !store.pluginCatalogVisible && PhoneTabBar.isVisible(on: store.route) {
                 PhoneTabBar().offset(y: 8)

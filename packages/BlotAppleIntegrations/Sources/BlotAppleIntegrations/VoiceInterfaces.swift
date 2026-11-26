@@ -4,7 +4,7 @@ public enum VoiceFailure: Error, LocalizedError, Equatable {
     case microphoneDenied, languageUnavailable, voiceUnavailable, audioUnavailable, audioOverrun, interrupted, emptyResponse
     public var errorDescription: String? {
         switch self {
-        case .microphoneDenied: "Разрешите микрофон для Blot в системных настройках."
+        case .microphoneDenied: "Разрешите микрофон для Ori в системных настройках."
         case .languageUnavailable: "Локальное распознавание этого языка недоступно на устройстве."
         case .voiceUnavailable: "На устройстве нет голоса для выбранного языка."
         case .audioUnavailable: "Не удалось включить аудиоустройство. Проверьте микрофон и наушники."

@@ -56,7 +56,7 @@ public struct BlotCharacterView: View {
         self.stimulus = stimulus
         self.followsPointer = followsPointer
         self.pointer = pointer
-        self.label = accessibilityLabel ?? "Blot · \(state.title)"
+        self.label = accessibilityLabel ?? "Ori · \(state.title)"
     }
 
     private var active: Bool { scenePhase == .active && visible }

@@ -1,5 +1,7 @@
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 import { AuthError, cookieKey } from "./config.mjs";
+import { browserClients } from "./browser-clients.mjs";
+import { isCliCallback } from "./cli-callback.mjs";
 
 export const SESSION_COOKIE = "blot_web_session";
 export const GOOGLE_COOKIE = "blot_google_attempt";
@@ -29,18 +31,21 @@ export function unseal(text, now = Date.now()) {
   } catch { return null; }
 }
 
-const CLIENTS = { "blot-ios": "blot-agent-ios:/oauth/account", "blot-macos": "blot-agent-macos:/oauth/account" };
 const PARAMETERS = ["response_type", "client_id", "redirect_uri", "state", "code_challenge", "code_challenge_method", "intent"];
 
 export function nativeAttempt(parameters) {
   const query = parameters instanceof URLSearchParams ? parameters : new URLSearchParams(parameters);
   if (!PARAMETERS.some(name => query.has(name))) return null;
+  const clients = browserClients();
+  const clientID = query.get("client_id"), redirectURI = query.get("redirect_uri");
+  const validCallback = isCliCallback(clientID, redirectURI)
+    || (Object.hasOwn(clients, clientID) && redirectURI === clients[clientID]);
   if (PARAMETERS.some(name => query.getAll(name).length !== 1) || [...query.keys()].some(name => !PARAMETERS.includes(name))
       || query.get("response_type") !== "code" || query.get("code_challenge_method") !== "S256"
-      || !CLIENTS[query.get("client_id")] || query.get("redirect_uri") !== CLIENTS[query.get("client_id")]
+      || !validCallback
       || !/^[A-Za-z0-9_-]{43}$/.test(query.get("state")) || !/^[A-Za-z0-9_-]{43}$/.test(query.get("code_challenge"))
       || !["login", "register"].includes(query.get("intent"))) throw new AuthError("invalid_app_request");
-  return { clientID: query.get("client_id"), redirectURI: query.get("redirect_uri"),
+  return { clientID, redirectURI,
     state: query.get("state"), codeChallenge: query.get("code_challenge"), intent: query.get("intent") };
 }
 

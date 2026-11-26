@@ -74,26 +74,13 @@ struct MacTeamChatMenu: View {
 
     var body: some View {
         ForEach(MacTeamChatAction.available(for: selection), id: \.self) { action in
-            MacTeamNavigationButton {
+            Button {
                 close()
                 action.perform(for: selection, in: presentation)
             } label: {
                 BlotLabel(action.title(for: selection, in: presentation), symbol: action.symbol, size: BlotIconSize.control)
-                    .font(.system(size: 12))
-            }
-        }
-    }
-}
-
-struct MacTeamChatContextActions: View {
-    let selection: MacTeamSelection
-    @Environment(MacTeamPresentation.self) private var presentation
-
-    var body: some View {
-        ForEach(MacTeamChatAction.available(for: selection), id: \.self) { action in
-            Button(action.title(for: selection, in: presentation)) {
-                action.perform(for: selection, in: presentation)
-            }
+                    .font(.system(size: 13))
+            }.buttonStyle(MacMenuRowStyle())
         }
     }
 }

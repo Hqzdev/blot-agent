@@ -9,6 +9,7 @@ struct MCPConfigurationFields: View {
     let russian: Bool
     @State private var picking = MCPPath.executable
     @State private var importing = false
+    @State private var headersJSON = "{}"
     private func text(_ ru: String, _ en: String) -> String { russian ? ru : en }
     private var transports: [WorkspaceChoiceOption<MCPConfiguration.Transport>] {
         #if os(macOS)
@@ -22,7 +23,12 @@ struct MCPConfigurationFields: View {
             WorkspaceChoice(title: text("Транспорт", "Transport"), selection: $configuration.transport, options: transports)
             if configuration.transport == .http {
                 TextField("https://server.example/mcp", text: $configuration.endpoint)
+                WorkspaceMCPOAuthButton(configuration: $configuration, russian: russian)
                 SecureField(text("Bearer-токен (если нужен)", "Bearer token (optional)"), text: $configuration.bearerToken)
+                SecureField(text("Дополнительные заголовки — JSON", "Additional headers — JSON"), text: $headersJSON)
+                    .onChange(of: headersJSON) { _, raw in
+                        configuration.httpHeaders = (try? JSONDecoder().decode([String: String].self, from: Data(raw.utf8))) ?? ["": ""]
+                    }
                 Text(text("Токен хранится в Связке ключей. Для сервера с OAuth используйте выданный им токен.", "The token stays in Keychain. For OAuth servers, supply a token issued by that server.")).font(.caption).foregroundStyle(.secondary)
             } else {
                 TextField(text("Полный путь к программе", "Absolute executable path"), text: $configuration.endpoint)
@@ -36,13 +42,17 @@ struct MCPConfigurationFields: View {
                 #endif
                 SecureField(text("Переменные среды — JSON-объект", "Environment — JSON object"), text: $environment)
                 Toggle(text("Я доверяю этой программе", "I trust this executable"), isOn: $configuration.trustedLocalProcess)
-                Text(text("Программа получает только заданные переменные среды и доступ в рамках системной песочницы Blot. MCP сам по себе не изолирует программу.", "The executable receives only the specified environment and access allowed by Blot’s system sandbox. MCP itself does not isolate a process.")).font(.caption).foregroundStyle(.secondary)
+                Text(text("Программа получает только заданные переменные среды и доступ в рамках системной песочницы Ori. MCP сам по себе не изолирует программу.", "The executable receives only the specified environment and access allowed by Ori’s system sandbox. MCP itself does not isolate a process.")).font(.caption).foregroundStyle(.secondary)
             }
             WorkspaceCounter(title: text("Таймаут, с", "Timeout, s"), value: Binding(get: { Int(configuration.timeout) }, set: { configuration.timeout = Double($0) }), range: 5...300, step: 5)
         }
+        .onAppear { headersJSON = String(decoding: (try? JSONEncoder().encode(configuration.httpHeaders ?? [:])) ?? Data("{}".utf8), as: UTF8.self) }
         .onChange(of: configuration.transport) { _, _ in
             configuration.endpoint = ""; configuration.arguments = []; configuration.environment = [:]; configuration.workingDirectory = ""
             configuration.bearerToken = ""; configuration.executableBookmark = nil; configuration.directoryBookmark = nil
+            configuration.httpHeaders = nil
+            configuration.oauth = nil
+            headersJSON = "{}"
             arguments = "[]"; environment = "{}"
         }
         #if os(macOS)

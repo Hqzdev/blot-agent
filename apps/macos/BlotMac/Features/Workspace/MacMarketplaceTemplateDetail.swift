@@ -46,7 +46,7 @@ struct MacMarketplaceTemplateDetail: View {
                         Text("Доступ к этим сервисам подключается отдельно.").font(.caption).foregroundStyle(.secondary)
                     }
                     if let saveError {
-                        Label(saveError, systemImage: "exclamationmark.triangle").font(.callout).foregroundStyle(.red)
+                        BlotLabel(saveError, symbol: "exclamationmark.triangle").font(.callout).foregroundStyle(.red)
                     }
                 }.padding(24)
             }

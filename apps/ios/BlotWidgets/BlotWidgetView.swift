@@ -1,4 +1,5 @@
 import BlotWidgetSupport
+import BlotDesign
 import SwiftUI
 import WidgetKit
 
@@ -10,10 +11,10 @@ struct BlotWidgetView: View {
         Group {
             if entry.unavailable {
                 BlotWidgetEmpty(title: snapshot.text("Не удалось обновить", "Update unavailable"),
-                    detail: snapshot.text("Откройте Blot, чтобы загрузить данные.", "Open Blot to load your workspace."), symbol: "arrow.clockwise")
+                    detail: snapshot.text("Откройте Ori, чтобы загрузить данные.", "Open Ori to load your workspace."), symbol: "arrow.clockwise")
             } else if !snapshot.isSignedIn {
                 BlotWidgetEmpty(title: snapshot.text("Твоя команда рядом", "Your team, at hand"),
-                    detail: snapshot.text("Откройте Blot и войдите в аккаунт.", "Open Blot and sign in."), symbol: "person.crop.circle")
+                    detail: snapshot.text("Откройте Ori и войдите в аккаунт.", "Open Ori and sign in."), symbol: "person.crop.circle")
             } else {
                 content
             }
@@ -45,10 +46,10 @@ struct BlotWidgetView: View {
     }
     private var compose: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 7) { BlotWidgetAvatar(); Text("Blot").font(.subheadline.weight(.semibold)) }
+            HStack(spacing: 7) { BlotWidgetAvatar(); Text("Ori").font(.subheadline.weight(.semibold)) }
             Spacer(minLength: 0)
             Text(snapshot.text("Новое\nпоручение", "New\nrequest")).font(.headline).lineLimit(2)
-            Label(snapshot.text("Открыть чат", "Open chat"), systemImage: "arrow.up.right")
+            BlotLabel(snapshot.text("Открыть чат", "Open chat"), symbol: "arrow.up.right", size: 12)
                 .font(.caption).foregroundStyle(.secondary).labelStyle(.titleAndIcon)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -57,7 +58,7 @@ struct BlotWidgetView: View {
             HStack {
                 Text(entry.decisions.count, format: .number).font(.largeTitle.weight(.medium)).monospacedDigit().widgetAccentable()
                 Spacer(minLength: 0)
-                Image(systemName: "checkmark.shield").foregroundStyle(.secondary).accessibilityHidden(true)
+                BlotIcon(symbol: "checkmark.shield", size: 16).foregroundStyle(.secondary).accessibilityHidden(true)
             }
             Spacer(minLength: 0)
             Text(entry.decisions.isEmpty ? snapshot.text("Всё решено", "All clear") : snapshot.text("Нужно твоё решение", "Your decision needed"))
@@ -71,7 +72,7 @@ struct BlotWidgetView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 7) {
                     BlotWidgetAvatar(agent: agent(chat.agentID), size: 24)
-                    Text(agent(chat.agentID)?.name ?? "Blot").font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(agent(chat.agentID)?.name ?? "Ori").font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     Spacer(minLength: 4)
                     BlotWidgetState(state: chat.state, snapshot: snapshot)
                 }
@@ -90,7 +91,7 @@ struct BlotWidgetView: View {
                 detail: nil)
             Spacer(minLength: 0)
             if snapshot.agents.isEmpty {
-                Text(snapshot.text("Добавьте первого агента в Blot.", "Add your first agent in Blot."))
+                Text(snapshot.text("Добавьте первого агента в Ori.", "Add your first agent in Ori."))
                     .font(.caption).foregroundStyle(.secondary)
             } else {
                 HStack(alignment: .top, spacing: 8) {
@@ -114,7 +115,7 @@ struct BlotWidgetView: View {
             if entry.schedules.isEmpty {
                 Spacer(minLength: 0)
                 Text(snapshot.text("Запусков пока нет", "No upcoming runs")).font(.subheadline.weight(.medium))
-                Text(snapshot.text("Создайте расписание в Blot.", "Create a schedule in Blot."))
+                Text(snapshot.text("Создайте расписание в Ori.", "Create a schedule in Ori."))
                     .font(.caption2).foregroundStyle(.secondary)
             } else {
                 ForEach(entry.schedules.prefix(2)) { schedule in
@@ -157,7 +158,7 @@ struct BlotWidgetView: View {
                             BlotWidgetState(state: chat.state, snapshot: snapshot)
                         }
                         Spacer(minLength: 0)
-                        Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.secondary)
+                        BlotIcon(symbol: "chevron.right", size: 12).foregroundStyle(.secondary)
                     }
                 }.buttonStyle(.plain)
             }
@@ -166,7 +167,7 @@ struct BlotWidgetView: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer(minLength: 0)
-            Label(snapshot.text("Открыть Blot", "Open Blot"), systemImage: "arrow.up.right")
+            BlotLabel(snapshot.text("Открыть Ori", "Open Ori"), symbol: "arrow.up.right", size: 12)
                 .font(.caption2).foregroundStyle(.secondary)
         }
     }
@@ -178,7 +179,7 @@ struct BlotWidgetView: View {
     }
     private var freshness: some View {
         HStack(spacing: 3) {
-            if entry.isStale { Image(systemName: "arrow.clockwise") }
+            if entry.isStale { BlotIcon(symbol: "arrow.clockwise", size: 16) }
             Text(snapshot.text("Данные на", "Updated"))
             Text(snapshot.updatedAt, style: .time)
         }.font(.caption2).foregroundStyle(.secondary).lineLimit(1)

@@ -49,14 +49,19 @@ public actor GigaChatTokenProvider {
     public func invalidate() { token = nil }
 }
 
-public struct GigaChatModel: ChatModel {
+public struct GigaChatModel: BlotSelectableModel {
     private let endpoint: URL
-    private let model: String
+    private var model: String
     private let tokens: GigaChatTokenProvider
     private let session: URLSession
     public init(endpoint: URL, model: String, tokens: GigaChatTokenProvider, session: URLSession? = nil) throws {
         try ModelHTTP.validate(endpoint: endpoint, model: model, secret: "token-provider")
         self.endpoint = endpoint; self.model = model; self.tokens = tokens; self.session = session ?? ModelHTTP.makeSession()
+    }
+    public func selecting(_ tier: BlotModelTier) -> any ChatModel {
+        var copy = self
+        copy.model = tier.providerID
+        return copy
     }
     public func stream(request: ChatModelRequest) -> AsyncThrowingStream<ChatModelEvent, Error> {
         ModelHTTP.stream(session: session, dialect: .gigaChat, onUnauthorized: { await tokens.invalidate() }) {

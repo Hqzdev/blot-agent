@@ -109,7 +109,7 @@ struct MacTeamComposer: View {
     }
 
     private var attachmentActions: some View {
-        VStack(spacing: 3) {
+        MacActionMenuPanel {
             attachmentAction("Прикрепить файл", symbol: "paperclip") { presentation.sheet = .attachment }
             attachmentAction("Использовать навык", symbol: "shippingbox") {
                 presentation.draft = "/"
@@ -119,17 +119,17 @@ struct MacTeamComposer: View {
             attachmentAction("Подключить приложение", symbol: "puzzlepiece.extension") {
                 presentation.open(.library(.marketplace))
             }
-            Divider()
+            WorkspaceMenuGap()
             attachmentAction("Новый навык", symbol: "plus") { presentation.editSkill() }
-        }.padding(6).frame(width: 250).background(MacTeamStyle.panel)
+        }
     }
 
     private func attachmentAction(_ title: String, symbol: String, action: @escaping () -> Void) -> some View {
-        MacTeamNavigationButton {
+        Button {
             attachmentsExpanded = false
             action()
         } label: {
-            BlotLabel(title, symbol: symbol, size: BlotIconSize.control).font(.system(size: 12))
-        }
+            BlotLabel(title, symbol: symbol, size: BlotIconSize.control)
+        }.buttonStyle(MacMenuRowStyle())
     }
 }

@@ -39,6 +39,10 @@ enum ModelHTTP {
                     let (bytes, response) = try await session.bytes(for: request)
                     guard let response = response as? HTTPURLResponse else { throw ChatModelError.invalidStream }
                     if response.statusCode == 401 { await onUnauthorized?() }
+                    if response.statusCode == 429, let reset = response.value(forHTTPHeaderField: "X-Blot-Quota-Reset"),
+                       let date = try? Date(reset, strategy: .iso8601.time(includingFractionalSeconds: true)) {
+                        throw ChatModelError.quotaExceeded(date)
+                    }
                     guard (200..<300).contains(response.statusCode) else { throw ChatModelError.http(response.statusCode) }
                     guard response.value(forHTTPHeaderField: "Content-Type")?.lowercased().hasPrefix("text/event-stream") == true else {
                         throw ChatModelError.invalidStream

@@ -6,7 +6,7 @@ struct MacWorkspaceInspector: View {
     @Environment(WorkspaceStore.self) private var store
     private var agent: BlotV3.AgentProfile? { store.snapshot.agents.first { $0.metadata.id == store.currentConversation?.agentId } }
     private var routines: [BlotV3.Automation] { store.snapshot.schedules.filter { $0.agentId == agent?.metadata.id } }
-    private var summary: String { ([agent?.name ?? "Blot Agent"] + routines.map { "\($0.name) · \($0.localTime)" }).joined(separator: "\n") }
+    private var summary: String { ([agent?.name ?? "Ori"] + routines.map { "\($0.name) · \($0.localTime)" }).joined(separator: "\n") }
 
     var body: some View {
         VStack(spacing: 0) {

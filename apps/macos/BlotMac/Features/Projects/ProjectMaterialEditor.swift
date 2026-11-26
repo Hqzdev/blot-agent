@@ -72,7 +72,7 @@ struct ProjectMaterialEditor: View {
     @State private var importing = false
 
     var body: some View {
-        KSheet("Добавить материал", subtitle: "Blot сможет использовать его в чатах этого проекта.", width: 580) {
+        KSheet("Добавить материал", subtitle: "Ori сможет использовать его в чатах этого проекта.", width: 580) {
             TextField("Название материала", text: $draft.title).textFieldStyle(.roundedBorder)
                 .disabled(draft.submitted)
             TextEditor(text: $draft.content).font(KFont.body()).frame(height: 190)

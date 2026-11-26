@@ -80,8 +80,12 @@ public actor WorkspaceBrowserService {
         let browserActions = Set(projection.actions.filter { $0.toolId.hasPrefix("browser_") }.map(\.metadata.id))
         let uncertain = projection.invocations.contains { $0.state == .unknown && browserActions.contains($0.preparedActionId) && $0.execution.executorDeviceId == identity.deviceID }
         tools = tools.filter { name in
-            let writes = WorkspaceBrowserCatalog.requiresConfirmation(name)
-            return restrictions.allows(operation: writes ? "send" : "read") && !(writes && (agent.accessMode == .observe || uncertain))
+            let writes = WorkspaceBrowserCatalog.recordsAction(name)
+            let operation = switch name {
+            case "browser_attach", "browser_type": "update"
+            default: writes ? "send" : "read"
+            }
+            return restrictions.allows(operation: operation) && !(writes && (agent.accessMode == .observe || uncertain))
         }
         if let taskID = context.taskID {
             var id: UUID? = taskID; var visited: Set<UUID> = []
@@ -98,6 +102,10 @@ public actor WorkspaceBrowserService {
         return Authorization(scope: .init(sourceID: context.sourceMessageID, taskID: context.taskID, agentID: agentID), origins: automaticAccess ? ["*"] : access.origins, tools: tools,
             sessionKey: group.map { .group($0.metadata.id) } ?? .agent(agentID))
     }
+    public func browserProfiles() async -> [WorkspaceBrowserProfileInfo] { await driver.browserProfiles() }
+    public func copyCookies(_ transfer: WorkspaceCardContent.CookieTransfer) async throws -> Int { try await driver.copyCookies(transfer) }
+    public func beginManual(_ command: WorkspaceBrowserCommand, tabID: UUID) async throws { try await driver.beginManual(session: command.sessionKey, tabID: tabID) }
+    public func endManual(_ command: WorkspaceBrowserCommand) async { await driver.endManual(session: command.sessionKey) }
     public func prepare(_ command: WorkspaceBrowserCommand) async throws -> WorkspaceBrowserBinding { try await driver.prepare(command) }
     public func perform(_ command: WorkspaceBrowserCommand, binding: WorkspaceBrowserBinding) async throws -> WorkspaceBrowserResult {
         try _Concurrency.Task.checkCancellation()

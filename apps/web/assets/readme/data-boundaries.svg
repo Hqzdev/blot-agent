@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650" role="img" aria-labelledby="title desc">
+  <title id="title">Database schemas and ownership boundaries</title>
+  <desc id="desc">Teya stores identity, conversation, billing, and AI data in separate PostgreSQL schemas, with actor ownership checked in every service.</desc>
+  <rect width="1200" height="650" rx="28" fill="#0b0d10"/>
+  <text x="56" y="62" fill="#f4f6f8" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="42" font-weight="700">Data boundaries</text>
+  <text x="56" y="96" fill="#8c96a3" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif" font-size="20">One PostgreSQL cluster, four domain schemas, explicit ownership at service boundaries.</text>
+  <g id="data-schemas" transform="translate(56 138)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <g>
+      <rect width="252" height="330" rx="22" fill="#11151a" stroke="#313b47" stroke-width="2"/>
+      <rect width="252" height="60" rx="22" fill="#17243a"/>
+      <path d="M0 60H252" stroke="#313b47"/>
+      <text x="24" y="38" fill="#f4f6f8" font-size="23" font-weight="700">identity</text>
+      <g transform="translate(24 98)" fill="#d9dee5" font-size="18">
+        <text y="0">users</text>
+        <text y="38">email and nickname</text>
+        <text y="76">password hash</text>
+        <text y="114">customization</text>
+      </g>
+      <text x="24" y="292" fill="#7dd3fc" font-size="17" font-weight="600">Primary owner: user.id</text>
+    </g>
+    <g transform="translate(278)">
+      <rect width="252" height="330" rx="22" fill="#11151a" stroke="#313b47" stroke-width="2"/>
+      <rect width="252" height="60" rx="22" fill="#17243a"/>
+      <path d="M0 60H252" stroke="#313b47"/>
+      <text x="24" y="38" fill="#f4f6f8" font-size="23" font-weight="700">conversation</text>
+      <g transform="translate(24 98)" fill="#d9dee5" font-size="18">
+        <text y="0">projects and chats</text>
+        <text y="38">messages and votes</text>
+        <text y="76">documents and suggestions</text>
+        <text y="114">object files and sources</text>
+        <text y="152">library items</text>
+      </g>
+      <text x="24" y="292" fill="#7dd3fc" font-size="17" font-weight="600">Owner checked per record</text>
+    </g>
+    <g transform="translate(556)">
+      <rect width="252" height="330" rx="22" fill="#11151a" stroke="#313b47" stroke-width="2"/>
+      <rect width="252" height="60" rx="22" fill="#17243a"/>
+      <path d="M0 60H252" stroke="#313b47"/>
+      <text x="24" y="38" fill="#f4f6f8" font-size="23" font-weight="700">billing</text>
+      <g transform="translate(24 98)" fill="#d9dee5" font-size="18">
+        <text y="0">plans</text>
+        <text y="38">subscriptions</text>
+        <text y="76">payments</text>
+        <text y="114">webhook events</text>
+      </g>
+      <text x="24" y="292" fill="#7dd3fc" font-size="17" font-weight="600">Amounts from plan catalog</text>
+    </g>
+    <g transform="translate(834)">
+      <rect width="252" height="330" rx="22" fill="#11151a" stroke="#313b47" stroke-width="2"/>
+      <rect width="252" height="60" rx="22" fill="#17243a"/>
+      <path d="M0 60H252" stroke="#313b47"/>
+      <text x="24" y="38" fill="#f4f6f8" font-size="23" font-weight="700">ai</text>
+      <g transform="translate(24 98)" fill="#d9dee5" font-size="18">
+        <text y="0">skills</text>
+        <text y="38">user installations</text>
+        <text y="76">usage events</text>
+      </g>
+      <text x="24" y="292" fill="#7dd3fc" font-size="17" font-weight="600">Built-in or owner-scoped</text>
+    </g>
+  </g>
+  <g id="data-rules" transform="translate(56 504)" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif">
+    <rect width="1088" height="92" rx="18" fill="#15191f" stroke="#313b47" stroke-width="2"/>
+    <text x="28" y="36" fill="#f4f6f8" font-size="20" font-weight="650">Cross-domain rule</text>
+    <text x="28" y="65" fill="#aeb7c2" font-size="18">The authenticated actor is propagated through the BFF; services reject foreign records before returning or mutating data.</text>
+  </g>
+</svg>

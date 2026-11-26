@@ -64,9 +64,37 @@ import Synchronization
     precondition(!rows.flatMap(\.details).contains { $0.value.contains("secret") })
     print("PASS: actual calls show active and queued rows before any assistant text, without URL credentials/query or request context")
 
+    let question = f.call("conversation_ask")
+    let unrelated = f.call("conversation_ask", "another-question")
+    let questionID = WorkspaceToolCallIdentity.actionID(workspaceID: f.owner, sourceID: f.source, callID: question.id)
+    func questionCard(operationID: UUID, state: String = "pending", expiresAt: Date = .now.addingTimeInterval(60)) throws -> BlotV3.ConversationCard {
+        try .init(metadata: f.metadata(operationID), messageId: UUID(), operationId: operationID, executorDeviceId: f.owner,
+            kind: "question", state: state, expiresAt: expiresAt, payloadJSON: "{}", updatedByDeviceId: f.owner)
+    }
+    var questionSnapshot = try f.snapshot([f.step([question, unrelated])])
+    content.update(questionSnapshot, previous: value)
+    precondition(content.activities(for: pending).map(\.state) == [.running, .queued])
+    let questionCases: [(BlotV3.ConversationCard, WorkspaceToolActivity.State)] = [
+        (try questionCard(operationID: UUID()), .running),
+        (try questionCard(operationID: questionID, expiresAt: .distantPast), .running),
+        (try questionCard(operationID: questionID), .waitingForAnswer),
+        (try questionCard(operationID: questionID, state: "answered"), .running),
+    ]
+    for (card, expected) in questionCases {
+        let previous = questionSnapshot
+        questionSnapshot.cards = [card]
+        content.update(questionSnapshot, previous: previous)
+        precondition(content.activities(for: pending).map(\.state) == [expected, .queued])
+    }
+    let questionResult: ChatJSON = .object(["state": .string("answered")])
+    let answeredSnapshot = try f.snapshot([f.step([question, unrelated], results: [question.id: questionResult])])
+    content.update(answeredSnapshot, previous: questionSnapshot)
+    precondition(content.activities(for: pending).map(\.state) == [.succeeded, .running])
+    print("PASS: only a matching, unexpired question pauses its tool row, and answering invalidates the cached status")
+
     let action = try f.action("browser_click", state: .waiting_approval, scope: .browser)
     let step = try f.step([f.call("browser_click")])
-    let previous = value; value = try f.snapshot([step], actions: [action]); content.update(value, previous: previous)
+    value = try f.snapshot([step], actions: [action]); content.update(value, previous: answeredSnapshot)
     precondition(content.activities(for: pending).first?.state == .approval)
     let uncertain = try BlotV3.ToolInvocation(metadata: f.metadata(UUID()), execution: action.execution, preparedActionId: action.metadata.id, state: .unknown)
     let before = value; value.toolInvocations = [uncertain]
@@ -84,6 +112,11 @@ import Synchronization
     content.update(deniedSnapshot, previous: value)
     precondition(content.activities(for: pending).first?.state == .denied)
     let builder = WorkspaceToolActivityBuilder()
+    for tool in ["workspace_write_file", "workspace_create_directory", "document_create", "project_write_file"] {
+        let rows = builder.build(steps: [try f.step([f.call(tool)], results: ["call": .object(["state": .string("succeeded")])])], actions: [:], invocations: [:], connections: []).rows
+        precondition(rows.count == 1 && !rows[0].title(russian: false).isEmpty)
+    }
+    print("PASS: expanding successful file/folder actions resolves the full title table without duplicate-key traps")
     for (state, expected) in [(BlotV3.ModelStepState.canceled, WorkspaceToolActivity.State.stopped), (.interrupted, .unknown), (.completed, .unknown)] {
         let terminalStep = try f.step([f.call("git_push")], state: state)
         precondition(builder.build(steps: [terminalStep], actions: [:], invocations: [:], connections: []).rows.first?.state == expected)
@@ -134,12 +167,12 @@ private struct ProgressModel: ChatModel {
         try verifyPresentation()
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("blot-progress-" + UUID().uuidString)
         defer { try? FileManager.default.removeItem(at: root) }
-        let local = try LocalWorkspaceService(databaseURL: root.appendingPathComponent("workspace.sqlite"), makeModel: { _ in ProgressModel() })
+        let local = try LocalWorkspaceService(databaseURL: root.appendingPathComponent("workspace.sqlite"), runTokenBudget: 100000, makeModel: { _ in ProgressModel() })
         let store = WorkspaceStore(mode: .live, service: local)
         await store.loadWorkspace()
         store.form.agent = WorkspaceAgentForm(name: "Progress fixture", instructions: "Create a requested document", toolIDs: ["document_create"])
         await store.perform(.createAgent)
-        guard let agent = store.selectedAgentID else { throw VoiceFailure.emptyResponse }
+        guard let agent = store.selectedAgentID else { throw CocoaError(.coderInvalidValue) }
         await store.newChat(with: agent)
         store.form.composer.draft = "Создай документ"
         await store.perform(.send)
@@ -148,6 +181,10 @@ private struct ProgressModel: ChatModel {
             try await _Concurrency.Task.sleep(for: .milliseconds(20))
         }
         let replies = store.currentVisibleMessages.filter { $0.role == .assistant }
+        if replies.count != 2 || replies.last?.content != "Документ готов." {
+            print("Fixture reply status:", replies.map { ($0.delivery.rawValue, $0.content) }, "error:", store.error ?? "none")
+            fflush(stdout)
+        }
         precondition(replies.count == 2 && replies[0].content.contains("Подготовлю") && replies[1].content == "Документ готов.")
         precondition(WorkspaceMessageSeries.authorIDs(in: replies).count == 1)
         precondition(store.chatContent.activities(for: replies[0]).first?.state == .succeeded)

@@ -5,7 +5,7 @@ import dev.blot.cloud.CloudFailure;
 final class CloudSchema {
   static void migrate(CloudTransaction tx) {
     int version = tx.one("PRAGMA user_version", r -> r.getInt(1)).orElse(0);
-    if (version > 5) throw new CloudFailure(503, "schema_incompatible");
+    if (version > 6) throw new CloudFailure(503, "schema_incompatible");
     if (version == 0)
       for (String sql :
           new String[] {
@@ -52,6 +52,19 @@ final class CloudSchema {
     if (version < 5) {
       tx.execute("ALTER TABLE accounts ADD COLUMN avatar_url TEXT");
       tx.execute("PRAGMA user_version = 5");
+    }
+    if (version < 6) {
+      tx.execute(
+          "CREATE TABLE collaboration_teams (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, name TEXT NOT NULL, created_at INTEGER NOT NULL)");
+      tx.execute(
+          "CREATE TABLE collaboration_members (team_id TEXT NOT NULL REFERENCES collaboration_teams(id) ON DELETE CASCADE, account_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, role TEXT NOT NULL, PRIMARY KEY(team_id,account_id))");
+      tx.execute(
+          "CREATE TABLE collaboration_invites (token_hash TEXT PRIMARY KEY, team_id TEXT NOT NULL REFERENCES collaboration_teams(id) ON DELETE CASCADE, email TEXT NOT NULL, role TEXT NOT NULL, expires INTEGER NOT NULL)");
+      tx.execute(
+          "CREATE TABLE collaboration_bots (id TEXT PRIMARY KEY, team_id TEXT NOT NULL REFERENCES collaboration_teams(id) ON DELETE CASCADE, owner_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, version INTEGER NOT NULL, configuration TEXT NOT NULL, updated_at INTEGER NOT NULL)");
+      tx.execute(
+          "CREATE TABLE published_content (id TEXT PRIMARY KEY, owner_id TEXT NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, token_hash TEXT UNIQUE NOT NULL, kind TEXT NOT NULL, title TEXT NOT NULL, payload TEXT NOT NULL, expires INTEGER NOT NULL, revoked INTEGER NOT NULL DEFAULT 0)");
+      tx.execute("PRAGMA user_version = 6");
     }
   }
 }

@@ -20,11 +20,7 @@ struct PhoneGeneralSettingsView: View {
             }
             PhoneSettingsGroup(title: "General") {
                 PhoneSettingsValueRow(title: "Language", detail: "App interface language.") {
-                    Picker(store.t("Language"), selection: $store.languageSelection) {
-                        Text(store.t("System default")).tag("system")
-                        Text("Русский").tag("ru")
-                        Text("English").tag("en")
-                    }.labelsHidden()
+                    WorkspaceChoice(title: store.t("Language"), selection: $store.languageSelection, options: [.init("system", store.t("System default")), .init("ru", "Русский"), .init("en", "English")], showsTitle: false)
                 }
             }
             WorkspaceVoiceSettingsView()
@@ -48,11 +44,7 @@ struct PhoneAppearanceSettingsView: View {
         PhoneSettingsPage {
             PhoneSettingsGroup(title: "Appearance", detail: "The system theme follows the appearance of iOS.") {
                 PhoneSettingsValueRow(title: "Theme") {
-                    Picker(store.settingsText("Theme"), selection: $theme) {
-                        Text(store.settingsText("System")).tag(ThemePreference.system)
-                        Text(store.settingsText("Light")).tag(ThemePreference.light)
-                        Text(store.settingsText("Dark")).tag(ThemePreference.dark)
-                    }.labelsHidden()
+                    WorkspaceChoice(title: store.settingsText("Theme"), selection: $theme, options: [.init(.system, store.settingsText("System")), .init(.light, store.settingsText("Light")), .init(.dark, store.settingsText("Dark"))], showsTitle: false)
                 }
             }
             PhoneSettingsGroup(title: "Interface") {
@@ -66,13 +58,5 @@ struct PhoneAppearanceSettingsView: View {
 }
 
 struct PhoneUpdatesSettingsView: View {
-    var body: some View {
-        PhoneSettingsPage {
-            PhoneSettingsGroup(title: "Application version") {
-                PhoneSettingsRow(title: "Blot", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "—", showsChevron: false)
-                PhoneSettingsDivider()
-                PhoneSettingsRow(title: "Build", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "—", showsChevron: false)
-            }
-        }
-    }
+    var body: some View { PhoneSettingsPage { WorkspaceUpdatesView() } }
 }

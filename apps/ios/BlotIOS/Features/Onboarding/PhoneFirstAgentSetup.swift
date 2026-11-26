@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Owns the first blot's draft until both its profile and first chat are saved.
+/// Owns the first agent's draft until both its profile and first chat are saved.
 @MainActor @Observable
 final class PhoneFirstAgentSetup {
     enum Step: Int, CaseIterable {

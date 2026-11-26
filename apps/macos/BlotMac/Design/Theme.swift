@@ -24,7 +24,7 @@ extension Color {
     }
 }
 
-/// Blot design tokens for the Mac app, backed by `BlotDesign`.
+/// Ori design tokens for the Mac app, backed by `BlotDesign`.
 enum K {
     // Surfaces
     static let bg = BlotColor.canvas

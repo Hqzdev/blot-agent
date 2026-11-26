@@ -10,7 +10,7 @@ struct MacWelcomeView: View {
                 VStack(spacing: 44) {
                     HStack(spacing: 20) {
                         mark
-                        Text("Blot Agent").font(.system(size: 64, weight: .regular))
+                        Text("Ori").font(.system(size: 64, weight: .regular))
                             .lineLimit(1).minimumScaleFactor(0.7).accessibilityAddTraits(.isHeader)
                     }
                     Text(store.t("Your team of always-on agents\nyou can give real work to"))

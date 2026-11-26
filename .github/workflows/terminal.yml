@@ -1,0 +1,33 @@
+name: Terminal checks
+
+on:
+  pull_request:
+  push:
+    branches: [main, 'mac/**', 'ios/**', 'windows/**', 'android/**']
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: apps/terminal
+
+jobs:
+  test:
+    name: py${{ matrix.python }} ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: apps/terminal/uv.lock
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: scripts/run_tests.sh

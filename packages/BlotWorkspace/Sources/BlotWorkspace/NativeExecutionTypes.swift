@@ -84,6 +84,7 @@ public struct NativeRequest: Codable, Sendable {
     public enum Operation: String, Codable, Sendable {
         case start, status, stop, fileRead, fileSearch, fileWrite, gitStatus, gitDiff, gitLog, gitPrepareCommit, gitCommit, gitPreparePush, gitPush, gitReconcilePush, gitBranch
         case workspacePrepare, workspaceRecord, workspaceRemoveRecord, workspaceEraseOwner, workspaceList, workspaceRead, workspaceWrite, workspaceMkdir, workspaceCopyArtifact
+        case teachApplications, teachStart, teachStatus, teachPause, teachStop, teachReplay
     }
     public let operation: Operation
     public let command: NativeCommand

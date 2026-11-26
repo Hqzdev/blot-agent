@@ -12,7 +12,14 @@ public protocol AppleIntegrationExecuting: Sendable {
     func resources(_ plugin: ApplePluginID, selected: [String]) async throws -> [AppleResource]
     func accessible(_ plugin: ApplePluginID, resources: [String]) async -> Bool
     func execute(_ tool: AppleTool, arguments: ChatJSON) async throws -> ChatJSON
+    func reviseMailDraft(arguments: ChatJSON, draft: WorkspaceCardContent.MailDraft) async throws
+    func discardMailDraft(arguments: ChatJSON) async throws
     func preview(_ tool: AppleTool, arguments: ChatJSON) async throws -> ChatJSON?
+}
+
+public extension AppleIntegrationExecuting {
+    func reviseMailDraft(arguments: ChatJSON, draft: WorkspaceCardContent.MailDraft) async throws { throw AppleIntegrationError.unavailable }
+    func discardMailDraft(arguments: ChatJSON) async throws { throw AppleIntegrationError.unavailable }
 }
 
 @MainActor @Observable
@@ -122,6 +129,22 @@ public final class AppleIntegrationController: AppleIntegrationExecuting {
             return try await interactions.compose(arguments)
             #endif
         }
+    }
+    public func reviseMailDraft(arguments: ChatJSON, draft: WorkspaceCardContent.MailDraft) async throws {
+        #if os(macOS)
+        guard case .object(var fields) = arguments else { throw AppleIntegrationError.invalidArguments }
+        fields["recipient"] = .string(draft.recipient); fields["subject"] = .string(draft.subject); fields["body"] = .string(draft.body)
+        _ = try await automation.mailDraft(operation: "update_draft", arguments: AppleArguments(.object(fields)))
+        #else
+        throw AppleIntegrationError.unavailable
+        #endif
+    }
+    public func discardMailDraft(arguments: ChatJSON) async throws {
+        #if os(macOS)
+        _ = try await automation.mailDraft(operation: "discard_draft", arguments: AppleArguments(arguments))
+        #else
+        throw AppleIntegrationError.unavailable
+        #endif
     }
     public func preview(_ tool: AppleTool, arguments json: ChatJSON) async throws -> ChatJSON? {
         let arguments = try AppleArguments(json)

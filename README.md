@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme/hero.svg" width="100%" alt="Blot — an AI assistant with a team of agents for Mac and iPhone">
+  <img src="assets/readme/hero.svg" width="100%" alt="Ori — an AI assistant with a team of agents for Mac and iPhone">
 </p>
 
 <p align="center">
@@ -10,14 +10,14 @@
   <a href="docs/README.md">Documentation</a>
 </p>
 
-# Blot
+# Ori
 
 **One task. A team of agents. Results in your workspace.**
 
-Blot is an AI assistant in development, with native apps for Mac and iPhone. You describe a task in chat, a coordinator brings in agents with the right roles, and plans, files, and actions come together in one place. This repository contains the apps, local services, website, and contracts.
+Ori is an AI assistant in development, with native apps for Mac and iPhone. You describe a task in chat, a coordinator brings in agents with the right roles, and plans, files, and actions come together in one place. This repository contains the apps, local services, website, and contracts.
 
 <p align="center">
-  <img src="docs/status/verification/mac-team-demo/workspace.jpg" width="100%" alt="Blot on macOS: a team discusses invoices and drafts an email, with participants, schedules, and connections open on the right">
+  <img src="docs/status/verification/mac-team-demo/workspace.jpg" width="100%" alt="Ori on macOS: a team discusses invoices and drafts an email, with participants, schedules, and connections open on the right">
 </p>
 
 <p align="center"><sub>Team chat on macOS. This screenshot is from the local demo, where external services and actions use test data.</sub></p>
@@ -40,7 +40,7 @@ This is an overview of the project's capabilities. Availability of a particular 
 ### iPhone · tasks, team, and schedules
 
 <p align="center">
-  <img src="docs/status/verification/apple-v3/ios/10-chat-with-ceo-light.png" width="30%" alt="iPhone: discussing a task and reviewing a plan with Blot CEO">
+  <img src="docs/status/verification/apple-v3/ios/10-chat-with-ceo-light.png" width="30%" alt="iPhone: discussing a task and reviewing a plan with Ori CEO">
   <img src="docs/status/verification/apple-v3/ios/15-my-agents-light.png" width="30%" alt="iPhone: an agent catalog with roles and individual avatars">
   <img src="docs/status/verification/apple-v3/ios/17-schedules-light.png" width="30%" alt="iPhone: schedules for a morning digest and weekly meal plan">
 </p>
@@ -56,11 +56,11 @@ This is an overview of the project's capabilities. Availability of a particular 
 
 ### macOS · settings in dark mode
 
-<img src="docs/status/verification/mac-settings-page/general-dark.jpg" width="100%" alt="macOS: Blot's general settings page in dark mode">
+<img src="docs/status/verification/mac-settings-page/general-dark.jpg" width="100%" alt="macOS: Ori's general settings page in dark mode">
 
-### Web · Blot landing page
+### Web · Ori landing page
 
-<img src="landing/design-evidence/implementation-desktop-hero.png" width="100%" alt="Blot's website hero: an introduction to the assistant, navigation, and product preview">
+<img src="landing/design-evidence/implementation-desktop-hero.png" width="100%" alt="Ori's website hero: an introduction to the assistant, navigation, and product preview">
 
 </details>
 
@@ -76,12 +76,36 @@ The project is under active development. The repository includes SwiftUI clients
 | **Workspace** | Chat, agent, file, task, permission, memory, and sync services, with component tests. |
 | **Backend and accounts** | Local Java server modules, a separate `cloud` module, web authentication, and session handoff to the app. |
 | **Website** | Landing page, product pages, documentation, and a project `/workspace`. |
+| **Web application** | Lumia application in `apps/web`, with shared Ori login and PostgreSQL chat history for web/Mac/iPhone. Documents and library remain available; common model gateway integration is a subsequent stage. |
+| **Terminal application** | Imported Python coding agent in `apps/terminal`; `blot` and `pilot-agent` run the same CLI. |
 | **Android and Windows** | Target platforms in the specification and designs; native apps are not yet included in this repository. |
 | **Release** | The instructions below are for development from source. Release readiness is assessed against the acceptance matrix. |
 
 Screen reviews, successful builds, and component tests cover different parts of the product. A complete workflow with a real model, email, connections, and a physical iPhone requires separate verification. The main requirements and BLOT-01…30 are described in the [November 1, 2026 specification](docs/product/blot-technical-specification.md); verification history is in [`docs/status/`](docs/status/).
 
 ## Quick start
+
+### Imported web and terminal applications
+
+The product website remains in `landing/`. The web application is built independently:
+
+```bash
+cd apps/web
+pnpm install --frozen-lockfile
+pnpm dev
+```
+
+Its root opens the chat sign-in flow. Lumia's original landing source is preserved in `docs/design/lumia-landing` and is not served by the web app.
+
+For the Python CLI, from the repository root:
+
+```bash
+cd apps/terminal
+UV_PYTHON_DOWNLOADS=never uv sync --all-groups --frozen
+uv run blot --help
+```
+
+See the [web guide](apps/web/README.md), [terminal guide](apps/terminal/README.md), and [unification plan](docs/product/blot-unification-plan.md). Web login now uses the existing Ori account service; see [configuration and verification](docs/status/web-blot-auth.md). Shared history, CLI login and the common GigaChat gateway remain subsequent stages.
 
 ### Get the source
 
@@ -121,7 +145,7 @@ Open [`apps/Blot.xcodeproj`](apps/Blot.xcodeproj), select the **BlotMac** scheme
 ./script/build_and_run.sh
 ```
 
-The script builds the app, checks for the embedded Java backend, and launches Blot. Additional modes are available:
+The script builds the app, checks for the embedded Java backend, and launches Ori. Additional modes are available:
 
 ```bash
 # Build without launching

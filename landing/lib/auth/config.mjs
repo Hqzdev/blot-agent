@@ -1,5 +1,6 @@
 import { createHmac } from "node:crypto";
 import { AuthError } from "./errors.mjs";
+import { accountDatabaseURL } from "../accounts/database-url.mjs";
 export { AuthError } from "./errors.mjs";
 
 export function accountOrigin() {
@@ -42,7 +43,7 @@ export function yandexConfiguration() {
       || !(url.protocol === "https:" || (url.protocol === "http:" && ["127.0.0.1", "localhost"].includes(url.hostname)))) {
     throw new AuthError("yandex_unconfigured", 503);
   }
-  if (!process.env.DATABASE_URL) throw new AuthError("auth_service_unconfigured", 503);
+  if (!accountDatabaseURL()) throw new AuthError("auth_service_unconfigured", 503);
   return { clientID, clientSecret, redirectURI };
 }
 
@@ -52,7 +53,7 @@ export async function accountRequest(path, { body, accessToken, method = "POST",
     const { localAccountService } = await import("../accounts/service.mjs");
     return localAccountService(developmentDatabase()).request(path, { body, accessToken, method, clientIP });
   }
-  if (process.env.DATABASE_URL) {
+  if (accountDatabaseURL()) {
     const { localAccountService } = await import("../accounts/service.mjs");
     return localAccountService().request(path, { body, accessToken, method, clientIP });
   }

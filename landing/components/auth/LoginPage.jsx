@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, Check, LoaderCircle } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Check, LoaderCircle, X } from "lucide-react";
 import { AppHandoff } from "@/lib/auth/app-handoff.mjs";
 import { loginCopy, loginErrors } from "@/lib/auth/login-copy";
-import { useLocale } from "@/components/site/LocaleProvider";
+import { LanguageSwitcher, useLocale } from "@/components/site/LocaleProvider";
+import { Pet } from "@/components/landing/Pet";
 import { AuthProviders } from "./AuthProviders";
 import "./login.css";
 
@@ -20,6 +21,8 @@ async function request(path, body) {
 export function LoginPage({ attempt, query, initialMode, initialError, googleEnabled, yandexEnabled }) {
   const { language } = useLocale();
   const copy = loginCopy[language];
+  const webAttempt = attempt?.clientID === "blot-web";
+  const cliAttempt = attempt?.clientID === "blot-cli";
   const [intent, setIntent] = useState(initialMode);
   const [step, setStep] = useState("providers");
   const [account, setAccount] = useState(null);
@@ -100,15 +103,30 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
   }
   const registering = intent === "register";
   const title = account ? copy.signedIn : step === "code" ? copy.verify : registering ? copy.register : copy.login;
+  const confirming = step === "code";
+  const accountDescription = cliAttempt
+    ? (language === "ru" ? "Подтверди вход и вернись в терминал." : "Continue sign-in and return to your terminal.")
+    : attempt ? copy.nativeDescription : copy.accountDescription;
   return <main id="main-content" className="auth-page" lang={language}>
+    <header className="auth-header">
+      <Link className="auth-glass auth-close" href="/" aria-label={copy.close}><X size={19} aria-hidden="true" /></Link>
+      <span className="auth-brand">Ori</span>
+      <LanguageSwitcher />
+    </header>
     <section className="auth-panel" aria-labelledby="auth-title" aria-busy={busy || checking}>
+      <div className="auth-heading">
+        <Pet size={68} animated={false} />
+        <h1 id="auth-title">{title}</h1>
+        {account ? <p>{accountDescription}</p> : confirming ? <p>{copy.codeDescription} <strong>{email.trim()}</strong>. {copy.codeHint}</p> : null}
+      </div>
+      {notice && <p className="auth-notice" role="status">{copy[notice]}</p>}
+      {error && <p className="auth-error" role="alert" tabIndex={-1} ref={errorRef}>{loginErrors[error]?.[language === "ru" ? 0 : 1] || copy.unknown}</p>}
       {checking ? <div className="auth-checking" role="status"><LoaderCircle size={20} className="auth-spinner" />{copy.checking}</div> : <>
-        <div className="auth-heading"><h1 id="auth-title">{title}</h1><p>{account ? attempt ? copy.nativeDescription : copy.accountDescription : step === "code" ? <>{copy.codeDescription} <strong>{email.trim()}</strong>. {copy.codeHint}</> : step === "providers" ? copy.choose : null}</p></div>
         {account ? <>
           <div className="auth-account"><span className="auth-check"><Check size={20} /></span><div><strong>{account.name}</strong><span>{account.email}</span></div></div>
           {!attempt && <div className="auth-platforms" role="group" aria-label={copy.device}><button type="button" aria-pressed={platform === "macos"} onClick={() => setPlatform("macos")}>Mac</button><button type="button" aria-pressed={platform === "ios"} onClick={() => setPlatform("ios")}>iPhone</button></div>}
-          <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? <><LoaderCircle className="auth-spinner" size={18} />{copy.opening}</> : <>{attempt ? copy.again : copy.open}<ArrowUpRight size={17} /></>}</button>
-          <p className="auth-help">{copy.openHelp}</p><Link className="auth-download" href="/beta">{copy.download}</Link>
+          <button className="auth-primary" disabled={busy} onClick={prepareApp}>{busy ? <><LoaderCircle className="auth-spinner" size={18} />{copy.opening}</> : <>{cliAttempt ? (language === "ru" ? "Продолжить в терминале" : "Continue in terminal") : webAttempt ? (language === "ru" ? "Продолжить в веб-приложении" : "Continue on the web") : attempt ? copy.again : copy.open}<ArrowUpRight size={17} /></>}</button>
+          {!webAttempt && !cliAttempt && <><p className="auth-help">{copy.openHelp}</p><Link className="auth-download" href="/beta">{copy.download}</Link></>}
           <button type="button" className="auth-text-button" disabled={busy} onClick={logout}>{copy.other}</button>
         </> : <>
           {step === "providers" ? <AuthProviders copy={copy} query={query} registering={registering} googleEnabled={googleEnabled} yandexEnabled={yandexEnabled} onEmail={() => changeStep("email")} onUnavailable={setError} /> : <>
@@ -117,17 +135,21 @@ export function LoginPage({ attempt, query, initialMode, initialError, googleEna
                 {registering && <label>{copy.name}<input ref={inputRef} name="name" autoComplete="name" required maxLength={200} value={name} onChange={event => setName(event.target.value)} disabled={busy} /></label>}
                 <label>{copy.email}<input ref={registering ? null : inputRef} name="email" type="email" autoComplete="email" autoCapitalize="none" spellCheck={false} required maxLength={254} value={email} onChange={event => setEmail(event.target.value)} disabled={busy} /></label>
               </> : <label>{copy.code}<input ref={inputRef} className="auth-code" name="code" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6}" minLength={6} maxLength={6} required value={code} onChange={event => setCode(event.target.value.replace(/\D/g, ""))} disabled={busy} /></label>}
-              <button className="auth-primary" type="submit" disabled={busy}>{busy ? <><LoaderCircle className="auth-spinner" size={18} />{copy.wait}</> : step === "code" ? copy.confirm : copy.send}</button>
+              <div className={confirming ? "auth-form-actions auth-form-actions-split" : "auth-form-actions"}>
+                {confirming && <button className="auth-glass" type="button" disabled={busy} onClick={() => changeStep("email")}>{copy.cancel}</button>}
+                <button className="auth-primary" type="submit" disabled={busy}>
+                  {busy && <LoaderCircle className="auth-spinner" size={18} aria-hidden="true" />}
+                  {busy ? copy.wait : confirming ? copy.confirm : copy.send}
+                </button>
+              </div>
             </form>
             {step === "code" && <button type="button" className="auth-text-button" disabled={busy || remaining > 0} onClick={resend}>{remaining > 0 ? `${copy.resendIn} ${remaining} ${copy.seconds}` : copy.resend}</button>}
-            <button type="button" className="auth-back" disabled={busy} onClick={() => changeStep(step === "code" ? "email" : "providers")}><ArrowLeft size={14} />{step === "code" ? copy.changeEmail : copy.back}</button>
+            {!confirming && <button type="button" className="auth-back" disabled={busy} onClick={() => changeStep("providers")}><ArrowLeft size={14} aria-hidden="true" />{copy.back}</button>}
           </>}
           {step !== "code" && <p className="auth-switch">{registering ? copy.hasAccount : copy.noAccount} <button type="button" disabled={busy} onClick={changeIntent}>{registering ? copy.signIn : copy.signUp}</button></p>}
           <p className="auth-privacy">{copy.privacy} <Link href="/privacy">{copy.privacyLink}</Link>.</p>
         </>}
       </>}
-      {notice && <p className="auth-notice" role="status">{copy[notice]}</p>}
-      {error && <p className="auth-error" role="alert" tabIndex={-1} ref={errorRef}>{loginErrors[error]?.[language === "ru" ? 0 : 1] || copy.unknown}</p>}
     </section>
   </main>;
 }

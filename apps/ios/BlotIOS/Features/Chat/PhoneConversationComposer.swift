@@ -69,6 +69,7 @@ struct PhoneConversationComposer: View {
                 }
             }.ignoresSafeArea()
         }
+        .workspacePanelSheet(isPresented: presented(.skills)) { WorkspaceSkillQuickPicker().environment(store) }
         .fileImporter(isPresented: presented(.files), allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
             switch result {
             case .success(let urls):
