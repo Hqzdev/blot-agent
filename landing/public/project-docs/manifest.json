@@ -58,12 +58,21 @@
       "taskCompleted": false
     },
     {
+      "id": "ori-defense-specification",
+      "taskId": null,
+      "source": "docs/product/ori-defense-specification.md",
+      "downloadUrl": "/project-docs/product/ori-defense-specification.md",
+      "sha256": "dc7d2cb2b820efe437f5a1f529b51253539bdd5e2986aee198636f7abdbfde09",
+      "bytes": 6761,
+      "taskCompleted": false
+    },
+    {
       "id": "blot-technical-specification",
       "taskId": null,
       "source": "docs/product/blot-technical-specification.md",
       "downloadUrl": "/project-docs/product/blot-technical-specification.md",
-      "sha256": "7f1c1326d59608b1bf0b6ba008b5dfe31db2398ea0791711ec4a9b8a5b41c4d9",
-      "bytes": 90317,
+      "sha256": "a6bbc8d7683bc1bfe6bd6648badc45efe405a6f90d5d8aba288a254b5e8666ef",
+      "bytes": 90503,
       "taskCompleted": false
     },
     {
@@ -287,8 +296,8 @@
       "taskId": null,
       "source": "docs/README.md",
       "downloadUrl": "/project-docs/README.md",
-      "sha256": "3ba2c58f74b09bbfaf0a2e1d55405d79c7115e10a4fd4df21c656697f8fdc94c",
-      "bytes": 8488,
+      "sha256": "1c80873d25b5cb4c2134cf4b145aeb2661318ef1bdb48386a57ebfc143eeffaa",
+      "bytes": 8549,
       "taskCompleted": false
     },
     {
