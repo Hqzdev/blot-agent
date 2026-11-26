@@ -55,16 +55,12 @@ for argument in sys.argv[1:]:
 PY
 
 scripts/sign-native.sh --entitlements apps/macos/BlotMac/BlotMac.entitlements "$mac"
-codesign --verify --deep --strict "$mac"
-mkdir -p "$stage/dmg" "$stage/ipa/Payload"
-ditto "$mac" "$stage/dmg/Ori.app"
-ln -s /Applications "$stage/dmg/Applications"
+mkdir -p "$stage/ipa/Payload"
 ditto "$ios" "$stage/ipa/Payload/Ori.app"
 
 dmg=Ori-1.0-Beta.2-macOS-arm64.dmg
 ipa=Ori-1.0-Beta.2-iOS.ipa
-hdiutil create -fs HFS+ -format UDZO -srcfolder "$stage/dmg" -volname 'Ori 1.0 Beta 2' "$stage/$dmg"
-hdiutil verify "$stage/$dmg"
+bash scripts/package-dmg.sh "$mac" "$stage/$dmg" 'Ori 1.0 Beta 2'
 (cd "$stage/ipa" && ditto -c -k --keepParent Payload "$stage/$ipa")
 unzip -tq "$stage/$ipa"
 (cd "$stage" && shasum -a 256 "$dmg" "$ipa" > SHA256SUMS.txt)
