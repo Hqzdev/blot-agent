@@ -150,6 +150,7 @@ struct MacLiveTeamConversation: View {
                 .frame(maxWidth: .infinity).background(WorkspaceStyle.canvas)
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
+        .background { MacChatWallpaperBackground() }
         .kAnimation(MacTeamMessageMotion.receive, value: timeline.lastRevealedID)
         .kAnimation(MacTeamMessageMotion.receive, value: store.currentReplyDraft)
     }

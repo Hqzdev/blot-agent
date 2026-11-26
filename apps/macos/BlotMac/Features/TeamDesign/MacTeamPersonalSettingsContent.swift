@@ -67,6 +67,7 @@ struct MacTeamPersonalSettingsContent: View {
                               showsTitle: false)
             }
         }
+        MacChatWallpaperSettings()
         MacTeamSettingsSection(title: "Интерфейс") {
             MacTeamSettingsToggle(title: "Компактные сообщения",
                                   detail: "Меньше расстояние между сообщениями и отступы внутри пузырей.", isOn: $compactMessages)

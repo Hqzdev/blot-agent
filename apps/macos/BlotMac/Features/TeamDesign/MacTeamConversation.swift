@@ -88,6 +88,7 @@ struct MacTeamConversation: View {
             } catch { assertionFailure("Unexpected message animation delay error: \(error)") }
         }
         .coordinateSpace(name: MacTeamMessageMotion.coordinateSpace)
+        .background { MacChatWallpaperBackground() }
     }
 
     private struct MessageUpdate: Equatable {
