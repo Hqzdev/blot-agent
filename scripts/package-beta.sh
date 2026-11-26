@@ -3,7 +3,7 @@ set -euo pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 free_kib=$(df -Pk . | awk 'NR == 2 {print $4}')
-if [[ "$free_kib" -lt 20971520 ]]; then
+if [[ "$free_kib" -lt 20971520 && "${ORI_RELEASE_ALLOW_LOW_DISK:-0}" != 1 ]]; then
     echo 'Apple release builds require at least 20 GiB of free disk space.' >&2
     exit 1
 fi
