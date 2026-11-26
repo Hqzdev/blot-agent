@@ -138,7 +138,9 @@ public final class V3Workspace {
             actor.deviceId() != null,
             false,
             false,
-            ConversationKind.DIRECT));
+            ConversationKind.DIRECT,
+            null,
+            null));
   }
 
   private void sendMessage(V3Store.Transaction tx, Actor actor, Command command) {
@@ -248,7 +250,9 @@ public final class V3Workspace {
                       chat.mobileOwned(),
                       chat.pinned(),
                       chat.archived(),
-                      chat.kind())),
+                      chat.kind(),
+                      chat.parentConversationId(),
+                      chat.parentMessageId())),
               true));
       for (var record : tx.records("Message")) {
         var message = json.convert(record.value(), Message.class);
@@ -268,7 +272,9 @@ public final class V3Workspace {
               chat.mobileOwned(),
               bool(p, "pinned", chat.pinned()),
               bool(p, "archived", chat.archived()),
-              chat.kind()));
+              chat.kind(),
+              chat.parentConversationId(),
+              chat.parentMessageId()));
     }
   }
 

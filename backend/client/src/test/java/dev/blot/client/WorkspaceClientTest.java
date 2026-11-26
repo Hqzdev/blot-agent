@@ -86,7 +86,15 @@ class WorkspaceClientTest {
           new RecordMetadata(UUID.randomUUID(), owner, workspace, 1, Instant.now(), Instant.now());
       var chat =
           new Conversation(
-              metadata, UUID.randomUUID(), "Chat", false, false, false, ConversationKind.DIRECT);
+              metadata,
+              UUID.randomUUID(),
+              "Chat",
+              false,
+              false,
+              false,
+              ConversationKind.DIRECT,
+              null,
+              null);
       var accepted = client.send(chat, "Hello", commandId);
       assertEquals("ACCEPTED", accepted.state());
       assertEquals(accepted, client.send(chat, "Hello", commandId));
