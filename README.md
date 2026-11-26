@@ -51,8 +51,8 @@ To try a conversation, add your model credentials, select that model in the agen
 ## Build from source
 
 ```bash
-git clone https://github.com/Hqzdev/blot-agent.git
-cd blot-agent
+git clone https://github.com/Hqzdev/ori-agent.git
+cd ori-agent
 ```
 
 ### Apple apps
@@ -113,4 +113,4 @@ For website checks, run `npm run test:plan`, `npm run test:auth`, and `npm run b
 - [Module map](docs/architecture/module-map.md) and [v3 contracts](contracts/v3/README.md)
 - [Permissions and approvals](docs/rules/permission-policy.md) and [MCP developer guide](docs/integrations/mcp-developer-guide.md)
 - [Verification notes and evidence](docs/status/)
-- [Report a bug](https://github.com/Hqzdev/blot-agent/issues)
+- [Report a bug](https://github.com/Hqzdev/ori-agent/issues)
