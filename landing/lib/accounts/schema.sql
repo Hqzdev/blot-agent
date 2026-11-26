@@ -66,3 +66,13 @@ CREATE TABLE IF NOT EXISTS blot_workspace_backup_parts (
 
 ALTER TABLE blot_email_challenges DROP CONSTRAINT IF EXISTS blot_email_challenges_purpose_check;
 ALTER TABLE blot_email_challenges ADD CONSTRAINT blot_email_challenges_purpose_check CHECK (purpose IN ('verify', 'reset', 'delete', 'signin'));
+
+-- Accounts are accessed by the trusted server connection. Public PostgREST
+-- roles receive no row policies, including on Supabase's exposed public schema.
+ALTER TABLE blot_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_email_challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_auth_rates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_browser_codes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_workspace_backups ENABLE ROW LEVEL SECURITY;
+ALTER TABLE blot_workspace_backup_parts ENABLE ROW LEVEL SECURITY;

@@ -2,6 +2,8 @@ import { Pool } from "pg";
 import { attachDatabasePool } from "@vercel/functions";
 import { readFile } from "node:fs/promises";
 import { AuthError } from "../auth/errors.mjs";
+import { accountDatabaseURL } from "./database-url.mjs";
+import { accountConnectionOptions } from "./connection-options.mjs";
 
 export class AccountDatabase {
   #pool;
@@ -10,7 +12,13 @@ export class AccountDatabase {
   constructor(pool) { this.#pool = pool; }
 
   async initialize() {
-    this.#ready ??= this.#migrate().catch(error => { this.#ready = undefined; throw error; });
+    this.#ready ??= this.#migrate().catch(error => {
+      this.#ready = undefined;
+      // Driver messages/details can contain credentials or account data.
+      const code = typeof error?.code === "string" && /^[A-Z0-9_]{1,64}$/.test(error.code) ? error.code : "UNKNOWN";
+      console.error(JSON.stringify({ event: "account_database_initialization_failed", code }));
+      throw new AuthError("auth_service_unavailable", 503);
+    });
     await this.#ready;
   }
 
@@ -41,9 +49,9 @@ export class AccountDatabase {
 let database;
 export function accountDatabase() {
   if (!database) {
-    const connectionString = process.env.DATABASE_URL;
+    const connectionString = accountDatabaseURL();
     if (!connectionString) throw new AuthError("auth_service_unconfigured", 503);
-    const pool = new Pool({ connectionString, max: 4, idleTimeoutMillis: 5000, connectionTimeoutMillis: 10_000 });
+    const pool = new Pool({ ...accountConnectionOptions(connectionString), max: 4, idleTimeoutMillis: 5000, connectionTimeoutMillis: 10_000 });
     attachDatabasePool(pool);
     database = new AccountDatabase(pool);
   }
