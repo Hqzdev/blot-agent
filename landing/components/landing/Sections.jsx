@@ -24,7 +24,7 @@ export function Hero() {
   const { t } = useLocale();
   return <section id="hero" className="blot-hero">
     <Reveal className="blot-hero-copy"><Link href="/changelog" className="blot-announcement"><span className="blot-announcement-desktop">{t("1.0 Beta is here · See what’s new")}</span><span className="blot-announcement-mobile">{t("1.0 Beta is here")}</span><ArrowUpRight size={13} /></Link>
-      <h1>{t("Meet")}<Pet size={60} />{t("Blot")}</h1>
+      <h1>{t("Meet")}<Pet size={60} />{t("Ori")}</h1>
       <p>{t("AI teammates you can give real work to. Bots can sign in to your tools, use them just like you do, and come back with finished work.")}</p>
       <div className="blot-actions"><a className="blot-button" href={releaseDownload("macos")}><AppleMark />{t("Download for macOS")}</a><Link className="blot-button blot-button-soft" href="/contact">{t("Contact sales")}</Link></div>
     </Reveal>
@@ -74,7 +74,7 @@ export function Pricing() {
           <article className="blot-plan"><div className="blot-plan-header"><h3>{t("Teams")}</h3><div className="blot-seat-picker" aria-label={t("Choose a Teams seat")}>{individualPlans.map((plan, index) => <button key={plan.name} aria-pressed={seat === index} className={seat === index ? "is-selected" : ""} onClick={() => setSeat(index)}>{plan.name}</button>)}</div></div><div className="blot-plan-price"><strong>${individualPlans[seat].price}</strong><span>{t("/ user / month")}</span></div><p className="blot-plan-billing">{t("Billed monthly")}</p><Link className="blot-button" href={`/beta?plan=teams&seat=${individualPlans[seat].name.toLowerCase()}`}>{t("Get Teams")}</Link><FeatureList intro="Includes:" items={teamFeatures} /></article>
           <article className="blot-plan"><h3>{t("Enterprise")}</h3><div className="blot-plan-price"><strong>{t("Custom")}</strong></div><p className="blot-plan-billing">{t("Let’s find the right fit")}</p><Link className="blot-button blot-button-soft" href="/contact">{t("Contact sales")}</Link><FeatureList intro="Everything in Teams, plus:" items={enterpriseFeatures} /></article>
         </>}
-      </div><p className="blot-pricing-note">{t("Already on an eligible Premium, Super, Ultra, Teams, or Enterprise plan? Blot is included.")}</p></Reveal></section>;
+      </div><p className="blot-pricing-note">{t("Already on an eligible Premium, Super, Ultra, Teams, or Enterprise plan? Ori is included.")}</p></Reveal></section>;
 }
 
 export function Downloads() {
@@ -87,12 +87,12 @@ export function Downloads() {
     document.addEventListener("keydown", close);
     return () => { document.removeEventListener("pointerdown", close); document.removeEventListener("keydown", close); };
   }, []);
-  return <section id="download" className="blot-section blot-download"><Reveal className="blot-download-card"><div><h2>{t("Download Blot")}</h2><p>{betaRelease.version} · {t("macOS 26+ on Apple Silicon and iOS 26+. iPhone IPA requires your own signing.")}</p><Link className="site-text-link" href="/beta">{t("Installation guide and model setup")}<ArrowUpRight size={14} /></Link></div><div className="blot-download-actions" ref={ref}><a className="blot-button" href={releaseDownload("macos")}><AppleMark />{t("Download for macOS")}</a><button className="blot-button blot-button-paper" aria-expanded={open} aria-controls="blot-platforms" onClick={() => setOpen(!open)}>{t("More downloads")}<ChevronDown size={15} /></button><AnimatePresence>{open && <motion.div className="blot-platform-menu" id="blot-platforms" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.16 }}>{releasePlatforms.map(({ name, id, file }) => { const Icon = ["macos", "windows"].includes(id) ? Laptop : Smartphone; return file ? <a key={id} href={releaseDownload(id)}><Icon size={16} /><span>{name}</span><Download size={14} /></a> : <span className="blot-platform-soon" key={id} aria-disabled="true"><Icon size={16} /><span>{name}</span><small>{t("Soon")}</small></span>; })}</motion.div>}</AnimatePresence></div></Reveal></section>;
+  return <section id="download" className="blot-section blot-download"><Reveal className="blot-download-card"><div><h2>{t("Download Ori")}</h2><p>{betaRelease.version} · {t("macOS 26+ on Apple Silicon and iOS 26+. iPhone IPA requires your own signing.")}</p><Link className="site-text-link" href="/beta">{t("Installation guide and model setup")}<ArrowUpRight size={14} /></Link></div><div className="blot-download-actions" ref={ref}><a className="blot-button" href={releaseDownload("macos")}><AppleMark />{t("Download for macOS")}</a><button className="blot-button blot-button-paper" aria-expanded={open} aria-controls="blot-platforms" onClick={() => setOpen(!open)}>{t("More downloads")}<ChevronDown size={15} /></button><AnimatePresence>{open && <motion.div className="blot-platform-menu" id="blot-platforms" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.16 }}>{releasePlatforms.map(({ name, id, file }) => { const Icon = ["macos", "windows"].includes(id) ? Laptop : Smartphone; return file ? <a key={id} href={releaseDownload(id)}><Icon size={16} /><span>{name}</span><Download size={14} /></a> : <span className="blot-platform-soon" key={id} aria-disabled="true"><Icon size={16} /><span>{name}</span><small>{t("Soon")}</small></span>; })}</motion.div>}</AnimatePresence></div></Reveal></section>;
 }
 
 export function Guides() {
   const { t } = useLocale();
-  return <section id="guides" className="blot-section blot-guides"><Reveal className="blot-guide-card"><h2>{t("Blot Guides")}</h2><p>{t("How PMs, designers, and GTM run Blot day to day.")}</p><Link href="/docs" className="blot-button">{t("Read guides")}<ArrowUpRight size={14} /></Link></Reveal></section>;
+  return <section id="guides" className="blot-section blot-guides"><Reveal className="blot-guide-card"><h2>{t("Ori Guides")}</h2><p>{t("How PMs, designers, and GTM run Ori day to day.")}</p><Link href="/docs" className="blot-button">{t("Read guides")}<ArrowUpRight size={14} /></Link></Reveal></section>;
 }
 
 export function FAQ() {

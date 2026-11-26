@@ -14,7 +14,7 @@ export function generateStaticParams() { return documents.map((document) => ({ i
 export async function generateMetadata({ params }) {
   const { id } = await params;
   const document = getDocument(id);
-  return { title: document ? `Blot — ${document.title}` : "Blot — документ" };
+  return { title: document ? `Ori — ${document.title}` : "Ori — документ" };
 }
 
 export default async function DocumentPage({ params }) {

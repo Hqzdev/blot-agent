@@ -19,40 +19,40 @@ export const chats = [
 ];
 
 export const features = [
-  { title: "Blot works where you work", body: "Log Blot in once. It uses your apps and websites just like you would, including the tools that are harder to navigate." },
+  { title: "Ori works where you work", body: "Log Ori in once. It uses your apps and websites just like you would, including the tools that are harder to navigate." },
   { title: "Show a Bot how it’s done", body: "Ask a Bot to follow along as you complete a workflow once. It saves it as a routine and runs it on its own next time." },
   { title: "Bots get smarter over time", body: "Bots keep context and learn from each other. Show one a workflow today, hand off the project by Friday." },
   { title: "Connect the Bots", body: "Put a few Bots in the same thread and they pass work between themselves. You watch them take action instead of approving every step." },
 ];
 
 export const individualPlans = [
-  { name: "Premium", price: 30, intro: "Includes:", features: ["Blot’s own computer", "Signs into your tools", "Routines on a schedule", "Work anywhere: desktop, mobile, and more", "Weekly Blot usage included"] },
+  { name: "Premium", price: 30, intro: "Includes:", features: ["Ori’s own computer", "Signs into your tools", "Routines on a schedule", "Work anywhere: desktop, mobile, and more", "Weekly Ori usage included"] },
   { name: "Super", price: 100, intro: "Everything in Premium, plus:", features: ["3.5× Premium usage", "Priority model access at peak times"] },
   { name: "Ultra", price: 200, intro: "Everything in Super, plus:", features: ["12× Premium usage", "Earliest access to all products & models"] },
 ];
 
-export const teamFeatures = ["Blot’s own computer", "Routines on a schedule", "Centralized billing and admin", "Team marketplace for skills and plugins", "Shared usage analytics", "Team-wide privacy settings", "SAML/OIDC SSO", "Mix-and-match seat types"];
-export const enterpriseFeatures = ["Invoice/PO billing", "SCIM", "Granular spend controls", "Group-level settings and spend limits", "Auto-run, browser, and network controls", "Repository, model, and MCP access controls", "Audit logs and service accounts", "Access, network, and audit controls for Blot", "Priority support"];
+export const teamFeatures = ["Ori’s own computer", "Routines on a schedule", "Centralized billing and admin", "Team marketplace for skills and plugins", "Shared usage analytics", "Team-wide privacy settings", "SAML/OIDC SSO", "Mix-and-match seat types"];
+export const enterpriseFeatures = ["Invoice/PO billing", "SCIM", "Granular spend controls", "Group-level settings and spend limits", "Auto-run, browser, and network controls", "Repository, model, and MCP access controls", "Audit logs and service accounts", "Access, network, and audit controls for Ori", "Priority support"];
 
 export const faqs = [
-  ["How is Blot different from AI assistants?", "Bots have their own computer, so they can work inside your apps and tools. They also run in parallel, 24/7, even when your laptop is closed."],
-  ["Who is Blot available for today?", "Blot is included with Premium, Super, Ultra, Teams, and Enterprise."],
-  ["Is Blot available for enterprises?", "Yes. Blot is generally available for Enterprise, as well as for teams on the Teams plan. Contact sales to set up Enterprise access for your organization, including people who don’t already have a seat."],
-  ["Where do I talk to Blot?", "Work with Blot from your desktop (macOS or Windows) or your phone with the iOS app."],
-  ["How much does Blot cost?", "Blot subscriptions come with weekly usage included, with additional usage billed based on token cost. Enterprise customers should contact sales."],
+  ["How is Ori different from AI assistants?", "Bots have their own computer, so they can work inside your apps and tools. They also run in parallel, 24/7, even when your laptop is closed."],
+  ["Who is Ori available for today?", "Ori is included with Premium, Super, Ultra, Teams, and Enterprise."],
+  ["Is Ori available for enterprises?", "Yes. Ori is generally available for Enterprise, as well as for teams on the Teams plan. Contact sales to set up Enterprise access for your organization, including people who don’t already have a seat."],
+  ["Where do I talk to Ori?", "Work with Ori from your desktop (macOS or Windows) or your phone with the iOS app."],
+  ["How much does Ori cost?", "Ori subscriptions come with weekly usage included, with additional usage billed based on token cost. Enterprise customers should contact sales."],
   ["Do Bots share one computer?", "Yes. Every user has one persistent cloud computer. Your Bots share that machine — files, browser, and logins — so they can hand work off and keep context. Isolation is per user, not per Bot."],
-  ["How does Blot handle my data & privacy?", "Your cloud computer is encrypted in transit and at rest, with training opt-out. Sensitive actions can go through Auto Review before they run. Enterprise admins can set DLP, certificates, proxies, and network controls."],
+  ["How does Ori handle my data & privacy?", "Your cloud computer is encrypted in transit and at rest, with training opt-out. Sensitive actions can go through Auto Review before they run. Enterprise admins can set DLP, certificates, proxies, and network controls."],
 ];
 
 export const menuGroups = {
   Products: [["Overview", "/"], ["Demo", "/#demo"], ["Agents", "/features"], ["Workspace", "/workspace"]],
   Solutions: [["Agent roles", "/#use-cases"], ["Teams", "/#pricing"], ["Enterprise", "/contact"], ["Integrations", "/docs"]],
   Developer: [["Documentation", "/docs"], ["MCP integrations", "/workspace/documents/mcp-developer-guide"], ["GitHub", "/github"]],
-  Company: [["About Blot", "/#statement"], ["Changelog", "/changelog"], ["Contact", "/contact"], ["Privacy", "/privacy"]],
+  Company: [["About Ori", "/#statement"], ["Changelog", "/changelog"], ["Contact", "/contact"], ["Privacy", "/privacy"]],
 };
 
 export const footerGroups = [
-  ["Blot", [["Overview", "/"], ["Features", "/features"], ["Agent roles", "/#use-cases"], ["Pricing", "/#pricing"]]],
+  ["Ori", [["Overview", "/"], ["Features", "/features"], ["Agent roles", "/#use-cases"], ["Pricing", "/#pricing"]]],
   ["Download", [["macOS", "/beta?platform=macos"], ["iOS", "/beta?platform=ios"], ["Android · Soon", "/beta?platform=android"], ["Windows · Soon", "/beta?platform=windows"]]],
   ["Resources", [["Documentation", "/docs"], ["MCP guide", "/workspace/documents/mcp-developer-guide"], ["Workspace", "/workspace"], ["GitHub", "/github"]]],
   ["Company", [["Changelog", "/changelog"], ["Contact", "/contact"]]],

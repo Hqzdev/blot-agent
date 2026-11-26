@@ -116,7 +116,7 @@ export default function Workspace() {
   return (
     <main className="ws-page" lang="ru" id="main-content" tabIndex={-1}>
       <div className="ws-topline">
-        <div className="ws-breadcrumb"><Link href="/">Blot</Link><span>/</span><span>Рабочая среда проекта</span></div>
+        <div className="ws-breadcrumb"><Link href="/">Ori</Link><span>/</span><span>Рабочая среда проекта</span></div>
         <span className="ws-version">План · 01.11.2026</span>
       </div>
       <header className="ws-header">
