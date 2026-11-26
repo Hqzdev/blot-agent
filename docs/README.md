@@ -4,7 +4,9 @@
 
 ## С чего начать
 
-Трёх документов достаточно, чтобы понять проект:
+Чтобы разобраться в текущем коде, начните с [блок-схем проекта](architecture/backend.md) и [разбора бэкенда по файлам](#бэкенд-по-файлам).
+
+Для требований и планов используйте эти документы.
 
 1. [Техническое задание](product/blot-technical-specification.md) — что продукт должен уметь и как мы проверим, что он готов. Это главный документ.
 2. [План разработки](product/blot-product-plan.md) — в каком порядке строим, к какому сроку и сколько кода ждать.
@@ -26,6 +28,29 @@
 | `archive/` | Устаревшее: первая версия продукта и старый список из 405 задач | Нет, только для истории |
 
 Макеты экранов лежат не здесь, а в папке `screens/` рядом с `docs/` и в файле `agent.pen`.
+
+## Бэкенд по файлам
+
+Папки ниже повторяют структуру `backend/`. Например, описание `backend/cloud/src/main/java/dev/blot/cloud/storage/CloudDatabase.java` лежит в [`docs/cloud/src/main/java/dev/blot/cloud/storage/CloudDatabase.java.md`](cloud/src/main/java/dev/blot/cloud/storage/CloudDatabase.java.md). На каждой странице есть назначение файла и ссылка на исходник.
+
+| Папка | За что отвечает |
+| --- | --- |
+| [`api/`](api/README.md) | Локальный HTTP API v2, команды, чтение записей и SSE |
+| [`application/`](application/README.md) | Сценарии чата, планирования, задач, подтверждений и работы агентов |
+| [`cloud/`](cloud/README.md) | Облачный Java API v1, устройства, relay, квоты и совместная работа |
+| [`core/`](core/README.md) | Доменные модели Java v2 и сгенерированные типы общего контракта v3 |
+| [`infrastructure/`](infrastructure/README.md) | Адаптеры SQLite, Git, файлов, macOS, GigaChat и почты |
+| [`gradle/`](gradle/README.md) | Версии библиотек, проверка зависимостей и Gradle Wrapper |
+| [`plans/`](plans/README.md) | Планы и отчёты Apple v1 |
+
+### Файлы в корне `backend/`
+
+- [`README.md`](backend-README.md)
+- [`build.gradle.kts`](build.gradle.kts.md)
+- [`settings.gradle.kts`](settings.gradle.kts.md)
+- [`settings-gradle.lockfile`](settings-gradle.lockfile.md)
+- [`gradlew`](gradlew.md)
+- [`gradlew.bat`](gradlew.bat.md)
 
 ## Как отличить новое от старого
 
